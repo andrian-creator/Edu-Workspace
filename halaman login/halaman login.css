@@ -1,0 +1,420 @@
+:root {
+  --font-main: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --color-bg: #ffffff;
+  --color-text-main: #232629;
+  --color-text-muted: #5e656d;
+  --color-border: #e2e8f0;
+  --color-border-dark: #232629;
+  --color-yellow-pill: #ffd500;
+  --radius-pill: 999px;
+  --radius-card: 24px;
+  --transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-main);
+  background-color: var(--color-bg);
+  color: var(--color-text-main);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Header */
+.login-header {
+  padding: 36px 64px 20px;
+  position: relative;
+  top: 0;
+  z-index: 100;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.header-container {
+  max-width: 1360px;
+  margin: 0 auto;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.btn-back-home {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 10px !important;
+  text-decoration: none !important;
+  font-size: 1.05rem !important;
+  font-weight: 700 !important;
+  color: var(--color-text-main) !important;
+  padding: 8px 18px !important;
+  border: 1.5px solid transparent !important;
+  border-radius: var(--radius-pill) !important;
+  transition: var(--transition) !important;
+  background: transparent !important;
+  cursor: pointer !important;
+  user-select: none !important;
+}
+
+.btn-back-home:hover {
+  border-color: var(--color-border-dark, #1e293b) !important;
+  background: transparent !important;
+  color: var(--color-text-main) !important;
+}
+
+.nav-btn-icon {
+  width: 22px !important;
+  height: 22px !important;
+  object-fit: contain !important;
+  display: block !important;
+  flex-shrink: 0 !important;
+}
+
+/* Main Container */
+.login-main {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 32px 60px;
+}
+
+.login-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 72px;
+  width: 100%;
+  max-width: 1140px;
+  margin: 0 auto;
+}
+
+/* Ilustrasi Login di Samping Kiri (Besarnya sama dengan gambar di index / landing page) */
+.login-illustration-area {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  max-width: 480px;
+  flex-shrink: 0;
+}
+
+.login-illustration-image {
+  width: 100%;
+  max-width: 480px;
+  max-height: 480px;
+  height: auto;
+  object-fit: contain;
+  display: block;
+  transition: transform 0.4s ease;
+}
+
+.login-illustration-image:hover {
+  transform: scale(1.02);
+}
+
+.login-card {
+  width: 100%;
+  max-width: 460px;
+  padding: 48px 36px;
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-card);
+  background: #ffffff;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.03);
+  text-align: center;
+  transition: var(--transition);
+  flex-shrink: 0;
+}
+
+.login-title {
+  font-size: 2.1rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  margin-bottom: 8px;
+  color: var(--color-text-main);
+}
+
+.login-subtitle {
+  font-size: 0.95rem;
+  color: var(--color-text-muted);
+  margin-bottom: 34px;
+  line-height: 1.5;
+}
+
+/* Google Button Area (Diperbesar Proporsional, Natural & Tidak Penyet) */
+.google-btn-area {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 60px;
+  padding: 6px 0;
+  margin: 0 auto;
+}
+
+.g_id_signin {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+}
+
+.g_id_signin iframe {
+  margin: 0 auto !important;
+  transform: scale(1.18);
+  transform-origin: center center;
+  transition: transform 0.25s ease, filter 0.25s ease;
+}
+
+.g_id_signin iframe:hover {
+  transform: scale(1.22);
+  filter: drop-shadow(0 4px 14px rgba(0, 0, 0, 0.08));
+}
+
+/* Popup Notifikasi Berhasil Login */
+.popup-overlay {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(15, 23, 42, 0.5);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  z-index: 99999;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.popup-overlay.active {
+  display: flex;
+  animation: popupFade 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes popupFade {
+  from { opacity: 0; transform: scale(0.92); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.popup-card {
+  width: 100%;
+  max-width: 380px;
+  background: #ffffff;
+  border-radius: var(--radius-card);
+  padding: 36px 28px 32px;
+  text-align: center;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.popup-icon-circle {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: #dcfce7;
+  color: #16a34a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.8rem;
+  margin-bottom: 18px;
+  box-shadow: 0 4px 14px rgba(22, 163, 74, 0.2);
+}
+
+.popup-title {
+  font-size: 1.45rem;
+  font-weight: 800;
+  color: var(--color-text-main);
+  margin-bottom: 6px;
+  letter-spacing: -0.02em;
+}
+
+.popup-desc {
+  font-size: 0.95rem;
+  color: var(--color-text-muted);
+  line-height: 1.5;
+  margin-bottom: 8px;
+}
+
+.popup-user-email {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-text-main);
+  background: #f1f5f9;
+  padding: 4px 12px;
+  border-radius: var(--radius-pill);
+  margin-top: 4px;
+}
+
+@media (max-width: 1024px) {
+  .login-container {
+    gap: 48px;
+  }
+  .login-illustration-area {
+    max-width: 380px;
+  }
+  .login-illustration-image {
+    max-width: 380px;
+    max-height: 380px;
+  }
+}
+
+@media (max-width: 860px) {
+  .login-container {
+    gap: 32px;
+  }
+  .login-illustration-area {
+    max-width: 320px;
+  }
+  .login-illustration-image {
+    max-width: 320px;
+    max-height: 320px;
+  }
+}
+
+/* Penyesuaian Tampilan Mobile (Sesuai Gambar 2): Tombol Kembali, Gambar, dan Kartu Login */
+@media (max-width: 768px) {
+  .login-header {
+    padding: 14px 20px !important;
+    border-bottom: 1px solid #f1f5f9 !important;
+  }
+
+  .login-header .header-container {
+    height: 40px !important;
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    width: 100% !important;
+  }
+
+  .login-header .brand-logo {
+    font-size: 1.35rem !important;
+  }
+
+  /* Tombol Kembali Mobile: Rapi, Menempel di Kanan, Berbentuk Pill Bersih */
+  .login-header .btn-back-home {
+    width: auto !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 6px 14px !important;
+    font-size: 0.88rem !important;
+    font-weight: 700 !important;
+    gap: 6px !important;
+    border: 1.5px solid var(--color-border, #e2e8f0) !important;
+    background: #ffffff !important;
+    border-radius: var(--radius-pill, 999px) !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04) !important;
+  }
+
+  .login-header .btn-back-home:hover {
+    border-color: var(--color-border-dark, #1e293b) !important;
+    background: #f8fafc !important;
+  }
+
+  .login-header .nav-btn-icon {
+    width: 16px !important;
+    height: 16px !important;
+  }
+
+  /* Layout Konten Mobile: Gambar di Atas (Ukuran Lebih Besar & Proporsional), Kartu Login di Bawah */
+  .login-main {
+    padding: 20px 16px 36px !important;
+  }
+
+  .login-container {
+    flex-direction: column !important;
+    gap: 24px !important;
+    max-width: 440px !important;
+  }
+
+  .login-illustration-area {
+    width: 100% !important;
+    max-width: 290px !important;
+    margin: 0 auto !important;
+  }
+
+  .login-illustration-image {
+    width: 100% !important;
+    max-width: 290px !important;
+    max-height: 330px !important;
+    height: auto !important;
+    object-fit: contain !important;
+  }
+
+  .login-card {
+    padding: 28px 20px 32px !important;
+    border-radius: 20px !important;
+    max-width: 100% !important;
+    width: 100% !important;
+  }
+
+  .login-title {
+    font-size: 1.65rem !important;
+    margin-bottom: 6px !important;
+  }
+
+  .login-subtitle {
+    font-size: 0.88rem !important;
+    margin-bottom: 22px !important;
+  }
+
+  .google-btn-area {
+    min-height: 58px !important;
+    padding: 6px 0 !important;
+  }
+
+  .g_id_signin iframe {
+    transform: scale(1.1) !important;
+    transform-origin: center center !important;
+  }
+}
+
+@media (max-width: 390px) {
+  .login-illustration-area {
+    max-width: 250px !important;
+  }
+
+  .login-illustration-image {
+    max-width: 250px !important;
+    max-height: 290px !important;
+  }
+
+  .login-card {
+    padding: 24px 16px 28px !important;
+  }
+
+  .login-title {
+    font-size: 1.5rem !important;
+  }
+
+  .google-btn-area {
+    min-height: 54px !important;
+    padding: 4px 0 !important;
+  }
+
+  .g_id_signin iframe {
+    transform: scale(1.02) !important;
+    transform-origin: center center !important;
+  }
+}
+
+@media (max-width: 350px) {
+  .g_id_signin iframe {
+    transform: scale(0.95) !important;
+  }
+}

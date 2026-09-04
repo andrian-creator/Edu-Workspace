@@ -1,0 +1,464 @@
+/* ==========================================================================
+   EDU WORKSPACE - DASHBOARD PENGGUNA (GURU / DOSEN)
+   Tampilan Premium, Zero-Scroll 100vh, Selaras dengan Dashboard Admin
+   ========================================================================== */
+
+:root {
+  --font-main: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --color-bg: #ffffff;
+  --color-card: #ffffff;
+  --color-text-main: #1e293b;
+  --color-text-muted: #5e656d;
+  --color-border: #e2e8f0;
+  --color-yellow-pill: #ffd500;
+  --color-yellow-text: #eab308;
+  --color-yellow-hover: #ffdf33;
+  --color-accent-blue: #3b82f6;
+  --radius-pill: 999px;
+  --radius-card: 20px;
+  --transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  height: 100%;
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
+  background-color: #ffffff;
+  color: #1e293b;
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  overflow-x: clip;
+  scrollbar-gutter: stable;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ==========================================================================
+   2. MAIN WRAPPER (Presisi Sejajar Header & 100vh Fit)
+   ========================================================================== */
+.user-main-wrapper {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-evenly;
+  padding: 0 64px 28px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.user-main-container {
+  max-width: 1360px;
+  margin: 0 auto;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(42px, 5.5vh, 68px);
+  box-sizing: border-box;
+}
+
+/* ==========================================================================
+   3. HERO SECTION (Typography & Image Dashboard Pengguna)
+   ========================================================================== */
+.hero-section {
+  width: 100%;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+.hero-container {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 1.15fr 0.85fr;
+  align-items: center;
+  gap: 36px;
+  box-sizing: border-box;
+}
+
+.hero-left {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  max-width: 640px;
+  width: 100%;
+}
+
+.hero-title {
+  font-size: clamp(2.8rem, 4.2vw, 3.85rem);
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: -0.04em;
+  color: #1e293b;
+  margin-bottom: 18px;
+}
+
+.text-yellow {
+  color: #eab308;
+  display: inline;
+}
+
+.hero-description {
+  font-size: 1.08rem;
+  line-height: 1.65;
+  color: #5e656d;
+  font-weight: 400;
+  margin: 0;
+  max-width: 520px;
+}
+
+.hero-right {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  width: 100%;
+}
+
+.illustration-wrapper {
+  width: 100%;
+  max-width: 560px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.hero-image {
+  width: 100%;
+  max-width: 540px;
+  max-height: 335px;
+  height: auto;
+  object-fit: contain;
+  display: block;
+  transition: transform 0.4s ease;
+}
+
+.hero-image:hover {
+  transform: scale(1.02);
+}
+
+/* ==========================================================================
+   4. 3 TOMBOL KOTAK BESAR SEJAJAR HORIZONTAL (ACTION CARDS)
+   ========================================================================== */
+.user-actions-section {
+  width: 100%;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+.actions-container {
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+  box-sizing: border-box;
+}
+
+/* 1 Tombol: Memanjang 100% penuh rata kanan-kiri */
+.actions-container.count-1,
+.actions-container.single-item,
+.actions-container:has(> .user-action-card:only-child),
+.actions-container:has(> :only-child) {
+  grid-template-columns: 1fr !important;
+}
+
+.actions-container.count-1 > .user-action-card,
+.actions-container.single-item > .user-action-card,
+.actions-container > .user-action-card:only-child,
+.actions-container > :only-child {
+  grid-column: 1 / -1 !important;
+  width: 100% !important;
+}
+
+/* 2 Tombol: Membagi rata 50% - 50% rata kanan-kiri tanpa celah kosong */
+.actions-container.count-2,
+.actions-container:has(> :nth-child(2):last-child) {
+  grid-template-columns: repeat(2, 1fr) !important;
+}
+
+/* 3 Tombol: Membagi rata 3 kolom (33.3% masing-masing) */
+.actions-container.count-3,
+.actions-container:has(> :nth-child(3):last-child) {
+  grid-template-columns: repeat(3, 1fr) !important;
+}
+
+.user-action-card {
+  background: #ffffff;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 20px;
+  padding: 22px 24px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 165px;
+  text-decoration: none;
+  color: inherit;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.03);
+  position: relative;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.user-action-card.active-card {
+  cursor: pointer;
+}
+
+.user-action-card.active-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.08);
+  border-color: #cbd5e1;
+}
+
+.user-action-card.disabled-card {
+  opacity: 0.65;
+  background: #f8fafc;
+  cursor: pointer;
+}
+
+.user-action-card.disabled-card:hover {
+  opacity: 0.85;
+  border-color: #cbd5e1;
+}
+
+.action-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.action-card-icon-box {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #1e293b;
+}
+
+/* Kotak Pesan saat Belum Ada Fitur yang Aktif */
+.locked-features-box {
+  grid-column: 1 / -1;
+  width: 100%;
+  background: #ffffff;
+  border: 1.5px dashed #cbd5e1;
+  border-radius: 20px;
+  padding: 24px 30px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  box-sizing: border-box;
+  animation: fadeIn 0.3s ease;
+}
+
+.locked-icon-wrapper {
+  width: 52px;
+  height: 52px;
+  min-width: 52px;
+  border-radius: 14px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.locked-icon-img {
+  width: 26px;
+  height: 26px;
+  object-fit: contain;
+}
+
+.locked-content {
+  flex: 1;
+}
+
+.locked-title {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: #1e293b;
+  margin-bottom: 4px;
+  letter-spacing: -0.01em;
+}
+
+.locked-desc {
+  font-size: 0.92rem;
+  color: #64748b;
+  line-height: 1.5;
+  margin: 0;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.action-card-icon-img {
+  width: 26px;
+  height: 26px;
+  object-fit: contain;
+}
+
+.action-badge-active {
+  background: #dcfce7;
+  color: #15803d;
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 999px;
+}
+
+.action-badge-soon {
+  background: #f1f5f9;
+  color: #64748b;
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 999px;
+}
+
+.action-badge-locked {
+  background: #fee2e2;
+  color: #dc2626;
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 999px;
+}
+
+.action-card-title {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #1e293b;
+  margin-bottom: 5px;
+  letter-spacing: -0.02em;
+}
+
+.action-card-desc {
+  font-size: 0.9rem;
+  color: #64748b;
+  line-height: 1.55;
+  margin-bottom: 12px;
+}
+
+.action-card-footer {
+  margin-top: auto;
+  padding-top: 10px;
+  border-top: 1px solid #f1f5f9;
+}
+
+.action-card-link {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #1e293b;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+}
+
+.disabled-card .action-card-link {
+  color: #94a3b8;
+  font-weight: 500;
+}
+
+/* ==========================================================================
+   5. TOAST NOTIFIKASI
+   ========================================================================== */
+
+/* User Toast */
+.user-toast {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  background: #1e293b;
+  color: #ffffff;
+  padding: 14px 22px;
+  border-radius: 12px;
+  font-size: 0.92rem;
+  font-weight: 600;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+  z-index: 99999;
+  opacity: 0;
+  transform: translateY(20px);
+  pointer-events: none;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.user-toast.show {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+/* ==========================================================================
+   6. RESPONSIVE DESIGN
+   ========================================================================== */
+@media (max-height: 820px) {
+  .user-main-container {
+    gap: 32px;
+  }
+  .hero-section {
+    padding-bottom: 0;
+  }
+  .hero-title {
+    font-size: 2.5rem;
+    margin-bottom: 10px;
+  }
+  .user-action-card {
+    padding: 16px 20px;
+    min-height: 145px;
+  }
+  .action-card-desc {
+    font-size: 0.84rem;
+    margin-bottom: 8px;
+  }
+}
+
+@media (max-width: 1024px) {
+  html, body {
+    height: auto;
+    overflow-y: auto;
+  }
+  .user-main-wrapper {
+    padding: 0 40px 40px;
+  }
+  .hero-container {
+    grid-template-columns: 1fr;
+    gap: 28px;
+    text-align: center;
+  }
+  .hero-left {
+    max-width: 100%;
+    align-items: center;
+  }
+  .hero-right, .illustration-wrapper {
+    justify-content: center;
+  }
+  .actions-container {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .user-main-wrapper {
+    padding: 0 20px 32px;
+  }
+  .hero-title {
+    font-size: 2.2rem;
+  }
+  .actions-container {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+}

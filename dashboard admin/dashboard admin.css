@@ -1,0 +1,378 @@
+/* ==========================================================================
+   EDU WORKSPACE - DASHBOARD ADMIN (PORTAL UTAMA)
+   Desain Editorial Minimalist - Fit 1 Layar Penuh (Zero Scroll) & Rata Presisi
+   ========================================================================== */
+
+html, body {
+  height: 100%;
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
+  background-color: var(--color-bg);
+  color: var(--color-text-main);
+  font-family: var(--font-main);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  overflow-x: clip;
+}
+
+/* Main Wrapper & Container (Identik Presisi dengan Header Container) */
+.admin-main-wrapper {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-evenly;
+  padding: 0 64px 28px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.admin-main-container {
+  max-width: 1360px;
+  margin: 0 auto;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-evenly;
+  height: 100%;
+  box-sizing: border-box;
+}
+
+/* ==========================================================================
+   HERO SECTION (2 Kolom Gaya Editorial)
+   ========================================================================== */
+.hero-section {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+.hero-container {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 40px;
+  align-items: center;
+  box-sizing: border-box;
+}
+
+/* Left Hero Typography */
+.hero-left {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  max-width: 640px;
+  width: 100%;
+}
+
+.hero-title {
+  font-size: clamp(2.8rem, 4.2vw, 3.85rem);
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: -0.04em;
+  color: var(--color-text-main);
+  margin-bottom: 18px;
+}
+
+.text-yellow {
+  color: var(--color-yellow-text, #eab308);
+  display: inline;
+}
+
+.hero-description {
+  font-size: 1.08rem;
+  line-height: 1.65;
+  color: var(--color-text-muted);
+  font-weight: 400;
+  margin: 0;
+  max-width: 520px;
+}
+
+/* Right Hero Image */
+.hero-right {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  width: 100%;
+}
+
+.illustration-wrapper {
+  width: 100%;
+  max-width: 560px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.hero-image {
+  width: 100%;
+  max-width: 540px;
+  max-height: 335px;
+  height: auto;
+  object-fit: contain;
+  display: block;
+  transition: transform 0.4s ease;
+}
+
+.hero-image:hover {
+  transform: scale(1.02);
+}
+
+/* ==========================================================================
+   3 TOMBOL KOTAK BESAR SEJAJAR HORIZONTAL
+   ========================================================================== */
+.admin-actions-section {
+  width: 100%;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+.actions-container {
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+  box-sizing: border-box;
+}
+
+/* 1 Tombol: Memanjang 100% penuh rata kanan-kiri */
+.actions-container.count-1,
+.actions-container.single-item,
+.actions-container:has(> .admin-action-card:only-child),
+.actions-container:has(> :only-child) {
+  grid-template-columns: 1fr !important;
+}
+
+.actions-container.count-1 > .admin-action-card,
+.actions-container.single-item > .admin-action-card,
+.actions-container > .admin-action-card:only-child,
+.actions-container > :only-child {
+  grid-column: 1 / -1 !important;
+  width: 100% !important;
+}
+
+/* 2 Tombol: Membagi rata 50% - 50% rata kanan-kiri */
+.actions-container.count-2,
+.actions-container:has(> :nth-child(2):last-child) {
+  grid-template-columns: repeat(2, 1fr) !important;
+}
+
+/* 3 Tombol: Membagi rata 3 kolom (33.3% masing-masing) */
+.actions-container.count-3,
+.actions-container:has(> :nth-child(3):last-child) {
+  grid-template-columns: repeat(3, 1fr) !important;
+}
+
+.admin-action-card {
+  background: #ffffff;
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-card);
+  padding: 22px 26px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  text-decoration: none;
+  color: inherit;
+  transition: var(--transition);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.02);
+  min-height: 172px;
+  box-sizing: border-box;
+  position: relative;
+}
+
+.admin-action-card.active-card {
+  cursor: pointer;
+}
+
+.admin-action-card.active-card:hover {
+  border-color: #0f172a;
+  transform: translateY(-4px);
+  box-shadow: 0 14px 32px rgba(15, 23, 42, 0.08);
+}
+
+.admin-action-card.active-card:hover .action-card-link {
+  color: #2563eb;
+  transform: translateX(4px);
+}
+
+.admin-action-card.disabled-card {
+  cursor: pointer;
+  background: #fafafa;
+}
+
+.admin-action-card.disabled-card:hover {
+  border-color: #cbd5e1;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.04);
+}
+
+.action-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.action-card-icon-box {
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  background: #f1f5f9;
+  color: #1e293b;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.active-card:hover .action-card-icon-box {
+  background: #ffd500;
+  color: #111827;
+}
+
+.action-badge-active {
+  background: #dcfce7;
+  color: #15803d;
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 999px;
+}
+
+.action-badge-soon {
+  background: #f1f5f9;
+  color: #64748b;
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 999px;
+}
+
+.action-card-title {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--color-text-main);
+  margin-bottom: 5px;
+  letter-spacing: -0.02em;
+}
+
+.action-card-desc {
+  font-size: 0.9rem;
+  color: var(--color-text-muted);
+  line-height: 1.55;
+  margin-bottom: 12px;
+}
+
+.action-card-footer {
+  margin-top: auto;
+  padding-top: 10px;
+  border-top: 1px solid #f1f5f9;
+}
+
+.action-card-link {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--color-text-main);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+}
+
+.disabled-card .action-card-link {
+  color: #94a3b8;
+  font-weight: 500;
+}
+
+/* Toast */
+.admin-toast {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  background: #1e293b;
+  color: #ffffff;
+  padding: 14px 22px;
+  border-radius: 12px;
+  font-size: 0.92rem;
+  font-weight: 600;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+  z-index: 99999;
+  opacity: 0;
+  transform: translateY(20px);
+  pointer-events: none;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.admin-toast.show {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+/* ==========================================================================
+   RESPONSIVE DESIGN
+   ========================================================================== */
+@media (max-height: 750px) {
+  .hero-image {
+    max-height: 250px;
+  }
+  .hero-title {
+    font-size: 2.5rem;
+    margin-bottom: 10px;
+  }
+  .admin-action-card {
+    padding: 16px 20px;
+    min-height: 145px;
+  }
+  .action-card-desc {
+    font-size: 0.84rem;
+    margin-bottom: 8px;
+  }
+}
+
+@media (max-width: 1024px) {
+  html, body {
+    height: auto;
+    overflow-y: auto;
+  }
+  .admin-main-wrapper {
+    padding: 0 40px 40px;
+  }
+  .hero-container {
+    grid-template-columns: 1fr;
+    gap: 28px;
+    text-align: center;
+  }
+  .hero-left {
+    max-width: 100%;
+    align-items: center;
+  }
+  .hero-right,
+  .illustration-wrapper {
+    justify-content: center;
+  }
+  .actions-container {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 680px) {
+  .admin-main-wrapper {
+    padding: 0 20px 32px;
+  }
+  .hero-title {
+    font-size: clamp(2rem, 8.5vw, 2.6rem);
+    line-height: 1.15;
+  }
+  .hero-description {
+    font-size: 0.94rem;
+    line-height: 1.5;
+  }
+  .actions-container {
+    grid-template-columns: 1fr;
+  }
+}

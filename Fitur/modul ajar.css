@@ -1,0 +1,1425 @@
+/**
+ * EDU WORKSPACE - MODUL AJAR FITUR STYLESHEET
+ * Desain Bersih, Elegan, dan Responsif Khas Edu Workspace
+ */
+
+:root {
+  --color-bg-page: #f8fafc;
+  --color-card: #ffffff;
+  --color-border: #e2e8f0;
+  --color-border-dark: #1e293b;
+  --color-text-main: #1e293b;
+  --color-text-muted: #64748b;
+  --color-primary: #1e293b;
+  --color-primary-hover: #0f172a;
+  --color-accent-yellow: #eab308;
+  --radius-card: 20px;
+  --radius-pill: 999px;
+  --font-main: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  --transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background-color: var(--color-bg-page);
+  color: var(--color-text-main);
+  font-family: var(--font-main);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ==========================================================================
+   2. MAIN WRAPPER & PAGE HEADER
+   ========================================================================== */
+.modul-main-wrapper {
+  flex: 1;
+  padding: 32px 64px 60px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.modul-main-container {
+  max-width: 1360px;
+  margin: 0 auto;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.modul-page-header {
+  margin-bottom: 32px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 8px;
+}
+
+.modul-title {
+  font-size: clamp(2rem, 3vw, 2.6rem);
+  font-weight: 800;
+  letter-spacing: -0.035em;
+  color: var(--color-text-main);
+  line-height: 1.15;
+  margin: 0;
+  text-align: center;
+}
+
+.text-yellow {
+  color: var(--color-accent-yellow);
+}
+
+.modul-subtitle {
+  font-size: 1.02rem;
+  line-height: 1.6;
+  color: var(--color-text-muted);
+  max-width: 680px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+/* ==========================================================================
+   2.1. STEPPER WIZARD INDICATOR (3 Tahapan Modul Ajar)
+   ========================================================================== */
+.stepper-wrapper {
+  margin-top: 24px;
+  width: 100%;
+  display: flex;
+}
+
+.stepper-track {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  max-width: 100%;
+  padding: 12px 32px;
+  background: #ffffff;
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.02);
+  box-sizing: border-box;
+}
+
+.step-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  background: transparent;
+  border: none;
+  padding: 8px 18px;
+  border-radius: var(--radius-pill);
+  cursor: default;
+  pointer-events: none;
+  user-select: none;
+  transition: var(--transition);
+  font-family: inherit;
+  flex-shrink: 0;
+}
+
+.step-circle {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.95rem;
+  font-weight: 800;
+  background: #f1f5f9;
+  color: #64748b;
+  border: 1.5px solid #cbd5e1;
+  transition: var(--transition);
+  flex-shrink: 0;
+}
+
+.step-approved-icon {
+  display: none;
+  width: 17px;
+  height: 17px;
+  object-fit: contain;
+}
+
+.step-name {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #64748b;
+  line-height: 1.2;
+  transition: color 0.2s ease;
+  white-space: nowrap;
+}
+
+/* Active Step */
+.step-item.active {
+  background: #f8fafc;
+  cursor: default;
+}
+
+.step-item.active .step-circle {
+  background: #1e293b;
+  color: #ffffff;
+  border-color: #1e293b;
+  box-shadow: 0 4px 12px rgba(30, 41, 59, 0.2);
+}
+
+.step-item.active .step-name {
+  color: #0f172a;
+  font-weight: 800;
+}
+
+/* Completed Step (Bebas dari list merah/garis tepi dan menampilkan icon_approved.png) */
+.step-item.completed .step-circle {
+  background: #ffd500;
+  border: none;
+  box-shadow: none;
+}
+
+.step-item.completed .step-num {
+  display: none;
+}
+
+.step-item.completed .step-approved-icon {
+  display: block;
+}
+
+.step-item.completed .step-name {
+  color: #1e293b;
+}
+
+/* Step Line Connector (Memanjang Fleksibel di Antara Langkah) */
+.step-line {
+  flex: 1;
+  height: 2px;
+  background: #e2e8f0;
+  border-radius: 2px;
+  margin: 0 20px;
+  min-width: 24px;
+  transition: background 0.3s ease;
+}
+
+.step-line.completed {
+  background: #ffd500;
+}
+
+/* Step Panes */
+.step-pane {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  animation: stepFadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes stepFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Form Section Blocks (A. Informasi Pendidik & B. Informasi Akademik) */
+.form-section-block {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  background: #fbfcfe;
+  border: 1.5px solid #edf2f7;
+  border-radius: 16px;
+  padding: 22px 24px;
+  transition: var(--transition);
+}
+
+.form-section-block:hover {
+  border-color: #e2e8f0;
+}
+
+.form-section-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 2px;
+  border-bottom: 1px solid #f1f5f9;
+  padding-bottom: 12px;
+}
+
+.section-badge {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: var(--color-primary, #1e293b);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.82rem;
+  font-weight: 800;
+  flex-shrink: 0;
+}
+
+.section-heading {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--color-text-main, #1e293b);
+  margin: 0;
+  letter-spacing: -0.015em;
+}
+
+.form-section-header.between-space {
+  justify-content: space-between;
+}
+
+.section-title-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.optional-badge {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #64748b;
+  margin-left: 6px;
+}
+
+/* Tombol Generator AI di Header Section (EduWorkspace Flat Style - Tanpa Bayangan) */
+.btn-ai-generator {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 7px 18px;
+  background: var(--color-primary, #1e293b);
+  color: #ffffff;
+  border: none;
+  border-radius: var(--radius-pill);
+  font-size: 0.82rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: var(--transition);
+  box-shadow: none;
+  user-select: none;
+  white-space: nowrap;
+}
+
+.btn-ai-generator .btn-ai-icon {
+  width: 15px;
+  height: 15px;
+  object-fit: contain;
+  filter: brightness(0) invert(1);
+  transition: transform 0.2s ease;
+}
+
+.btn-ai-generator:hover {
+  background: var(--color-primary-hover, #0f172a);
+  color: #ffffff;
+  transform: translateY(-1px);
+  box-shadow: none;
+}
+
+.btn-ai-generator:hover .btn-ai-icon {
+  transform: rotate(15deg) scale(1.08);
+}
+
+.btn-ai-generator:active {
+  transform: translateY(0);
+  box-shadow: none;
+}
+
+.btn-ai-generator:disabled,
+.btn-ai-generator.loading {
+  opacity: 0.85;
+  cursor: not-allowed;
+  pointer-events: none;
+  box-shadow: none;
+}
+
+/* Indikator Loading Lingkaran di Sebelah Kiri Tombol Generate */
+.btn-spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  border-top-color: #ffffff;
+  border-radius: 50%;
+  animation: btnSpin 0.65s linear infinite;
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+@keyframes btnSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.form-row-three {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+.form-group.no-margin {
+  margin-bottom: 0 !important;
+}
+
+.manual-input-box {
+  animation: stepFadeIn 0.25s ease-out;
+}
+
+.step-nav-footer {
+  display: flex;
+  align-items: center;
+  margin-top: 14px;
+  padding-top: 20px;
+  border-top: 1px solid #f1f5f9;
+}
+
+.step-nav-footer.right-align {
+  justify-content: flex-end;
+}
+
+.step-nav-footer.between-align {
+  justify-content: space-between;
+}
+
+.btn-step-next {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  background: #1e293b;
+  color: #ffffff;
+  border: none;
+  padding: 13px 28px;
+  border-radius: var(--radius-pill);
+  font-size: 0.98rem;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  transition: var(--transition);
+  box-shadow: 0 4px 14px rgba(30, 41, 59, 0.15);
+}
+
+.btn-step-next:hover {
+  background: #0f172a;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(30, 41, 59, 0.22);
+}
+
+.btn-step-prev {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: #ffffff;
+  color: #1e293b;
+  border: 1.5px solid #cbd5e1;
+  padding: 12px 22px;
+  border-radius: var(--radius-pill);
+  font-size: 0.95rem;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  transition: var(--transition);
+  text-decoration: none;
+}
+
+.btn-step-prev:hover {
+  background: #f8fafc;
+  border-color: #94a3b8;
+  color: #0f172a;
+  text-decoration: none;
+}
+
+
+/* Icon Pill Yellow */
+.icon-pill-yellow {
+  background: #fffbeb !important;
+  border-color: #fde68a !important;
+  color: #d97706 !important;
+}
+
+/* Review Summary Card */
+.review-summary-card {
+  background: #f8fafc;
+  border: 1.5px solid var(--color-border);
+  border-radius: 16px;
+  padding: 24px 28px;
+}
+
+.review-summary-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.review-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.review-item.full-width {
+  grid-column: 1 / -1;
+}
+
+.review-label {
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: #64748b;
+}
+
+.review-val {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #0f172a;
+  line-height: 1.4;
+}
+
+.review-note {
+  font-weight: 500;
+  color: #334155;
+  background: #ffffff;
+  padding: 12px 16px;
+  border-radius: 10px;
+  border: 1px solid #e2e8f0;
+  margin-top: 4px;
+}
+
+.review-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.review-tag-badge {
+  display: inline-flex;
+  align-items: center;
+  background: #ffffff;
+  border: 1.5px solid #cbd5e1;
+  padding: 6px 14px;
+  border-radius: var(--radius-pill);
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+/* ==========================================================================
+   3. FORM ISIAN CONTAINER (Full Width Sejajar Header)
+   ========================================================================== */
+.modul-content-grid {
+  width: 100%;
+  display: block;
+}
+
+.modul-card {
+  background: var(--color-card);
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-card);
+  padding: 40px 48px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 26px;
+  width: 100%;
+  max-width: 100%;
+}
+
+.card-header-group {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid #f1f5f9;
+  padding-bottom: 18px;
+}
+
+.card-title-box {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.card-icon-pill {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: #f8fafc;
+  border: 1.5px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.card-icon-pill img {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+}
+
+.card-title {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: var(--color-text-main);
+  margin: 0 0 2px 0;
+  letter-spacing: -0.02em;
+}
+
+.card-desc {
+  font-size: 0.84rem;
+  color: var(--color-text-muted);
+  margin: 0;
+}
+
+/* Form Styling */
+.form-row-dual {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 18px;
+}
+
+.form-label {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--color-text-main);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.form-label-action-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 6px;
+  flex-wrap: wrap;
+}
+
+.form-label-action-wrap .form-label {
+  margin-bottom: 0;
+  padding: 0;
+}
+
+.form-label-action-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-left: auto;
+}
+
+@media (max-width: 640px) {
+  .form-label-action-wrap {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
+  .form-label-action-right {
+    margin-left: 0;
+    width: 100%;
+    justify-content: space-between;
+  }
+}
+
+.form-label-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.section-heading .required,
+.form-label .required,
+.form-label-title .required {
+  color: #dc2626;
+  margin-left: 2px;
+  font-weight: 800;
+}
+
+.form-label-hint {
+  font-size: 0.76rem;
+  color: var(--color-text-muted);
+  font-weight: 500;
+  margin-left: auto;
+}
+
+.form-input,
+.form-select,
+.form-textarea {
+  width: 100%;
+  padding: 12px 16px;
+  font-size: 0.92rem;
+  font-family: var(--font-main);
+  color: var(--color-text-main);
+  background: #f8fafc;
+  border: 1.5px solid var(--color-border);
+  border-radius: 12px;
+  outline: none;
+  transition: var(--transition);
+  box-sizing: border-box;
+}
+
+.form-textarea {
+  resize: vertical;
+  max-width: 100%;
+  min-width: 100%;
+  min-height: 76px;
+  line-height: 1.5;
+}
+
+.form-input:focus,
+.form-select:focus,
+.form-textarea:focus {
+  background: #ffffff;
+  border-color: var(--color-border-dark);
+  box-shadow: 0 0 0 3px rgba(30, 41, 59, 0.06);
+}
+
+/* Custom Checkbox Grid (Flat - Tanpa Shape Putih di Dalam) */
+.custom-checkbox-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px 20px;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  padding: 6px 0 2px 0;
+  box-sizing: border-box;
+}
+
+.custom-checkbox-grid.five-cols {
+  grid-template-columns: repeat(5, 1fr);
+  gap: 14px 16px;
+}
+
+.fasilitas-lainnya-wrapper {
+  margin-top: 10px;
+  animation: fadeIn 0.2s ease;
+}
+
+.custom-checkbox-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  user-select: none;
+  position: relative;
+  transition: var(--transition);
+}
+
+.custom-checkbox-item input[type="checkbox"] {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+
+.custom-checkbox-box {
+  width: 19px;
+  height: 19px;
+  border-radius: 5px;
+  border: 1.5px solid #cbd5e1;
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  box-sizing: border-box;
+}
+
+.custom-checkbox-box svg {
+  opacity: 0;
+  transform: scale(0.6);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  color: #ffffff;
+  stroke: #ffffff;
+}
+
+.custom-checkbox-item:hover .custom-checkbox-box {
+  border-color: #94a3b8;
+  background: #f8fafc;
+}
+
+/* Checked State - Vibrant Blue EduWorkspace */
+.custom-checkbox-item input[type="checkbox"]:checked + .custom-checkbox-box {
+  background: #2563eb;
+  border-color: #2563eb;
+}
+
+.custom-checkbox-item input[type="checkbox"]:checked + .custom-checkbox-box svg {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.custom-checkbox-label {
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: #1e293b;
+  line-height: 1.3;
+  transition: color 0.2s ease;
+}
+
+.custom-checkbox-item:hover .custom-checkbox-label {
+  color: #0f172a;
+}
+
+.form-actions-group {
+  margin-top: 10px;
+}
+
+.btn-primary-generate {
+  width: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 14px 28px;
+  background: var(--color-primary);
+  color: #ffffff;
+  border: none;
+  border-radius: var(--radius-pill);
+  font-family: var(--font-main);
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: var(--transition);
+  box-shadow: 0 4px 14px rgba(30, 41, 59, 0.2);
+}
+
+.btn-primary-generate:hover {
+  background: var(--color-primary-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(30, 41, 59, 0.25);
+}
+
+.btn-primary-generate:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* ==========================================================================
+   4. NOTIFIKASI MODAL POPUP DI TENGAH
+   ========================================================================== */
+.confirm-icon-box.icon-box-success {
+  background: #ecfdf5;
+  border: 1.5px solid #a7f3d0;
+  color: #10b981;
+}
+
+.confirm-icon-box.icon-box-error {
+  background: #fef2f2;
+  border: 1.5px solid #fecaca;
+  color: #ef4444;
+}
+
+.confirm-icon-box.icon-box-warning {
+  background: #fffbeb;
+  border: 1.5px solid #fde68a;
+  color: #f59e0b;
+}
+
+.confirm-icon-box.icon-box-info {
+  background: #eff6ff;
+  border: 1.5px solid #bfdbfe;
+  color: #3b82f6;
+}
+
+/* Tombol Modal Notifikasi Mengerti */
+.btn-modal-primary,
+.btn-primary-api {
+  width: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 13px 26px;
+  background: var(--color-primary, #1e293b);
+  color: #ffffff !important;
+  border: none !important;
+  border-radius: var(--radius-pill, 999px) !important;
+  font-family: inherit;
+  font-size: 0.98rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: var(--transition);
+  box-shadow: 0 4px 14px rgba(30, 41, 59, 0.18);
+  box-sizing: border-box;
+  text-decoration: none;
+}
+
+.btn-modal-primary:hover,
+.btn-primary-api:hover {
+  background: var(--color-primary-hover, #0f172a);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(30, 41, 59, 0.25);
+}
+
+/* ==========================================================================
+   5. RESPONSIVE DESIGN (Mobile & Tablet Presisi)
+   ========================================================================== */
+@media (max-width: 1024px) {
+  .modul-main-wrapper {
+    padding: 24px 36px 48px !important;
+  }
+  .modul-card {
+    padding: 32px 32px !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .modul-main-wrapper {
+    padding: 20px 20px 40px !important;
+  }
+  .modul-page-header {
+    margin-bottom: 24px;
+  }
+  .modul-title {
+    font-size: 1.85rem !important;
+  }
+  .modul-subtitle {
+    font-size: 0.92rem !important;
+    line-height: 1.5;
+  }
+  .form-row-dual,
+  .form-row-three {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+  .modul-card {
+    padding: 24px 18px !important;
+    border-radius: 16px;
+    gap: 20px;
+  }
+  .card-header-group {
+    padding-bottom: 14px;
+  }
+  .card-title {
+    font-size: 1.05rem;
+  }
+  .card-desc {
+    font-size: 0.8rem;
+  }
+  .custom-checkbox-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px 14px;
+    padding: 4px 0 2px 0;
+  }
+  .btn-primary-generate {
+    padding: 13px 20px;
+    font-size: 0.95rem;
+    width: 100%;
+    justify-content: center;
+  }
+
+  /* Responsive Stepper & Review Mobile */
+  .stepper-track {
+    gap: 4px;
+    padding: 8px 12px;
+    width: 100%;
+  }
+  .step-item {
+    gap: 6px;
+    padding: 6px 6px;
+  }
+  .step-circle {
+    width: 26px;
+    height: 26px;
+    font-size: 0.78rem;
+  }
+  .step-name {
+    font-size: 0.76rem;
+  }
+  .step-line {
+    margin: 0 4px;
+    min-width: 8px;
+  }
+  .review-summary-card {
+    padding: 18px 16px;
+  }
+  .review-summary-grid {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+  .step-nav-footer.between-align {
+    flex-direction: column-reverse;
+    gap: 10px;
+  }
+  .btn-step-next, .btn-step-prev {
+    width: 100%;
+    justify-content: center;
+  }
+  .review-row-dual {
+    grid-template-columns: 1fr;
+    gap: 18px;
+  }
+  .review-grid-2x2 {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+  .step-nav-footer-dual {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+}
+
+/* ==========================================================================
+   Tahap 3 Review Ringkas & Bersih Sesuai Gambar 3
+   ========================================================================== */
+.review-clean-container {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  margin-top: 14px;
+}
+
+.review-row-dual {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 32px;
+  padding-bottom: 22px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.review-group-col,
+.review-group-block {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.review-section-heading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.96rem;
+  font-weight: 700;
+  color: #2563eb;
+}
+
+.review-section-heading svg {
+  flex-shrink: 0;
+}
+
+.review-table-kv {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.review-table-kv td {
+  padding: 5px 0;
+  vertical-align: top;
+  font-size: 0.88rem;
+  line-height: 1.5;
+}
+
+.review-table-kv .review-key {
+  width: 110px;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.review-table-kv .review-colon {
+  width: 16px;
+  color: #1e293b;
+  font-weight: 600;
+  text-align: center;
+}
+
+.review-table-kv .review-value {
+  color: #1e293b;
+  font-weight: 600;
+}
+
+/* Card Box (Konteks & CP) */
+.review-card-box {
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 18px 22px;
+  background: #ffffff;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+}
+
+.review-grid-2x2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px 28px;
+}
+
+.review-grid-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.review-grid-cell .cell-label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #64748b;
+}
+
+.review-grid-cell .cell-value {
+  font-size: 0.9rem;
+  color: #1e293b;
+  line-height: 1.5;
+}
+
+.review-grid-cell .cell-text-bold {
+  font-weight: 600;
+}
+
+.review-bullet-list {
+  margin: 2px 0 0 0;
+  padding-left: 18px;
+  list-style-type: disc;
+  color: #1e293b;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.review-bullet-list li {
+  margin-bottom: 2px;
+}
+
+.review-cp-narrative {
+  font-size: 0.88rem;
+  line-height: 1.7;
+  color: #334155;
+  font-weight: 500;
+  text-align: justify;
+}
+
+/* Navigasi Bawah Tahap 3: Dua Tombol Sejajar Sama Besar */
+.step-nav-footer-dual {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-top: 28px;
+  padding-top: 22px;
+  border-top: 1px solid #f1f5f9;
+}
+
+.btn-step-action {
+  height: 50px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  border-radius: 9999px;
+  font-size: 0.96rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.btn-prev-action {
+  background: #ffffff;
+  color: #1e293b;
+  border: 1.5px solid #cbd5e1;
+}
+
+.btn-prev-action:hover {
+  background: #f8fafc;
+  border-color: #94a3b8;
+}
+
+.btn-generate-action {
+  background: #1e293b;
+  color: #ffffff;
+  border: none;
+}
+
+.btn-generate-action:hover {
+  background: #0f172a;
+  transform: translateY(-1px);
+}
+
+.btn-generate-action .btn-ai-icon {
+  width: 18px;
+  height: 18px;
+  object-fit: contain;
+  filter: brightness(0) invert(1) !important;
+}
+
+.btn-step-action:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* Kartu Tersendiri: Hasil / Proses Generate (Terpisah dari Kartu Review) */
+.generate-result-standalone-wrapper {
+  margin-top: 28px;
+  width: 100%;
+  box-sizing: border-box;
+  animation: fadeIn 0.35s ease;
+}
+
+.generate-result-card {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 60px;
+  background: var(--color-card, #ffffff);
+  border: 1.5px solid var(--color-border, #e2e8f0);
+  border-radius: var(--radius-card, 24px);
+  padding: 44px 48px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+  box-sizing: border-box;
+  width: 100%;
+}
+
+.generate-result-left {
+  flex-shrink: 0;
+  width: 460px;
+  max-width: 48%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.generate-result-img {
+  width: 100%;
+  max-width: 460px;
+  height: auto;
+  object-fit: contain;
+  display: block;
+}
+
+.generate-result-right {
+  flex: 0 1 auto;
+  width: 100%;
+  max-width: 460px;
+  min-width: 0;
+}
+
+.generate-state-box {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+}
+
+.generate-text-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.generate-state-heading {
+  font-size: 1.22rem;
+  font-weight: 800;
+  color: #0f172a;
+  letter-spacing: -0.2px;
+}
+
+.generate-state-sub {
+  font-size: 0.92rem;
+  color: #64748b;
+  line-height: 1.5;
+}
+
+/* Indikator Bar & Spinner */
+.generate-indicator-group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.generate-bar-track {
+  width: 100%;
+  height: 10px;
+  background: #f1f5f9;
+  border-radius: 9999px;
+  overflow: hidden;
+  position: relative;
+}
+
+.generate-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #2563eb 0%, #38bdf8 100%);
+  border-radius: 9999px;
+  transition: width 0.4s ease;
+  position: relative;
+}
+
+.generate-bar-fill::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.4) 50%, rgba(255,255,255,0) 100%);
+  animation: shimmerProgress 1.6s infinite;
+}
+
+@keyframes shimmerProgress {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+.generate-indicator-info {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.85rem;
+  color: #64748b;
+}
+
+.generate-indicator-spin-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.generate-mini-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2.2px solid #cbd5e1;
+  border-top-color: #2563eb;
+  border-radius: 50%;
+  animation: spinProgressMini 0.8s linear infinite;
+  display: inline-block;
+}
+
+@keyframes spinProgressMini {
+  to { transform: rotate(360deg); }
+}
+
+.generate-indicator-percent {
+  font-weight: 700;
+  color: #2563eb;
+}
+
+.generate-indicator-caption {
+  font-size: 0.82rem;
+  color: #94a3b8;
+}
+
+/* State Sukses */
+.generate-success-badge-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  align-self: flex-start;
+  background: #dcfce7;
+  color: #15803d;
+  font-size: 0.82rem;
+  font-weight: 700;
+  padding: 4px 12px;
+  border-radius: 9999px;
+}
+
+.btn-buka-modul-ajar {
+  margin-top: 8px;
+  width: 100%;
+  max-width: 320px;
+  min-height: 50px;
+  padding: 12px 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+  color: #ffffff;
+  border: none;
+  border-radius: var(--radius-pill, 9999px);
+  font-size: 1.02rem;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  box-shadow: 0 4px 16px rgba(22, 163, 74, 0.28);
+  box-sizing: border-box;
+}
+
+.btn-buka-modul-ajar:hover {
+  background: linear-gradient(135deg, #15803d 0%, #166534 100%);
+  box-shadow: 0 6px 20px rgba(22, 163, 74, 0.38);
+  transform: translateY(-2px);
+}
+
+.btn-buka-modul-ajar .btn-open-icon {
+  width: 18px;
+  height: 18px;
+  object-fit: contain;
+  filter: brightness(0) invert(1);
+}
+
+@media (max-width: 768px) {
+  .generate-result-card {
+    flex-direction: column !important;
+    padding: 36px 20px !important;
+    gap: 24px !important;
+    text-align: center !important;
+  }
+  .generate-result-left {
+    width: 100% !important;
+    max-width: 320px !important;
+  }
+  .generate-result-img {
+    width: 100% !important;
+    max-width: 320px !important;
+    height: auto !important;
+    margin: 0 auto !important;
+  }
+  .generate-result-right {
+    width: 100% !important;
+    max-width: 100% !important;
+    align-items: center !important;
+  }
+  .generate-state-box {
+    align-items: center !important;
+    text-align: center !important;
+  }
+  .generate-text-group {
+    align-items: center !important;
+    text-align: center !important;
+  }
+  .generate-state-heading {
+    font-size: 1.45rem !important;
+    text-align: center !important;
+  }
+  .generate-state-sub {
+    font-size: 0.98rem !important;
+    text-align: center !important;
+  }
+  .generate-indicator-group {
+    width: 100% !important;
+  }
+  .btn-buka-modul-ajar {
+    width: 100% !important;
+    max-width: 300px !important;
+  }
+}
+
+@keyframes popIn {
+  0% { opacity: 0; transform: scale(0.97); }
+  100% { opacity: 1; transform: scale(1); }
+}

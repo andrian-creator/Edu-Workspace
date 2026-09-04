@@ -1,0 +1,780 @@
+/* ==========================================================================
+   EDU WORKSPACE - LANDING PAGE SPECIFIC STYLES
+   Menggunakan Variabel & Reset dari global.css
+   ========================================================================== */
+
+
+
+/* Nav Links Pill Style */
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.nav-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  text-decoration: none;
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--color-text-main);
+  padding: 8px 20px;
+  border-radius: var(--radius-pill);
+  border: 1.5px solid transparent;
+  background: transparent;
+  transition: var(--transition);
+  position: relative;
+  cursor: pointer;
+  user-select: none;
+}
+
+.nav-link:hover:not(.active) {
+  border-color: var(--color-border-dark);
+  background: transparent;
+  color: var(--color-text-main);
+}
+
+.nav-link.nav-home {
+  padding: 8px 14px;
+}
+
+.nav-home-text {
+  display: none;
+}
+
+.nav-link.active {
+  background-color: var(--color-yellow-pill);
+  border-color: var(--color-yellow-pill);
+  color: #111827;
+  font-weight: 600;
+  text-decoration: none;
+  box-shadow: 0 4px 14px rgba(255, 213, 0, 0.4);
+  cursor: default;
+  pointer-events: none;
+}
+
+/* Hamburger Button (Mobile Only) */
+.hamburger-btn {
+  display: none;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 5px;
+  width: 44px;
+  height: 44px;
+  background: transparent;
+  border: 1.5px solid var(--color-border-dark);
+  border-radius: 50%;
+  cursor: pointer;
+  padding: 0;
+  transition: var(--transition);
+}
+
+.hamburger-bar {
+  width: 18px;
+  height: 2px;
+  background-color: var(--color-text-main);
+  border-radius: 2px;
+  transition: var(--transition);
+}
+
+.hamburger-btn.active .hamburger-bar:nth-child(1) {
+  transform: translateY(7px) rotate(45deg);
+}
+
+.hamburger-btn.active .hamburger-bar:nth-child(2) {
+  opacity: 0;
+}
+
+.hamburger-btn.active .hamburger-bar:nth-child(3) {
+  transform: translateY(-7px) rotate(-45deg);
+}
+
+/* ==========================================================================
+   HERO SECTION
+   ========================================================================== */
+.hero-section {
+  width: 100%;
+  min-height: calc(100vh - 120px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px 64px 60px;
+}
+
+.hero-container {
+  max-width: 1360px;
+  width: 100%;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1.15fr 0.85fr;
+  gap: 40px;
+  align-items: center;
+}
+
+.hero-left {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  max-width: 640px;
+  width: 100%;
+  padding-bottom: 10px;
+}
+
+.hero-title {
+  font-size: clamp(2.8rem, 4.4vw, 4.25rem);
+  font-weight: 800;
+  line-height: 1.12;
+  letter-spacing: -0.04em;
+  color: var(--color-text-main);
+  margin-bottom: 24px;
+}
+
+.text-yellow {
+  color: var(--color-yellow-text);
+  display: inline;
+}
+
+.hero-description {
+  font-size: 1.08rem;
+  line-height: 1.65;
+  color: var(--color-text-muted);
+  font-weight: 400;
+  margin-bottom: 36px;
+  max-width: 520px;
+}
+
+.btn-see-more {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--color-text-main);
+  background: transparent;
+  padding: 11px 34px;
+  border: 1.8px solid var(--color-border-dark);
+  border-radius: var(--radius-pill);
+  transition: var(--transition);
+  cursor: pointer;
+  width: fit-content;
+}
+
+.btn-see-more:hover {
+  background: var(--color-text-main);
+  color: #ffffff;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(35, 38, 41, 0.12);
+}
+
+.hero-right {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  width: 100%;
+}
+
+.illustration-wrapper {
+  width: 100%;
+  max-width: 500px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.hero-image {
+  width: 100%;
+  max-width: 480px;
+  height: auto;
+  object-fit: contain;
+  display: block;
+  transition: transform 0.4s ease;
+}
+
+.hero-image:hover {
+  transform: scale(1.02);
+}
+
+/* ==========================================================================
+   RESPONSIVE DESIGN (Desktop, Tablet & Mobile)
+   ========================================================================== */
+@media (max-width: 1024px) {
+
+
+  .hero-section {
+    padding: 30px 40px 60px;
+    min-height: auto;
+  }
+
+  .hero-container {
+    grid-template-columns: 1fr;
+    gap: 40px;
+    text-align: center;
+  }
+
+  .hero-left {
+    max-width: 100%;
+    align-items: center;
+    padding-bottom: 0;
+  }
+
+  .hero-right,
+  .illustration-wrapper {
+    justify-content: center;
+  }
+
+  .hero-description {
+    margin: 0 auto 32px;
+  }
+}
+
+@media (max-width: 768px) {
+
+
+  .hamburger-btn {
+    display: flex;
+  }
+
+  .nav-links {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    width: 100%;
+    background: #ffffff;
+    padding: 20px 24px 28px;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+    border-bottom: 1px solid #f1f3f5;
+    box-shadow: 0 16px 32px rgba(0, 0, 0, 0.06);
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(-10px);
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .nav-links.open {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0);
+  }
+
+  .nav-link {
+    width: 100%;
+    padding: 12px 20px;
+    font-size: 1.05rem;
+    font-weight: 600;
+    justify-content: flex-start;
+    text-align: left;
+    gap: 12px;
+  }
+
+  .nav-link.nav-home {
+    padding: 12px 20px;
+    justify-content: flex-start;
+  }
+
+  .nav-home-text {
+    display: inline;
+  }
+
+  .hero-section {
+    padding: 20px 24px 40px;
+  }
+
+  .hero-title {
+    font-size: clamp(2.2rem, 8.5vw, 2.9rem);
+    line-height: 1.15;
+  }
+
+  .hero-description {
+    font-size: 0.98rem;
+    line-height: 1.6;
+  }
+
+  .btn-see-more {
+    width: 100%;
+    max-width: 280px;
+    padding: 12px 24px;
+  }
+}
+
+/* ==========================================================================
+   GLOBAL UTILITIES & SHARED SECTION COMPONENTS
+   ========================================================================== */
+html {
+  scroll-behavior: smooth;
+}
+
+.site-container {
+  max-width: 1360px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.section-header {
+  margin-bottom: 56px;
+}
+
+.section-header.text-center {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.section-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-main);
+  background: #f8fafc;
+  border: 1.5px solid var(--color-border);
+  padding: 6px 16px;
+  border-radius: var(--radius-pill);
+  margin-bottom: 16px;
+}
+
+.badge-dot {
+  width: 8px;
+  height: 8px;
+  background-color: var(--color-yellow-pill);
+  border-radius: 50%;
+  display: inline-block;
+  box-shadow: 0 0 0 2px rgba(255, 213, 0, 0.3);
+}
+
+.section-title {
+  font-size: clamp(2rem, 3.6vw, 2.85rem);
+  font-weight: 800;
+  letter-spacing: -0.035em;
+  line-height: 1.2;
+  color: var(--color-text-main);
+  margin-bottom: 16px;
+}
+
+.section-subtitle {
+  font-size: 1.08rem;
+  color: var(--color-text-muted);
+  line-height: 1.68;
+  font-weight: 400;
+}
+
+.section-subtitle.max-w-700 {
+  max-width: 720px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* ==========================================================================
+   SECTION 1: KEPERCAYAAN INSTITUSI PENDIDIKAN
+   ========================================================================== */
+.trust-section {
+  width: 100%;
+  padding: 90px 64px 110px;
+  background-color: #ffffff;
+}
+
+.trust-grid {
+  display: grid;
+  grid-template-columns: 1fr 1.15fr;
+  gap: 64px;
+  align-items: center;
+}
+
+.trust-image-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  width: 100%;
+}
+
+.trust-image {
+  width: 100%;
+  max-width: 520px;
+  height: auto;
+  object-fit: contain;
+  display: block;
+  transition: transform 0.4s ease;
+}
+
+.trust-image:hover {
+  transform: scale(1.02);
+}
+
+.trust-content {
+  display: flex;
+  flex-direction: column;
+}
+
+.trust-content .section-badge {
+  align-self: flex-start;
+}
+
+.trust-content .section-title {
+  margin-bottom: 18px;
+}
+
+.trust-content .section-subtitle {
+  margin-bottom: 36px;
+  text-align: justify;
+  text-justify: inter-word;
+}
+
+.trust-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+  width: 100%;
+  max-width: 480px;
+}
+
+.stat-card {
+  background: #ffffff;
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-card);
+  padding: 22px 24px;
+  transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.02);
+}
+
+.stat-card:hover {
+  transform: translateY(-4px);
+  border-color: var(--color-yellow-pill);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.06);
+}
+
+.stat-number {
+  font-size: 2.35rem;
+  font-weight: 800;
+  letter-spacing: -0.035em;
+  line-height: 1.1;
+  color: var(--color-text-main);
+  margin-bottom: 6px;
+}
+
+.stat-label {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--color-text-main);
+}
+
+/* ==========================================================================
+   SECTION 2: BENEFIT PLATFORM
+   ========================================================================== */
+.benefits-section {
+  width: 100%;
+  padding: 90px 64px 110px;
+  background-color: #fafbfc;
+  border-top: 1px solid var(--color-border);
+}
+
+.benefits-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 22px;
+}
+
+.benefit-card {
+  background: #ffffff;
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-card);
+  padding: 32px 24px;
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.3s ease, box-shadow 0.3s ease;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02);
+  position: relative;
+}
+
+.benefit-card:hover {
+  transform: translateY(-6px);
+  border-color: var(--color-border-dark);
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.08);
+}
+
+.benefit-icon-wrapper {
+  width: 58px;
+  height: 58px;
+  border-radius: 16px;
+  background: #fffdf0;
+  border: 1.5px solid #fef08a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 22px;
+}
+
+.benefit-icon {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+}
+
+.benefit-title {
+  font-size: 1.28rem;
+  font-weight: 700;
+  color: var(--color-text-main);
+  margin-bottom: 12px;
+  line-height: 1.35;
+}
+
+.benefit-desc {
+  font-size: 0.95rem;
+  color: var(--color-text-muted);
+  line-height: 1.65;
+  margin-bottom: 24px;
+  flex-grow: 1;
+}
+
+.benefit-highlight-tag {
+  align-self: flex-start;
+  display: inline-flex;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--color-text-main);
+  background: #f1f5f9;
+  padding: 4px 14px;
+  border-radius: var(--radius-pill);
+}
+
+/* ==========================================================================
+   SECTION 3: FITUR EDU WORKSPACE (INTERACTIVE SHOWCASE)
+   ========================================================================== */
+.features-section {
+  width: 100%;
+  padding: 90px 64px 130px;
+  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+}
+
+.features-showcase-grid {
+  display: grid;
+  grid-template-columns: 1fr 1.15fr;
+  gap: 64px;
+  align-items: center;
+  width: 100%;
+  margin-top: 20px;
+}
+
+.features-image-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+}
+
+.features-showcase-img {
+  width: 100%;
+  max-width: 540px;
+  height: auto;
+  object-fit: contain;
+  display: block;
+  filter: drop-shadow(0 10px 30px rgba(0, 0, 0, 0.04));
+  transition: transform 0.4s ease;
+}
+
+.features-showcase-img:hover {
+  transform: scale(1.02);
+}
+
+.features-content-wrapper {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 40px;
+}
+
+.feature-role-block {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.feature-role-heading {
+  font-size: 1.45rem;
+  font-weight: 800;
+  color: var(--color-text-main);
+  letter-spacing: -0.02em;
+}
+
+.feature-buttons-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px;
+}
+
+/* Button Pill matching Gambar 2 */
+.feature-pill-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  background: #ffffff;
+  border: 2px solid #0f172a;
+  border-radius: 9999px;
+  padding: 10px 24px;
+  font-family: inherit;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #0f172a;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+  user-select: none;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.feature-pill-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.08);
+}
+
+.pill-btn-icon {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+  display: block;
+}
+
+.pill-btn-text {
+  letter-spacing: -0.01em;
+}
+
+.feature-pill-btn.pill-ongoing {
+  border: 1.5px dashed #64748b;
+  color: #475569;
+  background: #f8fafc;
+  box-shadow: none;
+}
+
+.feature-pill-btn.pill-ongoing:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.04);
+}
+
+.pill-icon-muted {
+  opacity: 0.75;
+}
+
+/* ==========================================================================
+   
+   ========================================================================== */
+
+/* ==========================================================================
+   RESPONSIVE DESIGN (TABLET & MOBILE)
+   ========================================================================== */
+@media (max-width: 1024px) {
+  .site-container {
+    padding: 0;
+  }
+
+  .trust-section,
+  .benefits-section,
+  .features-section {
+    padding: 60px 40px 70px;
+  }
+
+  .trust-grid {
+    grid-template-columns: 1fr;
+    gap: 40px;
+    text-align: center;
+  }
+
+  .trust-content {
+    align-items: center;
+  }
+
+  .trust-content .section-badge {
+    align-self: center;
+  }
+
+  .trust-stats-grid {
+    max-width: 680px;
+    margin: 0 auto;
+  }
+
+  .benefits-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .features-showcase-grid {
+    grid-template-columns: 1fr;
+    gap: 44px;
+  }
+
+  .features-image-wrapper {
+    position: static;
+    justify-content: center;
+  }
+
+  .features-showcase-img {
+    max-width: 460px;
+    margin: 0 auto;
+  }
+}
+
+@media (max-width: 768px) {
+  .site-container {
+    padding: 0;
+  }
+
+  .trust-section,
+  .benefits-section,
+  .features-section {
+    padding: 50px 24px 60px;
+  }
+
+  .section-header {
+    margin-bottom: 36px;
+  }
+
+  .section-title {
+    font-size: 1.85rem;
+  }
+
+  .section-subtitle {
+    font-size: 0.98rem;
+  }
+
+  .trust-stats-grid {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  .stat-card {
+    padding: 18px 16px;
+  }
+
+  .stat-number {
+    font-size: 2rem;
+  }
+
+  .benefits-grid {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+
+  .benefit-card {
+    padding: 28px 22px;
+  }
+
+  .features-showcase-img {
+    max-width: 100%;
+  }
+
+  .feature-buttons-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .feature-pill-btn {
+    width: 100%;
+    justify-content: space-between;
+  }
+}

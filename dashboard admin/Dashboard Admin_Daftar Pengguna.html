@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Edu Workspace - Dashboard Admin</title>
+  <meta name="description"
+    content="Dashboard Admin Edu Workspace - Manajemen data pendaftaran akun Google personal (@gmail.com) guru dan dosen.">
+
+  <!-- Google Fonts: Plus Jakarta Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap"
+    rel="stylesheet">
+
+  <!-- Global & Page Stylesheet -->
+  <link rel="stylesheet" href="../global.css?v=78">
+  <link rel="stylesheet" href="Dashboard%20Admin_Daftar%20Pengguna.css?v=78">
+
+</head>
+
+<body>
+
+  <!-- Global Top Navbar -->
+  <header id="eduGlobalNavbar"></header>
+
+  <!-- Main Content -->
+  <main class="admin-content-wrapper">
+    <div class="admin-content">
+      <div class="page-header">
+      <h1>Dashboard Pengguna</h1>
+      <p>Kelola data akun pendaftar, persetujuan akses pendidik, dan masa aktif langganan akun.</p>
+    </div>
+
+    <!-- 4 Kartu Rekap Statistik Akun -->
+    <div class="stats-recap-grid">
+      <!-- 1. Rekap Akun Aktif -->
+      <div class="stat-card">
+        <div class="stat-icon-wrapper stat-icon-active">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+            <polyline points="22 4 12 14.01 9 11.01"></polyline>
+          </svg>
+        </div>
+        <div class="stat-info">
+          <div class="stat-value" id="statActiveCount">0</div>
+          <div class="stat-label">Akun Aktif</div>
+        </div>
+      </div>
+
+      <!-- 2. Rekap Akun Nonaktif / Habis Langganan -->
+      <div class="stat-card">
+        <div class="stat-icon-wrapper stat-icon-inactive">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+            stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="8" x2="12" y2="12"></line>
+            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+          </svg>
+        </div>
+        <div class="stat-info">
+          <div class="stat-value" id="statInactiveCount">0</div>
+          <div class="stat-label">Nonaktif / Habis Langganan</div>
+        </div>
+      </div>
+
+      <!-- 3. Rekap Akun Dosen -->
+      <div class="stat-card">
+        <div class="stat-icon-wrapper stat-icon-dosen">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M22 10v6M2 10l10-5 10 5-10 5z"></path>
+            <path d="M6 12v5c3 3 9 3 12 0v-5"></path>
+          </svg>
+        </div>
+        <div class="stat-info">
+          <div class="stat-value" id="statDosenCount">0</div>
+          <div class="stat-label">Akun Dosen</div>
+        </div>
+      </div>
+
+      <!-- 4. Rekap Akun Guru -->
+      <div class="stat-card">
+        <div class="stat-icon-wrapper stat-icon-guru">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+          </svg>
+        </div>
+        <div class="stat-info">
+          <div class="stat-value" id="statGuruCount">0</div>
+          <div class="stat-label">Akun Guru</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Data Table Card -->
+    <div class="table-card">
+      <div class="table-toolbar">
+        <input type="text" class="search-input" id="searchInput" placeholder="Cari nama guru, email, atau instansi..."
+          oninput="renderTable()">
+        <span style="font-size: 0.88rem; color: var(--color-text-muted);" id="tableInfo">Memuat data...</span>
+      </div>
+
+      <div class="table-responsive">
+        <table>
+          <thead>
+            <tr>
+              <th style="width: 50px;">No</th>
+              <th style="text-align: left;">Pengguna</th>
+              <th>Peran</th>
+              <th>Instansi / Asal Sekolah</th>
+              <th>Jenjang</th>
+              <th>Tgl Daftar</th>
+              <th>Status</th>
+              <th>Masa Langganan</th>
+              <th style="width: 70px;">Aksi</th>
+            </tr>
+          </thead>
+          <tbody id="userTableBody">
+            <!-- Rendered by JavaScript -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+    </div>
+  </main>
+
+  <!-- Modal logout diinjek otomatis oleh global.js -->
+
+  <!-- Modal Tolak / Nonaktifkan Pengguna -->
+  <div class="confirm-modal-overlay" id="rejectUserModal">
+    <div class="reject-modal-card">
+      <h3 class="reject-header-title">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+          stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="8" x2="12" y2="12"></line>
+          <line x1="12" y1="16" x2="12.01" y2="16"></line>
+        </svg>
+        <span id="rejectModalTitleText">Tolak Pengajuan Profil</span>
+      </h3>
+      <p style="font-size: 0.92rem; color: var(--color-text-muted); line-height: 1.5; margin-bottom: 6px;">
+        Berikan alasan atau catatan perbaikan. Keterangan ini akan langsung tampil di akun pengguna dan dikirim melalui
+        email notifikasi resmi.
+      </p>
+
+      <div class="reject-user-box">
+        <div style="font-weight: 700; font-size: 0.95rem; color: var(--color-text-main);" id="rejectTargetName">Nama
+          Guru</div>
+        <div style="font-size: 0.85rem; color: var(--color-text-muted); margin-top: 2px;" id="rejectTargetEmail">
+          email@gmail.com</div>
+      </div>
+
+      <label
+        style="font-size: 0.88rem; font-weight: 700; color: var(--color-text-main); margin-bottom: 8px; display: block;">Pilih
+        Alasan Cepat:</label>
+      <div class="reason-pills">
+        <button type="button" class="reason-btn"
+          onclick="selectRejectReason('Identitas pendidik perlu diperbaiki. Silakan periksa dan perbarui kelengkapan data profil Anda.')">
+          <span>Identitas pendidik perlu diperbaiki</span>
+          <span>→</span>
+        </button>
+        <button type="button" class="reason-btn"
+          onclick="selectRejectReason('Masa langganan telah habis. Silakan lakukan perpanjangan langganan melalui WhatsApp resmi di 085608673357.')">
+          <span>Langganan telah habis (Hubungi WA 085608673357)</span>
+          <span>→</span>
+        </button>
+      </div>
+
+      <label
+        style="font-size: 0.88rem; font-weight: 700; color: var(--color-text-main); margin-bottom: 8px; display: block;">Catatan
+        Alasan / Perbaikan Khusus:</label>
+      <textarea id="rejectReasonInput" class="reject-textarea"
+        placeholder="Tuliskan catatan perbaikan data untuk guru..."></textarea>
+
+      <div class="confirm-btn-group">
+        <button type="button" class="btn-cancel-modal" onclick="closeRejectModal()">Batal</button>
+        <button type="button" class="btn-confirm-reject" onclick="confirmRejectUser()">Tolak / Nonaktifkan</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Hapus Pengguna -->
+  <div class="confirm-modal-overlay" id="deleteUserModal">
+    <div class="confirm-modal-card" style="max-width: 440px;">
+      <div class="confirm-icon-box">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2.2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="3 6 5 6 21 6"></polyline>
+          <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+          <line x1="10" y1="11" x2="10" y2="17"></line>
+          <line x1="14" y1="11" x2="14" y2="17"></line>
+        </svg>
+      </div>
+      <h3 class="confirm-modal-title">Hapus Akun Pengguna?</h3>
+      <p class="confirm-modal-desc">
+        Tindakan ini akan menghapus akun secara permanen dari basis data sistem Edu Workspace. Data yang dihapus tidak
+        dapat dipulihkan kembali.
+      </p>
+
+      <div class="reject-user-box" style="width: 100%; margin: 0 0 20px 0; text-align: left;">
+        <div style="font-weight: 700; font-size: 0.95rem; color: var(--color-text-main);" id="deleteTargetName">Nama
+          Guru</div>
+        <div style="font-size: 0.85rem; color: var(--color-text-muted); margin-top: 2px;" id="deleteTargetEmail">
+          email@gmail.com</div>
+      </div>
+
+      <div class="confirm-btn-group" style="width: 100%;">
+        <button type="button" class="btn-cancel-modal" onclick="closeDeleteModal()">Batal</button>
+        <button type="button" class="btn-confirm-logout" style="background: #dc2626;" onclick="confirmDeleteUser()">Ya,
+          Hapus Akun</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Pengaturan Masa Langganan (Besar 560px & Full Width Rapi) -->
+  <div class="confirm-modal-overlay" id="subscriptionModal">
+    <div class="confirm-modal-card"
+      style="max-width: 560px; padding: 36px 36px 32px; width: 100%; box-sizing: border-box;">
+      <div class="confirm-icon-box"
+        style="width: 60px; height: 60px; border-radius: 50%; background: #fef9c3; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; border: 1.5px solid #fde047;">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#ca8a04" stroke-width="2.2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+          <line x1="16" y1="2" x2="16" y2="6"></line>
+          <line x1="8" y1="2" x2="8" y2="6"></line>
+          <line x1="3" y1="10" x2="21" y2="10"></line>
+        </svg>
+      </div>
+      <h3 class="confirm-modal-title"
+        style="font-size: 1.45rem; font-weight: 800; color: #111827; margin-bottom: 6px; text-align: center;">Masa
+        Langganan Akun</h3>
+      <p class="confirm-modal-desc"
+        style="font-size: 0.92rem; color: #4b5563; line-height: 1.5; margin-bottom: 20px; text-align: center;">
+        Kelola periode masa aktif berlangganan akun pengguna ini.
+      </p>
+
+      <div class="reject-user-box"
+        style="width: 100%; box-sizing: border-box; margin: 0 0 20px 0; text-align: left; background: #f8fafc; border: 1.5px solid var(--color-border); border-radius: 12px; padding: 14px 18px;">
+        <div style="font-weight: 700; font-size: 0.95rem; color: var(--color-text-main);" id="subTargetName">Nama Guru
+        </div>
+        <div style="font-size: 0.85rem; color: var(--color-text-muted); margin-top: 2px;" id="subTargetEmail">
+          email@gmail.com</div>
+      </div>
+
+      <div
+        style="display: flex; flex-direction: column; gap: 16px; margin-bottom: 26px; width: 100%; box-sizing: border-box; text-align: left;">
+        <div style="width: 100%; box-sizing: border-box;">
+          <label
+            style="font-size: 0.88rem; font-weight: 700; color: var(--color-text-main); margin-bottom: 8px; display: block;">Awal
+            Langganan (Mulai Aktif):</label>
+          <input type="date" id="subStartDateInput" class="search-input" onchange="updateMinEndDate()"
+            style="width: 100%; box-sizing: border-box; border-radius: 12px; font-size: 0.95rem; padding: 12px 16px; border: 1.5px solid var(--color-border); background: #ffffff;">
+        </div>
+
+        <div style="width: 100%; box-sizing: border-box;">
+          <label
+            style="font-size: 0.88rem; font-weight: 700; color: var(--color-text-main); margin-bottom: 8px; display: block;">Langganan
+            Berakhir (Batas Waktu):</label>
+          <input type="date" id="subEndDateInput" class="search-input"
+            style="width: 100%; box-sizing: border-box; border-radius: 12px; font-size: 0.95rem; padding: 12px 16px; border: 1.5px solid var(--color-border); background: #ffffff;">
+        </div>
+      </div>
+
+      <div class="confirm-btn-group" style="width: 100%;">
+        <button type="button" class="btn-cancel-modal" onclick="closeSubscriptionModal()">Batal</button>
+        <button type="button" class="btn-confirm-logout"
+          style="background: #ffd500; color: #111827; box-shadow: 0 4px 14px rgba(255, 213, 0, 0.4);"
+          onclick="confirmSaveSubscription()">Simpan Masa Langganan</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notifikasi Admin -->
+  <div class="admin-toast" id="adminToast">
+    <span id="adminToastText">Pemberitahuan berhasil dikirim.</span>
+  </div>
+
+  <!-- Scripts -->
+  <script src="../global.js?v=150"></script>
+  <script src="Dashboard%20Admin_Daftar%20Pengguna.js?v=150"></script>
+</body>
+
+</html>

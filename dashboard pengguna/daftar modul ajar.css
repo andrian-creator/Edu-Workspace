@@ -1,0 +1,721 @@
+/**
+ * EDU WORKSPACE - DAFTAR MODUL AJAR STYLESHEET
+ * Manajemen & Tabel Daftar Modul Ajar Tersimpan per-Akun
+ */
+
+:root {
+  --color-primary: #1e293b;
+  --color-primary-hover: #0f172a;
+  --color-accent-yellow: #eab308;
+  --color-bg-page: #f8fafc;
+  --color-card-bg: #ffffff;
+  --color-border: #e2e8f0;
+  --color-border-dark: #cbd5e1;
+  --color-text-main: #0f172a;
+  --color-text-muted: #64748b;
+  --color-success: #16a34a;
+  --color-success-bg: #f0fdf4;
+  --color-danger: #dc2626;
+  --color-danger-bg: #fef2f2;
+  --radius-card: 20px;
+  --radius-pill: 9999px;
+  --transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+body {
+  background-color: var(--color-bg-page);
+  color: var(--color-text-main);
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+}
+
+/* ==========================================================================
+   CONTAINER & LAYOUT
+   ========================================================================== */
+.modul-list-main-wrapper {
+  padding: 36px 24px 60px;
+  box-sizing: border-box;
+}
+
+.modul-list-container {
+  max-width: 1240px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+/* ==========================================================================
+   PAGE HEADER
+   ========================================================================== */
+.modul-page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.modul-title {
+  font-size: 2.2rem;
+  font-weight: 800;
+  color: var(--color-text-main);
+  margin: 0 0 6px;
+  letter-spacing: -0.03em;
+}
+
+.modul-title .text-yellow {
+  color: var(--color-accent-yellow);
+}
+
+.modul-subtitle {
+  font-size: 1.02rem;
+  color: var(--color-text-muted);
+  margin: 0;
+  line-height: 1.5;
+}
+
+.btn-create-modul {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 13px 24px;
+  background: var(--color-primary);
+  color: #ffffff;
+  text-decoration: none;
+  font-weight: 700;
+  font-size: 0.96rem;
+  border-radius: var(--radius-pill);
+  box-shadow: 0 4px 14px rgba(30, 41, 59, 0.2);
+  transition: var(--transition);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.btn-create-modul:hover {
+  background: var(--color-primary-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(30, 41, 59, 0.28);
+}
+
+.btn-create-modul.btn-disabled {
+  background: #cbd5e1 !important;
+  color: #64748b !important;
+  cursor: not-allowed !important;
+  box-shadow: none !important;
+  transform: none !important;
+  opacity: 0.65 !important;
+  pointer-events: auto !important;
+}
+
+.btn-create-modul.btn-disabled:hover {
+  background: #cbd5e1 !important;
+  color: #64748b !important;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+.btn-create-modul.btn-disabled svg {
+  stroke: #64748b !important;
+}
+
+/* ==========================================================================
+   STAT SUMMARY CARDS
+   ========================================================================== */
+.stat-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 18px;
+}
+
+.stat-summary-card {
+  background: var(--color-card-bg);
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-card);
+  padding: 20px 24px;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.02);
+  transition: var(--transition);
+}
+
+.stat-summary-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--color-border-dark);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.04);
+}
+
+.stat-icon-box {
+  width: 52px;
+  height: 52px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.stat-icon-box.bg-blue-subtle {
+  background: #eff6ff;
+  border: 1px solid #dbeafe;
+}
+
+.stat-icon-box.bg-green-subtle {
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+}
+
+.stat-icon-box.bg-purple-subtle {
+  background: #faf5ff;
+  border: 1px solid #f3e8ff;
+}
+
+.stat-icon-img {
+  width: 24px !important;
+  height: 24px !important;
+  max-width: 24px !important;
+  object-fit: contain;
+}
+
+.stat-info {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  overflow: hidden;
+}
+
+.stat-label {
+  font-size: 0.84rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.stat-number {
+  font-size: 1.85rem;
+  font-weight: 800;
+  color: var(--color-text-main);
+  line-height: 1.1;
+}
+
+.stat-number.text-green {
+  color: var(--color-success);
+}
+
+.stat-meta {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--color-text-main);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+}
+
+/* ==========================================================================
+   MAIN TABLE CARD & TOOLBAR
+   ========================================================================== */
+.modul-table-card {
+  background: var(--color-card-bg);
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-card);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.table-toolbar {
+  padding: 20px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  border-bottom: 1.5px solid var(--color-border);
+  flex-wrap: wrap;
+}
+
+.search-input-wrapper {
+  position: relative;
+  flex: 1;
+  min-width: 260px;
+  max-width: 480px;
+}
+
+.search-icon {
+  position: absolute;
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #94a3b8;
+  pointer-events: none;
+}
+
+.search-input {
+  width: 100%;
+  padding: 11px 16px 11px 44px;
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  font-family: inherit;
+  font-size: 0.94rem;
+  color: var(--color-text-main);
+  background: #f8fafc;
+  outline: none;
+  transition: var(--transition);
+  box-sizing: border-box;
+}
+
+.search-input:focus {
+  border-color: var(--color-primary);
+  background: #ffffff;
+  box-shadow: 0 0 0 3px rgba(30, 41, 59, 0.08);
+}
+
+.filter-controls-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.filter-select {
+  padding: 11px 18px;
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  font-family: inherit;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--color-text-main);
+  background: #f8fafc;
+  outline: none;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.filter-select:focus,
+.filter-select:hover {
+  border-color: var(--color-border-dark);
+  background: #ffffff;
+}
+
+/* ==========================================================================
+   DATA TABLE
+   ========================================================================== */
+.table-responsive-wrapper {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.modul-data-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.modul-data-table thead {
+  background: #f8fafc;
+  border-bottom: 1.5px solid var(--color-border);
+}
+
+.modul-data-table th {
+  padding: 16px 20px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+
+.modul-data-table tbody tr {
+  border-bottom: 1px solid var(--color-border);
+  transition: var(--transition);
+}
+
+.modul-data-table tbody tr:hover {
+  background: #f8fafc;
+}
+
+.modul-data-table td {
+  padding: 18px 16px;
+  font-size: 0.94rem;
+  color: var(--color-text-main);
+  vertical-align: middle;
+}
+
+/* Penyelarasan Posisi Teks */
+.cell-center {
+  text-align: center !important;
+}
+
+.cell-left {
+  text-align: left !important;
+}
+
+.text-muted-strong {
+  color: #64748b;
+  font-weight: 700;
+  font-size: 0.92rem;
+}
+
+/* Cell Nama Modul Persis Gambar 2 (Non-Clickable) */
+.cell-modul-name {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  cursor: default;
+  user-select: text;
+}
+
+.modul-title-text {
+  font-weight: 800;
+  color: var(--color-text-main);
+  font-size: 1.02rem;
+  line-height: 1.35;
+  letter-spacing: -0.01em;
+}
+
+.modul-subtitle-text {
+  font-size: 0.88rem;
+  font-weight: 500;
+  color: #64748b;
+  line-height: 1.35;
+}
+
+/* Plain Text Fase & Kelas (Tanpa Shape Berwarna) */
+.cell-text-plain {
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: #1e293b;
+  display: inline-block;
+  line-height: 1.4;
+}
+
+/* Status Pill (Tanpa Titik Hijau/Kuning) */
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 5px 14px;
+  border-radius: var(--radius-pill);
+  font-size: 0.82rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.status-pill.status-lengkap {
+  background: #f0fdf4;
+  color: #16a34a;
+  border: 1px solid #bbf7d0;
+}
+
+.status-pill.status-draft {
+  background: #fefce8;
+  color: #ca8a04;
+  border: 1px solid #fef08a;
+}
+
+.cell-timestamp {
+  font-size: 0.86rem;
+  color: var(--color-text-muted);
+  font-family: 'JetBrains Mono', monospace;
+  white-space: nowrap;
+}
+
+/* ==========================================================================
+   ACTION BUTTONS (Style Edu Workspace: Background Gelap / Hitam & Icon Putih)
+   ========================================================================== */
+.action-buttons-group {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.btn-action-disabled-wrapper {
+  display: inline-flex;
+  cursor: not-allowed;
+}
+
+.btn-table-action {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #0f172a;
+  border: 1.5px solid #0f172a;
+  cursor: pointer;
+  transition: var(--transition);
+  text-decoration: none;
+  box-sizing: border-box;
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.12);
+}
+
+.action-icon-img {
+  width: 17px;
+  height: 17px;
+  object-fit: contain;
+  display: block;
+  pointer-events: none;
+  filter: brightness(0) invert(1); /* Icon putih */
+  transition: var(--transition);
+}
+
+.btn-table-action:hover:not(:disabled) {
+  background: #1e293b;
+  border-color: #334155;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.25);
+}
+
+.btn-table-action:focus:not(:focus-visible) {
+  outline: none;
+}
+
+.btn-table-action:focus-visible {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+.btn-table-action.btn-action-delete:hover:not(:disabled) {
+  background: #dc2626;
+  border-color: #dc2626;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
+}
+
+/* State Disabled (Saat Fitur Modul Ajar Dinonaktifkan oleh Admin) */
+.btn-table-action:disabled,
+.btn-table-action.btn-action-disabled {
+  background: #f1f5f9 !important;
+  border-color: #e2e8f0 !important;
+  cursor: not-allowed !important;
+  opacity: 0.55 !important;
+  box-shadow: none !important;
+  transform: none !important;
+  pointer-events: none;
+}
+
+.btn-table-action:disabled .action-icon-img,
+.btn-table-action.btn-action-disabled .action-icon-img {
+  filter: grayscale(1) opacity(0.35) !important;
+}
+
+/* ==========================================================================
+   EMPTY STATE CARD
+   ========================================================================== */
+.empty-state-card {
+  padding: 60px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  box-sizing: border-box;
+}
+
+.empty-icon-circle {
+  width: 76px;
+  height: 76px;
+  border-radius: 24px;
+  background: #f1f5f9;
+  border: 1.5px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 18px;
+}
+
+.empty-icon-img {
+  width: 38px !important;
+  height: 38px !important;
+  max-width: 38px !important;
+  object-fit: contain;
+}
+
+.empty-title {
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: var(--color-text-main);
+  margin: 0 0 8px;
+}
+
+.empty-desc {
+  font-size: 0.98rem;
+  color: var(--color-text-muted);
+  max-width: 480px;
+  margin: 0 0 24px;
+  line-height: 1.5;
+}
+
+.btn-empty-action {
+  padding: 13px 26px;
+}
+
+/* ==========================================================================
+   TABLE FOOTER SUMMARY
+   ========================================================================== */
+.table-footer-summary {
+  padding: 16px 24px;
+  background: #f8fafc;
+  border-top: 1px solid var(--color-border);
+  font-size: 0.88rem;
+  color: var(--color-text-muted);
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* ==========================================================================
+   MODAL KONFIRMASI HAPUS (Kustom Edu Workspace)
+   ========================================================================== */
+.confirm-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.55);
+  backdrop-filter: blur(4px);
+  z-index: 9999;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  opacity: 0;
+  transition: opacity 0.25s ease;
+}
+
+.confirm-modal-overlay.active {
+  display: flex;
+  opacity: 1;
+}
+
+.confirm-modal-card {
+  background: #ffffff;
+  border-radius: 20px;
+  padding: 32px 28px;
+  max-width: 440px;
+  width: 100%;
+  text-align: center;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.16);
+  box-sizing: border-box;
+  transform: scale(0.95);
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.confirm-modal-overlay.active .confirm-modal-card {
+  transform: scale(1);
+}
+
+.confirm-icon-box {
+  width: 56px;
+  height: 56px;
+  border-radius: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 16px;
+}
+
+.confirm-icon-box.bg-red-subtle {
+  background: #fef2f2;
+  border: 1.5px solid #fecaca;
+}
+
+.confirm-icon-img {
+  width: 24px !important;
+  height: 24px !important;
+  max-width: 24px !important;
+  object-fit: contain;
+}
+
+.confirm-modal-title {
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: var(--color-text-main);
+  margin: 0 0 8px;
+}
+
+.confirm-modal-desc {
+  font-size: 0.94rem;
+  color: var(--color-text-muted);
+  margin: 0 0 24px;
+  line-height: 1.5;
+}
+
+.confirm-btn-group {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.btn-cancel-modal {
+  padding: 12px 20px;
+  background: #f1f5f9;
+  color: var(--color-text-main);
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  font-family: inherit;
+  font-size: 0.94rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.btn-cancel-modal:hover {
+  background: #e2e8f0;
+}
+
+.btn-confirm-delete {
+  padding: 12px 20px;
+  background: var(--color-danger);
+  color: #ffffff;
+  border: 1.5px solid transparent;
+  border-radius: var(--radius-pill);
+  font-family: inherit;
+  font-size: 0.94rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: var(--transition);
+  box-shadow: 0 4px 14px rgba(220, 38, 38, 0.25);
+}
+
+.btn-confirm-delete:hover {
+  background: #b91c1c;
+}
+
+/* ==========================================================================
+   RESPONSIVE
+   ========================================================================== */
+@media (max-width: 768px) {
+  .modul-page-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .btn-create-modul {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .table-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .search-input-wrapper {
+    max-width: 100%;
+  }
+
+  .filter-controls-group {
+    width: 100%;
+  }
+
+  .filter-select {
+    flex: 1;
+  }
+}

@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Edu Workspace - Masuk dengan Akun Google</title>
+  <meta name="description" content="Masuk ke Edu Workspace menggunakan Akun Google personal (@gmail.com) untuk login.">
+
+  <!-- 1. Google Identity Services SDK Resmi dari Google -->
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+
+  <!-- Google Fonts: Plus Jakarta Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap"
+    rel="stylesheet">
+
+  <!-- Global & Page Stylesheet -->
+  <link rel="stylesheet" href="../global.css?v=99">
+  <link rel="stylesheet" href="halaman%20login.css?v=99">
+</head>
+
+<body>
+
+  <!-- Global Top Navbar -->
+  <header id="eduGlobalNavbar"></header>
+
+  <!-- Login Section: Gambar Ilustrasi di Kiri, Kartu Login di Kanan -->
+  <main class="login-main">
+    <div class="login-container">
+      <!-- Left Column: Gambar Ilustrasi Login (Besarnya sama dengan landing page) -->
+      <div class="login-illustration-area">
+        <img src="../Assets/image/image_login.png" alt="Ilustrasi Login Edu Workspace" class="login-illustration-image">
+      </div>
+
+      <!-- Right Column: Kartu Login (Tetap Utuh Tanpa Ubahan) -->
+      <div class="login-card">
+        <h1 class="login-title">Dapatkan Akses</h1>
+        <p class="login-subtitle">Masuk menggunakan Akun Google personal (@gmail.com) untuk login</p>
+
+        <!-- Tombol Google Asli -->
+        <div class="google-btn-area">
+          <div id="g_id_onload"
+            data-client_id="576290066462-l7b7i77sas2rmgso65707h52uf6v7lau.apps.googleusercontent.com"
+            data-callback="handleGoogleAuthCallback" data-auto_prompt="false">
+          </div>
+          <div class="g_id_signin" data-type="standard" data-shape="pill" data-theme="outline" data-text="signin_with"
+            data-size="large" data-logo_alignment="left" data-width="340">
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Popup Notifikasi Berhasil Login -->
+  <div class="popup-overlay" id="loginSuccessPopup">
+    <div class="popup-card">
+      <div class="popup-icon-circle">✓</div>
+      <h2 class="popup-title">Login Berhasil!</h2>
+      <p class="popup-desc" id="popupRoleDesc">Selamat datang kembali, mengalihkan ke dashboard...</p>
+      <div class="popup-user-email" id="popupEmailText">email@gmail.com</div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="../global.js?v=150"></script>
+  <script src="halaman%20login.js?v=150"></script>
+</body>
+
+</html>

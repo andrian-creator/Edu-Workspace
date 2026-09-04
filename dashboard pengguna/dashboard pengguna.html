@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Edu Workspace - Dashboard Pengguna</title>
+  <meta name="description"
+    content="Dashboard Pengguna Guru dan Pendidik Edu Workspace - Otomatisasi Administrasi Mengajar.">
+
+  <!-- Google Fonts: Plus Jakarta Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap"
+    rel="stylesheet">
+
+  <!-- Global & Page Stylesheet -->
+  <link rel="stylesheet" href="../global.css?v=250">
+  <link rel="stylesheet" href="dashboard%20pengguna.css?v=250">
+</head>
+
+<body>
+
+  <!-- Global Top Navbar -->
+  <header id="eduGlobalNavbar"></header>
+
+  <!-- Main Wrapper (Menyatukan Hero & 3 Action Cards dalam 1 Layar Presisi Sejajar Header) -->
+  <div class="user-main-wrapper">
+    <div class="user-main-container">
+
+      <!-- Hero Section -->
+      <main class="hero-section" id="hero">
+        <div class="hero-container">
+
+          <!-- Left Column: Typography -->
+          <div class="hero-left">
+            <h1 class="hero-title">
+              Agen Cerdas untuk<br>
+              <span class="text-yellow">Setiap Kebutuhan Mengajar.</span>
+            </h1>
+
+            <p class="hero-description">
+              Rancang modul ajar dan asesmen cerdas secara instan. Kelola kebutuhan pembelajaran lebih cepat, hemat waktu administrasi.
+            </p>
+          </div>
+
+          <!-- Right Column: Image Dashboard Pengguna dari folder Assets -->
+          <div class="hero-right">
+            <div class="illustration-wrapper">
+              <img src="../Assets/image/image_dashboardpengguna.png" alt="Dashboard Pengguna Illustration" class="hero-image">
+            </div>
+          </div>
+
+        </div>
+      </main>
+
+      <!-- 3 Tombol Kotak Besar Sejajar Horizontal Memanjang dari Kiri ke Kanan -->
+      <section class="user-actions-section">
+        <div class="actions-container" id="fitur">
+          <!-- Rendered dynamically by JavaScript based on user's feature permissions -->
+        </div>
+      </section>
+
+    </div>
+  </div>
+
+  <!-- Modal logout diinjek otomatis oleh global.js -->
+
+  <!-- Toast Notifikasi Pengguna -->
+  <div class="user-toast" id="userToast">
+    <span id="userToastText">Membuka fitur...</span>
+  </div>
+
+  <!-- Scripts -->
+  <script src="../global.js?v=250"></script>
+  <script src="dashboard%20pengguna.js?v=250"></script>
+</body>
+
+</html>

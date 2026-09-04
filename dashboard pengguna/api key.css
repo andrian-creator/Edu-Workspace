@@ -1,0 +1,665 @@
+/* ==========================================================================
+   EDU WORKSPACE - API KEY MANAGEMENT STYLESHEET
+   Desain Modern, Elegan, Presisi 1360px, Responsif Mobile & Desktop
+   ========================================================================== */
+
+:root {
+  --color-bg: #f8fafc;
+  --color-card: #ffffff;
+  --color-border: #e2e8f0;
+  --color-border-dark: #1e293b;
+  --color-text-main: #1e293b;
+  --color-text-muted: #64748b;
+  --color-primary: #1e293b;
+  --color-primary-hover: #0f172a;
+  --color-accent-yellow: #eab308;
+  --color-success: #16a34a;
+  --color-success-bg: #dcfce7;
+  --color-danger: #dc2626;
+  --color-danger-bg: #fee2e2;
+  --font-main: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  --radius-card: 20px;
+  --radius-pill: 999px;
+  --transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
+  background-color: var(--color-bg);
+  color: var(--color-text-main);
+  font-family: var(--font-main);
+  display: flex;
+  flex-direction: column;
+  overflow-x: clip;
+  scrollbar-gutter: stable;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ==========================================================================
+   2. MAIN CONTENT WRAPPER (1360px Max Width)
+   ========================================================================== */
+.api-main-wrapper {
+  flex: 1;
+  width: 100%;
+  padding: 32px 64px 60px;
+  box-sizing: border-box;
+}
+
+.api-main-container {
+  max-width: 1360px;
+  margin: 0 auto;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+}
+
+/* ==========================================================================
+   3. HERO BANNER / PAGE HEADER
+   ========================================================================== */
+.api-page-header {
+  margin-bottom: 36px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 12px;
+}
+
+.api-title {
+  font-size: clamp(2rem, 3.2vw, 2.75rem);
+  font-weight: 800;
+  letter-spacing: -0.035em;
+  color: var(--color-text-main);
+  line-height: 1.15;
+  text-align: center;
+}
+
+.text-yellow {
+  color: var(--color-accent-yellow);
+}
+
+.api-subtitle {
+  font-size: 1.05rem;
+  line-height: 1.6;
+  color: var(--color-text-muted);
+  max-width: 680px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+/* ==========================================================================
+   4. DUAL COLUMN LAYOUT (Form Kiri & Panduan Kanan)
+   ========================================================================== */
+.api-content-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 28px;
+  align-items: stretch;
+  width: 100%;
+}
+
+/* Main Card */
+.api-card {
+  background: var(--color-card);
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-card);
+  padding: 32px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.card-header-group {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid #f1f5f9;
+  padding-bottom: 20px;
+}
+
+.card-title-box {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.card-icon-pill {
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  background: #f8fafc;
+  border: 1.5px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.card-icon-pill img {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+}
+
+.card-title {
+  font-size: 1.28rem;
+  font-weight: 800;
+  color: var(--color-text-main);
+  letter-spacing: -0.02em;
+  margin-bottom: 2px;
+}
+
+.card-desc {
+  font-size: 0.88rem;
+  color: var(--color-text-muted);
+}
+
+/* Status Badge */
+.status-pill-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: var(--radius-pill);
+  font-size: 0.82rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.status-pill-active {
+  background: var(--color-success-bg);
+  color: var(--color-success);
+  border: 1px solid #bbf7d0;
+}
+
+.status-pill-empty {
+  background: #fef3c7;
+  color: #b45309;
+  border: 1px solid #fde68a;
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+/* Form Controls */
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.form-label {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--color-text-main);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.form-label-hint {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--color-text-muted);
+}
+
+.input-with-actions {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.api-key-input {
+  width: 100%;
+  padding: 14px 105px 14px 18px;
+  font-size: 0.96rem;
+  font-family: 'JetBrains Mono', 'Courier New', monospace;
+  color: var(--color-text-main);
+  background: #f8fafc;
+  border: 1.5px solid var(--color-border);
+  border-radius: 14px;
+  outline: none;
+  transition: var(--transition);
+  box-sizing: border-box;
+}
+
+.api-key-input:focus {
+  background: #ffffff;
+  border-color: var(--color-border-dark);
+  box-shadow: 0 0 0 4px rgba(30, 41, 59, 0.08);
+}
+
+.input-suffix-actions {
+  position: absolute;
+  right: 10px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.btn-icon-action {
+  background: transparent;
+  border: none;
+  padding: 6px;
+  border-radius: 8px;
+  cursor: pointer;
+  color: var(--color-text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: var(--transition);
+}
+
+.btn-icon-action:hover {
+  background: #e2e8f0;
+  color: var(--color-text-main);
+}
+
+/* Connection Status Info Box */
+.connection-status-box {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 18px;
+  border-radius: 14px;
+  border: 1.5px solid var(--color-border);
+  background: #f8fafc;
+  transition: var(--transition);
+  box-sizing: border-box;
+}
+
+.connection-status-box.status-connected {
+  background: #f0fdf4;
+  border-color: #bbf7d0;
+  color: #15803d;
+}
+
+.connection-status-box.status-error {
+  background: #fef2f2;
+  border-color: #fecaca;
+  color: #dc2626;
+}
+
+.connection-status-box.status-testing {
+  background: #eff6ff;
+  border-color: #bfdbfe;
+  color: #2563eb;
+}
+
+.connection-status-icon {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.connection-status-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.connection-status-title {
+  font-size: 0.94rem;
+  font-weight: 700;
+}
+
+.connection-status-desc {
+  font-size: 0.85rem;
+  line-height: 1.45;
+  opacity: 0.9;
+}
+
+/* Button Group */
+.api-btn-group {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr !important;
+  gap: 14px !important;
+  padding-top: 14px !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+.api-btn-group .btn-primary-api,
+.api-btn-group .btn-danger-api {
+  width: 100% !important;
+  height: 48px !important;
+  min-height: 48px !important;
+  max-height: 48px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 10px !important;
+  padding: 0 16px !important;
+  border-radius: var(--radius-pill, 9999px) !important;
+  font-family: var(--font-main, sans-serif) !important;
+  font-size: 0.96rem !important;
+  font-weight: 700 !important;
+  cursor: pointer !important;
+  transition: var(--transition) !important;
+  box-sizing: border-box !important;
+  margin: 0 !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+}
+
+.api-btn-group .btn-primary-api {
+  background: var(--color-primary, #1e293b) !important;
+  color: #ffffff !important;
+  border: 1.5px solid transparent !important;
+  box-shadow: 0 4px 14px rgba(30, 41, 59, 0.18) !important;
+}
+
+.api-btn-group .btn-primary-api:hover {
+  background: var(--color-primary-hover, #0f172a) !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 6px 18px rgba(30, 41, 59, 0.25) !important;
+}
+
+.api-btn-group .btn-danger-api {
+  background: #fef2f2 !important;
+  color: #dc2626 !important;
+  border: 1.5px solid #fecaca !important;
+}
+
+.api-btn-group .btn-danger-api:hover {
+  background: #fee2e2 !important;
+  border-color: #f87171 !important;
+  color: #b91c1c !important;
+  transform: translateY(-1px) !important;
+}
+
+.api-btn-group .btn-icon-img,
+.api-btn-group img.btn-icon-img {
+  width: 18px !important;
+  height: 18px !important;
+  max-width: 18px !important;
+  max-height: 18px !important;
+  min-width: 18px !important;
+  min-height: 18px !important;
+  object-fit: contain !important;
+  flex-shrink: 0 !important;
+  display: inline-block !important;
+}
+
+.api-btn-group .btn-primary-api img.btn-icon-img,
+.api-btn-group .btn-primary-api .btn-icon-img {
+  filter: brightness(0) invert(1) !important;
+}
+
+.api-btn-group .btn-danger-api img.btn-icon-img,
+.api-btn-group .btn-danger-api .btn-icon-img {
+  filter: invert(27%) sepia(91%) saturate(2352%) hue-rotate(346deg) brightness(94%) contrast(94%) !important;
+}
+
+.api-btn-group .btn-danger-api:hover img.btn-icon-img,
+.api-btn-group .btn-danger-api:hover .btn-icon-img {
+  filter: invert(19%) sepia(85%) saturate(3039%) hue-rotate(345deg) brightness(85%) contrast(96%) !important;
+}
+
+.btn-secondary-api {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 13px 22px;
+  background: transparent;
+  color: var(--color-text-main);
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  font-family: var(--font-main);
+  font-size: 0.96rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.btn-secondary-api:hover {
+  border-color: var(--color-border-dark);
+  background: #ffffff;
+  transform: translateY(-1px);
+}
+
+/* Tutorial / Guide Card */
+.guide-card {
+  background: var(--color-card);
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-card);
+  padding: 32px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.guide-step-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.guide-step-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+}
+
+.guide-step-number {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #eff6ff;
+  color: #2563eb;
+  font-weight: 800;
+  font-size: 0.88rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border: 1px solid #dbeafe;
+}
+
+.guide-step-content {
+  flex: 1;
+}
+
+.guide-step-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--color-text-main);
+  margin-bottom: 2px;
+}
+
+.guide-step-desc {
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+  line-height: 1.5;
+  margin: 0;
+}
+
+.btn-external-guide {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 12px 18px;
+  background: #f8fafc;
+  color: #2563eb;
+  border: 1.5px solid #dbeafe;
+  border-radius: 14px;
+  font-weight: 700;
+  font-size: 0.92rem;
+  text-decoration: none;
+  transition: var(--transition);
+  box-sizing: border-box;
+}
+
+.btn-external-guide:hover {
+  background: #eff6ff;
+  border-color: #bfdbfe;
+  transform: translateY(-1px);
+}
+
+/* ==========================================================================
+   BANNER PERINGATAN KEAMANAN (Bawah, Panjang Mepet Kanan-Kiri Penuh)
+   ========================================================================== */
+.warning-alert-banner {
+  width: 100%;
+  margin-top: 28px;
+  background: #fffbeb;
+  border: 1.5px solid #fde047;
+  border-radius: var(--radius-card);
+  padding: 22px 28px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  box-sizing: border-box;
+  box-shadow: 0 4px 20px rgba(245, 158, 11, 0.05);
+  transition: var(--transition);
+}
+
+.warning-alert-banner:hover {
+  border-color: #facc15;
+  box-shadow: 0 6px 24px rgba(245, 158, 11, 0.09);
+}
+
+.warning-alert-icon-box {
+  width: 52px;
+  height: 52px;
+  min-width: 52px;
+  border-radius: 14px;
+  background: #fef3c7;
+  border: 1px solid #fde68a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.warning-alert-icon {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+  filter: invert(53%) sepia(85%) saturate(1832%) hue-rotate(9deg) brightness(101%) contrast(96%);
+}
+
+.warning-alert-content {
+  flex: 1;
+}
+
+.warning-alert-title {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: #92400e;
+  margin-bottom: 4px;
+  letter-spacing: -0.01em;
+}
+
+.warning-alert-desc {
+  font-size: 0.92rem;
+  color: #78350f;
+  line-height: 1.55;
+  margin: 0;
+}
+
+.warning-alert-desc strong {
+  color: #78350f;
+  font-weight: 700;
+}
+
+/* ==========================================================================
+   POPUP NOTIFIKASI DI TENGAH (Style Khas Edu Workspace)
+   ========================================================================== */
+.confirm-icon-box.icon-box-success {
+  background: #ecfdf5;
+  border: 1.5px solid #a7f3d0;
+  color: #10b981;
+}
+
+.confirm-icon-box.icon-box-error {
+  background: #fef2f2;
+  border: 1.5px solid #fecaca;
+  color: #ef4444;
+}
+
+.confirm-icon-box.icon-box-warning {
+  background: #fffbeb;
+  border: 1.5px solid #fde68a;
+  color: #f59e0b;
+}
+
+.confirm-icon-box.icon-box-info {
+  background: #eff6ff;
+  border: 1.5px solid #bfdbfe;
+  color: #3b82f6;
+}
+
+/* ==========================================================================
+   5. RESPONSIVE BREAKPOINTS (Mobile Presisi)
+   ========================================================================== */
+@media (max-width: 1024px) {
+  .api-main-wrapper {
+    padding: 24px 40px 40px;
+  }
+
+  .api-content-grid {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+}
+
+@media (max-width: 768px) {
+  .api-main-wrapper {
+    padding: 16px 24px 40px !important;
+  }
+
+  .api-card {
+    padding: 22px 20px;
+  }
+
+  .provider-selector-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .api-btn-group {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .btn-primary-api,
+  .btn-danger-api {
+    width: 100%;
+    margin-left: 0;
+  }
+}
+
+.spin-animation {
+  animation: spinKey 1s linear infinite;
+}
+
+@keyframes spinKey {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}

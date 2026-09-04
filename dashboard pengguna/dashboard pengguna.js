@@ -1,0 +1,250 @@
+/**
+ * Edu Workspace - Dashboard Pengguna (Guru / Dosen) Logic
+ * Verifikasi Sesi, Cek Masa Aktif Langganan, dan Manajemen Navigasi
+ */
+
+function showUserToast(msg) {
+  const toast = document.getElementById('userToast');
+  const text = document.getElementById('userToastText');
+  if (!toast || !text) return;
+  text.textContent = msg;
+  toast.style.transform = 'translateY(0)';
+  toast.style.opacity = '1';
+  setTimeout(() => {
+    toast.style.transform = 'translateY(100px)';
+    toast.style.opacity = '0';
+  }, 3000);
+}
+
+function isProfileComplete(user) {
+  if (!user) return false;
+  if (isSubscriptionExpired(user)) return false;
+  return user.isProfileCompleted === true &&
+    user.institution &&
+    user.institution !== 'Sekolah / Instansi Guru' &&
+    user.gradeLevel &&
+    (user.isApproved === true || user.status === 'Aktif');
+}
+
+async function initUserDashboard() {
+  const loggedUserStr = localStorage.getItem(CURRENT_USER_KEY);
+  if (!loggedUserStr) {
+    window.location.href = "../halaman login/halaman login.html";
+    return;
+  }
+
+  let user = JSON.parse(loggedUserStr);
+
+  // Jika akun yang login adalah Super Admin, langsung arahkan ke Dashboard Admin
+  const isAdmin = (user.email || '').toLowerCase() === ADMIN_EMAIL.toLowerCase() || user.role === 'Admin';
+  if (isAdmin) {
+    window.location.replace("../dashboard admin/dashboard admin.html");
+    return;
+  }
+
+  // Selalu ambil status dan data verifikasi terbaru langsung dari backend database (/api/users)
+  try {
+    const res = await fetch('/api/users');
+    if (res.ok) {
+      const data = await res.json();
+      const allUsers = data.users || [];
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(allUsers));
+      const latestUser = allUsers.find(u => (u.email || '').trim().toLowerCase() === (user.email || '').trim().toLowerCase());
+      if (latestUser) {
+        user = { ...user, ...latestUser };
+        localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user));
+      } else {
+        user.status = 'Dihapus';
+        user.isDeleted = true;
+        localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user));
+        window.location.replace("profil.html");
+        return;
+      }
+    }
+  } catch (e) {
+    // Fallback localStorage jika offline
+    try {
+      const allUsers = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+      const latestUser = allUsers.find(u => (u.email || '').trim().toLowerCase() === (user.email || '').trim().toLowerCase());
+      if (latestUser) {
+        user = { ...user, ...latestUser };
+        localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user));
+      }
+    } catch (err) { }
+  }
+
+  // Periksa masa aktif langganan
+  if (isSubscriptionExpired(user)) {
+    user.status = 'Nonaktif';
+    user.isApproved = false;
+    user.rejectReason = 'Masa langganan sudah habis, silahkan hubungi WhatsApp 085608673357 untuk memperpanjang langganan.';
+    localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user));
+    fetch('/api/users/status', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email: user.email,
+        status: 'Nonaktif',
+        rejectReason: user.rejectReason
+      })
+    }).catch(e => { });
+    window.location.replace("profil.html");
+    return;
+  }
+
+  // Jika akun dinonaktifkan, ditolak, atau belum disetujui, langsung kembalikan ke profil.html untuk pengajuan ulang
+  if (!isProfileComplete(user)) {
+    window.location.replace("profil.html");
+    return;
+  }
+
+  if (document.getElementById('welcomeName')) {
+    document.getElementById('welcomeName').textContent = user.name || 'Bapak/Ibu Guru';
+  }
+  // Render Header Global Terpusat
+  renderEduNavbar({
+    user: user,
+    homeUrl: '../index.html',
+    showBack: false,
+    showDaftarModul: true,
+    daftarModulUrl: 'daftar modul ajar.html',
+    showApiKey: true,
+    apiKeyUrl: 'api key.html',
+    showAccessTime: true
+  });
+
+  // Pastikan pill sisa waktu akses langsung terisi dan sinkron
+  if (typeof updateHeaderAccessPill === 'function') {
+    updateHeaderAccessPill(user);
+  }
+
+  // Render Modul Fitur sesuai Hak Akses Akun Pengguna
+  renderUserFeatures(user);
+}
+
+function renderUserFeatures(user) {
+  const container = document.getElementById('fitur');
+  if (!container) return;
+
+  // Cek apakah fitur generate_modul_ajar aktif
+  let activeFeatures = [];
+  if (user && Array.isArray(user.features)) {
+    activeFeatures = user.features;
+  } else {
+    try {
+      const allUsers = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+      const found = allUsers.find(u => (u.email || '').toLowerCase() === (user.email || '').toLowerCase());
+      if (found && Array.isArray(found.features)) {
+        activeFeatures = found.features;
+      } else {
+        activeFeatures = []; // Default akun baru non-aktif semua
+      }
+    } catch (e) {
+      activeFeatures = [];
+    }
+  }
+
+  const hasModulAjar = activeFeatures.includes('generate_modul_ajar');
+
+  if (hasModulAjar) {
+    container.innerHTML = `
+      <!-- Tombol: Generate Modul Ajar -->
+      <div class="user-action-card active-card" onclick="handleFeatureClick('Generate Modul Ajar')">
+        <div class="action-card-header">
+          <div class="action-card-icon-box">
+            <img data-icon="modul_ajar" src="${getEduIconUrl('modul_ajar')}" alt="Generate Modul Ajar" class="action-card-icon-img">
+          </div>
+          <span class="action-badge-active">Aktif</span>
+        </div>
+        <div class="action-card-body">
+          <h3 class="action-card-title">Generate Modul Ajar</h3>
+          <p class="action-card-desc">Buat rancangan pembelajaran Kurikulum Merdeka / K13 lengkap dengan capaian dan asesmen secara instan.</p>
+        </div>
+        <div class="action-card-footer">
+          <span class="action-card-link">Buka Generator &rarr;</span>
+        </div>
+      </div>
+    `;
+  } else {
+    container.innerHTML = `
+      <div class="locked-features-box">
+        <div class="locked-icon-wrapper">
+          <img data-icon="lock" src="${getEduIconUrl('lock')}" alt="Terkunci" class="locked-icon-img">
+        </div>
+        <div class="locked-content">
+          <h4 class="locked-title">Akses Fitur Belum Diaktifkan</h4>
+          <p class="locked-desc">
+            Saat ini belum ada fitur yang diaktifkan untuk akun Anda. Silakan hubungi <strong>Admin Edu Workspace</strong> untuk mengaktifkan akses modul pembelajaran.
+          </p>
+        </div>
+      </div>
+    `;
+  }
+
+  // Kelola layout adaptif berdasarkan jumlah tombol fitur yang aktif
+  const actionCards = container.querySelectorAll('.user-action-card');
+  container.classList.remove('single-item', 'count-1', 'count-2', 'count-3');
+  if (actionCards.length === 1) {
+    container.classList.add('single-item', 'count-1');
+  } else if (actionCards.length === 2) {
+    container.classList.add('count-2');
+  } else if (actionCards.length >= 3) {
+    container.classList.add('count-3');
+  }
+}
+
+function handleFeatureClick(featureName) {
+  if (featureName === 'Generate Modul Ajar') {
+    window.location.href = "../Fitur/modul%20ajar.html";
+  } else {
+    showUserToast(`Membuka ${featureName}... Modul siap digunakan.`);
+  }
+}
+
+// Event Listeners
+document.addEventListener('DOMContentLoaded', () => {
+  initUserDashboard();
+});
+
+window.addEventListener('storage', () => {
+  initUserDashboard();
+});
+
+window.addEventListener('focus', () => {
+  initUserDashboard();
+});
+
+try {
+  const channel = new BroadcastChannel('edu_workspace_sync');
+  channel.onmessage = (event) => {
+    if (event.data && (event.data.type === 'USER_DELETED' || event.data.type === 'STATUS_UPDATED' || event.data.type === 'SYNC_USER')) {
+      const loggedUserStr = localStorage.getItem(CURRENT_USER_KEY);
+      if (loggedUserStr) {
+        const user = JSON.parse(loggedUserStr);
+        if ((user.email || '').toLowerCase() === (event.data.email || '').toLowerCase()) {
+          if (event.data.type === 'USER_DELETED') {
+            user.status = 'Dihapus';
+            user.isDeleted = true;
+            user.isApproved = false;
+          } else if (event.data.status) {
+            user.status = event.data.status;
+            if (event.data.status === 'Nonaktif' || event.data.status === 'Dinonaktifkan' || event.data.status === 'Ditolak') {
+              user.isApproved = false;
+            }
+          }
+          localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user));
+
+          const isDeleted = user.status === 'Dihapus' || user.isDeleted === true;
+          const isExpired = typeof isSubscriptionExpired === 'function' && isSubscriptionExpired(user);
+          const isDeactivated = user.status === 'Nonaktif' || user.status === 'Dinonaktifkan' || user.status === 'Ditolak' || user.isApproved === false || isExpired;
+
+          if (isDeleted || isDeactivated) {
+            window.location.replace("profil.html");
+            return;
+          }
+        }
+      }
+    }
+    initUserDashboard();
+  };
+} catch (e) { }

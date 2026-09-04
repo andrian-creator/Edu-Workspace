@@ -1,0 +1,1394 @@
+/**
+ * EDU WORKSPACE - GLOBAL LOGIC & SHARED UTILITIES
+ * Konstanta Sesi, Autentikasi Admin, Parser JWT, dan Helper Avatar Google
+ */
+
+// ==========================================================================
+// SUPABASE INTEGRATION LAYER
+// Koneksi langsung ke Supabase REST API tanpa library tambahan
+// ==========================================================================
+const SUPABASE_URL = 'https://qrpcboreiulyqujublwl.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFycGNib3JlaXVseXF1anVibHdsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg1MTkxMzgsImV4cCI6MjEwNDA5NTEzOH0.kTRBa2LmYN4qzIuewGqz5CwFKWTZjYM4NOgAvMf-G10';
+
+/**
+ * Helper untuk request ke Supabase REST API
+ * @param {string} path - endpoint path, misal '/profiles'
+ * @param {Object} options - fetch options (method, body, headers tambahan)
+ * @returns {Promise<any>} - data JSON atau null jika error
+ */
+async function supabaseRequest(path, options = {}) {
+  const url = `${SUPABASE_URL}/rest/v1${path}`;
+  const headers = {
+    'apikey': SUPABASE_ANON_KEY,
+    'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+    'Content-Type': 'application/json',
+    'Prefer': options.prefer || 'return=representation',
+    ...(options.headers || {})
+  };
+  try {
+    const res = await fetch(url, {
+      method: options.method || 'GET',
+      headers,
+      body: options.body ? JSON.stringify(options.body) : undefined
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      console.warn('[Supabase]', res.status, path, err.message || err);
+      return null;
+    }
+    const text = await res.text();
+    return text ? JSON.parse(text) : [];
+  } catch (e) {
+    console.warn('[Supabase] network error:', path, e);
+    return null;
+  }
+}
+
+/**
+ * Mapping kolom DB (snake_case) ke format user lokal (camelCase) yang dipakai seluruh frontend
+ */
+function mapDbToUser(row) {
+  if (!row) return null;
+  return {
+    id: row.id,
+    name: row.name,
+    email: row.email,
+    avatar: row.avatar || '',
+    role: row.role || 'Guru',
+    institution: row.institution || '',
+    subject: row.subject || '',
+    gradeLevel: row.grade_level || '',
+    registeredAt: row.registered_at || '',
+    provider: row.provider || 'Google Account (@gmail.com)',
+    status: row.status || 'Belum Lengkap',
+    isApproved: row.is_approved || false,
+    isProfileCompleted: row.is_profile_completed || false,
+    features: row.features || [],
+    subscriptionStart: row.subscription_start || null,
+    subscriptionEnd: row.subscription_end || null,
+    rejectReason: row.reject_reason || '',
+    geminiApiKey: row.gemini_api_key || '',
+    isDeleted: row.is_deleted || false
+  };
+}
+
+/**
+ * Mapping user lokal (camelCase) ke format kolom DB (snake_case)
+ */
+function mapUserToDb(user) {
+  if (!user) return null;
+  const db = {
+    id: user.id,
+    name: user.name,
+    email: user.email,
+    avatar: user.avatar || null,
+    role: user.role || 'Guru',
+    institution: user.institution || '',
+    subject: user.subject || '',
+    grade_level: user.gradeLevel || '',
+    registered_at: user.registeredAt || null,
+    provider: user.provider || 'Google Account (@gmail.com)',
+    status: user.status || 'Belum Lengkap',
+    is_approved: user.isApproved || false,
+    is_profile_completed: user.isProfileCompleted || false,
+    features: user.features || [],
+    subscription_start: user.subscriptionStart || null,
+    subscription_end: user.subscriptionEnd || null,
+    reject_reason: user.rejectReason || null,
+    gemini_api_key: user.geminiApiKey || '',
+    is_deleted: user.isDeleted || false
+  };
+  // Hapus key null agar tidak overwrite yang sudah ada di DB
+  Object.keys(db).forEach(k => { if (db[k] === null || db[k] === undefined) delete db[k]; });
+  return db;
+}
+
+/**
+ * SupabaseDB: Objek terpusat untuk semua operasi database Supabase
+ */
+const SupabaseDB = {
+
+  /**
+   * Ambil semua users dari tabel profiles (non-deleted)
+   */
+  async getUsers() {
+    const rows = await supabaseRequest('/profiles?select=*&is_deleted=eq.false&order=registered_at.asc');
+    if (!rows) return null;
+    return rows.map(mapDbToUser);
+  },
+
+  /**
+   * Ambil user berdasarkan email
+   */
+  async getUserByEmail(email) {
+    const rows = await supabaseRequest(`/profiles?select=*&email=eq.${encodeURIComponent(email)}&limit=1`);
+    if (!rows || rows.length === 0) return null;
+    return mapDbToUser(rows[0]);
+  },
+
+  /**
+   * Upsert user (insert jika baru, update jika sudah ada berdasarkan id)
+   */
+  async upsertUser(user) {
+    const dbRow = mapUserToDb(user);
+    if (!dbRow || !dbRow.id) return null;
+    const result = await supabaseRequest('/profiles', {
+      method: 'POST',
+      prefer: 'return=representation,resolution=merge-duplicates',
+      headers: { 'Prefer': 'return=representation,resolution=merge-duplicates' },
+      body: dbRow
+    });
+    if (!result || result.length === 0) return null;
+    return mapDbToUser(result[0]);
+  },
+
+  /**
+   * Update field tertentu pada user berdasarkan email
+   */
+  async updateUserByEmail(email, fields) {
+    const dbFields = {};
+    if (fields.status !== undefined) dbFields.status = fields.status;
+    if (fields.isApproved !== undefined) dbFields.is_approved = fields.isApproved;
+    if (fields.isProfileCompleted !== undefined) dbFields.is_profile_completed = fields.isProfileCompleted;
+    if (fields.role !== undefined) dbFields.role = fields.role;
+    if (fields.institution !== undefined) dbFields.institution = fields.institution;
+    if (fields.subject !== undefined) dbFields.subject = fields.subject;
+    if (fields.gradeLevel !== undefined) dbFields.grade_level = fields.gradeLevel;
+    if (fields.features !== undefined) dbFields.features = fields.features;
+    if (fields.subscriptionStart !== undefined) dbFields.subscription_start = fields.subscriptionStart;
+    if (fields.subscriptionEnd !== undefined) dbFields.subscription_end = fields.subscriptionEnd;
+    if (fields.rejectReason !== undefined) dbFields.reject_reason = fields.rejectReason;
+    if (fields.geminiApiKey !== undefined) dbFields.gemini_api_key = fields.geminiApiKey;
+    if (fields.isDeleted !== undefined) dbFields.is_deleted = fields.isDeleted;
+    if (fields.avatar !== undefined) dbFields.avatar = fields.avatar;
+    if (fields.name !== undefined) dbFields.name = fields.name;
+
+    const result = await supabaseRequest(
+      `/profiles?email=eq.${encodeURIComponent(email)}`,
+      { method: 'PATCH', body: dbFields }
+    );
+    return result;
+  },
+
+  /**
+   * Soft-delete user berdasarkan email
+   */
+  async deleteUserByEmail(email) {
+    return await SupabaseDB.updateUserByEmail(email, { isDeleted: true, status: 'Dihapus' });
+  },
+
+  /**
+   * Ambil semua modul dari tabel moduls
+   */
+  async getModuls(email = null) {
+    let path = '/moduls?select=*&is_deleted=eq.false&order=created_at.desc';
+    if (email) path += `&email=eq.${encodeURIComponent(email)}`;
+    const rows = await supabaseRequest(path);
+    return rows || [];
+  },
+
+  /**
+   * Simpan modul baru ke Supabase
+   */
+  async saveModul(modul) {
+    const dbRow = {
+      id: modul.id,
+      email: modul.email,
+      user_name: modul.userName || modul.user_name || '',
+      subject: modul.subject || '',
+      grade_level: modul.gradeLevel || modul.grade_level || '',
+      topic: modul.topic || '',
+      curriculum: modul.curriculum || 'Kurikulum Merdeka',
+      content_json: modul.contentJson || modul.content_json || null,
+      is_deleted: false
+    };
+    const result = await supabaseRequest('/moduls', {
+      method: 'POST',
+      prefer: 'return=representation,resolution=merge-duplicates',
+      headers: { 'Prefer': 'return=representation,resolution=merge-duplicates' },
+      body: dbRow
+    });
+    return result;
+  },
+
+  /**
+   * Soft-delete modul berdasarkan id
+   */
+  async deleteModul(id) {
+    return await supabaseRequest(`/moduls?id=eq.${encodeURIComponent(id)}`, {
+      method: 'PATCH',
+      body: { is_deleted: true }
+    });
+  }
+};
+
+// ==========================================================================
+// SUPABASE SYNC HELPERS
+// Sinkronisasi otomatis antara Supabase dan localStorage (fallback lokal)
+// ==========================================================================
+
+/**
+ * Sync semua users dari Supabase ke localStorage (STORAGE_KEY)
+ * Dipanggil saat load halaman atau setelah operasi admin
+ */
+async function syncUsersFromSupabase() {
+  const users = await SupabaseDB.getUsers();
+  if (users && Array.isArray(users)) {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(users));
+    } catch (e) {}
+    return users;
+  }
+  return null;
+}
+
+/**
+ * Upsert user login ke Supabase + localStorage sekaligus
+ * Dipanggil dari proses login Google (halaman login.js)
+ */
+async function supabaseUpsertLoginUser(userObj) {
+  const saved = await SupabaseDB.upsertUser(userObj);
+  if (saved) {
+    // Update CURRENT_USER_KEY dengan data terbaru dari Supabase
+    try { localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(saved)); } catch (e) {}
+    // Sinkron ke STORAGE_KEY juga
+    const all = await SupabaseDB.getUsers();
+    if (all) {
+      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(all)); } catch (e) {}
+    }
+    return saved;
+  }
+  // Fallback: simpan ke localStorage saja jika Supabase gagal
+  try { localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(userObj)); } catch (e) {}
+  return userObj;
+}
+
+// Expose ke window
+if (typeof window !== 'undefined') {
+  window.SupabaseDB = SupabaseDB;
+  window.supabaseUpsertLoginUser = supabaseUpsertLoginUser;
+  window.syncUsersFromSupabase = syncUsersFromSupabase;
+  window.mapDbToUser = mapDbToUser;
+  window.mapUserToDb = mapUserToDb;
+}
+
+const STORAGE_KEY = 'edu_registered_users';
+const CURRENT_USER_KEY = 'edu_current_user';
+const ADMIN_EMAIL = 'ric04ndri4nt0@gmail.com';
+const ADMIN_EMAILS = [
+  'ric04ndri4nt0@gmail.com'
+];
+
+/**
+ * Generate Avatar Resmi Google Berwarna berdasarkan Inisial Nama Pengguna
+ */
+function getGoogleAvatar(name, avatarUrl) {
+  if (avatarUrl && !avatarUrl.includes('default-user') && !avatarUrl.includes('placeholder') && (avatarUrl.startsWith('http') || avatarUrl.startsWith('data:image'))) {
+    return avatarUrl;
+  }
+  const cleanName = (name || 'User').trim();
+  const initial = cleanName.charAt(0).toUpperCase() || 'U';
+
+  const googlePalette = [
+    '#1a73e8', // Biru Google
+    '#ea4335', // Merah Google
+    '#f9ab00', // Kuning/Amber Google
+    '#34a853', // Hijau Google
+    '#9334e6', // Ungu Google
+    '#e52592', // Pink Google
+    '#12b5cb', // Toska Google
+    '#fa7b17', // Oranye Google
+    '#00897b'  // Hijau Pinus Google
+  ];
+
+  let hash = 0;
+  for (let i = 0; i < cleanName.length; i++) {
+    hash = cleanName.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  const bg = googlePalette[Math.abs(hash) % googlePalette.length];
+
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100"><rect width="100" height="100" fill="${bg}" rx="50"/><text x="50%" y="54%" font-family="Google Sans, Roboto, 'Helvetica Neue', Arial, sans-serif" font-size="48" font-weight="500" fill="#ffffff" text-anchor="middle" dominant-baseline="middle">${initial}</text></svg>`;
+  return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
+}
+
+/**
+ * Decode payload Google JWT Token
+ */
+function parseJwt(token) {
+  try {
+    const base64Url = token.split('.')[1];
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const jsonPayload = decodeURIComponent(atob(base64).split('').map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join(''));
+    return JSON.parse(jsonPayload);
+  } catch (e) {
+    return null;
+  }
+}
+
+/**
+ * Ambil daftar users dari localStorage
+ */
+function getUsers() {
+  try {
+    const data = localStorage.getItem(STORAGE_KEY);
+    return data ? JSON.parse(data) : [];
+  } catch (e) {
+    return [];
+  }
+}
+
+/**
+ * Simpan daftar users ke localStorage
+ */
+function saveUsers(users) {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(users));
+  } catch (e) { }
+}
+
+/**
+ * Sanitasi string HTML untuk mencegah XSS
+ */
+function escapeHtml(text) {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+/**
+ * Deteksi apakah masa aktif langganan akun pengguna sudah kadaluarsa
+ */
+function isSubscriptionExpired(user) {
+  if (!user || user.role === 'Admin' || (user.email && ADMIN_EMAILS.includes(user.email.toLowerCase()))) {
+    return false;
+  }
+  if (!user.subscriptionEnd) return false;
+  const today = new Date();
+  const todayStr = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0') + '-' + String(today.getDate()).padStart(2, '0');
+  return todayStr > user.subscriptionEnd;
+}
+
+/**
+ * Hitung informasi sisa waktu masa aktif langganan akun pengguna
+ * Mengembalikan objek status, teks, label, dan kelas CSS untuk header pill
+ */
+function getAccessRemainingInfo(user) {
+  if (!user) return null;
+
+  const userEmail = (user.email || '').trim().toLowerCase();
+  // Super Admin utama tidak memerlukan pembatasan waktu akses
+  const isSuperAdmin = (typeof ADMIN_EMAILS !== 'undefined' && ADMIN_EMAILS.includes(userEmail)) || (typeof ADMIN_EMAIL !== 'undefined' && userEmail === ADMIN_EMAIL.toLowerCase());
+  if (isSuperAdmin) {
+    return null;
+  }
+
+  // Jika admin belum menentukan batas tanggal langganan
+  if (!user.subscriptionEnd || typeof user.subscriptionEnd !== 'string' || !user.subscriptionEnd.trim()) {
+    return {
+      days: null,
+      labelText: 'Sisa Waktu Akses:',
+      valueText: 'Aktif',
+      subtext: 'Masa aktif akun aktif (belum dibatasi admin)',
+      badgeClass: 'access-pill-active',
+      formattedDate: '-'
+    };
+  }
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  let yr, mo, dy;
+  const cleanEnd = user.subscriptionEnd.trim();
+  if (cleanEnd.includes('-')) {
+    const parts = cleanEnd.split('T')[0].split('-').map(Number);
+    yr = parts[0];
+    mo = parts[1];
+    dy = parts[2];
+  } else if (cleanEnd.includes('/')) {
+    const parts = cleanEnd.split('/').map(Number);
+    yr = parts[2];
+    mo = parts[1];
+    dy = parts[0];
+  }
+
+  if (!yr || !mo || !dy || isNaN(yr) || isNaN(mo) || isNaN(dy)) {
+    return {
+      days: null,
+      labelText: 'Sisa Waktu Akses:',
+      valueText: 'Aktif',
+      subtext: 'Masa aktif akun aktif',
+      badgeClass: 'access-pill-active',
+      formattedDate: '-'
+    };
+  }
+
+  const endDate = new Date(yr, mo - 1, dy);
+  endDate.setHours(0, 0, 0, 0);
+
+  const diffTime = endDate.getTime() - today.getTime();
+  const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+  const formattedDate = `${String(dy).padStart(2, '0')}/${String(mo).padStart(2, '0')}/${yr}`;
+
+  if (diffDays < 0) {
+    return {
+      days: diffDays,
+      labelText: 'Sisa Waktu Akses:',
+      valueText: 'Habis',
+      subtext: `Masa aktif langganan telah berakhir pada ${formattedDate}`,
+      badgeClass: 'access-pill-expired',
+      formattedDate
+    };
+  } else if (diffDays === 0) {
+    return {
+      days: 0,
+      labelText: 'Sisa Waktu Akses:',
+      valueText: 'Hari Ini',
+      subtext: `Masa aktif langganan berakhir hari ini (${formattedDate})`,
+      badgeClass: 'access-pill-warning',
+      formattedDate
+    };
+  } else if (diffDays <= 3) {
+    return {
+      days: diffDays,
+      labelText: 'Sisa Waktu Akses:',
+      valueText: `${diffDays} Hari`,
+      subtext: `Masa aktif berlaku hingga ${formattedDate} (${diffDays} hari lagi)`,
+      badgeClass: 'access-pill-warning',
+      formattedDate
+    };
+  } else {
+    return {
+      days: diffDays,
+      labelText: 'Sisa Waktu Akses:',
+      valueText: `${diffDays} Hari`,
+      subtext: `Masa aktif berlaku hingga ${formattedDate} (${diffDays} hari lagi)`,
+      badgeClass: 'access-pill-active',
+      formattedDate
+    };
+  }
+}
+
+/**
+ * Perbarui elemen badge/pill sisa waktu akses di header secara reaktif tanpa reload halaman
+ */
+function updateHeaderAccessPill(user) {
+  if (!user) {
+    try {
+      const raw = localStorage.getItem(CURRENT_USER_KEY);
+      user = raw ? JSON.parse(raw) : null;
+    } catch (e) { }
+  }
+
+  // Jika user di CURRENT_USER_KEY belum punya subscriptionEnd, coba cari di STORAGE_KEY
+  if (user && user.email && !user.subscriptionEnd) {
+    try {
+      const allUsers = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+      const found = allUsers.find(u => (u.email || '').trim().toLowerCase() === (user.email || '').trim().toLowerCase());
+      if (found && found.subscriptionEnd) {
+        user = { ...user, subscriptionEnd: found.subscriptionEnd, subscriptionStart: found.subscriptionStart };
+      }
+    } catch (e) { }
+  }
+
+  let pill = document.getElementById('headerAccessPill');
+  const info = getAccessRemainingInfo(user);
+  if (!info) {
+    if (pill) pill.style.display = 'none';
+    return;
+  }
+
+  const iconTimeUrl = typeof getEduIconUrl === 'function' ? getEduIconUrl('time') : '../Assets/icon/icon_time.png';
+
+  // Jika pill belum ada di DOM, buat dan sisipkan langsung ke navbar
+  if (!pill) {
+    const navActions = document.querySelector('.nav-actions');
+    if (navActions) {
+      pill = document.createElement('div');
+      pill.className = `header-access-pill ${info.badgeClass}`;
+      pill.id = 'headerAccessPill';
+      pill.title = info.subtext;
+      pill.style.cssText = `--icon-time-url: url('${iconTimeUrl}'); display: inline-flex;`;
+      pill.innerHTML = `
+        <span class="access-pill-icon" aria-hidden="true" style="-webkit-mask-image: url('${iconTimeUrl}'); mask-image: url('${iconTimeUrl}');"></span>
+        <span class="access-pill-label">${info.labelText}</span>
+        <span class="access-pill-value" id="headerAccessValue">${escapeHtml(info.valueText)}</span>
+      `;
+      navActions.insertBefore(pill, navActions.firstChild);
+      return;
+    }
+  }
+
+  if (pill) {
+    pill.style.display = 'inline-flex';
+    pill.className = `header-access-pill ${info.badgeClass}`;
+    pill.title = info.subtext;
+
+    const labelEl = pill.querySelector('.access-pill-label');
+    if (labelEl) {
+      labelEl.textContent = info.labelText;
+    }
+    const valEl = document.getElementById('headerAccessValue') || pill.querySelector('.access-pill-value');
+    if (valEl) {
+      valEl.textContent = info.valueText;
+    }
+
+    let iconEl = pill.querySelector('.access-pill-icon');
+    if (!iconEl) {
+      const dotEl = pill.querySelector('.access-pill-dot');
+      if (dotEl) dotEl.remove();
+      iconEl = document.createElement('span');
+      iconEl.className = 'access-pill-icon';
+      iconEl.setAttribute('aria-hidden', 'true');
+      pill.insertBefore(iconEl, pill.firstChild);
+    }
+    iconEl.style.webkitMaskImage = `url('${iconTimeUrl}')`;
+    iconEl.style.maskImage = `url('${iconTimeUrl}')`;
+  }
+}
+
+/**
+ * Global Mobile Navigation Menu Handler (Hamburger Toggle)
+ */
+function toggleGlobalMobileNav() {
+  const btn = document.getElementById('hamburgerBtn');
+  const menu = document.querySelector('.nav-actions') || document.querySelector('.nav-actions-right');
+  if (btn && menu) {
+    const isExpanded = btn.getAttribute('aria-expanded') === 'true';
+    btn.classList.toggle('active');
+    menu.classList.toggle('open');
+    btn.setAttribute('aria-expanded', !isExpanded);
+  }
+}
+
+function closeGlobalMobileNav() {
+  const btn = document.getElementById('hamburgerBtn');
+  const menu = document.querySelector('.nav-actions') || document.querySelector('.nav-actions-right');
+  if (btn && menu && menu.classList.contains('open')) {
+    btn.classList.remove('active');
+    menu.classList.remove('open');
+    btn.setAttribute('aria-expanded', 'false');
+  }
+}
+
+// Tutup menu mobile ketika klik di luar menu
+document.addEventListener('click', (e) => {
+  const btn = document.getElementById('hamburgerBtn');
+  const menu = document.querySelector('.nav-actions') || document.querySelector('.nav-actions-right');
+  if (btn && menu && menu.classList.contains('open')) {
+    if (!btn.contains(e.target) && !menu.contains(e.target)) {
+      btn.classList.remove('active');
+      menu.classList.remove('open');
+      btn.setAttribute('aria-expanded', 'false');
+    }
+  }
+
+  const wrapper = document.getElementById('profileDropdownWrapper');
+  const dropdown = document.getElementById('profileDropdown');
+  if (wrapper && dropdown && !wrapper.contains(e.target)) {
+    dropdown.classList.remove('active');
+    wrapper.classList.remove('open');
+  }
+});
+
+/**
+ * Toggle Dropdown Menu Profil
+ */
+function toggleProfileDropdown(e) {
+  if (e) e.stopPropagation();
+  const dropdown = document.getElementById('profileDropdown');
+  const wrapper = document.getElementById('profileDropdownWrapper');
+  if (dropdown) dropdown.classList.toggle('active');
+  if (wrapper) wrapper.classList.toggle('open');
+}
+
+/**
+ * Modal Logout Global
+ */
+function openLogoutModal() {
+  let modal = document.getElementById('logoutConfirmModal');
+  if (!modal) {
+    injectLogoutModal();
+    modal = document.getElementById('logoutConfirmModal');
+  }
+  if (modal) modal.classList.add('active');
+}
+
+function closeLogoutModal() {
+  const modal = document.getElementById('logoutConfirmModal');
+  if (modal) modal.classList.remove('active');
+}
+
+/**
+ * Dapatkan prefix relatif terhadap root proyek Edu Workspace
+ */
+function getAppSubDirPrefix() {
+  let p = '';
+  try {
+    p = decodeURIComponent(window.location.pathname || '').toLowerCase().replace(/\\/g, '/');
+  } catch (e) {
+    p = (window.location.pathname || '').toLowerCase().replace(/\\/g, '/');
+  }
+
+  if (
+    p.includes('/fitur/') ||
+    p.includes('/dashboard pengguna/') ||
+    p.includes('/dashboard%20pengguna/') ||
+    p.includes('/dashboard admin/') ||
+    p.includes('/dashboard%20admin/') ||
+    p.includes('/halaman login/') ||
+    p.includes('/halaman%20login/')
+  ) {
+    return '../';
+  }
+  return '';
+}
+
+/**
+ * ==========================================================================
+ * SISTEM REGISTRY IKON GLOBAL TERPUSAT (EDU WORKSPACE)
+ * Menjamin 100% path ikon valid di level folder mana pun
+ * ==========================================================================
+ */
+const EDU_GLOBAL_ICONS = {
+  admin: 'Assets/icon/icon_admin.png',
+  back: 'Assets/icon/icon_back.png',
+  benefit: 'Assets/icon/icon_benefit.png',
+  edit: 'Assets/icon/icon_edit.png',
+  exit: 'Assets/icon/icon_exit.png',
+  logout: 'Assets/icon/icon_exit.png',
+  feature: 'Assets/icon/icon_feature.png',
+  home: 'Assets/icon/icon_home.png',
+  key: 'Assets/icon/icon_key.png',
+  lock: 'Assets/icon/icon_lock.png',
+  modul_ajar: 'Assets/icon/icon_modul ajar.png',
+  'modul-ajar': 'Assets/icon/icon_modul ajar.png',
+  file: 'Assets/icon/icon_file.png',
+  daftar_modul: 'Assets/icon/icon_file.png',
+  'daftar-modul': 'Assets/icon/icon_file.png',
+  subscribe: 'Assets/icon/icon_subscribe.png',
+  time: 'Assets/icon/icon_time.png',
+  user: 'Assets/icon/icon_user.png',
+  warning: 'Assets/icon/icon_warning.png',
+};
+
+/**
+ * Dapatkan URL path ikon yang benar sesuai kedalaman folder
+ * @param {string} iconKey - nama ikon (misal: 'back', 'logout', 'modul_ajar')
+ * @returns {string} Path URL lengkap ikon
+ */
+function getEduIconUrl(iconKey) {
+  if (!iconKey) return '';
+  const key = String(iconKey).trim().toLowerCase();
+  const relPath = EDU_GLOBAL_ICONS[key];
+  if (!relPath) return '';
+  return getAppSubDirPrefix() + relPath;
+}
+
+/**
+ * Hydrate semua elemen yang memiliki atribut data-icon
+ * Contoh di HTML: <img data-icon="back" alt="Kembali">
+ */
+function initGlobalIcons(rootElement = document) {
+  if (!rootElement || !rootElement.querySelectorAll) return;
+  const iconElements = rootElement.querySelectorAll('[data-icon]');
+  iconElements.forEach(el => {
+    const iconKey = el.getAttribute('data-icon');
+    const url = getEduIconUrl(iconKey);
+    if (url) {
+      if (el.tagName.toLowerCase() === 'img') {
+        if (el.getAttribute('src') !== url) {
+          el.src = url;
+        }
+      } else {
+        el.style.backgroundImage = `url('${url}')`;
+      }
+    }
+  });
+}
+
+// Inisialisasi otomatis & observer perubahan DOM
+if (typeof window !== 'undefined') {
+  window.EDU_GLOBAL_ICONS = EDU_GLOBAL_ICONS;
+  window.getEduIconUrl = getEduIconUrl;
+  window.initGlobalIcons = initGlobalIcons;
+  window.getAccessRemainingInfo = getAccessRemainingInfo;
+  window.updateHeaderAccessPill = updateHeaderAccessPill;
+  window.syncUserSubscription = syncUserSubscription;
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => initGlobalIcons());
+  } else {
+    initGlobalIcons();
+  }
+
+  try {
+    const iconObserver = new MutationObserver((mutations) => {
+      let shouldHydrate = false;
+      for (const m of mutations) {
+        if (m.addedNodes && m.addedNodes.length > 0) {
+          shouldHydrate = true;
+          break;
+        }
+      }
+      if (shouldHydrate) {
+        initGlobalIcons();
+      }
+    });
+    iconObserver.observe(document.documentElement, { childList: true, subtree: true });
+  } catch (e) {}
+}
+
+function executeLogout() {
+  localStorage.removeItem(CURRENT_USER_KEY);
+  const subPrefix = getAppSubDirPrefix();
+  const loginUrl = subPrefix ? (subPrefix + 'halaman login/halaman login.html') : 'halaman login/halaman login.html';
+  window.location.href = loginUrl;
+}
+
+function injectLogoutModal() {
+  if (document.getElementById('logoutConfirmModal')) return;
+  const iconExitUrl = getEduIconUrl('logout');
+
+  const modalHtml = `
+    <div class="confirm-modal-overlay" id="logoutConfirmModal">
+      <div class="confirm-modal-card">
+        <div class="confirm-icon-box">
+          <img data-icon="logout" src="${iconExitUrl}" alt="Exit" class="confirm-icon-img">
+        </div>
+        <h3 class="confirm-modal-title">Konfirmasi Keluar</h3>
+        <p class="confirm-modal-desc">Apakah Anda yakin ingin keluar dari sesi Edu Workspace?</p>
+        <div class="confirm-btn-group">
+          <button type="button" class="btn-cancel-modal" onclick="closeLogoutModal()">Batal</button>
+          <button type="button" class="btn-confirm-logout" onclick="executeLogout()">Ya, Keluar</button>
+        </div>
+      </div>
+    </div>
+  `;
+  document.body.insertAdjacentHTML('beforeend', modalHtml);
+}
+
+/**
+ * Render Header / Navbar Global Edu Workspace Terpusat
+ * @param {Object} options
+/**
+ * Auto-initsialiasi Header Global jika elemen #eduGlobalNavbar ada di halaman
+ */
+function autoInitEduNavbar() {
+  const headerEl = document.getElementById('eduGlobalNavbar');
+  if (!headerEl || headerEl.children.length > 0) return;
+  renderEduNavbar();
+}
+
+if (typeof window !== 'undefined') {
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => autoInitEduNavbar());
+  } else {
+    autoInitEduNavbar();
+  }
+}
+
+/**
+ * Render Header / Navbar Global Edu Workspace Terpusat
+ * Mendukung 3 mode:
+ * 1. Landing (index.html) -> Logo + Hamburger + Nav Links (Home, Benefit, Fitur)
+ * 2. Login (halaman login.html) -> Logo + Tombol Kembali
+ * 3. Dashboard / Portal (Default) -> Logo + Api Key + Kembali + Profil Dropdown + Mobile Logout
+ * @param {Object} options
+ */
+function renderEduNavbar(options = {}) {
+  const targetId = options.targetId || 'eduGlobalNavbar';
+  let headerEl = document.getElementById(targetId);
+  if (!headerEl) {
+    headerEl = document.querySelector('header.edu-navbar, header.site-header, header.login-header, header.user-navbar, header.api-navbar, header.modul-navbar, header.profile-navbar');
+  }
+  if (!headerEl) return;
+
+  const subPrefix = getAppSubDirPrefix();
+
+  let p = '';
+  try {
+    p = decodeURIComponent(window.location.pathname || '').toLowerCase();
+  } catch (e) {
+    p = (window.location.pathname || '').toLowerCase();
+  }
+
+  // 1. Mode Landing Page (index.html)
+  const isLanding = options.type === 'landing' || p === '/' || p.endsWith('/index.html') || p.endsWith('07.%20eduworkspace/') || p.endsWith('07. eduworkspace/');
+  if (isLanding) {
+    headerEl.className = 'edu-navbar site-header';
+    headerEl.innerHTML = `
+      <div class="header-container">
+        <a href="#hero" class="brand-logo" title="Edu Workspace">
+          <span class="brand-bold">Edu</span> <span class="brand-thin">Workspace</span>
+        </a>
+
+        <!-- Hamburger Menu Button (Mobile Only) -->
+        <button class="hamburger-btn" id="hamburgerBtn" aria-label="Toggle navigation menu" aria-expanded="false" onclick="toggleGlobalMobileNav()">
+          <span class="hamburger-bar"></span>
+          <span class="hamburger-bar"></span>
+          <span class="hamburger-bar"></span>
+        </button>
+
+        <!-- Navigation Links Landing Page -->
+        <nav class="nav-links" id="navMenu">
+          <a href="#hero" class="nav-link nav-home active" aria-label="Home">
+            <img data-icon="home" src="${getEduIconUrl('home')}" alt="Home" class="nav-btn-icon">
+            <span class="nav-home-text">Home</span>
+          </a>
+          <a href="#benefit" class="nav-link">
+            <img data-icon="benefit" src="${getEduIconUrl('benefit')}" alt="Benefit" class="nav-btn-icon">
+            <span>Benefit</span>
+          </a>
+          <a href="#fitur" class="nav-link">
+            <img data-icon="feature" src="${getEduIconUrl('feature')}" alt="Fitur" class="nav-btn-icon">
+            <span>Fitur</span>
+          </a>
+        </nav>
+      </div>
+    `;
+    return;
+  }
+
+  // 2. Mode Login / Simple Back Header (halaman login.html)
+  const isLogin = options.type === 'login' || options.showProfile === false || p.includes('/halaman login/') || p.includes('/halaman%20login/');
+  if (isLogin) {
+    const backHref = options.backUrl || (subPrefix ? subPrefix + 'index.html' : '../index.html');
+    const backText = options.backText || 'Kembali';
+    headerEl.className = 'edu-navbar login-header';
+    headerEl.innerHTML = `
+      <div class="header-container">
+        <a href="${options.homeUrl || backHref}" class="brand-logo" title="Edu Workspace">
+          <span class="brand-bold">Edu</span> <span class="brand-thin">Workspace</span>
+        </a>
+
+        <a href="${backHref}" class="btn-back-home" title="${backText}">
+          <img data-icon="back" src="${getEduIconUrl('back')}" alt="Kembali" class="nav-btn-icon">
+          <span>${backText}</span>
+        </a>
+      </div>
+    `;
+    return;
+  }
+
+  // 3. Mode Dashboard / Portal Pengguna & Admin (Default)
+  let user = options.user || null;
+  if (!user) {
+    try {
+      const raw = localStorage.getItem(CURRENT_USER_KEY);
+      user = raw ? JSON.parse(raw) : null;
+    } catch (e) {}
+  }
+
+  // Jika user di CURRENT_USER_KEY belum punya data subscriptionEnd, coba sinkron dari STORAGE_KEY
+  if (user && user.email && !user.subscriptionEnd) {
+    try {
+      const allUsers = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+      const found = allUsers.find(u => (u.email || '').trim().toLowerCase() === (user.email || '').trim().toLowerCase());
+      if (found && found.subscriptionEnd) {
+        user = { ...user, subscriptionEnd: found.subscriptionEnd, subscriptionStart: found.subscriptionStart };
+      }
+    } catch (e) {}
+  }
+
+  const isAdminArea = p.includes('/dashboard admin/') || p.includes('/dashboard%20admin/');
+  const isMainAdmin = isAdminArea && (p.endsWith('/dashboard admin.html') || p.endsWith('/dashboard%20admin.html') || p.endsWith('/dashboard admin/') || p.endsWith('/dashboard%20admin/'));
+  const isUserAdmin = (user && (user.role === 'Admin' || (typeof ADMIN_EMAILS !== 'undefined' && ADMIN_EMAILS.includes((user.email || '').toLowerCase()))));
+
+  let defaultName = (isAdminArea || isUserAdmin) ? 'Super Admin' : 'Bapak/Ibu Guru';
+  let defaultEmail = (isAdminArea || isUserAdmin) ? 'Admin Edu Workspace' : 'guru@gmail.com';
+
+  const userName = (user && user.name) ? user.name : defaultName;
+  const userEmail = (user && user.email) ? user.email : defaultEmail;
+  const userAvatar = getGoogleAvatar(userName, user ? user.avatar : null);
+
+  const isInFitur = p.includes('/fitur/');
+  const isDashboardPengguna = (
+    p.includes('/dashboard pengguna') || 
+    p.includes('/dashboard%20pengguna') || 
+    p.includes('dashboard pengguna') || 
+    p.includes('dashboard%20pengguna')
+  ) && !p.includes('daftar modul') && !p.includes('api key') && !p.includes('profil');
+
+  let defaultPortalHome = 'dashboard pengguna.html';
+  if (isInFitur) {
+    defaultPortalHome = '../dashboard pengguna/dashboard pengguna.html';
+  } else if (isAdminArea) {
+    defaultPortalHome = 'dashboard admin.html';
+  }
+
+  // URL Brand Logo (Kiri Atas): Selalu mengarah ke Landing Page (index.html) sesuai permintaan pengguna
+  const landingUrl = subPrefix ? subPrefix + 'index.html' : 'index.html';
+  const logoUrl = options.homeUrl || landingUrl;
+
+  let defaultShowBack = false;
+  let defaultBackUrl = defaultPortalHome;
+  if (isAdminArea && !isMainAdmin) {
+    defaultShowBack = true;
+    defaultBackUrl = 'dashboard admin.html';
+  }
+
+  // Khusus Dashboard Pengguna: Otomatis tampilkan tombol Daftar Modul Ajar & API Key
+  const defaultShowDaftarModul = isDashboardPengguna;
+  const showDaftarModul = options.showDaftarModul !== undefined ? options.showDaftarModul : defaultShowDaftarModul;
+  const defaultDaftarModulUrl = isInFitur ? '../dashboard pengguna/daftar modul ajar.html' : 'daftar modul ajar.html';
+  const daftarModulUrl = options.daftarModulUrl || defaultDaftarModulUrl;
+
+  const showBack = options.showBack !== undefined ? options.showBack : defaultShowBack;
+  const backUrl = options.backUrl || defaultBackUrl;
+  const backText = options.backText || 'Kembali';
+
+  const defaultShowApiKey = isDashboardPengguna;
+  const showApiKey = options.showApiKey !== undefined ? options.showApiKey : defaultShowApiKey;
+  const defaultApiKeyUrl = isInFitur ? '../dashboard pengguna/api key.html' : 'api key.html';
+  const apiKeyUrl = options.apiKeyUrl || defaultApiKeyUrl;
+
+  // Khusus Dashboard Pengguna (Bukan Admin): Tampilkan informasi Sisa Waktu Akses
+  const defaultShowAccessTime = isDashboardPengguna && !isUserAdmin && !isAdminArea;
+  const showAccessTime = options.showAccessTime !== undefined ? options.showAccessTime : defaultShowAccessTime;
+
+  let accessInfo = null;
+  if (showAccessTime && user) {
+    accessInfo = getAccessRemainingInfo(user);
+    if (!accessInfo && !isUserAdmin && !isAdminArea) {
+      accessInfo = {
+        days: null,
+        labelText: 'Sisa Waktu Akses:',
+        valueText: 'Aktif',
+        subtext: 'Masa aktif akun aktif',
+        badgeClass: 'access-pill-active',
+        formattedDate: '-'
+      };
+    }
+  }
+
+  const iconFileUrl = getEduIconUrl('file');
+  const iconKeyUrl = getEduIconUrl('key');
+  const iconBackUrl = getEduIconUrl('back');
+  const iconLogoutUrl = getEduIconUrl('logout');
+  const iconTimeUrl = getEduIconUrl('time');
+
+  headerEl.className = 'edu-navbar';
+  headerEl.innerHTML = `
+    <div class="header-container">
+      <a href="${logoUrl}" class="brand-logo" title="Edu Workspace">
+        <span class="brand-bold">Edu</span> <span class="brand-thin">Workspace</span>
+      </a>
+
+      <!-- Hamburger Menu Button (Mobile Only) -->
+      <button class="hamburger-btn" id="hamburgerBtn" aria-label="Toggle navigation menu" aria-expanded="false" onclick="toggleGlobalMobileNav()">
+        <span class="hamburger-bar"></span>
+        <span class="hamburger-bar"></span>
+        <span class="hamburger-bar"></span>
+      </button>
+
+      <div class="nav-actions">
+        ${options.customActionsHtml || ''}
+
+        ${(showAccessTime && accessInfo) ? `
+          <div class="header-access-pill ${accessInfo.badgeClass}" id="headerAccessPill" title="${escapeHtml(accessInfo.subtext)}" style="--icon-time-url: url('${iconTimeUrl}');">
+            <span class="access-pill-icon" aria-hidden="true" style="-webkit-mask-image: url('${iconTimeUrl}'); mask-image: url('${iconTimeUrl}');"></span>
+            <span class="access-pill-label">${accessInfo.labelText}</span>
+            <span class="access-pill-value" id="headerAccessValue">${escapeHtml(accessInfo.valueText)}</span>
+          </div>
+        ` : ''}
+
+        ${showDaftarModul ? `
+          <a href="${daftarModulUrl}" class="btn-back-home" title="Daftar Modul Ajar">
+            <img data-icon="file" src="${iconFileUrl}" alt="Daftar Modul Ajar" class="nav-btn-icon">
+            <span>Daftar Modul Ajar</span>
+          </a>
+        ` : ''}
+
+        ${showApiKey ? `
+          <a href="${apiKeyUrl}" class="btn-back-home" title="Kelola Kunci API AI">
+            <img data-icon="key" src="${iconKeyUrl}" alt="API Key" class="nav-btn-icon">
+            <span>API Key</span>
+          </a>
+        ` : ''}
+
+        ${showBack ? `
+          <a href="${backUrl}" class="btn-back-home" title="${backText}">
+            <img data-icon="back" src="${iconBackUrl}" alt="Kembali" class="nav-btn-icon">
+            <span>${backText}</span>
+          </a>
+        ` : ''}
+
+        ${(showDaftarModul || showApiKey || showBack || options.customActionsHtml || (showAccessTime && accessInfo)) ? '<div class="nav-divider"></div>' : ''}
+
+        <!-- Profile dengan Teks Kiri dan Avatar Kanan -->
+        <div class="profile-dropdown-wrapper" id="profileDropdownWrapper">
+          <div class="user-profile-btn" onclick="toggleProfileDropdown(event)">
+            <div class="profile-text-group">
+              <span class="profile-name-text" id="userNameDisplay">${escapeHtml(userName)}</span>
+              <span class="profile-email-text" id="userEmailDisplay">${escapeHtml(userEmail)}</span>
+            </div>
+            <img id="userAvatarImg" src="${userAvatar}" alt="Avatar" class="user-avatar-modern">
+          </div>
+
+          <div class="profile-dropdown-menu" id="profileDropdown">
+            <button type="button" class="btn-dropdown-item dropdown-logout-item" onclick="openLogoutModal()">
+              <img data-icon="logout" src="${iconLogoutUrl}" alt="Exit" class="dropdown-item-icon dropdown-logout-icon" width="18" height="18">
+              <span>Log Out</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Tombol Log Out Khusus Mobile Menu -->
+        <button type="button" class="mobile-logout-btn" onclick="openLogoutModal()">
+          <img data-icon="logout" src="${iconLogoutUrl}" alt="Exit" class="nav-btn-icon">
+          <span>Log Out</span>
+        </button>
+      </div>
+    </div>
+  `;
+
+  if (showAccessTime) {
+    initAccessTimeSync();
+  }
+}
+
+/**
+ * ==========================================================================
+ * REALTIME ACCESS TIME SYNCHRONIZATION (Dashboard Pengguna)
+ * Otomatis ter-sinkron dengan data masa langganan di Dashboard Admin
+ * ==========================================================================
+ */
+let isAccessSyncInitialized = false;
+
+function syncUserSubscription() {
+  let raw = localStorage.getItem(CURRENT_USER_KEY);
+  if (!raw) return;
+  let user = null;
+  try { user = JSON.parse(raw); } catch (e) { return; }
+  if (!user || !user.email) return;
+
+  const userEmail = (user.email || '').trim().toLowerCase();
+  if (user.role === 'Admin' || (typeof ADMIN_EMAILS !== 'undefined' && ADMIN_EMAILS.includes(userEmail)) || (typeof ADMIN_EMAIL !== 'undefined' && userEmail === ADMIN_EMAIL.toLowerCase())) {
+    return;
+  }
+
+  // 1. Cek instan dari database lokal localStorage (STORAGE_KEY)
+  try {
+    const allUsers = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+    const found = allUsers.find(u => (u.email || '').trim().toLowerCase() === userEmail);
+    if (found) {
+      user = { ...user, ...found };
+      localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user));
+      updateHeaderAccessPill(user);
+    }
+  } catch (e) { }
+
+  // 2. Sinkronisasi langsung dengan Supabase (prioritas utama)
+  SupabaseDB.getUserByEmail(userEmail)
+    .then(dbUser => {
+      if (dbUser) {
+        user = { ...user, ...dbUser };
+        localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user));
+        updateHeaderAccessPill(user);
+        // Update cache lokal juga
+        try {
+          const all = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+          const idx = all.findIndex(u => (u.email || '').toLowerCase() === userEmail);
+          if (idx >= 0) all[idx] = user; else all.push(user);
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(all));
+        } catch (e) {}
+      }
+    })
+    .catch(() => {
+      // Fallback ke /api/users jika Supabase tidak tersedia
+      fetch('/api/users')
+        .then(res => res.ok ? res.json() : null)
+        .then(data => {
+          if (!data || !Array.isArray(data.users)) return;
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(data.users));
+          const found = data.users.find(u => (u.email || '').trim().toLowerCase() === userEmail);
+          if (found) {
+            user = { ...user, ...found };
+            localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user));
+            updateHeaderAccessPill(user);
+          }
+        })
+        .catch(() => { });
+    });
+}
+
+function initAccessTimeSync() {
+  if (isAccessSyncInitialized) return;
+  isAccessSyncInitialized = true;
+
+  // A. Dengarkan BroadcastChannel untuk sinkronisasi realtime saat Admin simpan tanggal
+  try {
+    const syncChannel = new BroadcastChannel('edu_workspace_sync');
+    syncChannel.addEventListener('message', (event) => {
+      if (!event.data) return;
+      if (event.data.type === 'SYNC_USER' || event.data.type === 'SYNC_ALL' || event.data.type === 'STATUS_UPDATED') {
+        syncUserSubscription();
+      }
+    });
+  } catch (e) { }
+
+  // B. Storage event saat tab Admin mengubah data
+  window.addEventListener('storage', (e) => {
+    if (e.key === STORAGE_KEY || e.key === 'edu_sync_timestamp' || e.key === CURRENT_USER_KEY) {
+      syncUserSubscription();
+    }
+  });
+
+  // C. Saat jendela kembali mendapatkan fokus
+  window.addEventListener('focus', syncUserSubscription);
+
+  // D. Polling fallback berkala setiap 3 detik
+  setInterval(syncUserSubscription, 3000);
+}
+
+/**
+ * ==========================================================================
+ * REALTIME USER ACCOUNT DELETION MONITOR
+ * Jika akun pengguna dihapus saat pengguna sedang berada di halaman
+ * "Dashboard Pengguna", "API Key", "Daftar Modul Ajar", atau halaman fitur,
+ * sistem seketika mengalihkan pengguna ke tampilan Akun Dihapus (profil.html).
+ * ==========================================================================
+ */
+/**
+ * ==========================================================================
+ * REALTIME USER ACCOUNT ACCESS GUARD
+ * Jika akun pengguna DIHAPUS atau DINONAKTIFKAN (Nonaktif, Ditolak, atau Habis Langganan),
+ * pengguna TIDAK BISA MENGAKSES MENU APAPUN di portal internal.
+ * Setiap halaman internal (Dashboard Pengguna, API Key, Daftar Modul Ajar, Fitur Modul Ajar)
+ * otomatis seketika dialihkan ke profil.html untuk menampilkan keterangan Akun Dihapus / Dinonaktifkan.
+ * ==========================================================================
+ */
+(function setupUserAccountMonitor() {
+  function getRedirectTarget(p) {
+    if (p.includes('/fitur/')) {
+      return '../dashboard pengguna/profil.html';
+    }
+    return 'profil.html';
+  }
+
+  function isExcludedPublicPage(p) {
+    return p === '/' || 
+           p === '' || 
+           p.endsWith('/index.html') || 
+           p.endsWith('index.html') || 
+           p.endsWith('07.%20eduworkspace/') || 
+           p.endsWith('07. eduworkspace/') ||
+           p.includes('/halaman login/') || 
+           p.includes('/halaman%20login/') ||
+           p.endsWith('/profil.html') ||
+           p.endsWith('profil.html');
+  }
+
+  function checkAndRedirectIfBlocked(targetEmail = null, forceStatus = null) {
+    let p = '';
+    try {
+      p = decodeURIComponent(window.location.pathname || '').toLowerCase().replace(/\\/g, '/');
+    } catch (e) {
+      p = (window.location.pathname || '').toLowerCase().replace(/\\/g, '/');
+    }
+
+    if (isExcludedPublicPage(p)) {
+      return;
+    }
+
+    let raw = localStorage.getItem(CURRENT_USER_KEY);
+    if (!raw) return;
+
+    let user = null;
+    try {
+      user = JSON.parse(raw);
+    } catch (e) {
+      return;
+    }
+    if (!user || !user.email) return;
+
+    const userEmail = (user.email || '').trim().toLowerCase();
+
+    // Jangan blokir akun Super Admin
+    if (user.role === 'Admin' || (typeof ADMIN_EMAIL !== 'undefined' && userEmail === ADMIN_EMAIL.toLowerCase())) {
+      return;
+    }
+
+    const redirectTarget = getRedirectTarget(p);
+
+    // 1. Cek paksa jika ada event spesifik untuk email target ini
+    if (targetEmail && userEmail === targetEmail.trim().toLowerCase()) {
+      if (forceStatus === 'Dihapus' || !forceStatus) {
+        user.status = 'Dihapus';
+        user.isDeleted = true;
+        user.isApproved = false;
+        localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user));
+        localStorage.removeItem(`edu_api_key_${userEmail}`);
+        localStorage.removeItem(`edu_modul_list_${userEmail}`);
+        window.location.replace(redirectTarget);
+        return;
+      } else if (forceStatus === 'Nonaktif' || forceStatus === 'Dinonaktifkan' || forceStatus === 'Ditolak') {
+        user.status = forceStatus;
+        user.isApproved = false;
+        localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user));
+        window.location.replace(redirectTarget);
+        return;
+      }
+    }
+
+    // 2. Ambil data terbaru dari database users di localStorage (STORAGE_KEY)
+    try {
+      const allUsers = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+      if (allUsers && allUsers.length > 0) {
+        const found = allUsers.find(u => (u.email || '').trim().toLowerCase() === userEmail);
+        if (found) {
+          user = { ...user, ...found };
+          localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user));
+        } else {
+          // Akun pengguna TIDAK DITEMUKAN di daftar pengguna -> Telah Dihapus oleh Admin!
+          user.status = 'Dihapus';
+          user.isDeleted = true;
+          user.isApproved = false;
+          localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user));
+          localStorage.removeItem(`edu_api_key_${userEmail}`);
+          localStorage.removeItem(`edu_modul_list_${userEmail}`);
+          window.location.replace(redirectTarget);
+          return;
+        }
+      }
+    } catch (e) {}
+
+    const isDeleted = user.status === 'Dihapus' || user.isDeleted === true;
+    const isExpired = typeof isSubscriptionExpired === 'function' && isSubscriptionExpired(user);
+    const isDeactivated = user.status === 'Nonaktif' || 
+                          user.status === 'Dinonaktifkan' || 
+                          user.status === 'Ditolak' || 
+                          user.isApproved === false || 
+                          isExpired;
+
+    // JIKA AKUN DIHAPUS ATAU DINONAKTIFKAN:
+    // Pengguna DILARANG mengakses menu apapun di portal internal,
+    // langsung alihkan seketika ke profil.html!
+    if (isDeleted || isDeactivated) {
+      window.location.replace(redirectTarget);
+      return;
+    }
+  }
+
+  // Sinkronisasi status berkala langsung ke database backend server
+  function checkServerUserStatus() {
+    let p = '';
+    try {
+      p = decodeURIComponent(window.location.pathname || '').toLowerCase().replace(/\\/g, '/');
+    } catch (e) {
+      p = (window.location.pathname || '').toLowerCase().replace(/\\/g, '/');
+    }
+    if (isExcludedPublicPage(p)) return;
+
+    let raw = localStorage.getItem(CURRENT_USER_KEY);
+    if (!raw) return;
+    let user = null;
+    try { user = JSON.parse(raw); } catch (e) { return; }
+    if (!user || !user.email) return;
+
+    const userEmail = (user.email || '').trim().toLowerCase();
+    if (user.role === 'Admin' || (typeof ADMIN_EMAIL !== 'undefined' && userEmail === ADMIN_EMAIL.toLowerCase())) {
+      return;
+    }
+
+    const redirectTarget = getRedirectTarget(p);
+
+    // Cek status akun langsung dari Supabase
+    SupabaseDB.getUserByEmail(userEmail)
+      .then(dbUser => {
+        if (!dbUser) {
+          // Akun tidak ditemukan di Supabase = telah dihapus
+          user.status = 'Dihapus';
+          user.isDeleted = true;
+          user.isApproved = false;
+          localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user));
+          localStorage.removeItem(`edu_api_key_${userEmail}`);
+          localStorage.removeItem(`edu_modul_list_${userEmail}`);
+          window.location.replace(redirectTarget);
+        } else if (dbUser.is_deleted || dbUser.status === 'Dihapus') {
+          user.status = 'Dihapus';
+          user.isDeleted = true;
+          user.isApproved = false;
+          localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user));
+          window.location.replace(redirectTarget);
+        } else if (dbUser.status === 'Nonaktif' || dbUser.status === 'Dinonaktifkan' || dbUser.status === 'Ditolak' || dbUser.isApproved === false) {
+          user = { ...user, ...dbUser };
+          localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user));
+          window.location.replace(redirectTarget);
+        }
+      })
+      .catch(() => {
+        // Fallback ke /api/users jika Supabase tidak tersedia
+        fetch('/api/users')
+          .then(res => res.json())
+          .then(data => {
+            const users = data.users || [];
+            const found = users.find(u => (u.email || '').trim().toLowerCase() === userEmail);
+            if (!found) {
+              user.status = 'Dihapus';
+              user.isDeleted = true;
+              user.isApproved = false;
+              localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user));
+              localStorage.removeItem(`edu_api_key_${userEmail}`);
+              localStorage.removeItem(`edu_modul_list_${userEmail}`);
+              window.location.replace(redirectTarget);
+            } else if (found.status === 'Nonaktif' || found.status === 'Dinonaktifkan' || found.status === 'Ditolak' || found.isApproved === false) {
+              user = { ...user, ...found };
+              localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user));
+              window.location.replace(redirectTarget);
+            }
+          })
+          .catch(() => {});
+      });
+  }
+
+  // A. Jalankan pemeriksaan langsung saat script dimuat & saat DOM siap
+  checkAndRedirectIfBlocked();
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => checkAndRedirectIfBlocked());
+  }
+
+  // B. Active Heartbeat Polling setiap 1 detik
+  // Menjamin jika pengguna sedang diam di halaman daftar modul ajar atau api key,
+  // begitu admin menghapus atau menonaktifkan akunnya, halaman seketika otomatis relog/redirect!
+  setInterval(() => {
+    checkAndRedirectIfBlocked();
+  }, 1000);
+
+  // C. Server Database Check setiap 2.5 detik
+  setInterval(() => {
+    checkServerUserStatus();
+  }, 2500);
+
+  // D. Dengarkan sinyal broadcast realtime dari Dashboard Admin
+  try {
+    const channel = new BroadcastChannel('edu_workspace_sync');
+    channel.addEventListener('message', (event) => {
+      if (event.data) {
+        if (event.data.type === 'USER_DELETED') {
+          const targetEmail = (event.data.email || '').trim().toLowerCase();
+          checkAndRedirectIfBlocked(targetEmail, 'Dihapus');
+        } else if (event.data.type === 'STATUS_UPDATED') {
+          const targetEmail = (event.data.email || '').trim().toLowerCase();
+          checkAndRedirectIfBlocked(targetEmail, event.data.status);
+        } else if (event.data.type === 'SYNC_USER') {
+          checkAndRedirectIfBlocked(event.data.email);
+        }
+      }
+    });
+  } catch (e) {}
+
+  // E. Dengarkan storage event saat tab admin menghapus/mengubah status data pengguna
+  window.addEventListener('storage', (e) => {
+    if (e.key === CURRENT_USER_KEY || e.key === STORAGE_KEY || e.key === 'edu_sync_timestamp') {
+      checkAndRedirectIfBlocked();
+    }
+  });
+
+  // F. Periksa ulang saat window kembali mendapatkan fokus
+  window.addEventListener('focus', () => {
+    checkAndRedirectIfBlocked();
+    checkServerUserStatus();
+  });
+})();
+

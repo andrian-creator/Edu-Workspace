@@ -1,0 +1,951 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Modul Ajar - Edu Workspace</title>
+
+  <!-- Google Fonts: Plus Jakarta Sans & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap"
+    rel="stylesheet">
+
+  <!-- Global & Page Stylesheet -->
+  <link rel="stylesheet" href="../global.css?v=155">
+  <link rel="stylesheet" href="modul%20ajar.css?v=155">
+</head>
+
+<body>
+
+  <!-- Global Top Navbar -->
+  <header id="eduGlobalNavbar"></header>
+
+  <!-- Main Content Wrapper -->
+  <main class="modul-main-wrapper">
+    <div class="modul-main-container">
+
+      <!-- Header Halaman Modul Ajar -->
+      <section class="modul-page-header">
+        <h1 class="modul-title">
+          Generate <span class="text-yellow">Modul Ajar</span> With AI
+        </h1>
+
+        <!-- Stepper: 3 Tahapan Generator Terpadu (Memanjang Penuh Mepet Kiri & Kanan) -->
+        <div class="stepper-wrapper">
+          <div class="stepper-track">
+            <!-- Tahap 1: Info Dasar (Indikator Progres Murni) -->
+            <div class="step-item active" id="stepIndicator1">
+              <div class="step-circle">
+                <span class="step-num">1</span>
+                <img class="step-approved-icon" src="../Assets/icon/icon_approved.png" alt="Selesai">
+              </div>
+              <span class="step-name">Info Dasar</span>
+            </div>
+
+            <!-- Garis Penghubung 1-2 -->
+            <div class="step-line" id="stepLine1"></div>
+
+            <!-- Tahap 2: Konteks (Indikator Progres Murni) -->
+            <div class="step-item" id="stepIndicator2">
+              <div class="step-circle">
+                <span class="step-num">2</span>
+                <img class="step-approved-icon" src="../Assets/icon/icon_approved.png" alt="Selesai">
+              </div>
+              <span class="step-name">Konteks</span>
+            </div>
+
+            <!-- Garis Penghubung 2-3 -->
+            <div class="step-line" id="stepLine2"></div>
+
+            <!-- Tahap 3: Review & Generate (Indikator Progres Murni) -->
+            <div class="step-item" id="stepIndicator3">
+              <div class="step-circle">
+                <span class="step-num">3</span>
+                <img class="step-approved-icon" src="../Assets/icon/icon_approved.png" alt="Selesai">
+              </div>
+              <span class="step-name">Review & Generate</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Grid Form Generator & Output Hasil -->
+      <div class="modul-content-grid">
+
+        <!-- Form Parameter Modul Ajar Multi-Step -->
+        <div class="modul-card form-card">
+          <form id="formModulAjar" onsubmit="handleGenerateModul(event)">
+
+            <!-- ==========================================================
+                 PANE TAHAP 1: INFO DASAR
+                 ========================================================== -->
+            <div class="step-pane active" id="stepPane1">
+              <div class="card-header-group">
+                <div class="card-title-box">
+                  <div class="card-icon-pill">
+                    <img data-icon="modul_ajar" src="../Assets/icon/icon_modul ajar.png" alt="Icon Modul">
+                  </div>
+                  <div>
+                    <h2 class="card-title">1. Info Dasar Modul Ajar</h2>
+                    <p class="card-desc">Lengkapi identitas pendidik dan informasi kurikulum akademik.</p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- A. Informasi Pendidik -->
+              <div class="form-section-block">
+                <div class="form-section-header">
+                  <span class="section-badge">A</span>
+                  <h3 class="section-heading">Informasi Pendidik</h3>
+                </div>
+
+                <div class="form-row-dual">
+                  <!-- Nama Penyusun -->
+                  <div class="form-group">
+                    <label class="form-label" for="namaPenyusun">
+                      <span class="form-label-title">Nama Penyusun <span class="required">*</span></span>
+                    </label>
+                    <input type="text" id="namaPenyusun" class="form-input" placeholder="Contoh: Budi Santoso, S.Pd." required>
+                  </div>
+
+                  <!-- Institusi (Otomatis dari Profil) -->
+                  <div class="form-group">
+                    <label class="form-label" for="institusiPendidik">
+                      <span class="form-label-title">Institusi <span class="required">*</span></span>
+                      <span class="form-label-hint">Otomatis dari data profil</span>
+                    </label>
+                    <input type="text" id="institusiPendidik" class="form-input" placeholder="Nama Institusi / Sekolah" required>
+                  </div>
+                </div>
+              </div>
+
+              <!-- B. Informasi Akademik -->
+              <div class="form-section-block">
+                <div class="form-section-header">
+                  <span class="section-badge">B</span>
+                  <h3 class="section-heading">Informasi Akademik</h3>
+                </div>
+
+                <div class="form-row-dual">
+                  <!-- Tahun Penyusunan -->
+                  <div class="form-group">
+                    <label class="form-label" for="tahunPenyusunan">
+                      <span class="form-label-title">Tahun Penyusunan <span class="required">*</span></span>
+                    </label>
+                    <input type="number" id="tahunPenyusunan" class="form-input" min="2020" max="2035" placeholder="Contoh: 2026" required>
+                  </div>
+
+                  <!-- Jenjang Sekolah -->
+                  <div class="form-group">
+                    <label class="form-label" for="jenjangSekolah">
+                      <span class="form-label-title">Jenjang Sekolah <span class="required">*</span></span>
+                    </label>
+                    <select id="jenjangSekolah" class="form-select" onchange="handleJenjangChange()" required>
+                      <option value="" disabled>Pilih Jenjang Sekolah...</option>
+                      <option value="SD / MI">SD / MI</option>
+                      <option value="SMP / MTs">SMP / MTs</option>
+                      <option value="SMA / MA" selected>SMA / MA</option>
+                      <option value="SMK / MAK">SMK / MAK</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div class="form-row-dual">
+                  <!-- Jurusan -->
+                  <div class="form-group">
+                    <label class="form-label" for="jurusanSekolah">
+                      <span class="form-label-title">Jurusan <span class="required">*</span></span>
+                      <span class="form-label-hint">Selain SMK isi: Reguler</span>
+                    </label>
+                    <input type="text" id="jurusanSekolah" class="form-input" placeholder="Reguler" value="Reguler" required>
+                  </div>
+
+                  <!-- Kelas / Fase -->
+                  <div class="form-group">
+                    <label class="form-label" for="faseKelas">
+                      <span class="form-label-title">Kelas / Fase <span class="required">*</span></span>
+                    </label>
+                    <select id="faseKelas" class="form-select" required>
+                      <!-- Diisi dinamis via JavaScript sesuai jenjang -->
+                    </select>
+                  </div>
+                </div>
+
+                <!-- Mata Pelajaran -->
+                <div class="form-group">
+                  <label class="form-label" for="mataPelajaran">
+                    <span class="form-label-title">Mata Pelajaran <span class="required">*</span></span>
+                  </label>
+                  <input type="text" id="mataPelajaran" class="form-input" placeholder="Contoh: Ilmu Pengetahuan Alam dan Sosial, Matematika, Biologi" required>
+                </div>
+
+                <!-- Elemen Capaian Pembelajaran -->
+                <div class="form-group">
+                  <div class="form-label-action-wrap">
+                    <label class="form-label" for="elemenCP">
+                      <span class="form-label-title">Elemen Capaian Pembelajaran <span class="required">*</span></span>
+                    </label>
+                    <div class="form-label-action-right">
+                      <span class="form-label-hint">Ketik elemen CP, pisahkan dengan titik koma (;)</span>
+                      <button type="button" class="btn-ai-generator" id="btnGenElemenCPAI" onclick="generateAIElemenCP()">
+                        <img src="../Assets/icon/icon_generate.png" class="btn-ai-icon" alt="">
+                        <span>Generate With AI</span>
+                      </button>
+                    </div>
+                  </div>
+                  <textarea id="elemenCP" class="form-textarea" rows="3" placeholder="Contoh: Makhluk Hidup dan Lingkungannya; Zat dan Perubahannya; Energi dan Perubahannya; Keterampilan Proses" required></textarea>
+                </div>
+              </div>
+
+              <!-- Navigasi Bawah Tahap 1 -->
+              <div class="step-nav-footer between-align">
+                <a href="../dashboard pengguna/dashboard pengguna.html" class="btn-step-prev">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="15 18 9 12 15 6"></polyline>
+                  </svg>
+                  <span>Kembali ke Dashboard</span>
+                </a>
+                <button type="button" class="btn-step-next" onclick="nextStep(2)">
+                  <span>Lanjut ke Konteks</span>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="9 18 15 12 9 6"></polyline>
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            <!-- ==========================================================
+                 PANE TAHAP 2: KONTEKS PEMBELAJARAN
+                 ========================================================== -->
+            <div class="step-pane" id="stepPane2" style="display: none;">
+              <div class="card-header-group">
+                <div class="card-title-box">
+                  <div class="card-icon-pill">
+                    <img data-icon="feature" src="../Assets/icon/icon_feature.png" alt="Icon Konteks">
+                  </div>
+                  <div>
+                    <h2 class="card-title">2. Konteks Pembelajaran</h2>
+                    <p class="card-desc">Tentukan rancang model, pendekatan, target capaian, profil lulusan, dan analisis kebutuhan belajar.</p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- C. Konteks Pembelajaran -->
+              <div class="form-section-block">
+                <div class="form-section-header">
+                  <span class="section-badge">C</span>
+                  <h3 class="section-heading">Konteks Pembelajaran</h3>
+                </div>
+
+                <div class="form-row-dual">
+                  <!-- Jenis Input (Topik dan Materi) -->
+                  <div class="form-group">
+                    <label class="form-label" for="jenisInputKonteks">
+                      <span class="form-label-title">Jenis Input <span class="required">*</span></span>
+                    </label>
+                    <select id="jenisInputKonteks" class="form-select" onchange="handleJenisInputChange()">
+                      <option value="Topik" selected>Topik</option>
+                      <option value="Materi">Materi</option>
+                    </select>
+                  </div>
+
+                  <!-- Isi Topik / Materi -->
+                  <div class="form-group">
+                    <label class="form-label" for="isiTopikMateri">
+                      <span class="form-label-title" id="labelIsiTopik">Isi Topik <span class="required">*</span></span>
+                    </label>
+                    <input type="text" id="isiTopikMateri" class="form-input" placeholder="Ketik topik pembelajaran..." required>
+                  </div>
+                </div>
+
+                <div class="form-row-dual">
+                  <!-- Model Pembelajaran -->
+                  <div class="form-group">
+                    <label class="form-label" for="modelPembelajaran">
+                      <span class="form-label-title">Model Pembelajaran <span class="required">*</span></span>
+                    </label>
+                    <select id="modelPembelajaran" class="form-select" onchange="toggleManualModel(this)">
+                      <option value="PBL (Problem Based)" selected>PBL (Problem Based)</option>
+                      <option value="PJBL (Project Based)">PJBL (Project Based)</option>
+                      <option value="Discovery Learning">Discovery Learning</option>
+                      <option value="Inquiry Based Learning">Inquiry Based Learning</option>
+                      <option value="Cooperative Learning">Cooperative Learning</option>
+                      <option value="Contextual Teaching and Learning">Contextual Teaching and Learning</option>
+                      <option value="Input Manual">Input Manual</option>
+                    </select>
+                    <!-- Input Manual Model (Kondisional) -->
+                    <div id="wrapperModelManual" class="manual-input-box" style="display: none; margin-top: 8px;">
+                      <input type="text" id="inputModelManual" class="form-input" placeholder="Ketik model pembelajaran manual...">
+                    </div>
+                  </div>
+
+                  <!-- Pendekatan -->
+                  <div class="form-group">
+                    <label class="form-label" for="pendekatanPembelajaran">
+                      <span class="form-label-title">Pendekatan <span class="required">*</span></span>
+                    </label>
+                    <select id="pendekatanPembelajaran" class="form-select" onchange="toggleManualPendekatan(this)">
+                      <option value="Deep Learning" selected>Deep Learning</option>
+                      <option value="TPACK">TPACK</option>
+                      <option value="TaRL / Diferensiasi">TaRL / Diferensiasi</option>
+                      <option value="Saintifik (5M)">Saintifik (5M)</option>
+                      <option value="Input Manual">Input manual</option>
+                    </select>
+                    <!-- Input Manual Pendekatan (Kondisional) -->
+                    <div id="wrapperPendekatanManual" class="manual-input-box" style="display: none; margin-top: 8px;">
+                      <input type="text" id="inputPendekatanManual" class="form-input" placeholder="Ketik pendekatan pembelajaran manual...">
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Metode Pembelajaran (Checkbox) -->
+                <div class="form-group">
+                  <label class="form-label">
+                    <span class="form-label-title">Metode Pembelajaran <span class="required">*</span></span>
+                    <span class="form-label-hint">Pilih minimal satu metode</span>
+                  </label>
+                  <div class="custom-checkbox-grid">
+                    <label class="custom-checkbox-item">
+                      <input type="checkbox" name="metodePembelajaran" value="Ceramah Interaktif">
+                      <span class="custom-checkbox-box">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round">
+                          <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                      </span>
+                      <span class="custom-checkbox-label">Ceramah Interaktif</span>
+                    </label>
+                    <label class="custom-checkbox-item">
+                      <input type="checkbox" name="metodePembelajaran" value="Diskusi Kelompok">
+                      <span class="custom-checkbox-box">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round">
+                          <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                      </span>
+                      <span class="custom-checkbox-label">Diskusi Kelompok</span>
+                    </label>
+                    <label class="custom-checkbox-item">
+                      <input type="checkbox" name="metodePembelajaran" value="Simulasi">
+                      <span class="custom-checkbox-box">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round">
+                          <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                      </span>
+                      <span class="custom-checkbox-label">Simulasi</span>
+                    </label>
+                    <label class="custom-checkbox-item">
+                      <input type="checkbox" name="metodePembelajaran" value="Praktikum Langsung">
+                      <span class="custom-checkbox-box">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round">
+                          <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                      </span>
+                      <span class="custom-checkbox-label">Praktikum Langsung</span>
+                    </label>
+                    <label class="custom-checkbox-item">
+                      <input type="checkbox" name="metodePembelajaran" value="Peer Teaching">
+                      <span class="custom-checkbox-box">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round">
+                          <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                      </span>
+                      <span class="custom-checkbox-label">Peer Teaching</span>
+                    </label>
+                    <label class="custom-checkbox-item">
+                      <input type="checkbox" name="metodePembelajaran" value="Studi Kasus">
+                      <span class="custom-checkbox-box">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round">
+                          <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                      </span>
+                      <span class="custom-checkbox-label">Studi Kasus</span>
+                    </label>
+                    <label class="custom-checkbox-item">
+                      <input type="checkbox" name="metodePembelajaran" value="Demonstrasi">
+                      <span class="custom-checkbox-box">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round">
+                          <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                      </span>
+                      <span class="custom-checkbox-label">Demonstrasi</span>
+                    </label>
+                  </div>
+                </div>
+
+                <div class="form-row-dual">
+                  <!-- Jumlah Pertemuan -->
+                  <div class="form-group">
+                    <label class="form-label" for="jumlahPertemuan">
+                      <span class="form-label-title">Jumlah Pertemuan <span class="required">*</span></span>
+                    </label>
+                    <input type="number" id="jumlahPertemuan" class="form-input" placeholder="Contoh: 4" min="1" value="4">
+                  </div>
+
+                  <!-- Total JP & Durasi -->
+                  <div class="form-group">
+                    <label class="form-label" for="totalJPDurasi">
+                      <span class="form-label-title">Total JP & Durasi <span class="required">*</span></span>
+                    </label>
+                    <input type="text" id="totalJPDurasi" class="form-input" placeholder="Contoh: 4 JP x 45 Menit (4 Pertemuan)" value="4 JP x 45 Menit (4 Pertemuan)">
+                  </div>
+                </div>
+              </div>
+
+              <!-- D. Tujuan Pembelajaran -->
+              <div class="form-section-block">
+                <div class="form-section-header between-space">
+                  <div class="section-title-left">
+                    <span class="section-badge">D</span>
+                    <h3 class="section-heading">Tujuan Pembelajaran</h3>
+                  </div>
+                  <button type="button" class="btn-ai-generator" id="btnGenTujuanAI" onclick="generateAITujuan()">
+                    <img src="../Assets/icon/icon_generate.png" class="btn-ai-icon" alt="">
+                    <span>Generate With AI</span>
+                  </button>
+                </div>
+                <div class="form-group no-margin">
+                  <label class="form-label" for="tujuanPembelajaran">
+                    <span class="form-label-title">Deskripsi Tujuan Pembelajaran <span class="required">*</span></span>
+                  </label>
+                  <textarea id="tujuanPembelajaran" class="form-textarea" rows="5" placeholder="Isi Tujuan Pembelajaran sendiri. Satu TP per baris.&#10;Contoh:&#10;1. Murid mampu menghitung BEP produksi&#10;2. Murid mampu menganalisis titik impas"></textarea>
+                </div>
+              </div>
+
+              <!-- E. Materi Tambahan (Opsional) -->
+              <div class="form-section-block">
+                <div class="form-section-header between-space">
+                  <div class="section-title-left">
+                    <span class="section-badge">E</span>
+                    <h3 class="section-heading">Materi Tambahan <span class="optional-badge">(Opsional)</span></h3>
+                  </div>
+                  <button type="button" class="btn-ai-generator" id="btnGenMateriAI" onclick="generateAIMateri()">
+                    <img src="../Assets/icon/icon_generate.png" class="btn-ai-icon" alt="">
+                    <span>Generate With AI</span>
+                  </button>
+                </div>
+                <div class="form-group no-margin">
+                  <label class="form-label" for="materiTambahan">
+                    <span class="form-label-title">Ringkasan Materi Tambahan</span>
+                    <span class="form-label-hint">Bisa isi sendiri atau tombol Generate With AI</span>
+                  </label>
+                  <textarea id="materiTambahan" class="form-textarea" rows="5" placeholder="Ketik materi tambahan / pengayaan atau klik 'Generate With AI' untuk menyusunnya otomatis berdasarkan data sebelumnya."></textarea>
+                </div>
+              </div>
+
+              <!-- F. Analisis Kebutuhan -->
+              <div class="form-section-block">
+                <div class="form-section-header">
+                  <span class="section-badge">F</span>
+                  <h3 class="section-heading">Analisis Kebutuhan</h3>
+                </div>
+
+                <div class="form-row-dual">
+                  <!-- Mayoritas Gaya Belajar Murid -->
+                  <div class="form-group">
+                    <label class="form-label" for="gayaBelajarMurid">
+                      <span class="form-label-title">Mayoritas Gaya Belajar Murid <span class="required">*</span></span>
+                    </label>
+                    <select id="gayaBelajarMurid" class="form-select">
+                      <option value="Campuran / Multimodal" selected>Campuran / Multimodal</option>
+                      <option value="Visual">Visual</option>
+                      <option value="Auditori">Auditori</option>
+                      <option value="Kinestetik">Kinestetik</option>
+                    </select>
+                  </div>
+
+                  <!-- Media Digital -->
+                  <div class="form-group">
+                    <label class="form-label" for="mediaDigital">
+                      <span class="form-label-title">Media Digital <span class="required">*</span></span>
+                    </label>
+                    <input type="text" id="mediaDigital" class="form-input" placeholder="Contoh: Slide Canva, Video YouTube, Quizizz" value="">
+                  </div>
+                </div>
+
+                <!-- Fasilitas (Pilihan Centang Sesuai Gambar 2 + Opsi Lainnya) -->
+                <div class="form-group no-margin">
+                  <label class="form-label">
+                    <span class="form-label-title">Fasilitas <span class="required">*</span></span>
+                    <span class="form-label-hint">Pilih minimal satu fasilitas</span>
+                  </label>
+                  <div class="custom-checkbox-grid five-cols">
+                    <label class="custom-checkbox-item">
+                      <input type="checkbox" name="fasilitasBelajar" value="Lab Komputer">
+                      <span class="custom-checkbox-box">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round">
+                          <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                      </span>
+                      <span class="custom-checkbox-label">Lab Komputer</span>
+                    </label>
+                    <label class="custom-checkbox-item">
+                      <input type="checkbox" name="fasilitasBelajar" value="Proyektor/LCD">
+                      <span class="custom-checkbox-box">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round">
+                          <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                      </span>
+                      <span class="custom-checkbox-label">Proyektor/LCD</span>
+                    </label>
+                    <label class="custom-checkbox-item">
+                      <input type="checkbox" name="fasilitasBelajar" value="Internet Cepat">
+                      <span class="custom-checkbox-box">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round">
+                          <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                      </span>
+                      <span class="custom-checkbox-label">Internet Cepat</span>
+                    </label>
+                    <label class="custom-checkbox-item">
+                      <input type="checkbox" name="fasilitasBelajar" value="Smartphone Murid">
+                      <span class="custom-checkbox-box">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round">
+                          <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                      </span>
+                      <span class="custom-checkbox-label">Smartphone Murid</span>
+                    </label>
+                    <label class="custom-checkbox-item">
+                      <input type="checkbox" id="cbFasilitasLainnya" name="fasilitasBelajar" value="Lainnya" onchange="toggleFasilitasLainnya()">
+                      <span class="custom-checkbox-box">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round">
+                          <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                      </span>
+                      <span class="custom-checkbox-label">Lainnya</span>
+                    </label>
+                  </div>
+
+                  <!-- Kolom Input Fasilitas Lainnya (Muncul jika opsi Lainnya dicentang) -->
+                  <div id="wrapperFasilitasLainnya" class="fasilitas-lainnya-wrapper" style="display: none; margin-top: 12px;">
+                    <input type="text" id="inputFasilitasLainnya" class="form-input" placeholder="Contoh: Lapangan; Lab Foto">
+                    <span class="form-field-hint" style="display: block; margin-top: 5px; font-size: 0.78rem; color: #64748b;">Pisahkan dengan tanda titik koma (;) jika mengisi lebih dari satu fasilitas</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- G. Capaian Pembelajaran (CP) -->
+              <div class="form-section-block">
+                <div class="form-section-header between-space">
+                  <div class="section-title-left">
+                    <span class="section-badge">G</span>
+                    <h3 class="section-heading">Capaian Pembelajaran (CP)</h3>
+                  </div>
+                  <button type="button" class="btn-ai-generator" id="btnGenCPAI" onclick="generateAICP()">
+                    <img src="../Assets/icon/icon_generate.png" class="btn-ai-icon" alt="">
+                    <span>Generate With AI</span>
+                  </button>
+                </div>
+                <div class="form-group no-margin">
+                  <label class="form-label" for="capaianPembelajaran">
+                    <span class="form-label-title">Deskripsi Capaian Pembelajaran <span class="required">*</span></span>
+                  </label>
+                  <textarea id="capaianPembelajaran" class="form-textarea" rows="5" placeholder="Ketik rumusan Capaian Pembelajaran atau klik 'Generate With AI' untuk merumuskannya secara terpadu sesuai Elemen CP di Tahap 1."></textarea>
+
+                  <div class="cp-ringkas-checkbox-wrap" style="margin-top: 10px;">
+                    <label class="custom-checkbox-item">
+                      <input type="checkbox" id="ceklisRingkasCP" name="ceklisRingkasCP">
+                      <span class="custom-checkbox-box">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round">
+                          <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                      </span>
+                      <span class="custom-checkbox-label" style="font-weight: 500; font-size: 0.88rem; color: #334155;">Ceklis jika ingin AI meringkas CP agar lebih spesifik dan fokus pada Topik/Materi saja.</span>
+                    </label>
+                  </div>
+                </div>
+              </div>
+
+              <!-- H. Dimensi Profil Lulusan -->
+              <div class="form-section-block">
+                <div class="form-section-header">
+                  <span class="section-badge">H</span>
+                  <h3 class="section-heading">Dimensi Profil Lulusan</h3>
+                </div>
+                <div class="form-group no-margin">
+                  <label class="form-label">
+                    <span class="form-label-title">Pilihan Dimensi Target <span class="required">*</span></span>
+                    <span class="form-label-hint">Pilih minimal satu dimensi</span>
+                  </label>
+                  <div class="custom-checkbox-grid">
+                    <label class="custom-checkbox-item">
+                      <input type="checkbox" name="dimensiProfil" value="Keimanan">
+                      <span class="custom-checkbox-box">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round">
+                          <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                      </span>
+                      <span class="custom-checkbox-label">Keimanan</span>
+                    </label>
+                    <label class="custom-checkbox-item">
+                      <input type="checkbox" name="dimensiProfil" value="Kewargaan">
+                      <span class="custom-checkbox-box">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round">
+                          <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                      </span>
+                      <span class="custom-checkbox-label">Kewargaan</span>
+                    </label>
+                    <label class="custom-checkbox-item">
+                      <input type="checkbox" name="dimensiProfil" value="Penalaran Kritis">
+                      <span class="custom-checkbox-box">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round">
+                          <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                      </span>
+                      <span class="custom-checkbox-label">Penalaran Kritis</span>
+                    </label>
+                    <label class="custom-checkbox-item">
+                      <input type="checkbox" name="dimensiProfil" value="Kreativitas">
+                      <span class="custom-checkbox-box">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round">
+                          <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                      </span>
+                      <span class="custom-checkbox-label">Kreativitas</span>
+                    </label>
+                    <label class="custom-checkbox-item">
+                      <input type="checkbox" name="dimensiProfil" value="Kolaborasi">
+                      <span class="custom-checkbox-box">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round">
+                          <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                      </span>
+                      <span class="custom-checkbox-label">Kolaborasi</span>
+                    </label>
+                    <label class="custom-checkbox-item">
+                      <input type="checkbox" name="dimensiProfil" value="Kemandirian">
+                      <span class="custom-checkbox-box">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round">
+                          <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                      </span>
+                      <span class="custom-checkbox-label">Kemandirian</span>
+                    </label>
+                    <label class="custom-checkbox-item">
+                      <input type="checkbox" name="dimensiProfil" value="Kesehatan">
+                      <span class="custom-checkbox-box">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round">
+                          <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                      </span>
+                      <span class="custom-checkbox-label">Kesehatan</span>
+                    </label>
+                    <label class="custom-checkbox-item">
+                      <input type="checkbox" name="dimensiProfil" value="Komunikasi">
+                      <span class="custom-checkbox-box">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round">
+                          <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                      </span>
+                      <span class="custom-checkbox-label">Komunikasi</span>
+                    </label>
+                  </div>
+                </div>
+              </div>
+
+              <!-- I. Identifikasi Awal -->
+              <div class="form-section-block">
+                <div class="form-section-header between-space">
+                  <div class="section-title-left">
+                    <span class="section-badge">I</span>
+                    <h3 class="section-heading">Identifikasi Awal</h3>
+                  </div>
+                  <button type="button" class="btn-ai-generator" id="btnGenIdentifikasiAI" onclick="generateAIIdentifikasi()">
+                    <img src="../Assets/icon/icon_generate.png" class="btn-ai-icon" alt="">
+                    <span>Generate With AI</span>
+                  </button>
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label" for="identifikasiPesertaDidik">
+                    <span class="form-label-title">Identifikasi Peserta Didik <span class="required">*</span></span>
+                  </label>
+                  <textarea id="identifikasiPesertaDidik" class="form-textarea" rows="3" placeholder="Identifikasi kesiapan murid terhadap materi atau klik 'Generate With AI'."></textarea>
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label" for="identifikasiMateri">
+                    <span class="form-label-title">Identifikasi Materi Pembelajaran <span class="required">*</span></span>
+                  </label>
+                  <textarea id="identifikasiMateri" class="form-textarea" rows="3" placeholder="Identifikasi esensi materi pembelajaran atau klik 'Generate With AI'."></textarea>
+                </div>
+
+                <div class="form-group no-margin">
+                  <label class="form-label" for="identifikasiProfilLulusan">
+                    <span class="form-label-title">Dimensi Profil Lulusan <span class="required">*</span></span>
+                  </label>
+                  <textarea id="identifikasiProfilLulusan" class="form-textarea" rows="3" placeholder="Identifikasi keterkaitan profil lulusan dengan aktivitas atau klik 'Generate With AI'."></textarea>
+                </div>
+              </div>
+
+              <!-- Navigasi Bawah Tahap 2 -->
+              <div class="step-nav-footer between-align">
+                <button type="button" class="btn-step-prev" onclick="prevStep(1)">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="15 18 9 12 15 6"></polyline>
+                  </svg>
+                  <span>Kembali ke Info Dasar</span>
+                </button>
+                <button type="button" class="btn-step-next" onclick="nextStep(3)">
+                  <span>Lanjut ke Review & Generate</span>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="9 18 15 12 9 6"></polyline>
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            <!-- ==========================================================
+                 PANE TAHAP 3: REVIEW & GENERATE
+                 ========================================================== -->
+            <div class="step-pane" id="stepPane3" style="display: none;">
+              <div class="card-header-group">
+                <div class="card-title-box">
+                  <div class="card-icon-pill icon-pill-yellow">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+                      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                    </svg>
+                  </div>
+                  <div>
+                    <h2 class="card-title">3. Review & Siap Generate</h2>
+                    <p class="card-desc">Tinjau seluruh parameter pembelajaran dari Tahap 1 dan 2 sebelum AI menyusun modul ajar lengkap.</p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Container Ringkasan Data Sesuai Gambar 3 -->
+              <div class="review-clean-container">
+                <!-- Baris 1: Informasi Pendidik & Informasi Akademik -->
+                <div class="review-row-dual">
+                  <!-- Kolom Kiri: Informasi Pendidik -->
+                  <div class="review-group-col">
+                    <div class="review-section-heading">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="12" cy="7" r="4"></circle>
+                      </svg>
+                      <span>Informasi Pendidik</span>
+                    </div>
+                    <table class="review-table-kv">
+                      <tr>
+                        <td class="review-key">Nama</td>
+                        <td class="review-colon">:</td>
+                        <td class="review-value" id="reviewPenyusun">-</td>
+                      </tr>
+                      <tr>
+                        <td class="review-key">Institusi</td>
+                        <td class="review-colon">:</td>
+                        <td class="review-value" id="reviewInstitusi">-</td>
+                      </tr>
+                    </table>
+                  </div>
+
+                  <!-- Kolom Kanan: Informasi Akademik -->
+                  <div class="review-group-col">
+                    <div class="review-section-heading">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M22 10v6M2 10l10-5 10 5-10 5z"></path>
+                        <path d="M6 12v5c3 3 9 3 12 0v-5"></path>
+                      </svg>
+                      <span>Informasi Akademik</span>
+                    </div>
+                    <table class="review-table-kv">
+                      <tr>
+                        <td class="review-key">Jenjang/Fase</td>
+                        <td class="review-colon">:</td>
+                        <td class="review-value" id="reviewJenjangFase">-</td>
+                      </tr>
+                      <tr>
+                        <td class="review-key">Jurusan</td>
+                        <td class="review-colon">:</td>
+                        <td class="review-value" id="reviewJurusan">-</td>
+                      </tr>
+                      <tr>
+                        <td class="review-key">Mata Pelajaran</td>
+                        <td class="review-colon">:</td>
+                        <td class="review-value" id="reviewMapel">-</td>
+                      </tr>
+                    </table>
+                  </div>
+                </div>
+
+                <!-- Baris 2: Konteks Pembelajaran -->
+                <div class="review-group-block">
+                  <div class="review-section-heading">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                      <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                      <line x1="8" y1="21" x2="16" y2="21"></line>
+                      <line x1="12" y1="17" x2="12" y2="21"></line>
+                    </svg>
+                    <span>Konteks Pembelajaran</span>
+                  </div>
+                  <div class="review-card-box">
+                    <div class="review-grid-2x2">
+                      <div class="review-grid-cell">
+                        <span class="cell-label">Elemen yang Dipilih:</span>
+                        <div class="cell-value" id="reviewElemenCPList">
+                          <!-- List bullet elemen CP -->
+                        </div>
+                      </div>
+                      <div class="review-grid-cell">
+                        <span class="cell-label">Topik/Materi:</span>
+                        <div class="cell-value cell-text-bold" id="reviewTopikMateri">-</div>
+                      </div>
+                      <div class="review-grid-cell">
+                        <span class="cell-label">Model & Pendekatan:</span>
+                        <div class="cell-value cell-text-bold" id="reviewModelPendekatan">-</div>
+                      </div>
+                      <div class="review-grid-cell">
+                        <span class="cell-label">Metode:</span>
+                        <div class="cell-value cell-text-bold" id="reviewMetodeText">-</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Baris 3: Capaian Pembelajaran -->
+                <div class="review-group-block">
+                  <div class="review-section-heading">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                      <polyline points="14 2 14 8 20 8"></polyline>
+                      <line x1="16" y1="13" x2="8" y2="13"></line>
+                      <line x1="16" y1="17" x2="8" y2="17"></line>
+                      <polyline points="10 9 9 9 8 9"></polyline>
+                    </svg>
+                    <span>Capaian Pembelajaran</span>
+                  </div>
+                  <div class="review-card-box">
+                    <div class="review-cp-narrative" id="reviewCPNarrative">-</div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Navigasi Bawah Tahap 3: 2 Tombol Sejajar Horizontal Sama Besar -->
+              <div class="step-nav-footer-dual">
+                <button type="button" class="btn-step-action btn-prev-action" onclick="prevStep(2)">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="15 18 9 12 15 6"></polyline>
+                  </svg>
+                  <span>Ubah Konteks</span>
+                </button>
+                <button type="button" id="btnGenerateModul" class="btn-step-action btn-generate-action" onclick="confirmGenerateModul()">
+                  <img src="../Assets/icon/icon_generate.png" class="btn-ai-icon" alt="">
+                  <span>Generate Modul Ajar</span>
+                </button>
+              </div>
+            </div>
+
+          </form>
+        </div>
+
+        <!-- Kartu Tersendiri: Hasil / Proses Generate Modul Ajar (Terpisah dari Kartu Review) -->
+        <div id="generateProgressContainer" class="generate-result-standalone-wrapper" style="display: none; margin-top: 32px; width: 100%; box-sizing: border-box;">
+          <div class="generate-result-card" style="display: flex; flex-direction: row; align-items: center; justify-content: center; gap: 60px; background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 24px; padding: 44px 48px; box-shadow: 0 6px 28px rgba(15, 23, 42, 0.05); width: 100%; box-sizing: border-box;">
+            <!-- Sebelah Kiri: Gambar image_generatedone.png (Dibuat Lebih Besar & Menarik Pada Desktop) -->
+            <div class="generate-result-left" style="flex-shrink: 0; width: 460px; max-width: 48%; display: flex; align-items: center; justify-content: center;">
+              <img src="../Assets/image/image_generatedone.png" alt="Ilustrasi Modul Selesai" class="generate-result-img" style="width: 100%; max-width: 460px; height: auto; object-fit: contain; display: block;">
+            </div>
+
+            <!-- Sebelah Kanan: Teks & Indikator Proses Generate / Tombol Buka Modul Ajar -->
+            <div class="generate-result-right" style="flex: 0 1 auto; width: 100%; max-width: 460px; min-width: 0; display: flex; flex-direction: column; gap: 20px;">
+              <!-- State 1: Teks Proses Generate & Indikator Proses Generate -->
+              <div id="progressStateLoading" class="generate-state-box generate-loading-box" style="display: none; flex-direction: column; gap: 18px; width: 100%;">
+                <div class="generate-text-group" style="display: flex; flex-direction: column; gap: 8px;">
+                  <div style="display: flex; align-items: center; gap: 8px;">
+                    <span style="display: inline-flex; align-items: center; gap: 6px; background: #eff6ff; border: 1px solid #bfdbfe; color: #2563eb; font-size: 0.85rem; font-weight: 700; padding: 4px 12px; border-radius: 9999px;">
+                      ✦ AI Generator Aktif
+                    </span>
+                  </div>
+                  <div class="generate-state-heading" style="font-size: 1.5rem; font-weight: 800; color: #0f172a; line-height: 1.3;">Sedang Menyusun Modul Ajar...</div>
+                  <div class="generate-state-sub" id="generateProgressStepText" style="font-size: 1rem; color: #64748b; line-height: 1.6;">AI sedang merumuskan kegiatan inti pembelajaran & materi...</div>
+                </div>
+                
+                <!-- Indikator Proses Generate -->
+                <div class="generate-indicator-group" style="display: flex; flex-direction: column; gap: 12px; margin-top: 4px;">
+                  <div class="generate-bar-track" style="width: 100%; height: 12px; background: #f1f5f9; border-radius: 9999px; overflow: hidden; position: relative;">
+                    <div class="generate-bar-fill" id="generateProgressBar" style="width: 20%; height: 100%; background: linear-gradient(90deg, #2563eb 0%, #38bdf8 100%); border-radius: 9999px; transition: width 0.4s ease;"></div>
+                  </div>
+                  <div class="generate-indicator-info" style="display: flex; align-items: center; justify-content: space-between; font-size: 0.92rem; color: #64748b;">
+                    <div class="generate-indicator-spin-wrap" style="display: flex; align-items: center; gap: 10px;">
+                      <span class="generate-mini-spinner" style="width: 18px; height: 18px; border: 2.5px solid #cbd5e1; border-top-color: #2563eb; border-radius: 50%; display: inline-block;"></span>
+                      <span class="generate-indicator-percent" id="generatePercentText" style="font-weight: 800; color: #2563eb; font-size: 1rem;">20%</span>
+                    </div>
+                    <span class="generate-indicator-caption" style="font-size: 0.88rem; color: #94a3b8;">Proses perumusan otomatis oleh Gemini AI</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- State 2: Setelah Selesai Berubah Menjadi Info Sukses & Tombol Buka Modul Ajar -->
+              <div id="progressStateSuccess" class="generate-state-box generate-success-box" style="display: none; flex-direction: column; gap: 20px; width: 100%;">
+                <div class="generate-text-group" style="display: flex; flex-direction: column; gap: 8px;">
+                  <div class="generate-state-heading" style="font-size: 1.65rem; font-weight: 800; color: #0f172a; line-height: 1.3;">Yey, Modul Ajar Berhasil Disusun!</div>
+                  <div class="generate-state-sub" style="font-size: 1.05rem; color: #475569; line-height: 1.65;">Modul ajar siap untuk direview, dan diterapkan pada pembelajaran.</div>
+                </div>
+
+                <div style="margin-top: 4px;">
+                  <button type="button" id="btnOpenModul" class="btn-buka-modul-ajar" onclick="openGeneratedModulTab()" style="width: fit-content; min-width: 260px; min-height: 52px; padding: 14px 32px; display: inline-flex; align-items: center; justify-content: center; gap: 10px; background: linear-gradient(135deg, #16a34a 0%, #15803d 100%); color: #ffffff; border: none; border-radius: 9999px; font-size: 1.05rem; font-weight: 700; cursor: pointer; box-shadow: 0 4px 16px rgba(22, 163, 74, 0.28); transition: all 0.25s ease;">
+                    <img src="../Assets/icon/icon_share.png" alt="" class="btn-open-icon" style="width: 18px; height: 18px; object-fit: contain; filter: brightness(0) invert(1);">
+                    <span>Buka Modul Ajar</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </main>
+
+  <!-- Modal Konfirmasi Yakin Ingin Generate -->
+  <div class="confirm-modal-overlay" id="confirmGenerateModal" onclick="closeConfirmModalOnOverlay(event)">
+    <div class="confirm-modal-card">
+      <div class="confirm-icon-box" style="background: #eff6ff; border: 1.5px solid #bfdbfe; color: #2563eb;">
+        <img src="../Assets/icon/icon_generate.png" style="width: 28px; height: 28px; object-fit: contain;" alt="Generate">
+      </div>
+      <h3 class="confirm-modal-title">Yakin Ingin Generate?</h3>
+      <p class="confirm-modal-desc">Pastikan seluruh data pembelajaran sudah sesuai. AI akan segera menyusun Modul Ajar lengkap berdasarkan data yang telah diisi.</p>
+      <div class="confirm-btn-group" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; width: 100%;">
+        <button type="button" class="btn-step-action btn-prev-action" style="height: 44px; font-size: 0.9rem;" onclick="closeConfirmGenerateModal()">
+          <span>Batal</span>
+        </button>
+        <button type="button" class="btn-step-action btn-generate-action" style="height: 44px; font-size: 0.9rem;" onclick="proceedGenerateModul()">
+          <span>Ya, Generate</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Notifikasi Popup di Tengah (Style Khas Edu Workspace) -->
+  <div class="confirm-modal-overlay" id="notificationModal" onclick="closeNotificationModalOnOverlay(event)">
+    <div class="confirm-modal-card">
+      <div class="confirm-icon-box icon-box-success" id="notifIconBox">
+        <div id="notifIconContent">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="20 6 9 17 4 12"></polyline>
+          </svg>
+        </div>
+      </div>
+      <h3 class="confirm-modal-title" id="notifTitle">Berhasil!</h3>
+      <p class="confirm-modal-desc" id="notifDesc">Pemberitahuan berhasil.</p>
+      <div class="confirm-btn-group">
+        <button type="button" class="btn-modal-primary" onclick="closeNotificationModal()">
+          <span>Mengerti</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal logout diinjek otomatis oleh global.js -->
+
+  <!-- Scripts -->
+  <script src="../global.js?v=170"></script>
+  <script src="modul%20ajar.js?v=170"></script>
+</body>
+
+</html>

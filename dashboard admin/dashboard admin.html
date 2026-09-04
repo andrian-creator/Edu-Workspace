@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Edu Workspace - Dashboard Admin</title>
+  <meta name="description" content="Dashboard Super Admin Edu Workspace - Ruang Kendali dan Manajemen Edukasi.">
+
+  <!-- Google Fonts: Plus Jakarta Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap"
+    rel="stylesheet">
+
+  <!-- Global Stylesheet -->
+  <link rel="stylesheet" href="../global.css?v=75">
+  <link rel="stylesheet" href="dashboard%20admin.css?v=75">
+
+
+</head>
+
+<body>
+
+  <!-- Global Top Navbar -->
+  <header id="eduGlobalNavbar"></header>
+
+  <!-- Main Wrapper (Menyatukan Hero & 3 Action Cards dalam 1 Layar Presisi Sejajar Header) -->
+  <div class="admin-main-wrapper">
+    <div class="admin-main-container">
+
+      <!-- Hero Section -->
+      <main class="hero-section" id="hero">
+        <div class="hero-container">
+
+          <!-- Left Column: Typography -->
+          <div class="hero-left">
+            <h1 class="hero-title">
+              Dashboard<br>
+              <span class="text-yellow">Edu Workspace.</span>
+            </h1>
+
+            <p class="hero-description">
+              Pusat kendali dan manajemen terpadu. Pantau aktivitas pengguna, verifikasi pendidik, dan kelola ekosistem edukasi secara efisien.
+            </p>
+          </div>
+
+          <!-- Right Column: User's Image dari folder Assets -->
+          <div class="hero-right">
+            <div class="illustration-wrapper">
+              <img src="../Assets/image/image_dashboardadmin.png" alt="Dashboard Edu Workspace Illustration" class="hero-image">
+            </div>
+          </div>
+
+        </div>
+      </main>
+
+      <!-- 3 Tombol Kotak Besar Sejajar Horizontal Memanjang dari Kiri ke Kanan -->
+      <section class="admin-actions-section">
+        <div class="actions-container">
+
+          <!-- Tombol 1: Daftar Pengguna -->
+          <a href="Dashboard Admin_Daftar Pengguna.html" class="admin-action-card active-card">
+            <div class="action-card-header">
+              <div class="action-card-icon-box">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+                  stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                  <circle cx="9" cy="7" r="4"></circle>
+                  <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                  <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                </svg>
+              </div>
+              <span class="action-badge-active">Aktif</span>
+            </div>
+            <div class="action-card-body">
+              <h3 class="action-card-title">Daftar Pengguna</h3>
+              <p class="action-card-desc">Kelola data akun pendaftar, persetujuan akses pendidik, dan masa aktif langganan akun.</p>
+            </div>
+            <div class="action-card-footer">
+              <span class="action-card-link">Buka Menu &rarr;</span>
+            </div>
+          </a>
+
+          <!-- Tombol 2: Pengelola Fitur -->
+          <a href="Dashboard Admin_Pengelola Fitur.html" class="admin-action-card active-card">
+            <div class="action-card-header">
+              <div class="action-card-icon-box">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+                  stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="3" width="7" height="7"></rect>
+                  <rect x="14" y="3" width="7" height="7"></rect>
+                  <rect x="14" y="14" width="7" height="7"></rect>
+                  <rect x="3" y="14" width="7" height="7"></rect>
+                </svg>
+              </div>
+              <span class="action-badge-active">Aktif</span>
+            </div>
+            <div class="action-card-body">
+              <h3 class="action-card-title">Pengelola Fitur</h3>
+              <p class="action-card-desc">Pengaturan modul pembelajaran, generator RPP AI, dan integrasi fitur sistem.</p>
+            </div>
+            <div class="action-card-footer">
+              <span class="action-card-link">Buka Menu &rarr;</span>
+            </div>
+          </a>
+
+          <!-- Tombol 3: Pemberitahuan (Belum ada fungsi) -->
+          <div class="admin-action-card disabled-card" onclick="showComingSoonToast('Pemberitahuan')">
+            <div class="action-card-header">
+              <div class="action-card-icon-box">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+                  stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                  <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                </svg>
+              </div>
+              <span class="action-badge-soon">Segera Hadir</span>
+            </div>
+            <div class="action-card-body">
+              <h3 class="action-card-title">Pemberitahuan</h3>
+              <p class="action-card-desc">Kirim pengumuman massal, info pembaruan sistem, dan siaran pesan ke pengguna.</p>
+            </div>
+            <div class="action-card-footer">
+              <span class="action-card-link">Belum Tersedia</span>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+    </div>
+  </div>
+
+  <!-- Modal logout diinjek otomatis oleh global.js -->
+
+  <!-- Toast Notifikasi Admin -->
+  <div class="admin-toast" id="adminToast">
+    <span id="adminToastText">Pemberitahuan</span>
+  </div>
+
+  <!-- Scripts -->
+  <script src="../global.js?v=75"></script>
+  <script src="dashboard%20admin.js?v=75"></script>
+</body>
+
+</html>

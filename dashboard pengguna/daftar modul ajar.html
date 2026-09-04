@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Edu Workspace - Daftar Modul Ajar</title>
+  <meta name="description" content="Kelola dan pratinjau seluruh daftar Modul Ajar Kurikulum Merdeka yang telah Anda rancang di Edu Workspace.">
+
+  <!-- Google Fonts: Plus Jakarta Sans & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Global & Page Stylesheet -->
+  <link rel="stylesheet" href="../global.css?v=150">
+  <link rel="stylesheet" href="daftar%20modul%20ajar.css?v=150">
+</head>
+
+<body>
+
+  <!-- Global Top Navbar -->
+  <header id="eduGlobalNavbar"></header>
+
+  <!-- Main Content Wrapper -->
+  <main class="modul-list-main-wrapper">
+    <div class="modul-list-container">
+
+      <!-- Header Banner Halaman -->
+      <section class="modul-page-header">
+        <div class="header-text-group">
+          <h1 class="modul-title">
+            Daftar <span class="text-yellow">Modul Ajar.</span>
+          </h1>
+          <p class="modul-subtitle">
+            Kelola, pratinjau, dan edit seluruh rancangan Modul Ajar Kurikulum Merdeka yang tersimpan pada akun Anda.
+          </p>
+        </div>
+        <div class="header-action-group">
+          <a href="../Fitur/modul ajar.html" class="btn-create-modul" id="btnCreateModulTop">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="12" y1="5" x2="12" y2="19"></line>
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+            <span>Buat Modul Ajar Baru</span>
+          </a>
+        </div>
+      </section>
+
+      <!-- Stat Cards Ringkasan Modul Guru -->
+      <section class="stat-summary-grid">
+        <div class="stat-summary-card">
+          <div class="stat-icon-box bg-blue-subtle">
+            <img src="../Assets/icon/icon_file.png" alt="Total Modul" class="stat-icon-img">
+          </div>
+          <div class="stat-info">
+            <span class="stat-label">Total Modul Disusun</span>
+            <div class="stat-number" id="statTotalModul">0</div>
+          </div>
+        </div>
+
+        <div class="stat-summary-card">
+          <div class="stat-icon-box bg-green-subtle">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+              <polyline points="22 4 12 14.01 9 11.01"></polyline>
+            </svg>
+          </div>
+          <div class="stat-info">
+            <span class="stat-label">Status Lengkap (Terverifikasi)</span>
+            <div class="stat-number text-green" id="statModulLengkap">0</div>
+          </div>
+        </div>
+
+        <div class="stat-summary-card">
+          <div class="stat-icon-box bg-purple-subtle">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"></circle>
+              <polyline points="12 6 12 12 16 14"></polyline>
+            </svg>
+          </div>
+          <div class="stat-info">
+            <span class="stat-label">Terakhir Generate</span>
+            <div class="stat-meta" id="statTerakhirUpdate">-</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Toolbar Pencarian & Filter -->
+      <section class="modul-table-card">
+        <div class="table-toolbar">
+          <div class="search-input-wrapper">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="search-icon">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+            <input type="text" id="searchInput" class="search-input" placeholder="Cari nama modul, topik, mata pelajaran..." oninput="handleSearchFilter()">
+          </div>
+
+          <div class="filter-controls-group">
+            <select id="filterFase" class="filter-select" onchange="handleSearchFilter()">
+              <option value="">Semua Fase</option>
+              <option value="Fase A">Fase A (Kelas 1-2 SD)</option>
+              <option value="Fase B">Fase B (Kelas 3-4 SD)</option>
+              <option value="Fase C">Fase C (Kelas 5-6 SD)</option>
+              <option value="Fase D">Fase D (Kelas 7-9 SMP)</option>
+              <option value="Fase E">Fase E (Kelas 10 SMA/SMK)</option>
+              <option value="Fase F">Fase F (Kelas 11-12 SMA/SMK)</option>
+            </select>
+
+            <select id="filterStatus" class="filter-select" onchange="handleSearchFilter()">
+              <option value="">Semua Status</option>
+              <option value="Lengkap">Lengkap</option>
+              <option value="Draft">Draft</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Tabel Daftar Modul Ajar -->
+        <div class="table-responsive-wrapper">
+          <table class="modul-data-table" id="modulDataTable">
+            <thead>
+              <tr>
+                <th style="width: 5%; text-align: center;">No.</th>
+                <th style="width: 26%; text-align: center;">Nama Modul</th>
+                <th style="width: 17%; text-align: center;">Mata Pelajaran</th>
+                <th style="width: 9%; text-align: center;">Fase</th>
+                <th style="width: 9%; text-align: center;">Kelas</th>
+                <th style="width: 11%; text-align: center;">Status</th>
+                <th style="width: 13%; text-align: center;">Tanggal Update</th>
+                <th style="width: 10%; text-align: center;">Aksi</th>
+              </tr>
+            </thead>
+            <tbody id="modulTableBody">
+              <!-- Render Dinamis via JavaScript -->
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Empty State Tampilan Jika Belum Ada Data -->
+        <div id="emptyStateWrapper" class="empty-state-card" style="display: none;">
+          <div class="empty-icon-circle">
+            <img src="../Assets/icon/icon_file.png" alt="Belum Ada Modul" class="empty-icon-img">
+          </div>
+          <h3 class="empty-title">Belum Ada Modul Ajar</h3>
+          <p class="empty-desc" id="emptyDesc">
+            Anda belum memiliki rancangan modul ajar yang tersimpan di akun ini. Klik tombol di bawah untuk mulai membuat modul ajar Kurikulum Merdeka pertama Anda dengan AI.
+          </p>
+          <a href="../Fitur/modul ajar.html" class="btn-create-modul btn-empty-action" id="btnCreateModulEmpty">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="12" y1="5" x2="12" y2="19"></line>
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+            <span>Mulai Buat Modul Ajar</span>
+          </a>
+        </div>
+
+        <!-- Pagination / Summary Footer -->
+        <div class="table-footer-summary" id="tableFooterSummary">
+          <span id="footerCountText">Menampilkan 0 modul ajar</span>
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <!-- Modal Konfirmasi Hapus Modul Ajar -->
+  <div class="confirm-modal-overlay" id="deleteConfirmModal">
+    <div class="confirm-modal-card">
+      <div class="confirm-icon-box bg-red-subtle">
+        <img src="../Assets/icon/icon_trash.png" alt="Hapus" class="confirm-icon-img" style="filter: invert(27%) sepia(91%) saturate(2352%) hue-rotate(346deg) brightness(94%) contrast(94%);">
+      </div>
+      <h3 class="confirm-modal-title">Hapus Modul Ajar?</h3>
+      <p class="confirm-modal-desc" id="deleteModalDesc">
+        Apakah Anda yakin ingin menghapus modul ajar ini dari akun Anda? Seluruh data rancangan yang terhubung akan dihapus secara permanen.
+      </p>
+      <div class="confirm-btn-group">
+        <button type="button" class="btn-cancel-modal" onclick="closeDeleteModal()">Batal</button>
+        <button type="button" class="btn-confirm-delete" id="btnConfirmDelete" onclick="executeDeleteModul()">Ya, Hapus</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Shared Global Notification Modal -->
+  <div class="notification-modal-overlay" id="notificationModal">
+    <div class="notification-modal-card">
+      <div class="notification-icon-box" id="notificationIconBox"></div>
+      <h3 class="notification-title" id="notificationTitle">Notifikasi</h3>
+      <p class="notification-desc" id="notificationDesc">Pesan notifikasi.</p>
+      <div class="notification-btn-group">
+        <button type="button" class="btn-modal-primary" onclick="closeNotificationModal()">Mengerti</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Skrip Pendukung -->
+  <script src="../global.js?v=150"></script>
+  <script src="daftar%20modul%20ajar.js?v=150"></script>
+</body>
+
+</html>

@@ -1,0 +1,16 @@
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs & temp
+email_sent_log.json
+*.log
+
+# Python
+__pycache__/
+*.py[cod]
+
+# Local environment / Vercel
+.env
+.env.local
+.vercel

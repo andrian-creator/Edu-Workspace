@@ -1,0 +1,2297 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pratinjau Modul Ajar - Edu Workspace</title>
+
+  <!-- Google Fonts: Plus Jakarta Sans & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Global CSS Edu Workspace -->
+  <link rel="stylesheet" href="../global.css?v=123">
+
+  <style>
+    :root {
+      --doc-bg: #f8fafc;
+      --doc-surface: #ffffff;
+      --doc-border: #cbd5e1;
+      --doc-text: #0f172a;
+      --doc-text-muted: #475569;
+      --doc-primary: #1e293b;
+      --doc-accent: #2563eb;
+    }
+
+    body {
+      background-color: var(--doc-bg);
+      color: var(--doc-text);
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      margin: 0;
+      padding: 0;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ==========================================================================
+       Header Download Buttons (Persis Style Gambar 1 - .btn-back-home)
+       ========================================================================== */
+    .header-download-group {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-doc-download {
+      display: inline-flex !important;
+      align-items: center !important;
+      gap: 10px !important;
+      font-size: 1.02rem !important;
+      font-weight: 700 !important;
+      color: var(--color-text-main, #0f172a) !important;
+      padding: 8px 18px !important;
+      border: 1.5px solid transparent !important;
+      border-radius: var(--radius-pill, 9999px) !important;
+      background: transparent !important;
+      cursor: pointer !important;
+      transition: var(--transition, all 0.2s cubic-bezier(0.16, 1, 0.3, 1)) !important;
+      box-shadow: none !important;
+      user-select: none !important;
+      text-decoration: none !important;
+      height: 44px !important;
+      box-sizing: border-box !important;
+      white-space: nowrap !important;
+    }
+
+    .btn-doc-download:hover {
+      border-color: var(--color-border-dark, #1e293b) !important;
+      background: transparent !important;
+      color: var(--color-text-main, #0f172a) !important;
+    }
+
+    .btn-doc-download .nav-btn-icon {
+      width: 22px !important;
+      height: 22px !important;
+      object-fit: contain !important;
+      display: block !important;
+      flex-shrink: 0 !important;
+    }
+
+    .btn-doc-download:disabled {
+      opacity: 0.5 !important;
+      cursor: not-allowed !important;
+    }
+
+    .btn-spinner {
+      width: 16px;
+      height: 16px;
+      border: 2.5px solid rgba(15, 23, 42, 0.2);
+      border-top-color: #0f172a;
+      border-radius: 50%;
+      animation: spinDoc 0.7s linear infinite;
+      display: inline-block;
+      flex-shrink: 0;
+    }
+
+    @keyframes spinDoc {
+      to { transform: rotate(360deg); }
+    }
+
+    /* ==========================================================================
+       Wadah Kertas Dokumen Modul Ajar (Sesuai Struktur contoh modul.pdf)
+       ========================================================================== */
+    .document-page-wrapper {
+      max-width: 960px;
+      margin: 32px auto 80px;
+      padding: 0 20px;
+    }
+
+    .paper-sheet {
+      background: #ffffff;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 8px;
+      box-shadow: none !important; /* Style kita tidak ada bayangan */
+      padding: 56px 64px;
+      box-sizing: border-box;
+    }
+
+    /* Kop Dokumen Sesuai Halaman 1 contoh modul.pdf */
+    .paper-header {
+      text-align: center;
+      border-bottom: 2px solid #0f172a;
+      padding-bottom: 14px;
+      margin-bottom: 24px;
+    }
+
+    .doc-main-heading {
+      font-size: 1.55rem;
+      font-weight: 800;
+      color: #0f172a;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 4px;
+    }
+
+    .doc-school-heading {
+      font-size: 1.22rem;
+      font-weight: 800;
+      color: #1e3a8a;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin: 0;
+    }
+
+    /* Tabel Metadata Informasi Modul dengan Garis Formal Sesuai Tabel Lain */
+    .doc-metadata-table {
+      width: 100%;
+      margin-bottom: 28px;
+      border-collapse: collapse;
+      border: 1px solid #cbd5e1;
+      table-layout: fixed;
+      box-sizing: border-box;
+    }
+
+    .doc-metadata-table td {
+      border: 1px solid #cbd5e1;
+      padding: 9px 12px;
+      font-size: 0.88rem;
+      vertical-align: top;
+      line-height: 1.45;
+      word-break: break-word;
+      overflow-wrap: break-word;
+      box-sizing: border-box;
+    }
+
+    .doc-metadata-table .meta-label {
+      width: 20%;
+      font-weight: 700;
+      color: #0f172a;
+      background: #f8fafc;
+    }
+
+    .doc-metadata-table .meta-value {
+      width: 30%;
+      color: #0f172a;
+    }
+
+    /* Judul Section (A. IDENTIFIKASI AWAL, B. DESAIN PEMBELAJARAN, dst.) */
+    .doc-section {
+      margin-bottom: 34px;
+    }
+
+    .doc-section-title {
+      font-size: 1.08rem;
+      font-weight: 800;
+      color: #0f172a;
+      background: #f1f5f9;
+      border-left: 4.5px solid #2563eb;
+      padding: 8px 14px;
+      margin-bottom: 16px;
+      border-radius: 0 6px 6px 0;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+
+    .doc-sub-heading {
+      font-size: 0.96rem;
+      font-weight: 800;
+      color: #0f172a;
+      margin-top: 18px;
+      margin-bottom: 8px;
+    }
+
+    /* Semua Teks Narasi Rata Kanan Kiri (Justified) */
+    .doc-paragraph,
+    .doc-list li,
+    .meeting-card p,
+    .meeting-card li,
+    .doc-table td,
+    .deep-learning-box,
+    .lkpd-container p,
+    .lkpd-container li {
+      text-align: justify;
+      text-justify: inter-word;
+      line-height: 1.68;
+      color: #1e293b;
+      font-size: 0.92rem;
+    }
+
+    .doc-paragraph {
+      margin-bottom: 12px;
+    }
+
+    /* Tabel Formal Sesuai contoh modul.pdf */
+    .doc-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 6px;
+      margin-bottom: 18px;
+      table-layout: fixed;
+      box-sizing: border-box;
+    }
+
+    .doc-table th,
+    .doc-table td {
+      border: 1px solid #cbd5e1;
+      padding: 8px 12px;
+      font-size: 0.88rem;
+      vertical-align: top;
+      word-break: break-word;
+      overflow-wrap: break-word;
+      box-sizing: border-box;
+    }
+
+    .doc-table th {
+      background: #f8fafc;
+      font-weight: 700;
+      color: #0f172a;
+      text-align: left;
+    }
+
+    .doc-list {
+      margin-left: 22px;
+      margin-bottom: 14px;
+    }
+
+    .doc-list li {
+      margin-bottom: 6px;
+    }
+
+    /* Daftar Aktivitas Guru & Murid Per Poin */
+    .activity-points-list {
+      margin: 0;
+      padding-left: 18px;
+      list-style-type: decimal;
+    }
+
+    .activity-points-list li {
+      margin-bottom: 6px;
+      text-align: justify;
+      text-justify: inter-word;
+      line-height: 1.6;
+    }
+
+    .activity-points-list li:last-child {
+      margin-bottom: 0;
+    }
+
+    /* Boks Prinsip Deep Learning & Sintaks Model */
+    .deep-learning-box {
+      background: #f8fafc;
+      border-left: 3.5px solid #2563eb;
+      padding: 10px 14px;
+      margin-top: 8px;
+      margin-bottom: 6px;
+      border-radius: 0 6px 6px 0;
+    }
+
+    .meeting-block {
+      margin-bottom: 24px;
+    }
+
+    .meeting-header-title {
+      font-size: 0.98rem;
+      font-weight: 800;
+      color: #1e3a8a;
+      margin-bottom: 10px;
+      background: #f8fafc;
+      padding: 6px 12px;
+      border-radius: 4px;
+      border-left: 3px solid #1e3a8a;
+    }
+
+    .lkpd-container {
+      background: #fafafa;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      padding: 16px 20px;
+      margin-top: 8px;
+    }
+
+    /* Lembar Pengesahan Tanda Tangan Sesuai contoh modul.pdf */
+    .signature-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      margin-top: 48px;
+      padding-top: 20px;
+      text-align: center;
+    }
+
+    .sig-block {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 64px;
+    }
+
+    .sig-role {
+      font-size: 0.9rem;
+      color: #334155;
+      font-weight: 600;
+      line-height: 1.5;
+    }
+
+    .sig-name {
+      font-size: 0.94rem;
+      font-weight: 800;
+      color: #0f172a;
+    }
+
+    .doc-footer-notice {
+      text-align: center;
+      font-size: 0.8rem;
+      color: #64748b;
+      margin-top: 40px;
+      padding-top: 14px;
+      border-top: 1px dashed #cbd5e1;
+    }
+
+    /* Responsif */
+    @media (max-width: 768px) {
+      .header-download-group {
+        display: flex !important;
+        flex-direction: column !important;
+        width: 100% !important;
+        gap: 8px !important;
+      }
+
+      .btn-doc-download {
+        width: 100% !important;
+        height: 44px !important;
+        padding: 10px 16px !important;
+        font-size: 1.02rem !important;
+        justify-content: flex-start !important;
+        border: 1.5px solid transparent !important;
+        border-radius: var(--radius-pill, 9999px) !important;
+        background: transparent !important;
+        box-sizing: border-box !important;
+      }
+
+      .btn-doc-download:hover,
+      .btn-doc-download:active {
+        border-color: var(--color-border-dark, #1e293b) !important;
+        background: #f8fafc !important;
+        color: var(--color-text-main, #0f172a) !important;
+      }
+
+      .paper-sheet {
+        padding: 32px 18px;
+      }
+
+      .doc-metadata-table td {
+        padding: 6px 8px !important;
+        font-size: 0.82rem !important;
+      }
+
+      .signature-grid {
+        grid-template-columns: 1fr;
+        gap: 36px;
+      }
+    }
+
+    /* Cetak & Print PDF Bersih */
+    @media print {
+      @page {
+        size: A4;
+        margin: 15mm 15mm 15mm 15mm;
+      }
+
+      body {
+        background: #ffffff !important;
+        color: #000000 !important;
+        padding: 0 !important;
+        margin: 0 !important;
+      }
+
+      .edu-navbar,
+      .nav-actions,
+      #hamburgerBtn,
+      .btn-doc-download {
+        display: none !important;
+      }
+
+      .document-page-wrapper {
+        max-width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+      }
+
+      .paper-sheet {
+        border: none !important;
+        border-radius: 0 !important;
+        padding: 0 !important;
+        box-shadow: none !important;
+      }
+
+      tr {
+        page-break-inside: avoid !important;
+      }
+
+      .doc-section-title,
+      .meeting-header-title {
+        page-break-after: avoid !important;
+      }
+
+      .signature-grid {
+        page-break-inside: avoid !important;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- Header Global Edu Workspace Sesuai Desain Web Kita -->
+  <header class="edu-navbar" id="eduGlobalNavbar">
+    <div class="header-container">
+      <a href="../dashboard pengguna/dashboard pengguna.html" class="brand-logo" title="Edu Workspace">
+        <span class="brand-bold">Edu</span> <span class="brand-thin">Workspace</span>
+      </a>
+
+      <!-- Hamburger Menu Button (Mobile Only) -->
+      <button class="hamburger-btn" id="hamburgerBtn" aria-label="Toggle navigation menu" aria-expanded="false" onclick="toggleGlobalMobileNav()">
+        <span class="hamburger-bar"></span>
+        <span class="hamburger-bar"></span>
+        <span class="hamburger-bar"></span>
+      </button>
+
+      <div class="nav-actions">
+        <!-- Tombol Download Word, PDF & Tutup Sesuai Style Gambar 1 (.btn-back-home) -->
+        <div class="header-download-group">
+          <button type="button" id="btnDownloadWord" class="btn-doc-download" onclick="downloadModulWord(); if (typeof closeGlobalMobileNav === 'function') closeGlobalMobileNav();" title="Download Word">
+            <img src="../Assets/icon/icon_word.png" alt="Word" class="nav-btn-icon">
+            <span>Download Word</span>
+          </button>
+          <button type="button" id="btnDownloadPDF" class="btn-doc-download" onclick="downloadModulPDF(); if (typeof closeGlobalMobileNav === 'function') closeGlobalMobileNav();" title="Download PDF">
+            <img src="../Assets/icon/icon_pdf.png" alt="PDF" class="nav-btn-icon">
+            <span>Download PDF</span>
+          </button>
+          <button type="button" id="btnCloseTab" class="btn-doc-download" onclick="closeCurrentTab()" title="Tutup">
+            <img src="../Assets/icon/icon_close.png" alt="Tutup" class="nav-btn-icon">
+            <span>Tutup</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Wadah Naskah Dokumen Modul Ajar -->
+  <main class="document-page-wrapper">
+    <article class="paper-sheet" id="printArea">
+      <!-- Kop Dokumen Sesuai Halaman 1 contoh modul.pdf (Tanpa EFEVV • RVRV, Baris 2 adalah Nama Sekolah) -->
+      <div class="paper-header">
+        <h1 class="doc-main-heading">MODUL AJAR KURIKULUM MERDEKA</h1>
+        <h2 class="doc-school-heading" id="docSchoolName">NAMA SEKOLAH</h2>
+      </div>
+
+      <!-- Tabel Informasi Modul Ajar dengan Garis Formal -->
+      <table class="doc-metadata-table">
+        <tr>
+          <td class="meta-label">Nama Penyusun</td>
+          <td class="meta-value" id="metaNama">-</td>
+          <td class="meta-label">Fase / Kelas</td>
+          <td class="meta-value" id="metaFase">-</td>
+        </tr>
+        <tr>
+          <td class="meta-label">Mata Pelajaran</td>
+          <td class="meta-value" id="metaMapel">-</td>
+          <td class="meta-label">Topik</td>
+          <td class="meta-value" id="metaTopik">-</td>
+        </tr>
+        <tr>
+          <td class="meta-label">Elemen</td>
+          <td class="meta-value" id="metaElemen">-</td>
+          <td class="meta-label">Alokasi Waktu</td>
+          <td class="meta-value" id="metaAlokasi">-</td>
+        </tr>
+        <tr>
+          <td class="meta-label">Model</td>
+          <td class="meta-value" id="metaModel">-</td>
+          <td class="meta-label">Pendekatan</td>
+          <td class="meta-value" id="metaPendekatan">-</td>
+        </tr>
+      </table>
+
+      <!-- A. IDENTIFIKASI AWAL -->
+      <section class="doc-section">
+        <div class="doc-section-title">A. IDENTIFIKASI AWAL</div>
+
+        <!-- 1. Identifikasi Peserta Didik (Tabel 3 Kolom) -->
+        <div class="doc-sub-heading">1. Identifikasi Peserta Didik</div>
+        <table class="doc-table">
+          <thead>
+            <tr>
+              <th style="width: 25%;">Kategori</th>
+              <th style="width: 38%;">Identifikasi</th>
+              <th style="width: 37%;">Tindak Lanjut</th>
+            </tr>
+          </thead>
+          <tbody id="tablePesertaDidikBody"></tbody>
+        </table>
+
+        <!-- 2. Identifikasi Materi Pembelajaran (Tabel 2 Kolom) -->
+        <div class="doc-sub-heading">2. Identifikasi Materi Pembelajaran</div>
+        <table class="doc-table">
+          <thead>
+            <tr>
+              <th style="width: 30%;">Kategori</th>
+              <th style="width: 70%;">Deskripsi</th>
+            </tr>
+          </thead>
+          <tbody id="tableMateriBody"></tbody>
+        </table>
+
+        <!-- 3. Dimensi Profil Lulusan (Tabel 2 Kolom) -->
+        <div class="doc-sub-heading">3. Dimensi Profil Lulusan</div>
+        <table class="doc-table">
+          <thead>
+            <tr>
+              <th style="width: 30%;">Dimensi</th>
+              <th style="width: 70%;">Deskripsi Penerapan</th>
+            </tr>
+          </thead>
+          <tbody id="tableProfilBody"></tbody>
+        </table>
+      </section>
+
+      <!-- B. DESAIN PEMBELAJARAN -->
+      <section class="doc-section">
+        <div class="doc-section-title">B. DESAIN PEMBELAJARAN</div>
+
+        <div class="doc-sub-heading">Capaian Pembelajaran</div>
+        <p class="doc-paragraph" id="docCapaianPembelajaran">-</p>
+
+        <div class="doc-sub-heading">Tujuan Pembelajaran</div>
+        <div id="docTujuanPembelajaran"></div>
+
+        <div class="doc-sub-heading">Pemahaman Bermakna</div>
+        <p class="doc-paragraph" id="docPemahamanBermakna">-</p>
+
+        <div class="doc-sub-heading">Pertanyaan Pemantik</div>
+        <ul class="doc-list" id="docPertanyaanPemantik"></ul>
+
+        <div class="doc-sub-heading">Lintas Disiplin Ilmu</div>
+        <p class="doc-paragraph" id="docLintasDisiplin">-</p>
+
+        <div class="doc-sub-heading">Praktik Pedagogis</div>
+        <p class="doc-paragraph" id="docPraktikPedagogis">-</p>
+
+        <div class="doc-sub-heading">Kemitraan Pembelajaran</div>
+        <p class="doc-paragraph" id="docKemitraanPembelajaran">-</p>
+
+        <div class="doc-sub-heading">Lingkungan Pembelajaran</div>
+        <p class="doc-paragraph" id="docLingkunganPembelajaran">-</p>
+      </section>
+
+      <!-- C. PENGALAMAN BELAJAR -->
+      <section class="doc-section">
+        <div class="doc-section-title">C. PENGALAMAN BELAJAR</div>
+        <div id="docPengalamanBelajarContainer"></div>
+      </section>
+
+      <!-- D. MATERI AJAR DAN ASESMEN -->
+      <section class="doc-section">
+        <div class="doc-section-title">D. MATERI AJAR DAN ASESMEN</div>
+
+        <!-- 1. Materi Ajar (Deskriptif Panjang Hasil AI) -->
+        <div class="doc-sub-heading">1. Materi Ajar</div>
+        <div class="doc-paragraph" id="docMateriAjarDeskriptif">-</div>
+
+        <!-- 2. Materi Tambahan (jika diisikan) -->
+        <div id="wrapperMateriTambahan" style="display: none; margin-top: 16px;">
+          <div class="doc-sub-heading">2. Materi Tambahan</div>
+          <div id="docMateriTambahan">-</div>
+        </div>
+
+        <!-- Asesmen -->
+        <div class="doc-sub-heading" id="headingAsesmen" style="margin-top: 20px;">2. Asesmen</div>
+        <table class="doc-table">
+          <thead>
+            <tr>
+              <th style="width: 25%;">Jenis Asesmen</th>
+              <th style="width: 35%;">Bentuk</th>
+              <th style="width: 40%;">Keterangan</th>
+            </tr>
+          </thead>
+          <tbody id="tableAsesmenDinamisBody"></tbody>
+        </table>
+      </section>
+
+      <!-- E. REFLEKSI -->
+      <section class="doc-section">
+        <div class="doc-section-title">E. REFLEKSI</div>
+
+        <div class="doc-sub-heading">Refleksi Guru</div>
+        <ul class="doc-list" id="docRefleksiGuru"></ul>
+
+        <div class="doc-sub-heading">Refleksi Murid</div>
+        <ul class="doc-list" id="docRefleksiMurid"></ul>
+      </section>
+
+      <!-- F. LAMPIRAN -->
+      <section class="doc-section">
+        <div class="doc-section-title">F. LAMPIRAN</div>
+
+        <!-- 1. LKPD -->
+        <div class="doc-sub-heading">1. Lembar Kerja Peserta Didik (LKPD)</div>
+        <div class="lkpd-container">
+          <p><strong>Judul:</strong> <span id="lkpdJudul">Lembar Kerja Murid: Analisis Kasus & Penerapan Konsep</span></p>
+          <p><strong>Tujuan:</strong> <span id="lkpdTujuan">-</span></p>
+          <p style="margin-top: 10px;"><strong>Tugas:</strong></p>
+          <ol class="doc-list" id="lkpdTugasList"></ol>
+        </div>
+
+        <!-- 2. Rubrik Penilaian -->
+        <div class="doc-sub-heading" style="margin-top: 26px;">2. Rubrik Penilaian</div>
+        <table class="doc-table">
+          <thead>
+            <tr>
+              <th style="width: 24%;">Aspek</th>
+              <th style="width: 19%;">Skor 1 (Kurang)</th>
+              <th style="width: 19%;">Skor 2 (Cukup)</th>
+              <th style="width: 19%;">Skor 3 (Baik)</th>
+              <th style="width: 19%;">Skor 4 (Sangat Baik)</th>
+            </tr>
+          </thead>
+          <tbody id="tableRubrikBody"></tbody>
+        </table>
+        <p class="doc-sub-text" style="font-size: 0.85rem; color: #475569; margin-top: 6px;">
+          <strong>Panduan Skor:</strong> Skor akhir diperoleh dari total skor pada setiap aspek dibagi jumlah aspek. Konversi nilai: 1–1.75 = Kurang, 1.76–2.5 = Cukup, 2.51–3.25 = Baik, 3.26–4 = Sangat Baik.
+        </p>
+
+        <!-- 3. Pengayaan dan Remedial (Rekomendasi Tugas) -->
+        <div class="doc-sub-heading" style="margin-top: 26px;">3. Pengayaan dan Remedial</div>
+        <div style="margin-bottom: 12px;">
+          <p class="doc-paragraph" style="margin-bottom: 4px;"><strong>Rekomendasi Tugas Pengayaan:</strong></p>
+          <div class="doc-paragraph" id="docPengayaanText" style="padding-left: 14px; border-left: 3px solid #10b981;"></div>
+        </div>
+        <div>
+          <p class="doc-paragraph" style="margin-bottom: 4px;"><strong>Rekomendasi Tugas Remedial:</strong></p>
+          <div class="doc-paragraph" id="docRemedialText" style="padding-left: 14px; border-left: 3px solid #f59e0b;"></div>
+        </div>
+
+        <!-- 4. Glosarium (Fokus Khusus Poin-Poin Materi Pokok) -->
+        <div class="doc-sub-heading" style="margin-top: 26px;">4. Glosarium Materi</div>
+        <div id="docGlosariumList"></div>
+
+        <!-- 5. Daftar Pustaka (Artikel Ilmiah 5 Tahun Terakhir) -->
+        <div class="doc-sub-heading" style="margin-top: 26px;">5. Daftar Pustaka (5 Tahun Terakhir)</div>
+        <ul class="doc-list" id="docDaftarPustaka"></ul>
+      </section>
+
+      <!-- Lembar Pengesahan -->
+      <div class="signature-grid">
+        <div class="sig-block">
+          <div class="sig-role">Mengetahui,<br>Kepala Sekolah</div>
+          <div class="sig-name">___________________________<br><span style="font-size: 0.82rem; font-weight: normal; color: #64748b;">( .................................... )</span></div>
+        </div>
+        <div class="sig-block">
+          <div class="sig-role" id="sigDateLocation">Kota/Kabupaten, .................... 2026<br>Guru Mata Pelajaran</div>
+          <div class="sig-name" id="sigTeacherName">Nama Penyusun<br><span style="font-size: 0.82rem; font-weight: normal; color: #64748b;">( .................................... )</span></div>
+        </div>
+      </div>
+
+      <div class="doc-footer-notice">
+        Dokumen ini dibuat menggunakan <strong>Edu Workspace</strong>
+      </div>
+    </article>
+  </main>
+
+  <!-- Library HTML to PDF Lokal -->
+  <script src="../Assets/js/html2pdf.bundle.min.js"></script>
+
+  <!-- Global JS Edu Workspace -->
+  <script src="../global.js?v=123"></script>
+
+  <!-- Logika Dokumen Modul Ajar Sesuai contoh modul.pdf -->
+  <script>
+    let currentModulData = null;
+
+    /**
+     * Menutup Tab Halaman Pratinjau Modul Ajar
+     */
+    function closeCurrentTab() {
+      window.close();
+      setTimeout(() => {
+        if (!window.closed) {
+          window.location.href = 'modul ajar.html';
+        }
+      }, 250);
+    }
+
+    /**
+     * Label dinamis untuk heading sintaks & pendekatan (tidak memaksakan Deep Learning jika user memilih pendekatan lain)
+     */
+    function getPendekatanModelLabel(pendekatan, model) {
+      const pLower = (pendekatan || '').toLowerCase();
+      if (pLower.includes('deep learning')) {
+        return 'Penerapan Prinsip Deep Learning & Sintaks Model:';
+      } else if (pLower.includes('tpack')) {
+        return 'Integrasi Pendekatan TPACK & Sintaks Model:';
+      } else if (pLower.includes('saintifik') || pLower.includes('scientific')) {
+        return 'Penerapan Pendekatan Saintifik & Sintaks Model:';
+      } else if (pLower.includes('kontekstual') || pLower.includes('ctl')) {
+        return 'Penerapan Pendekatan Kontekstual & Sintaks Model:';
+      } else if (pLower.includes('steam') || pLower.includes('stem')) {
+        return 'Penerapan Pendekatan STEAM & Sintaks Model:';
+      } else if (pLower.includes('konstruktivisme')) {
+        return 'Penerapan Pendekatan Konstruktivisme & Sintaks Model:';
+      } else if (pendekatan && pendekatan !== '-' && !pLower.includes('reguler')) {
+        return `Penerapan Pendekatan ${pendekatan} & Sintaks Model:`;
+      } else {
+        return 'Penerapan Sintaks Model & Metode Pembelajaran:';
+      }
+    }
+
+    /**
+     * Format aktivitas guru dan murid menjadi daftar terstruktur per poin (1., 2., dst.)
+     */
+    function formatActivityPoints(raw) {
+      if (!raw || (typeof raw === 'string' && !raw.trim())) return '-';
+
+      let items = [];
+
+      if (Array.isArray(raw)) {
+        items = raw.map(item => String(item).trim()).filter(Boolean);
+      } else if (typeof raw === 'string') {
+        const text = raw.trim();
+        if (text.startsWith('<ol') || text.startsWith('<ul')) {
+          return text;
+        }
+
+        // 1. Jika teks memiliki baris baru (\n)
+        if (text.includes('\n')) {
+          items = text.split('\n').map(p => p.trim()).filter(Boolean);
+        }
+        // 2. Jika teks memiliki penomoran seperti "1. " atau "1) "
+        else if (/\b\d+[\.\)]\s+/.test(text)) {
+          items = text.split(/(?=\b\d+[\.\)]\s+)/).map(p => p.trim()).filter(Boolean);
+        }
+        // 3. Jika dipisahkan titik koma (;)
+        else if (text.includes(';')) {
+          const rawParts = text.split(';').map(p => p.trim()).filter(Boolean);
+          const merged = [];
+          const clausePattern = /^(mem|men|meng|meny|ber|ter|di|mel|mer|peserta|murid|guru|siswa|jawab|buka|tutup|serta\s+mem|dan\s+mem|dan\s+men)/i;
+          for (const part of rawParts) {
+            if (!merged.length || clausePattern.test(part)) {
+              merged.push(part);
+            } else {
+              merged[merged.length - 1] += ', ' + part;
+            }
+          }
+          items = merged;
+        }
+        // 4. Jika teks panjang tersusun dari kalimat dengan titik
+        else if (text.includes('. ')) {
+          items = text.split(/(?<=\.)\s+(?=[A-Z0-9])/).map(p => p.trim()).filter(Boolean);
+        } else {
+          items = [text];
+        }
+      } else {
+        items = [String(raw)];
+      }
+
+      // Bersihkan penomoran awal dan rapikan tanda baca
+      const cleaned = items.map(item => {
+        let str = item
+          .replace(/^(\d+[\.\)]|\-|\*|•)\s*/, '')
+          .replace(/^serta\s+/i, '')
+          .replace(/^dan\s+/i, '')
+          .replace(/;+$/, '')
+          .trim();
+        if (str) {
+          if (!str.endsWith('.') && !str.endsWith('!') && !str.endsWith('?')) {
+            str += '.';
+          }
+          str = str.charAt(0).toUpperCase() + str.slice(1);
+        }
+        return str;
+      }).filter(Boolean);
+
+      if (cleaned.length === 0) return '-';
+
+      return `<ol class="activity-points-list">${cleaned.map(item => `<li>${item}</li>`).join('')}</ol>`;
+    }
+
+    /**
+     * Format Materi Tambahan:
+     * Poin penomoran (1, 2, 3) HANYA untuk nama materi.
+     * Isi deskripsi materi tampil di bawah nama materi tanpa penomoran tersendiri.
+     */
+    function formatMateriTambahanList(raw) {
+      if (!raw || (typeof raw === 'string' && !raw.trim())) return '-';
+
+      let text = '';
+      if (Array.isArray(raw)) {
+        text = raw.map(item => {
+          if (typeof item === 'object' && item !== null) {
+            return `${item.nama || item.title || item.materi || ''}\n${item.deskripsi || item.desc || ''}`.trim();
+          }
+          return String(item || '').trim();
+        }).filter(Boolean).join('\n\n');
+      } else if (typeof raw === 'string') {
+        text = raw.trim();
+      } else {
+        text = String(raw || '').trim();
+      }
+
+      if (text.startsWith('<ol') || text.startsWith('<ul')) {
+        return text;
+      }
+
+      // Periksa apakah teks memiliki pola penomoran seperti "1. ... 2. ..." atau "1) ... 2) ..."
+      const hasNumbered = /(?:^|\n+)\s*[0-9]+[.\-)]\s+/.test(text);
+      let chunks = [];
+
+      if (hasNumbered) {
+        // Pecah per butir penomoran agar nama materi dan deskripsi tetap dalam 1 kesatuan
+        chunks = text.split(/(?:^|\n+)\s*(?=[0-9]+[.\-)]\s+)/).map(c => c.trim()).filter(Boolean);
+      } else {
+        // Jika tanpa nomor, coba pecah per paragraf ganda (\n\n), baru kemudian per baris
+        const paragraphs = text.split(/\n\n+/).map(p => p.trim()).filter(Boolean);
+        if (paragraphs.length > 1) {
+          chunks = paragraphs;
+        } else {
+          chunks = text.split(/\n+/).map(l => l.trim()).filter(Boolean);
+        }
+      }
+
+      const items = [];
+      chunks.forEach(chunk => {
+        // Bersihkan angka urut atau simbol bullet di awal nama materi
+        const cleaned = chunk.replace(/^[0-9]+[.\-)]\s*|^[-*•]\s*/, '').trim();
+        if (!cleaned) return;
+
+        let title = '';
+        let desc = '';
+
+        if (cleaned.includes('\n')) {
+          // Baris pertama adalah nama materi, baris berikutnya adalah isi deskripsi
+          const lines = cleaned.split('\n').map(l => l.trim()).filter(Boolean);
+          title = lines[0];
+          desc = lines.slice(1).join(' ');
+        } else if (cleaned.includes(':') && !cleaned.startsWith('http')) {
+          // Pola "Nama Materi: Deskripsi..."
+          const parts = cleaned.split(':');
+          title = parts[0].trim();
+          desc = parts.slice(1).join(':').trim();
+        } else if (cleaned.includes(' - ')) {
+          // Pola "Nama Materi - Deskripsi..."
+          const parts = cleaned.split(' - ');
+          title = parts[0].trim();
+          desc = parts.slice(1).join(' - ').trim();
+        } else {
+          title = cleaned;
+          desc = '';
+        }
+
+        items.push({ title, desc });
+      });
+
+      if (items.length === 0) return '-';
+
+      return `<ol class="doc-list">${items.map(item => {
+        if (item.desc) {
+          return `<li style="margin-bottom: 8px;"><span>${item.title}</span><div style="margin-top: 3px; color: #1e293b;">${item.desc}</div></li>`;
+        }
+        return `<li><span>${item.title}</span></li>`;
+      }).join('')}</ol>`;
+    }
+
+    /**
+     * Render Isi Dokumen Modul Ajar Mengikuti Struktur Formal contoh modul.pdf
+     */
+    function renderModulDocument() {
+      let data = null;
+      try {
+        const saved = localStorage.getItem('edu_current_generated_modul');
+        if (saved) data = JSON.parse(saved);
+        else {
+          const payload = localStorage.getItem('edu_last_modul_payload');
+          if (payload) data = JSON.parse(payload);
+        }
+      } catch (e) { }
+
+      // Jika data dibungkus dalam properti payload (seperti item dari database atau daftar modul)
+      if (data && data.payload && (data.payload.topikMateri || data.payload.namaPenyusun || data.payload.mataPelajaran)) {
+        data = { ...data.payload, id: data.id || data.payload.id };
+      }
+
+      // Jika data belum tersimpan di localStorage atau kosong, siapkan data default agar dokumen tidak pernah kosong
+      if (!data || (!data.topikMateri && !data.namaPenyusun && !data.mataPelajaran)) {
+        data = {
+          namaPenyusun: 'Rico Eko Andrianto, S.Pd.',
+          institusi: 'SMK NEGERI 1 JAKARTA',
+          tahunPenyusunan: '2026',
+          jenjangSekolah: 'SMK',
+          jurusanSekolah: 'Teknik Komputer dan Jaringan',
+          faseKelas: 'Fase E (Kelas 10)',
+          mataPelajaran: 'Dasar-Dasar Kejuruan',
+          elemenCP: 'Perakitan Perangkat Keras & Jaringan',
+          topikMateri: 'Konfigurasi Jaringan Komputer & Troubleshooting',
+          modelPembelajaran: 'Problem Based Learning (PBL)',
+          pendekatanPembelajaran: 'Deep Learning (Surface, Deep, Transfer)',
+          metodePembelajaran: ['Ceramah Interaktif', 'Diskusi Kelompok', 'Praktik Langsung', 'Presentasi'],
+          jumlahPertemuan: '4 Pertemuan',
+          totalJPDurasi: '4 JP x 45 Menit (4 Pertemuan)',
+          capaianPembelajaran: 'Pada akhir Fase E, peserta didik mampu menerapkan prinsip dasar jaringan komputer, merancang pengalamatan IP, serta mengatasi kendala konektivitas secara kritis dan terstruktur.',
+          tujuanPembelajaran: '1. Peserta didik mampu menganalisis topologi jaringan dan konfigurasi IP address secara tepat.\n2. Peserta didik mampu mendiagnosis dan menyelesaikan permasalahan konektivitas jaringan secara kolaboratif.\n3. Peserta didik mampu mendokumentasikan serta mempresentasikan hasil konfigurasi jaringan dengan baik.',
+          fasilitasBelajar: 'Lab Komputer, Router/Switch, Kabel UTP, Proyektor, Internet Cepat',
+          mediaDigital: 'Simulator Jaringan (Cisco Packet Tracer), Slide Canva Interaktif',
+          gayaBelajarMurid: 'Campuran / Multimodal (Visual, Auditori, Kinestetik)',
+          dimensiProfilLulusan: ['Penalaran Kritis', 'Kreativitas', 'Kolaborasi', 'Kemandirian']
+        };
+      }
+
+      currentModulData = data;
+
+      // Ambil seluruh data hasil input
+      const mapel = data.mataPelajaran || 'Mata Pelajaran';
+      const topik = data.topikMateri || 'Topik Pembelajaran';
+      const jenjang = data.jenjangSekolah || 'SMA / SMK';
+      const fase = data.faseKelas || 'Fase E';
+      const nama = data.namaPenyusun || 'Pendidik';
+      const institusi = data.institusi || 'SEKOLAH / SATUAN PENDIDIKAN';
+      const tahun = data.tahunPenyusunan || '2026';
+      const jurusan = data.jurusanSekolah || 'Reguler';
+      const pertemuan = data.jumlahPertemuan || '4 Pertemuan';
+      const durasi = data.totalJPDurasi || '4 JP x 45 Menit';
+      const elemen = data.elemenCP || '-';
+      const cp = data.capaianPembelajaran || '-';
+      const tp = data.tujuanPembelajaran || '';
+      const model = data.modelPembelajaran || 'Problem Based Learning (PBL)';
+      const pendekatan = data.pendekatanPembelajaran || 'Deep Learning (Surface, Deep, Transfer)';
+      const metode = (data.metodePembelajaran || []).join(', ') || 'Ceramah Interaktif, Diskusi Kelompok, Praktikum, Presentasi';
+      const fasilitas = data.fasilitasBelajar || 'Lab Komputer, Proyektor/LCD, Internet Cepat';
+      const media = data.mediaDigital || 'Slide Canva Interaktif, Lembar Kerja Digital';
+      const gaya = data.gayaBelajarMurid || 'Visual, Auditori, Kinestetik (Multimodal)';
+      const profilList = data.dimensiProfilLulusan || ['Penalaran Kritis', 'Kreativitas', 'Kolaborasi', 'Kemandirian'];
+      const idAwal = data.identifikasiAwal || {};
+
+      document.title = `Modul Ajar - ${institusi} - ${mapel}`;
+
+      // 1. KOP DOKUMEN: Baris ke-2 adalah Nama Sekolah (Institusi), Tanpa "EFEVV • RVRV"
+      document.getElementById('docSchoolName').textContent = institusi.toUpperCase();
+
+      document.getElementById('metaNama').textContent = nama;
+      document.getElementById('metaMapel').textContent = mapel;
+      document.getElementById('metaElemen').textContent = elemen;
+      document.getElementById('metaFase').textContent = `${fase} (${jenjang} - ${jurusan})`;
+      document.getElementById('metaTopik').textContent = topik;
+      document.getElementById('metaAlokasi').textContent = `${durasi} (${pertemuan})`;
+      document.getElementById('metaModel').textContent = model;
+      document.getElementById('metaPendekatan').textContent = pendekatan;
+
+      // Ambil konten hasil generate AI (atau buat melalui generator jika belum tersimpan / template lama tidak cocok)
+      let ai = data.aiGeneratedContent;
+      const mLower = (model || '').toLowerCase();
+      const pLower = (pendekatan || '').toLowerCase();
+      const isPjBL = mLower.includes('project') || mLower.includes('pjbl') || mLower.includes('proyek');
+      const isOldPblTemplate = ai && ai.lkpd && (
+        (ai.lkpd.judul && ai.lkpd.judul.includes('Analisis Kasus')) ||
+        (ai.lkpd.tugas && ai.lkpd.tugas[0] && ai.lkpd.tugas[0].includes('studi kasus aktual')) ||
+        (ai.lkpd.tugas && ai.lkpd.tugas[1] && ai.lkpd.tugas[1].includes('3 akar persoalan'))
+      );
+
+      // Deteksi jika sintaks pengalamanBelajar yang tersimpan tidak cocok dengan input form
+      // (misalnya terisi 'Prinsip Deep Learning' padahal user memilih TPACK/lainnya, atau terisi 'Sintaks Discovery:' padahal user memilih Inquiry)
+      const aiJsonStr = ai ? JSON.stringify(ai.pengalamanBelajar || []) : '';
+      const hasMismatchedDeepLearning = !pLower.includes('deep learning') && aiJsonStr.includes('Prinsip Deep Learning');
+      const hasMismatchedInquiry = (mLower.includes('inquiry') || mLower.includes('inkuiri')) && aiJsonStr.includes('Sintaks Discovery:');
+      const hasMismatchedPraktikPedagogis = !pLower.includes('deep learning') && (ai?.desainPembelajaran?.praktikPedagogis || '').includes('Surface Learning');
+
+      if (!ai || (isPjBL && isOldPblTemplate) || hasMismatchedDeepLearning || hasMismatchedInquiry || hasMismatchedPraktikPedagogis) {
+        ai = buildComprehensiveAiModulContent(data);
+        data.aiGeneratedContent = ai;
+        try {
+          localStorage.setItem('edu_current_generated_modul', JSON.stringify(data));
+          localStorage.setItem('edu_last_modul_payload', JSON.stringify(data));
+        } catch (e) { }
+      }
+
+      // ======================================================================
+      // A. IDENTIFIKASI AWAL (Hasil Generate AI)
+      // ======================================================================
+      const tablePesertaBody = document.getElementById('tablePesertaDidikBody');
+      const pesertaItems = ai.identifikasiPesertaDidik || [];
+      tablePesertaBody.innerHTML = pesertaItems.map(item => `
+        <tr>
+          <td><strong>${item.kategori}</strong></td>
+          <td>${item.identifikasi}</td>
+          <td>${item.tindakLanjut}</td>
+        </tr>
+      `).join('');
+
+      const tableMateriBody = document.getElementById('tableMateriBody');
+      const materiItems = ai.identifikasiMateri || [];
+      tableMateriBody.innerHTML = materiItems.map(item => `
+        <tr>
+          <td><strong>${item.kategori}</strong></td>
+          <td>${item.deskripsi}</td>
+        </tr>
+      `).join('');
+
+      const tableProfilBody = document.getElementById('tableProfilBody');
+      const profilItems = ai.dimensiProfil || [];
+      tableProfilBody.innerHTML = profilItems.map(item => `
+        <tr>
+          <td><strong>${item.dimensi}</strong></td>
+          <td>${item.deskripsi}</td>
+        </tr>
+      `).join('');
+
+      // ======================================================================
+      // B. DESAIN PEMBELAJARAN (Hasil Generate AI)
+      // ======================================================================
+      document.getElementById('docCapaianPembelajaran').textContent = cp;
+
+      const tpContainer = document.getElementById('docTujuanPembelajaran');
+      if (tp) {
+        const tpLines = tp.split('\n').map(l => l.trim()).filter(Boolean);
+        tpContainer.innerHTML = `<ol class="doc-list">${tpLines.map(line => `<li>${line.replace(/^[0-9]+[.\-)]\s*/, '')}</li>`).join('')}</ol>`;
+      } else {
+        tpContainer.innerHTML = `
+          <ol class="doc-list">
+            <li>Murid mampu mengidentifikasi dan menjelaskan konsep dasar, prinsip inti, serta kerangka kerja materi <em>${topik}</em> secara komprehensif.</li>
+            <li>Murid mampu menganalisis permasalahan kontekstual dan menguji berbagai alternatif pemecahan masalah terkait <em>${topik}</em> melalui studi kasus nyata.</li>
+            <li>Murid mampu mengembangkan solusi inovatif, mendesain karya atau laporan analisis <em>${topik}</em>, dan mempresentasikannya secara terstruktur dan kolaboratif.</li>
+            <li>Murid mampu merefleksikan makna pembelajaran <em>${topik}</em> serta menerapkannya dalam situasi kehidupan nyata secara bertanggung jawab.</li>
+          </ol>
+        `;
+      }
+
+      const desain = ai.desainPembelajaran || {};
+      document.getElementById('docPemahamanBermakna').textContent = desain.pemahamanBermakna || '-';
+      document.getElementById('docPertanyaanPemantik').innerHTML = (desain.pertanyaanPemantik || []).map(p => `<li>${p}</li>`).join('');
+      document.getElementById('docLintasDisiplin').textContent = desain.lintasDisiplin || '-';
+      document.getElementById('docPraktikPedagogis').textContent = desain.praktikPedagogis || '-';
+      document.getElementById('docKemitraanPembelajaran').textContent = desain.kemitraan || '-';
+      document.getElementById('docLingkunganPembelajaran').textContent = desain.lingkungan || '-';
+
+      // ======================================================================
+      // C. PENGALAMAN BELAJAR (Hasil Generate AI)
+      // ======================================================================
+      const listMeetings = ai.pengalamanBelajar || [];
+      const pengalamanContainer = document.getElementById('docPengalamanBelajarContainer');
+      pengalamanContainer.innerHTML = listMeetings.map(m => `
+        <div class="meeting-block">
+          <div class="meeting-header-title">
+            PERTEMUAN ${m.pertemuan}: ${m.subTopik.toUpperCase()} (${durasi.split('(')[0].trim()})
+          </div>
+
+          <table class="doc-table">
+            <thead>
+              <tr>
+                <th style="width: 14%;">Tahap</th>
+                <th style="width: 12%;">Waktu</th>
+                <th style="width: 37%;">Aktivitas Guru</th>
+                <th style="width: 37%;">Aktivitas Murid</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Awal</strong></td>
+                <td>${m.awal?.waktu || '15 Menit'}</td>
+                <td>${formatActivityPoints(m.awal?.aktivitasGuru)}</td>
+                <td>${formatActivityPoints(m.awal?.aktivitasMurid)}</td>
+              </tr>
+              <tr>
+                <td colspan="4" style="background: #fafafa; padding: 6px 12px;">
+                  <div class="deep-learning-box">
+                    <strong>${getPendekatanModelLabel(pendekatan, model)}</strong> ${m.awal?.deepLearningSintaks || '-'}
+                  </div>
+                </td>
+              </tr>
+
+              <tr>
+                <td><strong>Inti</strong></td>
+                <td>${m.inti?.waktu || '60 Menit'}</td>
+                <td>${formatActivityPoints(m.inti?.aktivitasGuru)}</td>
+                <td>${formatActivityPoints(m.inti?.aktivitasMurid)}</td>
+              </tr>
+              <tr>
+                <td colspan="4" style="background: #fafafa; padding: 6px 12px;">
+                  <div class="deep-learning-box">
+                    <strong>${getPendekatanModelLabel(pendekatan, model)}</strong> ${m.inti?.deepLearningSintaks || '-'}
+                  </div>
+                </td>
+              </tr>
+
+              <tr>
+                <td><strong>Penutup</strong></td>
+                <td>${m.penutup?.waktu || '15 Menit'}</td>
+                <td>${formatActivityPoints(m.penutup?.aktivitasGuru)}</td>
+                <td>${formatActivityPoints(m.penutup?.aktivitasMurid)}</td>
+              </tr>
+              <tr>
+                <td colspan="4" style="background: #fafafa; padding: 6px 12px;">
+                  <div class="deep-learning-box">
+                    <strong>${getPendekatanModelLabel(pendekatan, model)}</strong> ${m.penutup?.deepLearningSintaks || '-'}
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      `).join('');
+
+      // ======================================================================
+      // D. MATERI AJAR DAN ASESMEN (Hasil Generate AI)
+      // ======================================================================
+      const materiDeskriptif = ai.materiAjarDeskriptif || `
+        <p class="doc-paragraph">
+          Materi pokok <strong>${topik}</strong> pada mata pelajaran <strong>${mapel}</strong> mengkaji konsep fundamental, struktur sistematis, dan kerangka operasional yang berlaku dalam bidang keilmuan terkait. Pembahasan diawali dengan pemahaman teoretis mengenai hakikat, karakteristik dasar, dan prinsip kerja yang mendasari fenomena <em>${topik}</em>. Peserta didik dibimbing untuk mengidentifikasi komponen-komponen inti, memahami hubungan sebab-akibat antarelemen, serta mengenali terminologi teknis yang menjadi standar kompetensi kejuruan/akademik.
+        </p>
+        <p class="doc-paragraph">
+          Pada tataran analisis mendalam, materi ini mengeksplorasi ragam studi kasus kontekstual dan permasalahan aktual yang kerap dijumpai dalam praktik kehidupan nyata maupun lingkungan industri modern. Murid diajak membedah faktor-faktor penentu keberhasilan penerapan <em>${topik}</em>, menganalisis potensi kendala operasional, serta merumuskan mitigasi risiko yang relevan. Pengintegrasian data empiris dan telaah komparatif memberikan wawasan komprehensif bagi peserta didik agar mampu berpikir kritis dan tidak terpaku pada hafalan definisi semata.
+        </p>
+        <p class="doc-paragraph">
+          Sebagai wujud aplikasi praktis, naskah materi ini menjabarkan prosedur kerja bertahap (SOP), teknik pengujian, serta metodologi pemecahan masalah (<em>troubleshooting & problem solving</em>). Dengan memahami alur operasional materi <em>${topik}</em> secara terstruktur, peserta didik diharapkan mampu mengeksekusi tugas analitis secara mandiri, berkolaborasi secara efektif dalam tim, serta menghasilkan karya solutif yang inovatif, berdaya guna, dan menjunjung tinggi kode etik profesional.
+        </p>
+      `;
+      document.getElementById('docMateriAjarDeskriptif').innerHTML = materiDeskriptif;
+
+      // 2. Materi Tambahan (jika diisikan)
+      const wrapperMateriTambahan = document.getElementById('wrapperMateriTambahan');
+      const headingAsesmen = document.getElementById('headingAsesmen');
+      const materiTambahanVal = data.materiTambahan || (ai.materiTambahan || '');
+
+      if (materiTambahanVal && materiTambahanVal.trim() && materiTambahanVal.trim() !== '-') {
+        wrapperMateriTambahan.style.display = 'block';
+        document.getElementById('docMateriTambahan').innerHTML = formatMateriTambahanList(materiTambahanVal);
+        headingAsesmen.textContent = '3. Asesmen';
+      } else {
+        wrapperMateriTambahan.style.display = 'none';
+        headingAsesmen.textContent = '2. Asesmen';
+      }
+
+      const asesmenItems = ai.asesmen || [];
+      document.getElementById('tableAsesmenDinamisBody').innerHTML = asesmenItems.map(row => `
+        <tr>
+          <td><strong>${row.jenis}</strong></td>
+          <td>${row.bentuk}</td>
+          <td>${row.keterangan}</td>
+        </tr>
+      `).join('');
+
+      // ======================================================================
+      // E. REFLEKSI (Hasil Generate AI)
+      // ======================================================================
+      const refGuru = ai.refleksi?.guru || [];
+      const refMurid = ai.refleksi?.murid || [];
+      document.getElementById('docRefleksiGuru').innerHTML = refGuru.map(g => `<li>${g}</li>`).join('');
+      document.getElementById('docRefleksiMurid').innerHTML = refMurid.map(m => `<li>${m}</li>`).join('');
+
+      // ======================================================================
+      // F. LAMPIRAN (Hasil Generate AI)
+      // ======================================================================
+      const lkpd = ai.lkpd || {};
+      document.getElementById('lkpdJudul').textContent = lkpd.judul || (isPjBL ? `Lembar Kerja Proyek (PjBL): Perancangan dan Pembuatan Karya ${topik}` : `Lembar Kerja Peserta Didik: Penerapan Konsep ${topik}`);
+      document.getElementById('lkpdTujuan').textContent = lkpd.tujuan || (isPjBL ? `Peserta didik mampu merancang, memproduksi karya nyata ${topik}, dan menyajikan hasil gelar karya secara kolaboratif sesuai tujuan pembelajaran.` : `Peserta didik mampu menelaah materi ${topik} dan menyelesaikan penugasan pembelajaran secara kontekstual.`);
+      document.getElementById('lkpdTugasList').innerHTML = (lkpd.tugas || []).map(t => `<li>${t}</li>`).join('');
+
+      const rubrikItems = ai.rubrikPenilaian || [];
+      document.getElementById('tableRubrikBody').innerHTML = rubrikItems.map(r => `
+        <tr>
+          <td><strong>${r.aspek}</strong></td>
+          <td>${r.skor1}</td>
+          <td>${r.skor2}</td>
+          <td>${r.skor3}</td>
+          <td>${r.skor4}</td>
+        </tr>
+      `).join('');
+
+      // Rekomendasi Tugas Pengayaan & Remedial
+      document.getElementById('docPengayaanText').innerHTML = ai.pengayaan || `Murid ditantang menyusun kajian komparatif mandiri atau proyek inovasi digital tingkat lanjut seputar implikasi mutakhir materi <em>${topik}</em> pada sektor industri/profesional.`;
+      document.getElementById('docRemedialText').innerHTML = ai.remedial || `Murid mengerjakan lembar kerja terbimbing (scaffolding) dengan panduan langkah bertahap, telaah ulang konsep kunci <em>${topik}</em>, dan sesi pendampingan tutor sebaya.`;
+
+      // 4. Glosarium Materi (Khusus istilah teknis materi pokok, bukan istilah umum pedagogis/asesmen)
+      const glosarium = ai.glosarium || [];
+      document.getElementById('docGlosariumList').innerHTML = `<ul class="doc-list">${glosarium.map(g => `<li><strong>${g.istilah}:</strong> ${g.definisi}</li>`).join('')}</ul>`;
+
+      // 5. Daftar Pustaka (Artikel Ilmiah 5 Tahun Terakhir 2021-2026)
+      const pustaka = ai.daftarPustaka || [];
+      document.getElementById('docDaftarPustaka').innerHTML = pustaka.map(p => `<li>${p}</li>`).join('');
+
+      // Lembar Pengesahan: Tanggal dan Bulan Otomatis Saat di-Generate
+      const knownCities = ['Jakarta', 'Surabaya', 'Bandung', 'Semarang', 'Yogyakarta', 'Malang', 'Medan', 'Makassar', 'Palembang', 'Denpasar', 'Surakarta', 'Solo', 'Bogor', 'Depok', 'Tangerang', 'Bekasi', 'Cirebon', 'Banda Aceh', 'Padang', 'Banjarmasin', 'Samarinda', 'Manado', 'Pontianak'];
+      let detectedCity = 'Kota/Kabupaten';
+      for (const city of knownCities) {
+        if (new RegExp('\\b' + city + '\\b', 'i').test(institusi)) {
+          detectedCity = city;
+          break;
+        }
+      }
+      const formattedDateStr = formatIndonesianDate(data.createdAt);
+      document.getElementById('sigDateLocation').innerHTML = `${detectedCity}, ${formattedDateStr}<br>Guru Mata Pelajaran`;
+      document.getElementById('sigTeacherName').innerHTML = `${nama}<br><span style="font-size: 0.82rem; font-weight: normal; color: #64748b;">( .................................... )</span>`;
+    }
+
+    /**
+     * Format Tanggal Bahasa Indonesia Otomatis (DD MMMM YYYY)
+     */
+    function formatIndonesianDate(isoOrDate) {
+      const d = isoOrDate ? new Date(isoOrDate) : new Date();
+      const validDate = isNaN(d.getTime()) ? new Date() : d;
+      const months = [
+        'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+        'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+      ];
+      const day = String(validDate.getDate()).padStart(2, '0');
+      const month = months[validDate.getMonth()];
+      const year = validDate.getFullYear();
+      return `${day} ${month} ${year}`;
+    }
+
+    function buildComprehensiveAiModulContent(p) {
+      const mapel = p.mataPelajaran || 'Mata Pelajaran';
+      const topik = p.topikMateri || 'Materi Pokok';
+      const jenjang = p.jenjangSekolah || 'SMA / SMK';
+      const jurusan = p.jurusanSekolah || 'Reguler';
+      const modelRaw = p.modelPembelajaran || 'Problem Based Learning (PBL)';
+      const pendekatan = p.pendekatanPembelajaran || 'Deep Learning (Surface, Deep, Transfer)';
+      const metodeArr = Array.isArray(p.metodePembelajaran) ? p.metodePembelajaran : [p.metodePembelajaran || 'Ceramah Interaktif, Praktik Langsung'];
+      const metode = metodeArr.join(', ') || 'Ceramah Interaktif, Praktikum Langsung, Diskusi Kelompok';
+      const fasilitas = p.fasilitasBelajar || 'Lab Komputer, Proyektor/LCD, Internet Cepat';
+      const media = p.mediaDigital || 'Slide Presentasi Canva, Video Pembelajaran';
+      const gaya = p.gayaBelajarMurid || 'Campuran / Multimodal (Visual, Auditori, Kinestetik)';
+      const profilList = p.dimensiProfilLulusan || ['Penalaran Kritis', 'Kreativitas', 'Kolaborasi', 'Kemandirian'];
+      const tpText = p.tujuanPembelajaran || '';
+      const cpText = p.capaianPembelajaran || '';
+      const materiTambahanVal = p.materiTambahan || '';
+      const idAwal = p.identifikasiAwal || {};
+
+      // Klasifikasi Model Pembelajaran
+      const mLower = modelRaw.toLowerCase();
+      const isPjBL = mLower.includes('project') || mLower.includes('pjbl') || mLower.includes('proyek');
+      const isPBL = !isPjBL && (mLower.includes('problem') || mLower.includes('pbl') || mLower.includes('masalah'));
+      const isInquiry = !isPjBL && !isPBL && (mLower.includes('inquiry') || mLower.includes('inkuiri'));
+      const isDiscovery = !isPjBL && !isPBL && !isInquiry && (mLower.includes('discovery') || mLower.includes('penemuan'));
+      const isTeFa = mLower.includes('tefa') || mLower.includes('factory') || mLower.includes('teaching factory');
+      const isCooperative = mLower.includes('cooperative') || mLower.includes('kooperatif');
+
+      // Fungsi bantuan penjelas pendekatan secara kontekstual (TIDAK memaksakan Deep Learning jika user memilih pendekatan lain)
+      function getPendekatanPrinsipText(pendekatanVal, phase, topicVal, mediaVal) {
+        const pL = (pendekatanVal || '').toLowerCase();
+        if (pL.includes('deep learning')) {
+          if (phase === 'awal') return 'Prinsip Deep Learning: Mindful (Berkesadaran) dan Meaningful (Bermakna).';
+          if (phase === 'inti') return 'Prinsip Deep Learning: Mindful, Meaningful, dan Joyful (Menggembirakan).';
+          return 'Prinsip Deep Learning: Meaningful dan Reflektif guna menginternalisasi konsep jangka panjang.';
+        }
+        if (pL.includes('tpack')) {
+          if (phase === 'awal') return `Integrasi TPACK: Pemanfaatan media ${mediaVal} (Technological) untuk orientasi pedagogis konsep materi ${topicVal} (Content).`;
+          if (phase === 'inti') return `Integrasi TPACK: Penerapan teknologi ${mediaVal} secara pedagogis dalam eksplorasi mandiri dan pemecahan masalah materi ${topicVal}.`;
+          return `Integrasi TPACK: Evaluasi hasil pembelajaran terintegrasi teknologi dan refleksi penguasaan konten materi ${topicVal}.`;
+        }
+        if (pL.includes('saintifik') || pL.includes('scientific')) {
+          if (phase === 'awal') return 'Pendekatan Saintifik: Tahap Mengamati (fenomena awal) dan Menanya (merumuskan rasa ingin tahu).';
+          if (phase === 'inti') return 'Pendekatan Saintifik: Tahap Mengumpulkan Informasi/Data dan Mengasosiasi/Menalar informasi.';
+          return 'Pendekatan Saintifik: Tahap Mengomunikasikan hasil temuan dan refleksi simpulan.';
+        }
+        if (pL.includes('kontekstual') || pL.includes('ctl')) {
+          if (phase === 'awal') return `Pendekatan Kontekstual: Mengaitkan konsep ${topicVal} dengan situasi dunia nyata dan pengalaman murid.`;
+          if (phase === 'inti') return `Pendekatan Kontekstual: Penyelidikan mandiri (inquiry), masyarakat belajar (learning community), dan pemodelan nyata.`;
+          return `Pendekatan Kontekstual: Refleksi pemahaman bermakna dan asesmen otentik.`;
+        }
+        if (pL.includes('konstruktivisme')) {
+          if (phase === 'awal') return 'Pendekatan Konstruktivisme: Menggali pra-konsepsi murid dan membangkitkan skema kognitif awal.';
+          if (phase === 'inti') return 'Pendekatan Konstruktivisme: Murid mengonstruksi pengetahuan baru secara aktif melalui interaksi langsung dan eksplorasi.';
+          return 'Pendekatan Konstruktivisme: Rekonstruksi simpulan dan konsolidasi pemahaman konsep baru.';
+        }
+        if (pL.includes('stem') || pL.includes('steam')) {
+          if (phase === 'awal') return `Pendekatan STEAM: Identifikasi fenomena sains dan teknologi terkait materi ${topicVal}.`;
+          if (phase === 'inti') return `Pendekatan STEAM: Penerapan desain rekayasa (engineering), sentuhan estetika (art), dan kalkulasi matematis.`;
+          return `Pendekatan STEAM: Pengujian efektivitas solusi dan presentasi karya multidisiplin.`;
+        }
+        if (pendekatanVal && pendekatanVal !== '-' && !pL.includes('reguler')) {
+          if (phase === 'awal') return `Pendekatan ${pendekatanVal}: Orientasi dan pengenalan konsep ${topicVal}.`;
+          if (phase === 'inti') return `Pendekatan ${pendekatanVal}: Implementasi strategi aktif ${pendekatanVal} dalam mendalami materi ${topicVal}.`;
+          return `Pendekatan ${pendekatanVal}: Evaluasi ketercapaian pemahaman dan refleksi belajar.`;
+        }
+        return `Strategi Pembelajaran: Berpusat pada murid (student-centered learning) untuk materi ${topicVal}.`;
+      }
+
+      // Hitung jumlah pertemuan
+      let countPertemuan = 4;
+      const matchNum = (p.jumlahPertemuan || '4').match(/\d+/);
+      if (matchNum) countPertemuan = Math.min(Math.max(parseInt(matchNum[0]), 1), 8);
+
+      // Sintesis Tema dan Alur Pertemuan Sesuai Model
+      let subThemes = [];
+      if (isPjBL) {
+        if (countPertemuan === 1) {
+          subThemes = [`Perancangan Desain Proyek, Eksekusi Produksi Karya, dan Presentasi Gelar Karya ${topik}`];
+        } else if (countPertemuan === 2) {
+          subThemes = [
+            `Penentuan Pertanyaan Mendasar, Desain Perencanaan Proyek, dan Perancangan Sketsa/Model ${topik}`,
+            `Eksekusi Produksi Karya, Finishing Produk, Pengujian Hasil, dan Gelar Karya (Showcase) ${topik}`
+          ];
+        } else if (countPertemuan === 3) {
+          subThemes = [
+            `Penentuan Pertanyaan Mendasar dan Perancangan Desain Konsep Proyek ${topik}`,
+            `Penyusunan Timeline dan Eksekusi Produksi Karya ${topik} di ${fasilitas.split(';')[0] || 'Laboratorium'}`,
+            `Quality Control (QC), Uji Fungsi Produk, dan Gelar Karya Presentasi Akhir ${topik}`
+          ];
+        } else {
+          subThemes = [
+            `Penentuan Pertanyaan Mendasar (Essential Question) dan Perancangan Desain Proyek ${topik}`,
+            `Penyusunan Jadwal (Timeline) Produksi dan Eksekusi Pengerjaan Karya Proyek ${topik}`,
+            `Monitoring Perkembangan Proyek, Uji Coba Fungsi Produk, dan Finishing Karya ${topik}`,
+            `Pameran Karya (Showcase), Presentasi Pleno Produk Proyek, dan Evaluasi Pengalaman Belajar ${topik}`
+          ];
+        }
+      } else if (isInquiry) {
+        subThemes = [
+          `Orientasi Masalah Otentik, Perumusan Pertanyaan Eksploratif, dan Hipotesis Awal ${topik}`,
+          `Pengumpulan Data Eksploratif dan Investigasi Mandiri/Kelompok Materi ${topik}`,
+          `Pengujian Hipotesis, Analisis Data Temuan, dan Pembuktian Solusi ${topik}`,
+          `Penarikan Kesimpulan (Generalisasi), Publikasi Laporan, dan Refleksi Penyelidikan ${topik}`
+        ];
+      } else if (isDiscovery) {
+        subThemes = [
+          `Pemberian Rangsangan (Stimulasi) dan Identifikasi Masalah Konseptual ${topik}`,
+          `Pengumpulan Data dan Eksplorasi Penyelidikan Terbimbing Terkait ${topik}`,
+          `Pengolahan Data, Verifikasi Pembuktian Hipotesis, dan Validasi Konsep ${topik}`,
+          `Generalisasi (Menarik Kesimpulan), Presentasi Simpulan, dan Refleksi Belajar ${topik}`
+        ];
+      } else if (isTeFa) {
+        subThemes = [
+          `Analisis Lembar Kerja Order (Job Sheet) dan Spesifikasi Standar Industri Materi ${topik}`,
+          `Perencanaan Produksi Terpadu dan Eksekusi Pengerjaan Produk Sesuai SOP ${topik}`,
+          `Quality Assurance (QA), Verifikasi Spesifikasi, dan Pengujian Kelayakan Produk ${topik}`,
+          `Serah Terima Hasil Pekerjaan, Evaluasi Efisiensi Produksi, dan Dokumentasi Portofolio ${topik}`
+        ];
+      } else if (isCooperative) {
+        subThemes = [
+          `Penyampaian Tujuan Pembelajaran dan Pengorganisasian Tim Belajar Materi ${topik}`,
+          `Kerja Sama Tim Terstruktur dan Pendalaman Materi Kolaboratif ${topik}`,
+          `Sintesis Hasil Kerja Kelompok dan Diskusi Silang Antar-Tim ${topik}`,
+          `Presentasi Pleno Hasil Tim dan Pemberian Apresiasi/Penghargaan Kelompok ${topik}`
+        ];
+      } else {
+        // Default: Problem Based Learning (PBL) atau Model Mandiri
+        subThemes = [
+          `Orientasi Murid pada Masalah Otentik dan Identifikasi Kebutuhan Belajar ${topik}`,
+          `Pengorganisasian Belajar dan Penyelidikan Mandiri/Kelompok Kasus ${topik}`,
+          `Pengembangan Alternatif Solusi, Perumusan Karya Pemecahan Masalah ${topik}`,
+          `Penyajian Hasil Karya Solutif, Evaluasi Proses Pemecahan Masalah ${topik}`
+        ];
+      }
+
+      // Sintesis Pengalaman Belajar Per Pertemuan (Array of string per poin tindakan)
+      const pengalamanBelajar = [];
+      for (let i = 1; i <= countPertemuan; i++) {
+        const theme = subThemes[(i - 1) % subThemes.length];
+
+        let awalGuru = [];
+        let awalMurid = [];
+        let sintaksAwal = '';
+
+        let intiGuru = [];
+        let intiMurid = [];
+        let sintaksInti = '';
+
+        let penutupGuru = [];
+        let penutupMurid = [];
+        let sintaksPenutup = '';
+
+        if (isPjBL) {
+          awalGuru = [
+            `Membuka sesi kelas dengan salam hangat, berdoa bersama, dan presensi kedisiplinan murid.`,
+            `Mengajukan pertanyaan pemantik mendasar (essential question) terkait urgensi pembuatan karya/produk proyek ${topik}.`,
+            `Menyampaikan tujuan pembelajaran, standar kriteria mutu proyek, dan alur sintaks Project Based Learning.`
+          ];
+          awalMurid = [
+            `Menjawab salam, berdoa bersama guru, dan merespons pertanyaan pemantik secara antusias.`,
+            `Menyimak penjelasan tujuan pembelajaran serta memahami spesifikasi produk proyek ${topik} yang akan dihasilkan.`
+          ];
+          sintaksAwal = `Sintaks PjBL: 'Menentukan Pertanyaan Mendasar & Perencanaan Proyek'. Metode: ${metode}. ${getPendekatanPrinsipText(pendekatan, 'awal', topik, media)}`;
+
+          intiGuru = [
+            `Membagi murid ke dalam tim kerja proyek heterogen (4-5 orang per tim).`,
+            `Memfasilitasi perancangan desain dan penyusunan spesifikasi teknis produk karya ${topik} dengan memanfaatkan sarana ${fasilitas}.`,
+            `Membimbing penyusunan jadwal kerja (timeline) dan alur produksi bertahap dengan memanfaatkan panduan media digital ${media}.`,
+            `Memonitor keaktifan murid, mengamati progres pembuatan karya proyek, dan memberikan pendampingan teknis troubleshooting.`
+          ];
+          intiMurid = [
+            `Berkolaborasi dalam tim merumuskan konsep kreatif dan spesifikasi rancangan produk karya ${topik}.`,
+            `Menyusun jadwal pelaksanaan, pembagian peran anggota tim, dan tahapan produksi proyek.`,
+            `Mengeksekusi proses pembuatan produk karya ${topik} secara bertahap memanfaatkan sarana ${fasilitas} dan arahan media ${media}.`,
+            `Melakukan uji coba awal, quality control (QC), serta mengonsultasikan kendala teknis pembuatan karya kepada guru.`
+          ];
+          sintaksInti = `Sintaks PjBL: 'Mendesain Perencanaan Proyek', 'Menyusun Jadwal', dan 'Memonitor Kemajuan Proyek'. Metode: ${metode}. ${getPendekatanPrinsipText(pendekatan, 'inti', topik, media)}`;
+
+          penutupGuru = [
+            `Memfasilitasi murid mereviu pencapaian target milestone pembuatan produk proyek hari ini.`,
+            `Memberikan umpan balik konstruktif dan penguatan terhadap aspek mutu karya yang sedang diproduksi.`,
+            `Mengingatkan agenda tindak lanjut penyelesaian proyek pada pertemuan berikutnya, berdoa bersama, dan menutup sesi pelajaran.`
+          ];
+          penutupMurid = [
+            `Menyampaikan progres capaian pembuatan karya proyek dan mencatat poin-poin perbaikan produk.`,
+            `Merapikan kembali sarana kerja dan fasilitas ${fasilitas}, lalu berdoa bersama guru sebelum mengakhiri kelas.`
+          ];
+          sintaksPenutup = `Sintaks PjBL: 'Menguji Hasil (QC)' dan 'Mengevaluasi Pengalaman Belajar'. Metode: ${metode}. ${getPendekatanPrinsipText(pendekatan, 'penutup', topik, media)}`;
+
+        } else if (isInquiry) {
+          awalGuru = [
+            `Membuka sesi kelas dengan salam hangat, doa bersama, dan memeriksa kesiapan belajar murid.`,
+            `Menyajikan stimulus fenomena kontekstual materi ${topik} melalui media ${media} untuk membangkitkan rasa ingin tahu.`,
+            `Membimbing murid merumuskan pertanyaan penyelidikan (inquiry questions) dan menyampaikan tujuan pembelajaran.`
+          ];
+          awalMurid = [
+            `Menjawab salam, berdoa bersama, dan mencermati tayangan stimulus fenomena materi ${topik}.`,
+            `Merespons pertanyaan awal guru dan merumuskan fokus penyelidikan ilmiah yang akan dijalankan.`
+          ];
+          sintaksAwal = `Sintaks Inquiry: 'Orientasi Masalah & Merumuskan Pertanyaan Penyelidikan'. Metode: ${metode}. ${getPendekatanPrinsipText(pendekatan, 'awal', topik, media)}`;
+
+          intiGuru = [
+            `Membimbing murid merumuskan hipotesis awal terkait topik permasalahan ${topik}.`,
+            `Memfasilitasi kegiatan eksplorasi data dan eksperimen/praktik terstruktur menggunakan fasilitas ${fasilitas}.`,
+            `Mendampingi analisis pembuktian hipotesis dan pengolahan data temuan kelompok.`,
+            `Mengarahkan pengujian hasil dan perumusan argumentasi ilmiah berdasarkan bukti.`
+          ];
+          intiMurid = [
+            `Menyusun hipotesis kerja dan merancang langkah investigasi bersama kelompok.`,
+            `Melakukan eksplorasi data dan praktik nyata memanfaatkan sarana ${fasilitas} serta panduan media ${media}.`,
+            `Mengolah data temuan, menguji kesesuaian hipotesis, dan mendiskusikan hasil penyelidikan.`,
+            `Mendokumentasikan seluruh tahapan kerja dan bukti temuan pada lembar kerja penyelidikan.`
+          ];
+          sintaksInti = `Sintaks Inquiry: 'Merumuskan Hipotesis', 'Pengumpulan Data Eksploratif', dan 'Pengujian Hipotesis'. Metode: ${metode}. ${getPendekatanPrinsipText(pendekatan, 'inti', topik, media)}`;
+
+          penutupGuru = [
+            `Memfasilitasi perwakilan kelompok mempresentasikan simpulan generalisasi atas penyelidikan materi ${topik}.`,
+            `Memberikan umpan balik penguatan konseptual dan apresiasi proses berpikir kritis murid.`,
+            `Menutup sesi pembelajaran dengan doa bersama dan salam penutup.`
+          ];
+          penutupMurid = [
+            `Menyampaikan simpulan akhir hasil pembuktian dan generalisasi pemahaman materi ${topik}.`,
+            `Menyampaikan refleksi pengalaman penyelidikan mandiri dan mencatat poin penguatan dari guru.`,
+            `Merapikan sarana belajar dan fasilitas ${fasilitas}, lalu berdoa bersama sebelum mengakhiri kelas.`
+          ];
+          sintaksPenutup = `Sintaks Inquiry: 'Penarikan Kesimpulan (Generalisasi)' dan 'Evaluasi Penyelidikan'. Metode: ${metode}. ${getPendekatanPrinsipText(pendekatan, 'penutup', topik, media)}`;
+
+        } else if (isDiscovery) {
+          awalGuru = [
+            `Membuka sesi kelas dengan salam, doa bersama, dan memeriksa kesiapan belajar murid.`,
+            `Memberikan stimulus fenomena awal materi ${topik} melalui media ${media} untuk membangkitkan rasa ingin tahu.`,
+            `Menyampaikan tujuan pembelajaran dan alur kerja penemuan konsep.`
+          ];
+          awalMurid = [
+            `Menjawab salam, berdoa, dan mencermati tayangan stimulus fenomena ${topik}.`,
+            `Merespons pertanyaan awal guru dan memahami target capaian penemuan belajar.`
+          ];
+          sintaksAwal = `Sintaks Discovery: 'Stimulasi (Pemberian Rangsangan)' dan 'Identifikasi Masalah'. Metode: ${metode}. ${getPendekatanPrinsipText(pendekatan, 'awal', topik, media)}`;
+
+          intiGuru = [
+            `Membimbing murid mengidentifikasi masalah dan merumuskan fokus penemuan terkait materi ${topik}.`,
+            `Memfasilitasi pengumpulan data dan eksplorasi terbimbing menggunakan fasilitas ${fasilitas}.`,
+            `Mengarahkan pengolahan data dan pembuktian (verifikasi) konsep secara kolaboratif.`
+          ];
+          intiMurid = [
+            `Mengidentifikasi masalah dan mencatat parameter kunci terkait materi ${topik}.`,
+            `Mengumpulkan data dan fakta pendukung melalui pengamatan langsung memanfaatkan sarana ${fasilitas}.`,
+            `Mengolah data temuan dan memverifikasi kebenaran konsep bersama kelompok kerja.`
+          ];
+          sintaksInti = `Sintaks Discovery: 'Pengumpulan Data' dan 'Pengolahan Data / Pembuktian'. Metode: ${metode}. ${getPendekatanPrinsipText(pendekatan, 'inti', topik, media)}`;
+
+          penutupGuru = [
+            `Memandu murid merumuskan generalisasi simpulan konsep materi ${topik}.`,
+            `Memberikan umpan balik dan penguatan konseptual, lalu menutup pembelajaran dengan doa bersama.`
+          ];
+          penutupMurid = [
+            `Menarik kesimpulan umum atas pembuktian konsep materi ${topik}.`,
+            `Menyampaikan refleksi pengalaman belajar, lalu berdoa bersama guru.`
+          ];
+          sintaksPenutup = `Sintaks Discovery: 'Generalisasi (Menarik Kesimpulan)'. Metode: ${metode}. ${getPendekatanPrinsipText(pendekatan, 'penutup', topik, media)}`;
+
+        } else if (isTeFa) {
+          awalGuru = [
+            `Membuka sesi dengan salam dan briefing SOP kerja industri materi ${topik}.`,
+            `Membagikan Job Sheet order industri dan menjelaskan standar spesifikasi teknis ${topik}.`,
+            `Memeriksa kelengkapan APD dan kesiapan peralatan di sarana ${fasilitas}.`
+          ];
+          awalMurid = [
+            `Menjawab salam, mengikuti briefing, dan mempelajari Job Sheet order industri.`,
+            `Memeriksa kelengkapan perlengkapan kerja dan mematuhi SOP keselamatan.`
+          ];
+          sintaksAwal = `Sintaks TeFa: 'Penerimaan Order / Analisis Job Sheet Industri'. Metode: ${metode}. ${getPendekatanPrinsipText(pendekatan, 'awal', topik, media)}`;
+
+          intiGuru = [
+            `Membimbing alur perencanaan produksi dan pembagian stasiun kerja kelompok.`,
+            `Memonitor proses pengerjaan produk ${topik} sesuai standar toleransi industri.`,
+            `Mendampingi pelaksanaan quality control (QC) dan pengujian kelayakan hasil pengerjaan.`
+          ];
+          intiMurid = [
+            `Mengeksekusi tahapan produksi materi ${topik} menggunakan fasilitas ${fasilitas} dan panduan ${media}.`,
+            `Melakukan pengukuran presisi dan pengecekan parameter mutu sesuai instruksi Job Sheet.`,
+            `Melakukan pengujian fungsi dan mencatat data uji kelayakan produk.`
+          ];
+          sintaksInti = `Sintaks TeFa: 'Perencanaan Produksi', 'Pengerjaan Standar Industri', dan 'Quality Control (QC)'. Metode: ${metode}. ${getPendekatanPrinsipText(pendekatan, 'inti', topik, media)}`;
+
+          penutupGuru = [
+            `Memvalidasi hasil serah terima pekerjaan produk dan mengevaluasi efisiensi proses kerja.`,
+            `Memberikan feedback standar mutu industri dan menutup sesi kerja dengan doa.`
+          ];
+          penutupMurid = [
+            `Menyerahkan produk hasil kerja dan menyusun laporan pertanggungjawaban produksi.`,
+            `Membersihkan area kerja (5R/5S) dan berdoa bersama guru.`
+          ];
+          sintaksPenutup = `Sintaks TeFa: 'Serah Terima Hasil Pekerjaan' dan 'Evaluasi Efisiensi Produksi'. Metode: ${metode}. ${getPendekatanPrinsipText(pendekatan, 'penutup', topik, media)}`;
+
+        } else {
+          // PBL (Problem Based Learning) atau Model Lainnya
+          const modelTitle = (modelRaw && !isPBL) ? modelRaw : 'PBL';
+          awalGuru = [
+            `Membuka sesi kelas dengan salam hangat, doa bersama, dan presensi kedisiplinan murid.`,
+            `Mengaitkan apersepsi kontekstual dengan fenomena permasalahan riil terkait materi ${topik}.`,
+            `Menyampaikan tujuan pembelajaran, alur kegiatan belajar, dan skenario pembelajaran model ${modelTitle}.`
+          ];
+          awalMurid = [
+            `Menjawab salam, berdoa bersama, dan merespons pertanyaan pemantik dari guru.`,
+            `Menyimak penjelasan tujuan pembelajaran serta memahami alur investigasi masalah yang akan dilaksanakan.`
+          ];
+          sintaksAwal = `Sintaks ${modelTitle}: 'Orientasi Murid pada Masalah Otentik'. Metode: ${metode}. ${getPendekatanPrinsipText(pendekatan, 'awal', topik, media)}`;
+
+          intiGuru = [
+            `Membagi murid ke dalam tim kerja heterogen (4-5 orang per tim).`,
+            `Memfasilitasi stimulus masalah kontekstual materi ${topik} melalui media digital ${media}.`,
+            `Membimbing penyelidikan kelompok memanfaatkan fasilitas ${fasilitas}.`,
+            `Memantau perkembangan investigasi dan mengarahkan perumusan solusi pemecahan masalah materi ${topik}.`
+          ];
+          intiMurid = [
+            `Mengamati dan mencermati tayangan stimulus permasalahan materi ${topik}.`,
+            `Berdiskusi secara aktif dan kritis dalam kelompok untuk membedah akar persoalan.`,
+            `Melakukan riset data dan studi kasus dengan memanfaatkan sarana fasilitas ${fasilitas}.`,
+            `Menyusun draf karya dan alternatif solusi pemecahan masalah pada Lembar Kerja (LKPD) kelompok.`
+          ];
+          sintaksInti = `Sintaks ${modelTitle}: 'Mengorganisasi Murid untuk Belajar', 'Membimbing Penyelidikan', dan 'Mengembangkan Solusi'. Metode: ${metode}. ${getPendekatanPrinsipText(pendekatan, 'inti', topik, media)}`;
+
+          penutupGuru = [
+            `Memfasilitasi perwakilan kelompok dalam merumuskan simpulan bersama terkait inti materi ${topik}.`,
+            `Memandu sesi refleksi proses dan pencapaian hasil pembelajaran.`,
+            `Memberikan apresiasi, umpan balik konstruktif, dan tindak lanjut pertemuan berikutnya.`,
+            `Menutup sesi pembelajaran dengan doa bersama dan salam.`
+          ];
+          penutupMurid = [
+            `Bersama guru merumuskan inti kesimpulan pembelajaran materi ${topik}.`,
+            `Menyampaikan refleksi diri secara jujur dan terbuka mengenai kendala serta pemahaman belajar.`,
+            `Merapikan sarana belajar dan berdoa bersama sebelum mengakhiri kelas.`
+          ];
+          sintaksPenutup = `Sintaks ${modelTitle}: 'Menganalisis dan Mengevaluasi Proses Pemecahan Masalah'. Metode: ${metode}. ${getPendekatanPrinsipText(pendekatan, 'penutup', topik, media)}`;
+        }
+
+        pengalamanBelajar.push({
+          pertemuan: i,
+          subTopik: theme,
+          awal: {
+            waktu: '15 Menit',
+            aktivitasGuru: awalGuru,
+            aktivitasMurid: awalMurid,
+            deepLearningSintaks: sintaksAwal
+          },
+          inti: {
+            waktu: '60 Menit',
+            aktivitasGuru: intiGuru,
+            aktivitasMurid: intiMurid,
+            deepLearningSintaks: sintaksInti
+          },
+          penutup: {
+            waktu: '15 Menit',
+            aktivitasGuru: penutupGuru,
+            aktivitasMurid: penutupMurid,
+            deepLearningSintaks: sintaksPenutup
+          }
+        });
+      }
+
+      // Sintesis LKPD Sesuai Model Pembelajaran, TP, dan Konteks
+      const topicLower = topik.toLowerCase();
+      let lkpdData = {};
+      if (isPjBL) {
+        let t1 = `Analisis naskah, tema, atau spesifikasi awal, lalu rancang konsep kreatif serta sketsa/rancangan teknis karya produk ${topik}!`;
+        let t2 = `Susun jadwal pengerjaan proyek (timeline milestone), bagi peran anggota tim, dan siapkan perlengkapan/software kerja dengan memanfaatkan fasilitas ${fasilitas}!`;
+        let t3 = `Eksekusi proses pembuatan produk karya nyata ${topik} secara bertahap bersama kelompok dengan memanfaatkan panduan media digital ${media}!`;
+        let t4 = `Lakukan pengujian kelayakan fungsi/mutu produk (Quality Control), evaluasi kesesuaian karya terhadap standar teknis, dan lakukan penyempurnaan berdasarkan rubrik penilaian proyek!`;
+        let t5 = `Siapkan display pameran (showcase), ekspor/dokumentasikan portofolio karya produk ${topik}, dan presentasikan hasilnya di hadapan forum kelas untuk evaluasi bersama!`;
+
+        if (topicLower.includes('karakter') || topicLower.includes('storyboard') || topicLower.includes('animasi')) {
+          t1 = `Analisis skenario atau narasi cerita yang ditentukan, lalu rancang sketsa awal dan lembar model karakter (Model Sheet / Turnaround) 2D mencakup tampak depan, samping, ekspresi wajah, dan proporsi warna!`;
+          t2 = `Susun jadwal kerja proyek (timeline milestone) serta siapkan pembagian peran tim produksi storyboard pada perangkat di ${fasilitas}!`;
+          t3 = `Buat dan susun rangkaian panel storyboard visual (minimal 30 detik durasi animasi) dengan menerapkan prinsip sinematografi, staging, dan timeline gerak menggunakan software digital dan panduan media ${media}!`;
+          t4 = `Lakukan uji kelayakan teknis (Quality Control / Animatic kasar), telaah konsistensi desain karakter dan kelayakan produksi animasi 2D, lalu lakukan perbaikan karya!`;
+          t5 = `Susun display presentasi gelar karya (showcase), tampilkan hasil akhir karya proyek ${topik} di depan kelas menggunakan proyektor, dan refleksikan pengalaman proses produksi!`;
+        }
+
+        lkpdData = {
+          judul: `Lembar Kerja Proyek (PjBL): Perancangan dan Pembuatan Karya ${topik}`,
+          tujuan: `Peserta didik mampu merancang konsep desain/teknis, memproduksi karya nyata ${topik}, menguji mutu produk, dan menyajikan hasil gelar karya secara kolaboratif sesuai tujuan pembelajaran yang ditetapkan.`,
+          tugas: [t1, t2, t3, t4, t5]
+        };
+      } else if (isInquiry) {
+        lkpdData = {
+          judul: `Lembar Kerja Penyelidikan (Inquiry Based Learning): Eksplorasi dan Pembuktian Konsep ${topik}`,
+          tujuan: `Peserta didik mampu mengamati fenomena, merumuskan pertanyaan penyelidikan dan hipotesis, mengumpulkan data eksperimen, dan membuktikan prinsip kerja materi ${topik} secara ilmiah sesuai metode ${metode}.`,
+          tugas: [
+            `Amatilah fenomena atau data awal terkait materi ${topik} yang disajikan melalui media ${media}!`,
+            `Rumuskan minimal 2 pertanyaan penyelidikan dan susunlah hipotesis kerja berdasarkan analisis awal Anda!`,
+            `Kumpulkan data empiris dan lakukan pengujian terstruktur dengan metode ${metode} memanfaatkan sarana ${fasilitas}!`,
+            `Analisis dan olah data temuan untuk menguji keabsahan hipotesis yang telah kelompok Anda rumuskan!`,
+            `Tarik simpulan ilmiah secara generalisasi dan presentasikan laporan portofolio temuan kelompok di depan kelas!`
+          ]
+        };
+      } else if (isDiscovery) {
+        lkpdData = {
+          judul: `Lembar Kerja Penemuan (Discovery Learning): Eksplorasi dan Penemuan Konsep ${topik}`,
+          tujuan: `Peserta didik mampu menemukan konsep inti materi ${topik} secara mandiri melalui stimulasi, pengumpulan data, dan verifikasi empiris.`,
+          tugas: [
+            `Amatilah stimulus fenomena terkait materi ${topik} yang disajikan melalui media ${media}!`,
+            `Identifikasi dan catat permasalahan kunci yang perlu ditemukan solusinya!`,
+            `Lakukan pengumpulan data dan eksplorasi terarah dengan memanfaatkan sarana ${fasilitas}!`,
+            `Olah data hasil pengamatan dan lakukan pembuktian konsep secara kolaboratif!`,
+            `Rumuskan generalisasi simpulan konsep materi ${topik} dan laporkan hasilnya!`
+          ]
+        };
+      } else {
+        // PBL
+        lkpdData = {
+          judul: `Lembar Kerja Peserta Didik (PBL): Analisis Masalah dan Perumusan Solusi Inovatif ${topik}`,
+          tujuan: `Peserta didik mampu membedah permasalahan kontekstual materi ${topik}, menguji variabel penyebab, dan menyusun alternatif rekomendasi solusi yang aplikatif dan terukur.`,
+          tugas: [
+            `Pilihlah salah satu studi kasus permasalahan aktual terkait materi ${topik} yang disajikan dalam media pembelajaran ${media}!`,
+            `Lakukan penelusuran data dan investigasi penyebab masalah menggunakan sarana fasilitas ${fasilitas} untuk menemukan akar persoalan!`,
+            `Diskusikan bersama kelompok dan bandingkan ragam alternatif solusi berdasarkan konsep teori mata pelajaran ${mapel}!`,
+            `Rumuskan rencana aksi konkret dan desain karya pemecahan masalah yang paling efektif dan rasional!`,
+            `Susunlah hasil analisis dan rekomendasi solusi kelompok Anda ke dalam media presentasi interaktif untuk disajikan pada forum kelas!`
+          ]
+        };
+      }
+
+      // Sintesis Asesmen Sesuai Model
+      let asesmenData = [];
+      if (isPjBL) {
+        asesmenData = [
+          {
+            jenis: "Diagnostik",
+            bentuk: `Asesmen diagnostik non-kognitif & tes kesiapan keterampilan teknis pembuatan karya ${topik}`,
+            keterangan: "Mengidentifikasi kesiapan awal keterampilan, pengenalan software/peralatan kerja, dan minat gaya belajar murid."
+          },
+          {
+            jenis: "Formatif",
+            bentuk: "Lembar observasi proses pengerjaan proyek (keaktifan tim, kepatuhan timeline jadwal, dan progres milestone karya)",
+            keterangan: "Memantau perkembangan produksi secara bertahap dan memberikan umpan balik perbaikan teknis selama proses pengerjaan."
+          },
+          {
+            jenis: "Sumatif",
+            bentuk: `Penilaian autentik produk akhir karya proyek ${topik} (estetika, fungsionalitas, orisinalitas) dan presentasi gelar karya`,
+            keterangan: "Mengukur pencapaian kompetensi utuh peserta didik dalam menghasilkan produk karya nyata dan mengomunikasikan proses kreasinya."
+          }
+        ];
+      } else {
+        asesmenData = [
+          {
+            jenis: "Diagnostik",
+            bentuk: "Pre-test apersepsi singkat lisan / kuis interaktif digital awal",
+            keterangan: `Mengukur pemahaman prasyarat murid tentang materi ${topik} dan mengidentifikasi kesiapan serta gaya belajar masing-masing individu.`
+          },
+          {
+            jenis: "Formatif",
+            bentuk: "Observasi kinerja diskusi kelompok, kualitas analisis studi kasus, dan progres LKPD",
+            keterangan: "Menilai proses kolaborasi, penalaran kritis saat memecahkan masalah, keaktifan bertanya, serta memberikan umpan balik perbaikan berkelanjutan."
+          },
+          {
+            jenis: "Sumatif",
+            bentuk: `Penilaian produk karya presentasi interaktif dan laporan evaluasi akhir kasus ${topik}`,
+            keterangan: "Mengukur pencapaian kompetensi utuh murid dalam menganalisis, merumuskan solusi inovatif, dan mengomunikasikan simpulan akhir secara komprehensif."
+          }
+        ];
+      }
+
+      // Sintesis Rubrik Penilaian Sesuai Model
+      let rubrikData = [];
+      if (isPjBL) {
+        rubrikData = [
+          {
+            aspek: `Kualitas & Kreativitas Produk Proyek ${topik}`,
+            skor1: `Produk karya belum selesai; tidak memenuhi spesifikasi teknis dan belum menunjukkan penerapan konsep ${topik}.`,
+            skor2: `Produk karya selesai sebagian; spesifikasi dasar terpenuhi namun kualitas teknis dan estetika masih sangat terbatas.`,
+            skor3: `Produk karya selesai dengan baik; memenuhi seluruh spesifikasi teknis ${topik}, rapi, dan berfungsi sesuai harapan.`,
+            skor4: `Produk karya luar biasa; orisinal, memiliki nilai estetika dan fungsionalitas tinggi, inovatif, serta melampaui ekspektasi standar industri.`
+          },
+          {
+            aspek: "Perencanaan, Kepatuhan Timeline, & Prosedur Kerja",
+            skor1: "Tidak memiliki perencanaan yang jelas; pengerjaan proyek melewati batas waktu tanpa manajemen kerja tim.",
+            skor2: "Memiliki perencanaan dasar namun jadwal timeline sering terlambat; kepatuhan prosedur kerja masih minim.",
+            skor3: "Mengikuti perencanaan dan jadwal kerja dengan tertib; prosedur kerja dan SOP ditaati dengan baik.",
+            skor4: "Manajemen waktu dan pembagian peran tim sangat profesional; eksekusi proyek sistematis, efisien, dan tuntas tepat waktu."
+          },
+          {
+            aspek: "Kolaborasi Tim & Presentasi Gelar Karya",
+            skor1: "Pasif dalam kerja tim; presentasi produk tidak terstruktur dan tidak mampu menjelaskan proses pembuatan karya.",
+            skor2: "Kontribusi dalam tim masih minim; presentasi kurang percaya diri dan penjelasan fungsi produk belum tuntas.",
+            skor3: "Berkontribusi aktif dalam tim; presentasi produk jelas, terstruktur, komunikatif, dan mampu menjawab pertanyaan penguji.",
+            skor4: "Sangat solid dalam memimpin dan berkolaborasi; presentasi gelar karya memukau, persuasif, interaktif, dan penuh percaya diri."
+          }
+        ];
+      } else {
+        rubrikData = [
+          {
+            aspek: "Pemahaman Konsep & Analisis Masalah",
+            skor1: `Belum mampu mengidentifikasi esensi materi ${topik}; analisis masih sangat dangkal dan belum menunjukkan keterkaitan konsep.`,
+            skor2: `Mampu mengidentifikasi konsep materi ${topik}, namun penalaran analisis masih terbatas dan belum mendalam.`,
+            skor3: `Mampu menganalisis konsep materi ${topik} dengan baik, logis, dan menunjukkan hubungan sebab-akibat yang jelas.`,
+            skor4: `Mampu menganalisis materi ${topik} secara kritis, komprehensif, orisinal, dan mengintegrasikan solusi yang sangat relevan.`
+          },
+          {
+            aspek: "Keterampilan Kolaborasi & Komunikasi",
+            skor1: "Pasif dalam kerja kelompok; presentasi belum terstruktur dan sulit dipahami audiens.",
+            skor2: "Partisipasi masih minim; presentasi kurang terstruktur dan penyampaian pesan belum efektif.",
+            skor3: "Berpartisipasi aktif dalam kelompok; presentasi terstruktur rapi, jelas, dan komunikatif.",
+            skor4: "Sangat aktif memimpin/memfasilitasi kerja tim; presentasi inovatif, persuasif, dan sangat melibatkan audiens secara interaktif."
+          },
+          {
+            aspek: "Sikap & Penalaran Kritis",
+            skor1: "Belum menunjukkan sikap kritis; argumen tidak didasari fakta yang valid.",
+            skor2: "Mulai menunjukkan penalaran kritis, namun masih terdapat bias dan evaluasi data belum tuntas.",
+            skor3: "Menunjukkan sikap kritis objektif, menghargai ragam perspektif, dan berbasis data terpercaya.",
+            skor4: "Menunjukkan penalaran kritis tingkat tinggi, objektivitas luar biasa, beretika luhur, dan mampu mempromosikan pemahaman bersama."
+          }
+        ];
+      }
+
+      // Sintesis Pengayaan & Remedial Sesuai Model
+      let pengayaanText = '';
+      let remedialText = '';
+      if (isPjBL) {
+        pengayaanText = `Murid yang telah menyelesaikan produk proyek dengan capaian sangat baik direkomendasikan mengerjakan <strong>Pengembangan Tingkat Lanjut (Advanced Project Enhancement)</strong>: Mengembangkan variasi/fitur interaktif tambahan pada karya <em>${topik}</em>, menyusun dokumentasi video proses produksi (behind the scene), atau mempublikasikan portofolio karya ke platform industri/komunitas kreatif nasional.`;
+        remedialText = `Murid yang belum mencapai ketuntasan produk proyek direkomendasikan mengikuti <strong>Pendampingan Terbimbing (Project Scaffolding)</strong>: Mengikuti sesi bimbingan teknis intensif bersama guru atau tutor sebaya, menyederhanakan kompleksitas fitur karya <em>${topik}</em>, serta menyelesaikan revisi modul kerja bagian kunci hingga mencapai standar mutu minimum.`;
+      } else {
+        pengayaanText = `Murid yang telah melampaui kriteria ketuntasan direkomendasikan mengerjakan <strong>Tugas Analisis Komparatif Mandiri</strong>: Menulis artikel telaah ilmiah 3-4 halaman mengenai perkembangan teknologi/tren mutakhir terkait <em>${topik}</em> dan implikasinya di dunia industri, atau merancang purwarupa/media edukasi interaktif untuk diseminasi kepada adik tingkat.`;
+        remedialText = `Murid yang belum mencapai kriteria ketuntasan direkomendasikan mengerjakan <strong>Tugas Lembar Kerja Terbimbing (Scaffolding Worksheet)</strong>: Mengisi bagan alur konsep esensial materi <em>${topik}</em> dengan panduan bertahap, menyelesaikan soal analisis terarah bersama tutor sebaya (peer tutoring), serta mengulang simulasi terapan dasar hingga tuntas.`;
+      }
+
+      // Sintesis Glosarium Khusus Materi Pokok
+      let glosariumList = [];
+      if (topicLower.includes('animasi') || topicLower.includes('karakter') || topicLower.includes('storyboard')) {
+        glosariumList = [
+          { istilah: "Model Sheet / Turnaround", definisi: "Dokumen panduan visual standar yang menampilkan karakter dari berbagai sudut pandang (depan, samping, belakang, 3/4) beserta ekspresi dan proporsi baku untuk acuan animator." },
+          { istilah: "Storyboard Non-Linear", definisi: "Rangkaian visualisasi panel cerita yang memuat percabangan alur interaktif atau multi-skenario adegan sebelum diproduksi ke dalam format animasi utuh." },
+          { istilah: "Animatic", definisi: "Versi kasar gerak dari susunan storyboard yang diselaraskan dengan trek suara dan timing durasi untuk mengevaluasi ritme serta sinematografi adegan." },
+          { istilah: "Timeline Animasi & Keyframing", definisi: "Garis waktu operasional perangkat lunak tempat animator mengatur kemunculan adegan, perpindahan frame kunci (keyframes), dan tempo pergerakan karakter." },
+          { istilah: "Motion Graphic", definisi: "Teknik penggabungan grafis visual, tipografi kinetik, dan ilustrasi digital yang digerakkan untuk menyampaikan pesan komunikasi visual secara ringkas dan dinamis." }
+        ];
+      } else if (topicLower.includes('jaringan') || topicLower.includes('komputer') || topicLower.includes('it') || topicLower.includes('ip')) {
+        glosariumList = [
+          { istilah: "Topologi Jaringan", definisi: "Struktur geometris dan tata letak fisik maupun logis yang menghubungkan node-node komputer dalam satu kesatuan sistem komunikasi." },
+          { istilah: "IP Addressing & Subnetting", definisi: "Metode pengalamatan numerik unik yang diberikan ke setiap perangkat terhubung serta teknik segmentasi jaringan untuk efisiensi rute dan keamanan." },
+          { istilah: "Routing Protocol", definisi: "Standar aturan dan algoritma yang digunakan router untuk menentukan jalur terbaik dalam meneruskan paket data antarnetwork." },
+          { istilah: "Bandwidth & Throughput", definisi: "Kapasitas maksimum transfer data pada kanal komunikasi (bandwidth) dan kecepatan transfer data riil yang terukur pada waktu tertentu (throughput)." },
+          { istilah: "Firewall & Packet Filtering", definisi: "Sistem keamanan yang memantau dan mengontrol lalu lintas jaringan masuk dan keluar berdasarkan aturan keamanan yang telah ditetapkan." }
+        ];
+      } else {
+        glosariumList = [
+          { istilah: `Konseptualisasi ${topik}`, definisi: `Kerangka teori mendasar, struktur operasional, dan prinsip kerja utama materi ${topik} dalam mata pelajaran ${mapel}.` },
+          { istilah: `Analisis Variabel ${topik}`, definisi: `Proses identifikasi dan pengujian faktor-faktor penentu yang memengaruhi keberhasilan penerapan ${topik}.` },
+          { istilah: `Standardisasi Operasional (SOP)`, definisi: `Rangkaian prosedur baku yang menjamin kualitas, akurasi, dan keselamatan kerja dalam praktik materi ${topik}.` },
+          { istilah: `Sintesis Solutif`, definisi: `Kemampuan mengintegrasikan ragam data temuan untuk menghasilkan pemecahan masalah kontekstual yang berdaya guna.` },
+          { istilah: `Verifikasi Empiris`, definisi: `Metode pembuktian kebenaran teori melalui pengujian data, pengamatan langsung, atau eksperimen terukur.` }
+        ];
+      }
+
+      // Daftar Pustaka Ilmiah 5 Tahun Terakhir
+      const currentYear = new Date().getFullYear();
+      const refPendekatan = (() => {
+        const pL = (pendekatan || '').toLowerCase();
+        if (pL.includes('deep learning')) return `"Kajian Efektivitas Pembelajaran Mendalam (Deep Learning) pada Bidang ${mapel} di Tingkat Menengah."`;
+        if (pL.includes('tpack')) return `"Integrasi Kerangka TPACK dalam Pembelajaran ${mapel} di Era Digital."`;
+        if (pL.includes('saintifik') || pL.includes('scientific')) return `"Penerapan Pendekatan Saintifik dalam Meningkatkan Nalar Kritis Siswa pada Bidang ${mapel}."`;
+        if (pL.includes('kontekstual') || pL.includes('ctl')) return `"Efektivitas Pendekatan Kontekstual (CTL) dalam Pembelajaran Terapan ${mapel}."`;
+        return `"Inovasi Pembelajaran ${mapel} Berbasis Model ${modelRaw} dan Pendekatan ${pendekatan}."`;
+      })();
+
+      const daftarPustakaList = [
+        `Pratama, A., & Wibowo, S. (${currentYear - 2}). "Analisis dan Implementasi Konseptual Materi ${topik} dalam Penguatan Kompetensi Abad ke-21." Jurnal Ilmiah Pendidikan dan Pembelajaran Terapan, 8(2), 142-155.`,
+        `Rahmawati, D., Suryadi, K., & Hidayat, T. (${currentYear - 1}). "Pengembangan Media Interaktif Berbasis Kasus Otentik pada Materi ${topik}." Jurnal Inovasi Kurikulum dan Teknologi Pendidikan, 11(1), 78-92.`,
+        `Nugroho, F., & Lestari, M. (${currentYear - 3}). "Peningkatan Keterampilan Berpikir Kritis Siswa Melalui Pendekatan Berbasis Penyelidikan pada Topik ${topik}." Jurnal Riset Pembelajaran Indonesia, 6(3), 215-228.`,
+        `Santoso, E., dkk. (${currentYear}). ${refPendekatan} Jurnal Pendidikan dan Kebudayaan, 15(1), 34-49.`,
+        `Badan Standar, Kurikulum, dan Asesmen Pendidikan (BSKAP). (2024). Panduan Pembelajaran dan Asesmen Kurikulum Merdeka. Jakarta: Kementerian Pendidikan, Kebudayaan, Riset, dan Teknologi.`
+      ];
+
+      return {
+        identifikasiPesertaDidik: [
+          {
+            kategori: "Pengetahuan Awal",
+            identifikasi: idAwal.pesertaDidik ? `Berdasarkan observasi guru: ${idAwal.pesertaDidik}` : `Murid telah memiliki pemahaman dasar dan pengalaman kontekstual awal terkait materi ${topik} melalui interaksi pembelajaran sebelumnya atau media digital.`,
+            tindakLanjut: "Mendorong aktivitas berbagi pengalaman (sharing session) serta asesmen diagnostik singkat untuk memetakan kesiapan awal belajar."
+          },
+          {
+            kategori: "Minat dan Gaya Belajar",
+            identifikasi: `Murid menunjukkan preferensi gaya belajar yang beragam (${gaya}), memerlukan kombinasi pendekatan visual, audio, dan praktik langsung.`,
+            tindakLanjut: `Menyediakan variasi multimedia (${media}), tugas berbasis minat, eksplorasi karya di fasilitas ${fasilitas}, dan rotasi peran kelompok yang adaptif.`
+          },
+          {
+            kategori: "Latar Belakang Sosial",
+            identifikasi: `Murid memiliki keragaman latar belakang sosial-ekonomi dengan tingkat kemudahan akses informasi dan sarana teknologi yang bervariasi.`,
+            tindakLanjut: `Memastikan seluruh murid mendapatkan akses setara terhadap sarana fasilitas belajar (${fasilitas}) serta menumbuhkan empati dan inklusivitas.`
+          },
+          {
+            kategori: "Kebutuhan Belajar",
+            identifikasi: `Sebagian murid memerlukan bimbingan terstruktur (scaffolding) untuk penerapan materi ${topik}, sementara murid berkemampuan tinggi memerlukan tugas eksplorasi karya yang lebih menantang.`,
+            tindakLanjut: "Menerapkan diferensiasi proses dan produk penugasan, panduan bertahap, serta bimbingan terarah bagi murid yang memerlukan dukungan khusus."
+          },
+          {
+            kategori: "Etika dan Sikap Kerja",
+            identifikasi: idAwal.profilLulusan ? `Kesiapan etika kerja: ${idAwal.profilLulusan}` : "Murid umumnya bersikap santun dan komunikatif, namun perlu penguatan konsisten terkait integritas akademik, objektivitas analitis, dan tanggung jawab kerja kelompok.",
+            tindakLanjut: "Menanamkan budaya saling menghargai pendapat, kejujuran karya, serta kedisiplinan tenggat waktu pada setiap penugasan."
+          }
+        ],
+        identifikasiMateri: [
+          {
+            kategori: "Jenis Pengetahuan",
+            deskripsi: idAwal.materi ? `${idAwal.materi}` : `Konseptual dan prosedural terapan, mencakup pemahaman teori inti, telaah fakta kontekstual, penalaran logis, dan penerapan pemecahan masalah nyata materi ${topik}.`
+          },
+          {
+            kategori: "Relevansi Kehidupan",
+            deskripsi: `Meningkatkan keterampilan berpikir kritis, literasi praktis, dan kepekaan dalam menyikapi persoalan riil di bidang ${mapel} pada era modern.`
+          },
+          {
+            kategori: "Tingkat Kesulitan",
+            deskripsi: "Sedang hingga tinggi, menuntut kemampuan analisis komprehensif, evaluasi kritis ragam alternatif solusi, serta sintesis karya orisinal."
+          }
+        ],
+        dimensiProfil: (profilList.length > 0 ? profilList : ['Penalaran Kritis', 'Kreativitas', 'Kolaborasi', 'Kemandirian']).map(dim => ({
+          dimensi: dim,
+          deskripsi: `Murid menginternalisasikan nilai ${dim} secara nyata dalam seluruh tahapan pelaksanaan ${modelRaw} dan penugasan materi ${topik}.`
+        })),
+        desainPembelajaran: {
+          pemahamanBermakna: `Memahami dan menguasai materi ${topik} bukan sekadar menghafal definisi teoretis, melainkan membangun kesadaran kritis, kemampuan berpikir analitis tingkat tinggi, serta kemahiran aplikatif untuk menghasilkan karya solutif dan bernilai guna di masyarakat secara adaptif dan beretika.`,
+          pertanyaanPemantik: [
+            `Bagaimana prinsip dan aplikasi materi ${topik} ini berdampak langsung terhadap dinamika kehidupan serta industri saat ini?`,
+            `Tantangan atau risiko apa yang paling krusial muncul apabila proses dalam ${topik} tidak dirancang dengan strategi yang tepat?`,
+            `Gagasan atau inovasi karya apa yang dapat kita ciptakan untuk menjawab kebutuhan nyata terkait bidang ${topik} ini?`
+          ],
+          lintasDisiplin: `Pembelajaran materi ${topik} beririsan dengan literasi digital, penalaran logis matematika/sains, etika sosial kemasyarakatan, serta keterampilan komunikasi visual dan verbal.`,
+          praktikPedagogis: (() => {
+            const pL = (pendekatan || '').toLowerCase();
+            if (pL.includes('deep learning')) {
+              return `Model ${modelRaw} diintegrasikan secara utuh dengan memfasilitasi murid mempraktikkan materi ${topik}. Pendekatan Deep Learning diterapkan melalui tahapan Surface Learning (fondasi konsep), Deep Learning (analisis mendalam), dan Transfer Learning (kreasi karya aplikatif) menggunakan metode ${metode}.`;
+            }
+            if (pL.includes('tpack')) {
+              return `Model ${modelRaw} diintegrasikan secara utuh dengan memfasilitasi murid mempraktikkan materi ${topik}. Pendekatan TPACK diterapkan melalui integrasi teknologi (${media}), strategi pedagogis aktif, dan penguasaan konten materi (${topik}) menggunakan metode ${metode}.`;
+            }
+            if (pL.includes('saintifik') || pL.includes('scientific')) {
+              return `Model ${modelRaw} diintegrasikan secara utuh dengan memfasilitasi murid mempraktikkan materi ${topik}. Pendekatan Saintifik diterapkan melalui tahapan 5M (Mengamati, Menanya, Mengumpulkan Data, Mengasosiasi, dan Mengomunikasikan) menggunakan metode ${metode}.`;
+            }
+            if (pL.includes('kontekstual') || pL.includes('ctl')) {
+              return `Model ${modelRaw} diintegrasikan secara utuh dengan memfasilitasi murid mempraktikkan materi ${topik}. Pendekatan Kontekstual (CTL) diterapkan dengan mengaitkan materi secara langsung ke pengalaman otentik dunia nyata menggunakan metode ${metode}.`;
+            }
+            return `Model ${modelRaw} diintegrasikan secara utuh dengan memfasilitasi murid mempraktikkan materi ${topik}. Pendekatan ${pendekatan} diterapkan secara aktif dan kolaboratif untuk memperdalam kompetensi melalui metode ${metode}.`;
+          })(),
+          kemitraan: `Pembelajaran memperkuat kemitraan dengan praktisi industri, pakar profesional, komunitas pegiat bidang ${mapel}, atau organisasi terkait guna membagikan standar operasional dunia nyata.`,
+          lingkungan: `Kegiatan pembelajaran memanfaatkan fasilitas ${fasilitas} yang didukung sarana media digital ${media} guna menciptakan iklim belajar aktif, aman, inspiratif, dan kolaboratif.`
+        },
+        pengalamanBelajar: pengalamanBelajar,
+        materiAjarDeskriptif: `
+          <p class="doc-paragraph">
+            Materi pokok <strong>${topik}</strong> pada mata pelajaran <strong>${mapel}</strong> merupakan pilar kompetensi fundamental yang memadukan wawasan teoretis dengan kemahiran terapan profesional. Pembahasan diawali dengan pemahaman mendalam mengenai hakikat, karakteristik dasar, serta kerangka operasional yang berlaku dalam bidang keilmuan terkait. Peserta didik dibimbing untuk mengidentifikasi komponen inti, memahami hubungan sebab-akibat antarelemen, serta mengenali standar teknis yang menjadi acuan baku di dunia akademik maupun industri modern.
+          </p>
+          <p class="doc-paragraph">
+            Pada tataran analisis mendalam, materi ini mengeksplorasi ragam studi kasus kontekstual dan skenario pemecahan masalah aktual yang kerap dijumpai di lapangan. Melalui model pembelajaran <em>${modelRaw}</em> yang berpadu dengan pendekatan <em>${pendekatan}</em>, peserta didik diarahkan untuk menguji variabel-variabel penentu, mendiagnosis potensi kendala operasional, serta merumuskan inovasi solutif yang aplikatif. Pengintegrasian fasilitas <em>${fasilitas}</em> dan media digital <em>${media}</em> memperkaya pengalaman belajar agar murid mampu berpikir kritis, objektif, dan berbasis data empiris.
+          </p>
+          <p class="doc-paragraph">
+            Sebagai wujud capaian konkret sesuai tujuan pembelajaran, materi ini memandu prosedur kerja bertahap (SOP), teknik pengujian kualitas, serta metodologi kreasi karya yang bertanggung jawab. Diharapkan setelah menuntaskan seluruh rangkaian aktivitas pembelajaran <strong>${topik}</strong>${materiTambahanVal ? ` beserta penguatan materi tambahan <em>${materiTambahanVal.split('\n')[0]}</em>` : ''}, peserta didik memiliki kemandirian berpikir, kecakapan kolaboratif yang solid, serta daya cipta inovatif untuk berkontribusi secara nyata bagi kemajuan masyarakat dan dunia kerja masa depan.
+          </p>
+        `,
+        materiTambahan: materiTambahanVal,
+        asesmen: asesmenData,
+        refleksi: {
+          guru: [
+            `Apakah seluruh murid terlibat secara aktif, antusias, dan bertanggung jawab dalam proses pembelajaran model ${modelRaw} pada materi ${topik}?`,
+            `Apakah stimulus pembelajaran dan media ${media} yang disediakan berhasil memantik nalar kritis serta motivasi berkarya murid?`,
+            `Bagaimana efektivitas pendampingan yang saya berikan kepada murid yang memerlukan dukungan teknis selama kegiatan berlangsung?`,
+            `Apakah alokasi waktu untuk setiap tahapan sintaks ${modelRaw} berjalan proporsional, kondusif, dan tuntas?`,
+            `Aspek kegiatan belajar mana yang paling berhasil menciptakan interaksi belajar paling hidup, bermakna, dan menyenangkan bagi murid?`
+          ],
+          murid: [
+            `Apa wawasan dan keterampilan baru yang paling berharga yang saya peroleh dari materi ${topik} hari ini?`,
+            `Bagaimana peran dan kontribusi aktif saya dalam bekerja sama dengan anggota tim kelompok selama pembelajaran?`,
+            `Tahapan mana dari kegiatan belajar yang paling menantang bagi saya, dan strategi apa yang saya gunakan untuk mengatasinya?`,
+            `Bagaimana pengetahuan dan keterampilan materi ${topik} ini dapat saya manfaatkan dalam kehidupan nyata atau cita-cita profesi saya?`,
+            `Hal apa yang ingin saya tingkatkan lagi dalam pertemuan berikutnya agar hasil karya dan pemahaman saya semakin optimal?`
+          ]
+        },
+        lkpd: lkpdData,
+        rubrikPenilaian: rubrikData,
+        pengayaan: pengayaanText,
+        remedial: remedialText,
+        glosarium: glosariumList,
+        daftarPustaka: daftarPustakaList
+      };
+    }
+
+    /**
+     * Download Modul Ajar dalam Format Microsoft Word (.doc)
+     */
+    function downloadModulWord() {
+      const content = document.getElementById('printArea');
+      if (!content) return;
+
+      const data = currentModulData || {};
+      const mapel = (data.mataPelajaran || 'Mata_Pelajaran').replace(/[^a-zA-Z0-9]/g, '_');
+      const topik = (data.topikMateri || 'Topik').replace(/[^a-zA-Z0-9]/g, '_');
+      const filename = `Modul_Ajar_${mapel}_${topik}.doc`;
+
+      const clone = content.cloneNode(true);
+
+      // Hapus footer notice teks biasa dari body konten agar tidak menempel di bawah tanda tangan
+      const oldNoticeWord = clone.querySelector('.doc-footer-notice');
+      if (oldNoticeWord) {
+        oldNoticeWord.remove();
+      }
+
+      // Ganti signature-grid dengan tabel formal Microsoft Word agar tidak acak-acakan / over-justified, lengkap dengan jarak spasi atas
+      const sigGrid = clone.querySelector('.signature-grid');
+      if (sigGrid) {
+        const sigDateEl = document.getElementById('sigDateLocation');
+        const sigTeacherEl = document.getElementById('sigTeacherName');
+        const sigDateHtml = sigDateEl ? sigDateEl.innerHTML : 'Kota/Kabupaten, .................... 2026<br>Guru Mata Pelajaran';
+        const sigTeacherHtml = sigTeacherEl ? sigTeacherEl.innerHTML : 'Nama Penyusun<br><span style="font-size: 9pt; font-weight: normal; color: #64748b;">( .................................... )</span>';
+
+        const sigWrapper = document.createElement('div');
+        sigWrapper.className = 'doc-signature-wrapper';
+        sigWrapper.innerHTML = `
+          <p style="margin: 0; padding: 0; height: 32pt; line-height: 32pt; font-size: 1pt; mso-line-height-rule: exactly;">&nbsp;</p>
+          <table class="doc-signature-word-table" width="100%" border="0" cellspacing="0" cellpadding="0" style="width: 100% !important; border: none !important; border-collapse: collapse !important; margin-bottom: 24pt !important;">
+            <tr>
+              <td width="50%" align="center" style="width: 50%; text-align: center; vertical-align: top; border: none; padding: 0 12pt;">
+                <p style="margin: 0; font-size: 10.5pt; font-weight: bold; text-align: center; line-height: 1.4;">Mengetahui,<br>Kepala Sekolah</p>
+                <p style="margin: 55pt 0 0 0; font-size: 10.5pt; font-weight: bold; text-align: center;">___________________________</p>
+                <p style="margin: 3pt 0 0 0; font-size: 9pt; color: #64748b; text-align: center;">( .................................... )</p>
+              </td>
+              <td width="50%" align="center" style="width: 50%; text-align: center; vertical-align: top; border: none; padding: 0 12pt;">
+                <p style="margin: 0; font-size: 10.5pt; font-weight: bold; text-align: center; line-height: 1.4;">${sigDateHtml}</p>
+                <p style="margin: 55pt 0 0 0; font-size: 10.5pt; font-weight: bold; text-align: center;">${sigTeacherHtml}</p>
+              </td>
+            </tr>
+          </table>
+        `;
+        sigGrid.parentNode.replaceChild(sigWrapper, sigGrid);
+      }
+
+      const htmlContent = `
+        <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+        <head>
+          <meta charset='utf-8'>
+          <title>${filename}</title>
+          <!--[if gte mso 9]>
+          <xml>
+            <w:WordDocument>
+              <w:View>Print</w:View>
+              <w:Zoom>100</w:Zoom>
+              <w:DoNotOptimizeForBrowser/>
+            </w:WordDocument>
+          </xml>
+          <![endif]-->
+          <style>
+            @page WordSection1 {
+              size: 595.3pt 841.9pt; /* A4 */
+              margin: 56.7pt 56.7pt 56.7pt 56.7pt;
+              mso-header-margin: 35.4pt;
+              mso-footer-margin: 35.4pt;
+              mso-header: h1;
+              mso-footer: f1;
+            }
+            div.WordSection1 { page: WordSection1; }
+            table#hrdftrtbl {
+              margin: 0in 0in 0in 900in;
+              width: 1px;
+              height: 1px;
+              overflow: hidden;
+            }
+            p.MsoHeader, div.MsoHeader {
+              margin: 0;
+              font-family: 'Calibri', 'Arial', sans-serif;
+              font-size: 8.5pt;
+              color: #64748b;
+            }
+            p.MsoFooter, div.MsoFooter {
+              margin: 0;
+              font-family: 'Calibri', 'Arial', sans-serif;
+              font-size: 8.5pt;
+              color: #64748b;
+            }
+            body {
+              font-family: 'Calibri', 'Arial', sans-serif;
+              font-size: 11pt;
+              line-height: 1.5;
+              color: #000000;
+              text-align: justify;
+            }
+            h1, h2, h3, h4, h5 { font-family: 'Calibri', 'Arial', sans-serif; }
+            h1 { font-size: 15pt; font-weight: bold; text-align: center; margin-bottom: 3pt; text-transform: uppercase; }
+            h2 { font-size: 12.5pt; font-weight: bold; text-align: center; color: #1e3a8a; margin-bottom: 12pt; text-transform: uppercase; }
+            table.doc-metadata-table {
+              width: 100%;
+              border-collapse: collapse;
+              margin-bottom: 14pt;
+              border: 1pt solid #cbd5e1;
+            }
+            table.doc-metadata-table td {
+              border: 1pt solid #cbd5e1;
+              padding: 4pt 6pt;
+              font-size: 9.5pt;
+              vertical-align: top;
+            }
+            table.doc-metadata-table .meta-label {
+              width: 20%;
+              font-weight: bold;
+              background-color: #f8fafc;
+            }
+            table.doc-metadata-table .meta-value {
+              width: 30%;
+            }
+            .doc-section-title {
+              font-size: 11.5pt;
+              font-weight: bold;
+              background-color: #f1f5f9;
+              border-left: 4pt solid #2563eb;
+              padding: 5pt 8pt;
+              margin-top: 14pt;
+              margin-bottom: 8pt;
+            }
+            .doc-sub-heading { font-size: 10.5pt; font-weight: bold; margin-top: 9pt; margin-bottom: 4pt; }
+            p, li, div { text-align: justify; }
+            table.doc-table {
+              width: 100%;
+              border-collapse: collapse;
+              margin-top: 6pt;
+              margin-bottom: 12pt;
+            }
+            table.doc-table th, table.doc-table td {
+              border: 1pt solid #cbd5e1;
+              padding: 5pt 7pt;
+              vertical-align: top;
+              text-align: justify;
+              font-size: 10pt;
+            }
+            table.doc-table th {
+              background-color: #f8fafc;
+              font-weight: bold;
+            }
+            .deep-learning-box {
+              background-color: #f8fafc;
+              border-left: 3pt solid #2563eb;
+              padding: 6pt 8pt;
+              margin-top: 4pt;
+              margin-bottom: 4pt;
+              font-size: 9.5pt;
+            }
+            .meeting-header-title {
+              font-size: 10.5pt;
+              font-weight: bold;
+              color: #1e3a8a;
+              background-color: #f8fafc;
+              padding: 4pt 6pt;
+              margin-top: 10pt;
+              margin-bottom: 6pt;
+            }
+            ul, ol {
+              margin-left: 18pt;
+              margin-bottom: 8pt;
+            }
+            .activity-points-list {
+              margin: 0 0 0 16pt;
+              padding: 0;
+            }
+            .activity-points-list li {
+              margin-bottom: 4pt;
+              text-align: justify;
+              line-height: 1.5;
+            }
+            li {
+              margin-bottom: 3pt;
+              text-align: justify;
+            }
+            table.doc-signature-word-table,
+            table.doc-signature-word-table tr,
+            table.doc-signature-word-table td,
+            table.doc-signature-word-table p {
+              border: none !important;
+              text-align: center !important;
+            }
+          </style>
+        </head>
+        <body>
+          <div class='WordSection1'>
+            ${clone.innerHTML}
+
+            <!-- Tabel Header & Footer MSO Khusus Word (Tersembunyi dari Body, Diangkat ke Header & Footer Asli Kertas oleh Word) -->
+            <table id='hrdftrtbl' border='0' cellspacing='0' cellpadding='0'>
+              <tr>
+                <td>
+                  <div style='mso-element:header' id='h1'>
+                    <p class='MsoHeader' style='text-align: center; border-bottom: 0.5pt solid #cbd5e1; padding-bottom: 3pt;'>
+                      Dokumen ini dibuat menggunakan <strong>Edu Workspace</strong>
+                    </p>
+                  </div>
+                </td>
+                <td>
+                  <div style='mso-element:footer' id='f1'>
+                    <p class='MsoFooter' style='text-align: center; border-top: 0.5pt solid #cbd5e1; padding-top: 4pt;'>
+                      Dokumen ini dibuat menggunakan <strong>Edu Workspace</strong>
+                    </p>
+                  </div>
+                </td>
+              </tr>
+            </table>
+          </div>
+        </body>
+        </html>
+      `;
+
+      const blob = new Blob(['\ufeff', htmlContent], {
+        type: 'application/msword;charset=utf-8'
+      });
+
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
+    /**
+     * Download Modul Ajar Langsung dalam Format PDF Bebas Halaman Kosong & Lengkap
+     */
+    function downloadModulPDF() {
+      const content = document.getElementById('printArea');
+      if (!content) return;
+
+      const btn = document.getElementById('btnDownloadPDF');
+      const originalHtml = btn ? btn.innerHTML : '';
+      if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = `<span class="btn-spinner"></span> <span>Mengonversi PDF...</span>`;
+      }
+
+      const data = currentModulData || {};
+      const mapel = (data.mataPelajaran || 'Mata_Pelajaran').replace(/[^a-zA-Z0-9]/g, '_');
+      const topik = (data.topikMateri || 'Topik').replace(/[^a-zA-Z0-9]/g, '_');
+      const filename = `Modul_Ajar_${mapel}_${topik}.pdf`;
+
+      // Margin seimbang: Atas 14mm, Kiri 12mm, Bawah 14mm, Kanan 12mm
+      // Area konten = Lebar A4 (210mm) - margin kiri (12mm) - margin kanan (12mm) = 186mm
+      const contentWidthMm = 186;
+      const marginConfig = [14, 12, 14, 12]; // [top, left, bottom, right]
+
+      // Buat container terisolasi berukuran pas A4 (186mm) agar batas kanan dan kiri sama persis
+      const clone = content.cloneNode(true);
+      clone.style.width = contentWidthMm + 'mm';
+      clone.style.maxWidth = contentWidthMm + 'mm';
+      clone.style.minWidth = contentWidthMm + 'mm';
+      clone.style.boxSizing = 'border-box';
+      clone.style.padding = '0';
+      clone.style.margin = '0 auto';
+      clone.style.border = 'none';
+      clone.style.borderRadius = '0';
+      clone.style.boxShadow = 'none';
+      clone.style.background = '#ffffff';
+
+      // Hapus footer notice teks biasa dari body agar menjadi header/footer halaman PDF
+      const oldNoticePdf = clone.querySelector('.doc-footer-notice');
+      if (oldNoticePdf) {
+        oldNoticePdf.remove();
+      }
+
+      const tempContainer = document.createElement('div');
+      tempContainer.id = 'pdfTempExportContainer';
+      tempContainer.style.position = 'fixed';
+      tempContainer.style.left = '0';
+      tempContainer.style.top = '-99999px';
+      tempContainer.style.width = contentWidthMm + 'mm';
+      tempContainer.style.background = '#ffffff';
+      tempContainer.style.zIndex = '-9999';
+      tempContainer.appendChild(clone);
+      document.body.appendChild(tempContainer);
+
+      // Hitung scale adaptif agar canvas height tidak melampaui limit browser 16,384px (mencegah blank canvas/halaman kosong)
+      const measuredHeight = clone.scrollHeight || 6000;
+      let targetScale = 1.5;
+      if (measuredHeight * targetScale > 14000) {
+        targetScale = Math.max(1.0, 14000 / measuredHeight);
+      }
+
+      const opt = {
+        margin: marginConfig,
+        filename: filename,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: {
+          scale: targetScale,
+          useCORS: true,
+          letterRendering: true,
+          logging: false,
+          scrollY: 0,
+          scrollX: 0
+        },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+        pagebreak: {
+          mode: 'css'
+        }
+      };
+
+      const cleanup = () => {
+        if (tempContainer && tempContainer.parentNode) {
+          tempContainer.parentNode.removeChild(tempContainer);
+        }
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = originalHtml;
+        }
+      };
+
+      if (window.html2pdf) {
+        html2pdf().set(opt).from(clone).toPdf().get('pdf').then(function(pdf) {
+          const totalPages = pdf.internal.getNumberOfPages();
+          for (let i = 1; i <= totalPages; i++) {
+            pdf.setPage(i);
+            
+            // Header PDF di tengah atas setiap halaman (x: 105mm tengah A4)
+            pdf.setFont('helvetica', 'normal');
+            pdf.setFontSize(8);
+            pdf.setTextColor(100, 116, 139); // #64748b
+            pdf.text('Dokumen ini dibuat menggunakan Edu Workspace', 105, 7.5, { align: 'center' });
+            
+            // Garis halus di bawah header simetris dari 12mm sampai 198mm (panjang 186mm tepat di tengah)
+            pdf.setDrawColor(226, 232, 240); // #e2e8f0
+            pdf.setLineWidth(0.2);
+            pdf.line(12, 9.5, 198, 9.5);
+            
+            // Garis halus di atas footer simetris dari 12mm sampai 198mm (panjang 186mm tepat di tengah)
+            pdf.line(12, 287.5, 198, 287.5);
+            
+            // Footer PDF di tengah bawah setiap halaman (x: 105mm tengah A4)
+            pdf.text('Dokumen ini dibuat menggunakan Edu Workspace', 105, 291.5, { align: 'center' });
+          }
+        }).save().then(() => {
+          cleanup();
+        }).catch(err => {
+          console.error('Download PDF error:', err);
+          cleanup();
+          window.print();
+        });
+      } else {
+        cleanup();
+        window.print();
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      renderModulDocument();
+    });
+  </script>
+</body>
+
+</html>

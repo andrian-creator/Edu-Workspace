@@ -1,0 +1,39 @@
+[
+  {
+    "id": "ADM-001",
+    "name": "Rico Andrianto",
+    "email": "ric04ndri4nt0@gmail.com",
+    "avatar": "https://lh3.googleusercontent.com/a/ACg8ocKI_7KCJuwzmZEU9m8wP-iOxw7CMGmUZUJ5CaMIhgVfKy4uxSg=s96-c",
+    "role": "Admin",
+    "institution": "Edu Workspace",
+    "subject": "Super Admin",
+    "gradeLevel": "",
+    "registeredAt": "02 Sep 2026, 08:01",
+    "provider": "Google Account (@gmail.com)",
+    "status": "Aktif",
+    "isApproved": true,
+    "isProfileCompleted": true
+  },
+  {
+    "id": "USR-002",
+    "name": "Rico Eko Andrianto",
+    "email": "ricoandri00@gmail.com",
+    "avatar": "https://lh3.googleusercontent.com/a/ACg8ocIeOYePg5rwLeMyjR9MnQUUQiN0KBDN6Gb1J0W23t04xMsahpMv=s96-c",
+    "role": "Guru",
+    "institution": "bbjjh",
+    "subject": "",
+    "gradeLevel": "SMA / MA",
+    "registeredAt": "04 Sep 2026, 16.28",
+    "provider": "Google Account (@gmail.com)",
+    "status": "Aktif",
+    "isApproved": true,
+    "isProfileCompleted": true,
+    "features": [
+      "generate_modul_ajar"
+    ],
+    "subscriptionStart": "2026-09-04",
+    "subscriptionEnd": "2026-09-05",
+    "geminiApiKey": "",
+    "isDeleted": false
+  }
+]

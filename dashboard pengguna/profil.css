@@ -1,0 +1,376 @@
+:root {
+  --font-main: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --color-bg: #f8fafc;
+  --color-card: #ffffff;
+  --color-text-main: #1e293b;
+  --color-text-muted: #64748b;
+  --color-border: #e2e8f0;
+  --color-yellow-pill: #ffd500;
+  --color-yellow-hover: #ffdf33;
+  --radius-pill: 999px;
+  --radius-card: 24px;
+  --transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-main);
+  background-color: var(--color-bg);
+  color: var(--color-text-main);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Main Container */
+.profile-container {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 24px 60px;
+}
+
+.profile-card {
+  width: 100%;
+  max-width: 560px;
+  background: var(--color-card);
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-card);
+  padding: 44px 40px;
+  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.04);
+}
+
+.profile-header {
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.avatar-wrapper {
+  position: relative;
+  display: inline-block;
+  margin-bottom: 16px;
+}
+
+.profile-avatar-img {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid var(--color-yellow-pill);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.google-badge {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  background: #ffffff;
+  border-radius: 50%;
+  padding: 4px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.profile-title {
+  font-size: 1.6rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--color-text-main);
+  margin-bottom: 8px;
+}
+
+.profile-desc {
+  font-size: 0.95rem;
+  color: var(--color-text-muted);
+  line-height: 1.5;
+}
+
+/* Form */
+.form-group {
+  margin-bottom: 20px;
+  text-align: left;
+}
+
+.form-label {
+  display: block;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--color-text-main);
+  margin-bottom: 8px;
+}
+
+.form-label .required-star {
+  color: #dc2626;
+  margin-left: 2px;
+}
+
+.form-input, .form-select {
+  width: 100%;
+  padding: 13px 18px;
+  font-family: var(--font-main);
+  font-size: 0.96rem;
+  border: 1.5px solid var(--color-border);
+  border-radius: 14px;
+  background: #f8fafc;
+  color: var(--color-text-main);
+  transition: var(--transition);
+  outline: none;
+}
+
+.form-input:focus, .form-select:focus {
+  border-color: #1e293b;
+  background: #ffffff;
+  box-shadow: 0 0 0 3.5px rgba(30, 41, 59, 0.08);
+}
+
+.form-input:disabled {
+  background: #f1f5f9;
+  color: var(--color-text-muted);
+  cursor: not-allowed;
+}
+
+.btn-submit-profile {
+  width: 100%;
+  padding: 15px 24px;
+  font-family: var(--font-main);
+  font-size: 1.02rem;
+  font-weight: 800;
+  color: #111827;
+  background-color: var(--color-yellow-pill);
+  border: none;
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+  transition: var(--transition);
+  margin-top: 12px;
+  box-shadow: 0 4px 14px rgba(255, 213, 0, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.btn-submit-profile:hover {
+  background-color: var(--color-yellow-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(255, 213, 0, 0.45);
+}
+
+/* Kartu Status Pengajuan (Pending / Disetujui / Ditolak / Dihapus) */
+.status-state-box {
+  text-align: center;
+  padding-top: 10px;
+}
+
+.status-banner-card {
+  border-radius: 18px;
+  padding: 28px 24px;
+  margin-bottom: 24px;
+  text-align: center;
+}
+
+.status-banner-pending {
+  background: #fefce8;
+  border: 1.5px solid #fef08a;
+}
+
+.status-banner-approved {
+  background: #f0fdf4;
+  border: 1.5px solid #bbf7d0;
+}
+
+.status-banner-rejected {
+  background: #fef2f2;
+  border: 1.5px solid #fecaca;
+}
+
+.status-state-icon {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.8rem;
+  margin-bottom: 14px;
+}
+
+.icon-pending {
+  background: #fef08a;
+  color: #854d0e;
+}
+
+.icon-approved {
+  background: #dcfce7;
+  color: #16a34a;
+}
+
+.icon-rejected {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.status-state-title {
+  font-size: 1.35rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  margin-bottom: 8px;
+}
+
+.title-pending { color: #854d0e; }
+.title-approved { color: #166534; }
+.title-rejected { color: #991b1b; }
+
+.status-state-desc {
+  font-size: 0.94rem;
+  line-height: 1.55;
+  margin-bottom: 12px;
+}
+
+.desc-pending { color: #a16207; }
+.desc-approved { color: #15803d; }
+.desc-rejected { color: #b91c1c; }
+
+.reason-detail-callout {
+  background: #ffffff;
+  border: 1.5px dashed #f87171;
+  border-radius: 12px;
+  padding: 12px 16px;
+  margin: 14px 0 6px;
+  text-align: left;
+}
+
+.reason-detail-label {
+  font-size: 0.8rem;
+  font-weight: 800;
+  color: #991b1b;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 4px;
+}
+
+.reason-detail-text {
+  font-size: 0.9rem;
+  color: #1f2937;
+  font-weight: 600;
+}
+
+.status-actions-group {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.status-btn-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+}
+
+.btn-action-secondary {
+  flex: 1;
+  padding: 13px 18px;
+  font-family: var(--font-main);
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--color-text-main);
+  background: #ffffff;
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: var(--transition);
+  cursor: pointer;
+}
+
+.btn-action-secondary:hover {
+  border-color: #1e293b;
+  background: #f8fafc;
+  color: var(--color-text-main);
+}
+
+.btn-action-logout {
+  flex: 1;
+  padding: 13px 18px;
+  font-family: var(--font-main);
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #dc2626;
+  background: #fef2f2;
+  border: 1.5px solid #fecaca;
+  border-radius: var(--radius-pill);
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: var(--transition);
+  cursor: pointer;
+}
+
+.btn-action-logout:hover {
+  background: #fee2e2;
+  border-color: #f87171;
+  transform: translateY(-1px);
+}
+
+.btn-action-primary {
+  width: 100%;
+  padding: 14px 22px;
+  font-family: var(--font-main);
+  font-size: 1rem;
+  font-weight: 800;
+  border-radius: var(--radius-pill);
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  text-decoration: none;
+  transition: var(--transition);
+}
+
+.btn-green {
+  background: #16a34a;
+  color: #ffffff;
+  box-shadow: 0 4px 14px rgba(22, 163, 74, 0.35);
+}
+
+.btn-green:hover {
+  background: #15803d;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(22, 163, 74, 0.45);
+}
+
+.btn-reedit {
+  background: var(--color-yellow-pill);
+  color: #111827;
+  box-shadow: 0 4px 14px rgba(255, 213, 0, 0.35);
+}
+
+.btn-reedit:hover {
+  background: var(--color-yellow-hover);
+  transform: translateY(-2px);
+}
+
+
+
+@media (max-width: 640px) {
+  .profile-card {
+    padding: 32px 24px;
+  }
+}
