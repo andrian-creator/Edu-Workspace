@@ -47,12 +47,14 @@
     "gradeLevel": "SMA / MA",
     "registeredAt": "05 Sep 2026, 16.15",
     "provider": "Google Account (@gmail.com)",
-    "status": "Menunggu Persetujuan",
-    "isApproved": false,
+    "status": "Aktif",
+    "isApproved": true,
     "isProfileCompleted": true,
-    "features": [],
-    "subscriptionStart": null,
-    "subscriptionEnd": null,
+    "features": [
+      "generate_modul_ajar"
+    ],
+    "subscriptionStart": "2026-09-05",
+    "subscriptionEnd": "2026-10-05",
     "rejectReason": "",
     "geminiApiKey": "",
     "isDeleted": false

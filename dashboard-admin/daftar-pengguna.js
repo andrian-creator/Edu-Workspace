@@ -285,21 +285,7 @@ function getUsers() {
     const data = localStorage.getItem(STORAGE_KEY);
     const list = data ? JSON.parse(data) : [];
     // Jangan pernah tampilkan user yang berstatus Dihapus / isDeleted
-    return list.filter(u => !u.isDeleted && u.status !== 'Dihapus').map(u => {
-      // Jika akun masih berstatus Menunggu, Belum Mengisi, Belum Lengkap, atau belum disetujui (misal pengguna baru / daftar ulang),
-      // otomatis masa langganan wajib bersih (null) sehingga tertulis "Atur Hari"
-      const isUnapproved = !u.isApproved || 
-                           u.status === 'Menunggu' || 
-                           u.status === 'Menunggu Persetujuan' || 
-                           u.status === 'Belum Lengkap' || 
-                           u.status === 'Belum Mengisi';
-      if (isUnapproved && u.role !== 'Admin') {
-        u.subscriptionStart = null;
-        u.subscriptionEnd = null;
-        delete u.subscriptionDays;
-      }
-      return u;
-    });
+    return list.filter(u => !u.isDeleted && u.status !== 'Dihapus');
   } catch (e) {
     return [];
   }
@@ -731,14 +717,25 @@ async function confirmSaveSubscription() {
   users[index].subscriptionStart = startDate;
   users[index].subscriptionEnd = endDate;
 
-  // Jika sebelumnya dinonaktifkan karena masa langganan habis, dan sekarang diperpanjang
+  // Jika sebelumnya dinonaktifkan karena masa langganan habis, atau status masih Menunggu,
+  // maka dengan disetelnya masa langganan aktif, akun langsung diaktifkan / disetujui
   const today = new Date();
   const todayStr = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0') + '-' + String(today.getDate()).padStart(2, '0');
   let statusUpdated = false;
-  if (users[index].status === 'Nonaktif' && (users[index].rejectReason || '').includes('Masa langganan') && endDate >= todayStr) {
+
+  const isPendingOrExpired = users[index].status === 'Menunggu' || 
+                             users[index].status === 'Menunggu Persetujuan' || 
+                             (users[index].status === 'Nonaktif' && (users[index].rejectReason || '').includes('Masa langganan'));
+
+  if (isPendingOrExpired && endDate >= todayStr) {
     users[index].status = 'Aktif';
     users[index].isApproved = true;
+    users[index].isProfileCompleted = true;
     delete users[index].rejectReason;
+    users[index].rejectReason = '';
+    if (!users[index].features || users[index].features.length === 0) {
+      users[index].features = ['generate_modul_ajar'];
+    }
     statusUpdated = true;
   }
 
@@ -760,7 +757,9 @@ async function confirmSaveSubscription() {
         if (statusUpdated) {
           cur.status = 'Aktif';
           cur.isApproved = true;
+          cur.isProfileCompleted = true;
           delete cur.rejectReason;
+          cur.features = users[index].features;
         }
         localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(cur));
       }
@@ -775,7 +774,9 @@ async function confirmSaveSubscription() {
   if (statusUpdated) {
     supabasePayload.status = 'Aktif';
     supabasePayload.isApproved = true;
+    supabasePayload.isProfileCompleted = true;
     supabasePayload.rejectReason = '';
+    supabasePayload.features = users[index].features || ['generate_modul_ajar'];
   }
 
   if (window.SupabaseDB && typeof SupabaseDB.updateUserByEmail === 'function') {
@@ -794,6 +795,7 @@ async function confirmSaveSubscription() {
     body: JSON.stringify(users[index])
   }).catch(e => { });
 
+  // 3. Broadcast sync jika ada tab lain yang terbuka
   localStorage.setItem('edu_sync_timestamp', Date.now().toString());
   try {
     const channel = new BroadcastChannel('edu_workspace_sync');
@@ -962,17 +964,10 @@ function renderTable() {
 
     // Masa Langganan (Otomatis hitung sisa ... Hari, clickable langsung untuk setting)
     let subInfoHtml = '';
-    const isUserActiveAndApproved = (u.isApproved === true || u.status === 'Aktif') &&
-                                    u.status !== 'Menunggu' &&
-                                    u.status !== 'Menunggu Persetujuan' &&
-                                    u.status !== 'Belum Mengisi' &&
-                                    u.status !== 'Belum Lengkap' &&
-                                    u.status !== 'Ditolak' &&
-                                    u.status !== 'Dihapus';
 
     if (isAdm) {
       subInfoHtml = `<span style="color: #94a3b8; font-size: 0.85rem;">Permanen</span>`;
-    } else if (u.subscriptionEnd && isUserActiveAndApproved) {
+    } else if (u.subscriptionEnd) {
       const endParts = u.subscriptionEnd.split('-');
       const formattedEnd = endParts.length === 3 ? `${endParts[2]}/${endParts[1]}/${endParts[0]}` : u.subscriptionEnd;
 
@@ -1017,7 +1012,7 @@ function renderTable() {
         `;
       }
     } else {
-      // Belum diatur atau akun baru / belum disetujui -> Wajib tampil tombol [ Atur Hari ]
+      // Belum diatur -> Wajib tampil tombol [ Atur Hari ]
       subInfoHtml = `
         <button type="button" class="sub-badge-clickable sub-badge-unset" onclick="openSubscriptionModal('${safeEmail}')" title="Klik untuk atur masa langganan">
           <span>Atur Hari</span>
