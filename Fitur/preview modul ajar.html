@@ -1011,10 +1011,7 @@
           draftBanner.style.textAlign = 'center';
 
           const targetId = data.id ? encodeURIComponent(data.id) : '';
-          const isWeb = window.location.protocol.startsWith('http');
-          const editHref = isWeb
-            ? (targetId ? `/modul-ajar?editId=${targetId}` : `/modul-ajar`)
-            : (targetId ? `../Fitur/modul ajar.html?editId=${targetId}` : `../Fitur/modul ajar.html`);
+          const editHref = targetId ? `../Fitur/modul ajar.html?editId=${targetId}` : `../Fitur/modul ajar.html`;
 
           draftBanner.innerHTML = `
             <div style="width: 52px; height: 52px; background: #fef3c7; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 14px;">

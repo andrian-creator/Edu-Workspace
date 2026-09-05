@@ -183,7 +183,7 @@ function renderUserFeatures(user) {
 
 function handleFeatureClick(featureName) {
   if (featureName === 'Generate Modul Ajar') {
-    window.location.href = window.location.protocol.startsWith('http') ? "/modul-ajar" : "../Fitur/modul%20ajar.html";
+    window.location.href = "../Fitur/modul%20ajar.html";
   } else {
     showUserToast(`Membuka ${featureName}... Modul siap digunakan.`);
   }

@@ -948,40 +948,36 @@ function renderEduNavbar(options = {}) {
   const userEmail = (user && user.email) ? user.email : defaultEmail;
   const userAvatar = getGoogleAvatar(userName, user ? user.avatar : null);
 
-  const isWebHost = window.location.protocol.startsWith('http');
-
-  const isInFitur = p.includes('/fitur/') || p.includes('/modul-ajar') || p.includes('/preview-modul');
+  const isInFitur = p.includes('/fitur/');
   const isDashboardPengguna = (
     p.includes('/dashboard pengguna') || 
     p.includes('/dashboard%20pengguna') || 
     p.includes('dashboard pengguna') || 
-    p.includes('dashboard%20pengguna') ||
-    p === '/dashboard' ||
-    p === '/dashboard/'
-  ) && !p.includes('daftar modul') && !p.includes('daftar-modul') && !p.includes('api key') && !p.includes('api-key') && !p.includes('profil');
+    p.includes('dashboard%20pengguna')
+  ) && !p.includes('daftar modul') && !p.includes('api key') && !p.includes('profil');
 
-  let defaultPortalHome = isWebHost ? '/dashboard' : 'dashboard pengguna.html';
+  let defaultPortalHome = 'dashboard pengguna.html';
   if (isInFitur) {
-    defaultPortalHome = isWebHost ? '/dashboard' : '../dashboard pengguna/dashboard pengguna.html';
+    defaultPortalHome = '../dashboard pengguna/dashboard pengguna.html';
   } else if (isAdminArea) {
-    defaultPortalHome = isWebHost ? '/admin' : 'dashboard admin.html';
+    defaultPortalHome = 'dashboard admin.html';
   }
 
   // URL Brand Logo (Kiri Atas): Selalu mengarah ke Landing Page (index.html) sesuai permintaan pengguna
-  const landingUrl = isWebHost ? '/' : (subPrefix ? subPrefix + 'index.html' : 'index.html');
+  const landingUrl = subPrefix ? subPrefix + 'index.html' : 'index.html';
   const logoUrl = options.homeUrl || landingUrl;
 
   let defaultShowBack = false;
   let defaultBackUrl = defaultPortalHome;
   if (isAdminArea && !isMainAdmin) {
     defaultShowBack = true;
-    defaultBackUrl = isWebHost ? '/admin' : 'dashboard admin.html';
+    defaultBackUrl = 'dashboard admin.html';
   }
 
   // Khusus Dashboard Pengguna: Otomatis tampilkan tombol Daftar Modul Ajar & API Key
   const defaultShowDaftarModul = isDashboardPengguna;
   const showDaftarModul = options.showDaftarModul !== undefined ? options.showDaftarModul : defaultShowDaftarModul;
-  const defaultDaftarModulUrl = isWebHost ? '/daftar-modul' : (isInFitur ? '../dashboard pengguna/daftar modul ajar.html' : 'daftar modul ajar.html');
+  const defaultDaftarModulUrl = isInFitur ? '../dashboard pengguna/daftar modul ajar.html' : 'daftar modul ajar.html';
   const daftarModulUrl = options.daftarModulUrl || defaultDaftarModulUrl;
 
   const showBack = options.showBack !== undefined ? options.showBack : defaultShowBack;
@@ -990,7 +986,7 @@ function renderEduNavbar(options = {}) {
 
   const defaultShowApiKey = isDashboardPengguna;
   const showApiKey = options.showApiKey !== undefined ? options.showApiKey : defaultShowApiKey;
-  const defaultApiKeyUrl = isWebHost ? '/api-key' : (isInFitur ? '../dashboard pengguna/api key.html' : 'api key.html');
+  const defaultApiKeyUrl = isInFitur ? '../dashboard pengguna/api key.html' : 'api key.html';
   const apiKeyUrl = options.apiKeyUrl || defaultApiKeyUrl;
 
   // Khusus Dashboard Pengguna (Bukan Admin): Tampilkan informasi Sisa Waktu Akses
@@ -1211,9 +1207,6 @@ function initAccessTimeSync() {
  */
 (function setupUserAccountMonitor() {
   function getRedirectTarget(p) {
-    if (window.location.protocol.startsWith('http')) {
-      return '/profil';
-    }
     if (p.includes('/fitur/')) {
       return '../dashboard pengguna/profil.html';
     }
@@ -1232,10 +1225,8 @@ function initAccessTimeSync() {
            p.endsWith('07. eduworkspace/') ||
            p.includes('/halaman login') || 
            p.includes('/halaman%20login') ||
-           p.includes('/login') ||
            p.includes('/dashboard admin') ||
            p.includes('/dashboard%20admin') ||
-           p.includes('/admin') ||
            p.includes('profil');
   }
 

@@ -201,9 +201,8 @@ function processLogin(payload) {
     const curRaw = localStorage.getItem(CURRENT_USER_KEY);
     const u = curRaw ? JSON.parse(curRaw) : matchedUser;
 
-    const isWeb = window.location.protocol.startsWith('http');
     if (isAdmin) {
-      window.location.href = isWeb ? "/admin" : "../dashboard admin/dashboard admin.html";
+      window.location.href = "../dashboard admin/dashboard admin.html";
     } else {
       const isAktif = (u.status === 'Aktif' || u.isApproved === true) && 
                       u.isProfileCompleted === true && 
@@ -216,9 +215,9 @@ function processLogin(payload) {
                       !isSubscriptionExpired(u);
 
       if (isAktif) {
-        window.location.href = isWeb ? "/dashboard" : "../dashboard pengguna/dashboard pengguna.html";
+        window.location.href = "../dashboard pengguna/dashboard pengguna.html";
       } else {
-        window.location.href = isWeb ? "/profil" : "../dashboard pengguna/profil.html";
+        window.location.href = "../dashboard pengguna/profil.html";
       }
     }
   }, 1200);
