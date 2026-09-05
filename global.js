@@ -946,6 +946,89 @@ if (typeof window !== 'undefined') {
 }
 
 /**
+ * Periksa apakah user saat ini memiliki kewenangan Administrator
+ */
+function isCurrentUserAdmin(user) {
+  if (!user || typeof user !== 'object') return false;
+  const email = (user.email || '').trim().toLowerCase();
+  const role = (user.role || '').trim();
+  if (role === 'Admin') return true;
+  if (typeof ADMIN_EMAILS !== 'undefined' && Array.isArray(ADMIN_EMAILS) && ADMIN_EMAILS.some(e => (e || '').toLowerCase() === email)) return true;
+  if (typeof ADMIN_EMAIL !== 'undefined' && email === (ADMIN_EMAIL || '').toLowerCase()) return true;
+  return false;
+}
+
+/**
+ * Sembunyikan konten halaman admin jika user tidak berwenang
+ */
+function hideAdminPageContent() {
+  try {
+    const targets = document.querySelectorAll('.admin-content-wrapper, .admin-main-wrapper, .admin-content, main, .stats-recap-grid, .table-card');
+    targets.forEach(el => {
+      el.style.display = 'none';
+      el.style.visibility = 'hidden';
+    });
+  } catch (e) {}
+}
+
+/**
+ * Proteksi Area Admin Terpusat:
+ * Jika halaman berada di bawah /dashboard-admin/ dan pengguna bukan Admin atau belum login,
+ * langsung sembunyikan seluruh isi halaman dan tampilkan modal alert peringatan (Akses Terbatas).
+ */
+function enforceAdminGuard() {
+  const p = (window.location.pathname || '').toLowerCase();
+  const isAdminArea = p.includes('/dashboard-admin/') || p.includes('/dashboard admin/');
+  if (!isAdminArea) return true;
+
+  const loggedUserStr = localStorage.getItem(CURRENT_USER_KEY);
+  if (!loggedUserStr) {
+    hideAdminPageContent();
+    showEduAlert({
+      title: "Silakan Login Terlebih Dahulu",
+      message: "Sesi Anda belum terautentikasi. Silakan masuk dengan akun Google terdaftar untuk mengakses halaman Administrator.",
+      iconType: "lock",
+      buttonText: "Ke Halaman Login",
+      redirectUrl: "../halaman-login/halaman-login.html"
+    });
+    return false;
+  }
+
+  let user = null;
+  try {
+    user = JSON.parse(loggedUserStr);
+  } catch (e) {
+    user = null;
+  }
+
+  if (!isCurrentUserAdmin(user)) {
+    hideAdminPageContent();
+    showEduAlert({
+      title: "Akses Terbatas",
+      message: "Halaman ini hanya dapat diakses oleh Administrator Edu Workspace.",
+      iconType: "warning",
+      buttonText: "Ke Dashboard Pengguna",
+      redirectUrl: "../dashboard-pengguna/dashboard-pengguna.html"
+    });
+    return false;
+  }
+
+  return true;
+}
+
+if (typeof window !== 'undefined') {
+  window.isCurrentUserAdmin = isCurrentUserAdmin;
+  window.hideAdminPageContent = hideAdminPageContent;
+  window.enforceAdminGuard = enforceAdminGuard;
+
+  // Jalankan guard sesegera mungkin saat script global dimuat
+  const currentPath = (window.location.pathname || '').toLowerCase();
+  if (currentPath.includes('/dashboard-admin/') || currentPath.includes('/dashboard admin/')) {
+    enforceAdminGuard();
+  }
+}
+
+/**
  * Render Header / Navbar Global Edu Workspace Terpusat
  * @param {Object} options
 /**
@@ -1075,7 +1158,12 @@ function renderEduNavbar(options = {}) {
     p.endsWith('/dashboard admin.html') || 
     p.endsWith('/dashboard admin')
   );
-  const isUserAdmin = (user && (user.role === 'Admin' || (typeof ADMIN_EMAILS !== 'undefined' && ADMIN_EMAILS.includes((user.email || '').toLowerCase()))));
+  const isUserAdmin = isCurrentUserAdmin(user);
+
+  if (isAdminArea && !isUserAdmin) {
+    enforceAdminGuard();
+    return;
+  }
 
   let defaultName = (isAdminArea || isUserAdmin) ? 'Super Admin' : 'Bapak/Ibu Guru';
   let defaultEmail = (isAdminArea || isUserAdmin) ? 'Admin Edu Workspace' : 'guru@gmail.com';

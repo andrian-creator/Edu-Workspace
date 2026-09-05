@@ -20,6 +20,49 @@ function showAdminToast(msg) {
 
 // Proteksi Keamanan: Periksa apakah user saat ini adalah Admin
 function checkAdminAuth() {
+  if (typeof enforceAdminGuard === 'function') {
+    const passed = enforceAdminGuard();
+    if (!passed) return false;
+  } else {
+    const loggedUserStr = localStorage.getItem(CURRENT_USER_KEY);
+    if (!loggedUserStr) {
+      if (typeof hideAdminPageContent === 'function') hideAdminPageContent();
+      if (typeof showEduAlert === 'function') {
+        showEduAlert({
+          title: "Silakan Login Terlebih Dahulu",
+          message: "Sesi Anda belum terautentikasi. Silakan masuk dengan akun Google terdaftar untuk mengakses Dashboard Admin.",
+          iconType: "lock",
+          buttonText: "Ke Halaman Login",
+          redirectUrl: "../halaman-login/halaman-login.html"
+        });
+      } else {
+        window.location.href = "../halaman-login/halaman-login.html";
+      }
+      return false;
+    }
+
+    let user = null;
+    try { user = JSON.parse(loggedUserStr); } catch (e) {}
+    const isAdm = typeof isCurrentUserAdmin === 'function' 
+      ? isCurrentUserAdmin(user) 
+      : (user && (user.role === 'Admin' || (user.email || '').toLowerCase() === (typeof ADMIN_EMAIL !== 'undefined' ? ADMIN_EMAIL.toLowerCase() : '')));
+    if (!isAdm) {
+      if (typeof hideAdminPageContent === 'function') hideAdminPageContent();
+      if (typeof showEduAlert === 'function') {
+        showEduAlert({
+          title: "Akses Terbatas",
+          message: "Halaman ini hanya dapat diakses oleh Administrator Edu Workspace.",
+          iconType: "warning",
+          buttonText: "Ke Dashboard Pengguna",
+          redirectUrl: "../dashboard-pengguna/dashboard-pengguna.html"
+        });
+      } else {
+        window.location.href = "../dashboard-pengguna/dashboard-pengguna.html";
+      }
+      return false;
+    }
+  }
+
   // Render Global Navbar Terpusat (Otomatis: homeUrl & backUrl ke dashboard-admin.html)
   renderEduNavbar();
   return true;
@@ -986,20 +1029,25 @@ function toggleRowActionMenu(event, menuId) {
 
 // Event Listeners
 document.addEventListener('DOMContentLoaded', () => {
-  ensureInitialData();
-  if (checkAdminAuth()) {
-    renderTable();
-    fetchUsersFromBackend();
+  if (!checkAdminAuth()) {
+    return;
   }
+  ensureInitialData();
+  renderTable();
+  fetchUsersFromBackend();
 });
 
 // Event listener sync realtime instan tanpa spam HTTP request
 window.addEventListener('storage', () => {
-  renderTable();
+  if (checkAdminAuth()) {
+    renderTable();
+  }
 });
 
 window.addEventListener('focus', () => {
-  fetchUsersFromBackend();
+  if (checkAdminAuth()) {
+    fetchUsersFromBackend();
+  }
 });
 
 try {

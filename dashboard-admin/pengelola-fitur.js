@@ -469,29 +469,39 @@ function saveAdminNote() {
 }
 
 function initAdminFeaturesDashboard() {
-  const loggedUserStr = localStorage.getItem(CURRENT_USER_KEY);
-  if (!loggedUserStr) {
-    showEduAlert({
-      title: "Silakan Login Terlebih Dahulu",
-      message: "Sesi Anda belum terautentikasi. Silakan masuk dengan akun Google terdaftar untuk mengakses Pengelola Fitur.",
-      iconType: "lock",
-      buttonText: "Ke Halaman Login",
-      redirectUrl: "../halaman-login/halaman-login.html"
-    });
-    return;
-  }
+  if (typeof enforceAdminGuard === 'function') {
+    const passed = enforceAdminGuard();
+    if (!passed) return;
+  } else {
+    const loggedUserStr = localStorage.getItem(CURRENT_USER_KEY);
+    if (!loggedUserStr) {
+      if (typeof hideAdminPageContent === 'function') hideAdminPageContent();
+      showEduAlert({
+        title: "Silakan Login Terlebih Dahulu",
+        message: "Sesi Anda belum terautentikasi. Silakan masuk dengan akun Google terdaftar untuk mengakses Pengelola Fitur.",
+        iconType: "lock",
+        buttonText: "Ke Halaman Login",
+        redirectUrl: "../halaman-login/halaman-login.html"
+      });
+      return;
+    }
 
-  let user = JSON.parse(loggedUserStr);
-  const isAdmin = (user.email || '').toLowerCase() === ADMIN_EMAIL.toLowerCase() || user.role === 'Admin';
-  if (!isAdmin) {
-    showEduAlert({
-      title: "Akses Terbatas",
-      message: "Halaman Pengelola Fitur ini hanya dapat diakses oleh Administrator Edu Workspace.",
-      iconType: "warning",
-      buttonText: "Ke Dashboard Pengguna",
-      redirectUrl: "../dashboard-pengguna/dashboard-pengguna.html"
-    });
-    return;
+    let user = null;
+    try { user = JSON.parse(loggedUserStr); } catch (e) {}
+    const isAdm = typeof isCurrentUserAdmin === 'function'
+      ? isCurrentUserAdmin(user)
+      : (user && (user.role === 'Admin' || (user.email || '').toLowerCase() === (typeof ADMIN_EMAIL !== 'undefined' ? ADMIN_EMAIL.toLowerCase() : '')));
+    if (!isAdm) {
+      if (typeof hideAdminPageContent === 'function') hideAdminPageContent();
+      showEduAlert({
+        title: "Akses Terbatas",
+        message: "Halaman Pengelola Fitur ini hanya dapat diakses oleh Administrator Edu Workspace.",
+        iconType: "warning",
+        buttonText: "Ke Dashboard Pengguna",
+        redirectUrl: "../dashboard-pengguna/dashboard-pengguna.html"
+      });
+      return;
+    }
   }
 
   // Render Global Navbar Terpusat
