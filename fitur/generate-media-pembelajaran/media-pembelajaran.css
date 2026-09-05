@@ -1,14 +1,40 @@
 /* ==========================================================================
    Edu Workspace - Generate Media Pembelajaran Stylesheet
+   Desain Bersih, Elegan, dan Responsif Khas Edu Workspace
    ========================================================================== */
 
+:root {
+  --color-bg-page: #f8fafc;
+  --color-card: #ffffff;
+  --color-border: #e2e8f0;
+  --color-border-dark: #1e293b;
+  --color-text-main: #1e293b;
+  --color-text-muted: #64748b;
+  --color-primary: #1e293b;
+  --color-primary-hover: #0f172a;
+  --color-accent-yellow: #eab308;
+  --color-accent-blue: #2563eb;
+  --color-accent-blue-subtle: #eff6ff;
+  --radius-card: 20px;
+  --radius-pill: 999px;
+  --font-main: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+  --transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
 body {
-  background-color: var(--color-bg-light, #f8fafc);
-  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  color: var(--color-text-main, #0f172a);
+  background-color: var(--color-bg-page);
+  font-family: var(--font-main);
+  color: var(--color-text-main);
   margin: 0;
   padding: 0;
   min-height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
 
 .media-main-wrapper {
@@ -16,12 +42,857 @@ body {
   min-height: calc(100vh - 86px);
   display: flex;
   flex-direction: column;
+  padding-bottom: 60px;
 }
 
 .media-main-container {
-  max-width: 1200px;
+  max-width: 1400px;
   margin: 0 auto;
   width: 100%;
-  padding: 32px 24px;
+  padding: 24px 32px;
   box-sizing: border-box;
+}
+
+/* ==========================================================================
+   1. PAGE HEADER (Tanpa Sub Judul Sesuai Permintaan)
+   ========================================================================== */
+.media-page-header {
+  margin-bottom: 28px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.media-title {
+  font-size: clamp(1.9rem, 3.2vw, 2.5rem);
+  font-weight: 800;
+  letter-spacing: -0.035em;
+  color: var(--color-text-main);
+  line-height: 1.2;
+  margin: 0;
+  text-align: center;
+}
+
+.text-yellow {
+  color: var(--color-accent-yellow);
+}
+
+/* ==========================================================================
+   2. TWO-COLUMN WORKSPACE GRID (Kiri: Sumber/Hasil, Kanan: Prompt)
+   ========================================================================== */
+.media-workspace-grid {
+  display: grid;
+  grid-template-columns: 1.15fr 1fr;
+  gap: 24px;
+  align-items: start;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Base Card Style */
+.media-card {
+  background: #ffffff;
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-card);
+  box-shadow: 0 4px 20px rgba(15, 23, 42, 0.04);
+  padding: 28px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  transition: var(--transition);
+}
+
+.media-card:hover {
+  border-color: #cbd5e1;
+  box-shadow: 0 8px 28px rgba(15, 23, 42, 0.06);
+}
+
+/* ==========================================================================
+   3. KARTU SEBELAH KIRI: SUMBER MATERI & LIHAT HASIL GENERATE AI
+   ========================================================================== */
+.card-left-header {
+  margin-bottom: 20px;
+  border-bottom: 1.5px solid #f1f5f9;
+  padding-bottom: 16px;
+}
+
+/* Tab Bar Pengalih Kiri (Sumber Materi vs Hasil Generate AI) */
+.left-tab-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #f1f5f9;
+  padding: 5px;
+  border-radius: var(--radius-pill);
+  width: fit-content;
+  max-width: 100%;
+}
+
+.left-tab-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 18px;
+  font-size: 0.92rem;
+  font-weight: 700;
+  font-family: inherit;
+  color: var(--color-text-muted);
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+  transition: var(--transition);
+  white-space: nowrap;
+}
+
+.left-tab-btn:hover {
+  color: var(--color-text-main);
+}
+
+.left-tab-btn.active {
+  background: #ffffff;
+  color: var(--color-text-main);
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
+}
+
+.tab-badge {
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #e2e8f0;
+  color: #475569;
+}
+
+.left-tab-btn.active .tab-badge {
+  background: #eff6ff;
+  color: #2563eb;
+}
+
+.tab-badge.badge-ready {
+  background: #dcfce7 !important;
+  color: #16a34a !important;
+}
+
+.tab-badge.badge-loading {
+  background: #fef3c7 !important;
+  color: #d97706 !important;
+}
+
+/* Panel Konten Tab */
+.left-tab-panel {
+  display: none;
+  flex-direction: column;
+  width: 100%;
+}
+
+.left-tab-panel.active {
+  display: flex;
+}
+
+/* Sub-Segmented Control: Pilihan Metode Sumber Materi */
+.source-type-selector {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.source-type-option {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  border: 1.5px solid var(--color-border);
+  border-radius: 14px;
+  background: #f8fafc;
+  cursor: pointer;
+  transition: var(--transition);
+  user-select: none;
+}
+
+.source-type-option:hover {
+  background: #ffffff;
+  border-color: #cbd5e1;
+}
+
+.source-type-option.active {
+  background: #ffffff;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.source-radio {
+  accent-color: #2563eb;
+  cursor: pointer;
+  width: 16px;
+  height: 16px;
+}
+
+.source-text-title {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--color-text-main);
+  display: block;
+}
+
+.source-text-sub {
+  font-size: 0.78rem;
+  color: var(--color-text-muted);
+  display: block;
+  margin-top: 2px;
+}
+
+/* Form Groups */
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 16px;
+  width: 100%;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.form-label {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--color-text-main);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.form-hint {
+  font-size: 0.76rem;
+  font-weight: 500;
+  color: var(--color-text-muted);
+}
+
+.form-input,
+.form-select,
+.form-textarea {
+  width: 100%;
+  font-family: inherit;
+  font-size: 0.92rem;
+  color: var(--color-text-main);
+  background: #ffffff;
+  border: 1.5px solid var(--color-border);
+  border-radius: 12px;
+  padding: 10px 14px;
+  outline: none;
+  box-sizing: border-box;
+  transition: var(--transition);
+}
+
+.form-input:focus,
+.form-select:focus,
+.form-textarea:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+
+.form-textarea {
+  resize: vertical;
+  min-height: 140px;
+  line-height: 1.55;
+}
+
+/* Modul Ajar Preview Box */
+.modul-preview-box {
+  background: #f8fafc;
+  border: 1.5px dashed #cbd5e1;
+  border-radius: 14px;
+  padding: 16px;
+  margin-top: 10px;
+  display: none;
+}
+
+.modul-preview-box.active {
+  display: block;
+}
+
+.modul-preview-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.modul-badge-subject {
+  font-size: 0.76rem;
+  font-weight: 700;
+  background: #eff6ff;
+  color: #2563eb;
+  padding: 3px 10px;
+  border-radius: 999px;
+}
+
+.modul-badge-grade {
+  font-size: 0.76rem;
+  font-weight: 600;
+  color: #64748b;
+}
+
+.modul-preview-title {
+  font-size: 1rem;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0 0 8px;
+}
+
+.modul-preview-summary {
+  font-size: 0.85rem;
+  color: #475569;
+  line-height: 1.5;
+  max-height: 120px;
+  overflow-y: auto;
+}
+
+/* Area Tampilan Hasil Generate AI */
+.result-header-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 18px;
+  flex-wrap: wrap;
+}
+
+.result-status-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.result-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-result-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  font-family: inherit;
+  background: #ffffff;
+  color: var(--color-text-main);
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.btn-result-action:hover {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+}
+
+/* Empty State Hasil AI */
+.ai-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 60px 24px;
+  color: var(--color-text-muted);
+}
+
+.empty-state-icon {
+  width: 68px;
+  height: 68px;
+  border-radius: 50%;
+  background: #eff6ff;
+  border: 1.5px solid #bfdbfe;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 16px;
+  color: #2563eb;
+}
+
+.empty-state-title {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0 0 6px;
+}
+
+.empty-state-desc {
+  font-size: 0.9rem;
+  color: #64748b;
+  max-width: 380px;
+  line-height: 1.5;
+  margin: 0;
+}
+
+/* Loading State Hasil AI */
+.ai-loading-state {
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 60px 24px;
+}
+
+.ai-loading-state.active {
+  display: flex;
+}
+
+.loading-spinner-box {
+  position: relative;
+  width: 64px;
+  height: 64px;
+  margin-bottom: 20px;
+}
+
+.spinner-circle {
+  width: 100%;
+  height: 100%;
+  border: 4px solid #e2e8f0;
+  border-top-color: #2563eb;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.loading-heading {
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0 0 6px;
+}
+
+.loading-step-text {
+  font-size: 0.9rem;
+  color: #64748b;
+  line-height: 1.5;
+  margin: 0 0 16px;
+}
+
+.loading-progress-track {
+  width: 240px;
+  height: 6px;
+  background: #e2e8f0;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.loading-progress-bar {
+  width: 40%;
+  height: 100%;
+  background: linear-gradient(90deg, #2563eb, #3b82f6);
+  border-radius: 999px;
+  animation: progressPulse 1.8s ease-in-out infinite;
+}
+
+@keyframes progressPulse {
+  0% { transform: translateX(-100%); }
+  50% { transform: translateX(50%); }
+  100% { transform: translateX(250%); }
+}
+
+/* Tampilan Konten Hasil AI yang Telah Digenerate */
+.ai-content-rendered {
+  display: none;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+}
+
+.ai-content-rendered.active {
+  display: flex;
+}
+
+.slide-cards-container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-height: 620px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.slide-card-item {
+  background: #ffffff;
+  border: 1.5px solid var(--color-border);
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 2px 10px rgba(15, 23, 42, 0.03);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.slide-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid #f1f5f9;
+  padding-bottom: 10px;
+}
+
+.slide-badge-num {
+  font-size: 0.8rem;
+  font-weight: 800;
+  background: #0f172a;
+  color: #ffffff;
+  padding: 4px 10px;
+  border-radius: 8px;
+}
+
+.slide-card-title {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0;
+}
+
+.slide-card-body {
+  font-size: 0.92rem;
+  color: #334155;
+  line-height: 1.6;
+}
+
+.slide-card-body ul {
+  margin: 6px 0;
+  padding-left: 20px;
+}
+
+.slide-card-body li {
+  margin-bottom: 4px;
+}
+
+.slide-teacher-note {
+  background: #eff6ff;
+  border-left: 4px solid #2563eb;
+  padding: 10px 14px;
+  border-radius: 0 10px 10px 0;
+  font-size: 0.86rem;
+  color: #1e40af;
+  line-height: 1.5;
+}
+
+.slide-teacher-note strong {
+  color: #1e3a8a;
+  display: block;
+  margin-bottom: 2px;
+}
+
+.slide-visual-tip {
+  background: #fefce8;
+  border-left: 4px solid #eab308;
+  padding: 10px 14px;
+  border-radius: 0 10px 10px 0;
+  font-size: 0.86rem;
+  color: #854d0e;
+  line-height: 1.5;
+}
+
+.slide-visual-tip strong {
+  color: #713f12;
+  display: block;
+  margin-bottom: 2px;
+}
+
+/* Raw Output Box Fallback */
+.raw-output-box {
+  background: #f8fafc;
+  border: 1.5px solid var(--color-border);
+  border-radius: 12px;
+  padding: 18px;
+  font-size: 0.92rem;
+  line-height: 1.65;
+  color: #1e293b;
+  white-space: pre-wrap;
+  max-height: 520px;
+  overflow-y: auto;
+  font-family: inherit;
+}
+
+/* ==========================================================================
+   4. KARTU SEBELAH KANAN: PROMPT & GENERATOR DENGAN API PENGGUNA
+   ========================================================================== */
+.card-right-header {
+  margin-bottom: 20px;
+  border-bottom: 1.5px solid #f1f5f9;
+  padding-bottom: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.card-heading-title {
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: var(--color-text-main);
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.card-heading-badge {
+  font-size: 0.78rem;
+  font-weight: 700;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  color: #2563eb;
+  padding: 3px 10px;
+  border-radius: 999px;
+}
+
+/* Format Media Pembelajaran Options */
+.format-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.format-card-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 14px 16px;
+  background: #f8fafc;
+  border: 1.5px solid var(--color-border);
+  border-radius: 14px;
+  cursor: pointer;
+  transition: var(--transition);
+  text-align: left;
+  border: 1.5px solid var(--color-border);
+}
+
+.format-card-btn:hover {
+  background: #ffffff;
+  border-color: #cbd5e1;
+}
+
+.format-card-btn.active {
+  background: #ffffff;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.format-icon {
+  font-size: 1.3rem;
+  margin-bottom: 6px;
+}
+
+.format-title {
+  font-size: 0.92rem;
+  font-weight: 800;
+  color: var(--color-text-main);
+}
+
+.format-desc {
+  font-size: 0.76rem;
+  color: var(--color-text-muted);
+  line-height: 1.4;
+  margin-top: 2px;
+}
+
+/* Prompt Quick Chips */
+.prompt-chips-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+  margin-bottom: 18px;
+}
+
+.prompt-chip {
+  padding: 6px 12px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  font-family: inherit;
+  background: #f1f5f9;
+  color: #475569;
+  border: 1px solid #e2e8f0;
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.prompt-chip:hover {
+  background: #eff6ff;
+  border-color: #bfdbfe;
+  color: #2563eb;
+}
+
+/* Status API Key Pengguna */
+.api-status-card {
+  background: #f8fafc;
+  border: 1.5px solid var(--color-border);
+  border-radius: 14px;
+  padding: 14px 18px;
+  margin-bottom: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.api-status-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.api-status-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #10b981;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
+}
+
+.api-status-dot.missing {
+  background: #f59e0b;
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.2);
+}
+
+.api-status-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.api-status-title {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.api-status-sub {
+  font-size: 0.76rem;
+  color: #64748b;
+}
+
+.btn-setup-key {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #2563eb;
+  text-decoration: none;
+  padding: 4px 10px;
+  background: #eff6ff;
+  border-radius: var(--radius-pill);
+  border: 1px solid #bfdbfe;
+  transition: var(--transition);
+  white-space: nowrap;
+}
+
+.btn-setup-key:hover {
+  background: #dbeafe;
+}
+
+/* Tombol Generate Utama */
+.btn-generate-media {
+  width: 100%;
+  padding: 14px 24px;
+  font-size: 1.02rem;
+  font-weight: 800;
+  font-family: inherit;
+  background: #0f172a;
+  color: #ffffff;
+  border: none;
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  transition: var(--transition);
+  box-shadow: 0 4px 18px rgba(15, 23, 42, 0.18);
+  user-select: none;
+}
+
+.btn-generate-media:hover:not(:disabled) {
+  background: #1e293b;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.25);
+}
+
+.btn-generate-media:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.btn-generate-media:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none !important;
+}
+
+.generate-sparkle-icon {
+  color: var(--color-accent-yellow);
+}
+
+.generate-footer-note {
+  text-align: center;
+  font-size: 0.78rem;
+  color: var(--color-text-muted);
+  margin-top: 12px;
+}
+
+/* ==========================================================================
+   5. RESPONSIVE BREAKPOINTS (Mobile & Tablet)
+   ========================================================================== */
+@media (max-width: 1024px) {
+  .media-workspace-grid {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+
+  .media-card {
+    padding: 24px 20px;
+  }
+}
+
+@media (max-width: 640px) {
+  .media-main-container {
+    padding: 18px 16px;
+  }
+
+  .media-title {
+    font-size: 1.8rem;
+  }
+
+  .format-grid,
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+
+  .source-type-selector {
+    flex-direction: column;
+  }
+
+  .left-tab-bar {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .left-tab-btn {
+    flex: 1;
+    justify-content: center;
+    padding: 8px 12px;
+    font-size: 0.85rem;
+  }
 }

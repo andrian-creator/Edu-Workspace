@@ -6,34 +6,371 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Generate Media Pembelajaran - Edu Workspace</title>
   <meta name="description"
-    content="Generate Media Pembelajaran Edu Workspace - Generator media visual dan bahan pembelajaran interaktif berbasis AI.">
+    content="Generate Media Pembelajaran Edu Workspace - Generator media pembelajaran interaktif berbasis Google Gemini AI.">
 
-  <!-- Google Fonts: Plus Jakarta Sans -->
+  <!-- Google Fonts: Plus Jakarta Sans & JetBrains Mono -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap"
+  <link
+    href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap"
     rel="stylesheet">
 
   <!-- Global & Page Stylesheet -->
-  <link rel="stylesheet" href="../../global.css?v=295">
-  <link rel="stylesheet" href="media-pembelajaran.css?v=1">
+  <link rel="stylesheet" href="../../global.css?v=298">
+  <link rel="stylesheet" href="media-pembelajaran.css?v=298">
 </head>
 
 <body>
 
-  <!-- Global Top Navbar (Hanya tombol kembali seperti yang diminta) -->
+  <!-- Global Top Navbar (Tombol kembali terpusat) -->
   <header id="eduGlobalNavbar"></header>
 
-  <!-- Konten Utama (Dikosongkan sesuai permintaan pengguna) -->
+  <!-- Konten Utama -->
   <main class="media-main-wrapper" id="mediaMainContent">
     <div class="media-main-container">
-      <!-- Area konten kosong untuk pengembangan fitur selanjutnya -->
+
+      <!-- 1. Header Halaman (Tanpa Sub Judul Sesuai Permintaan) -->
+      <section class="media-page-header">
+        <h1 class="media-title">
+          Generate <span class="text-yellow">Media Pembelajaran</span> With AI
+        </h1>
+      </section>
+
+      <!-- 2. Dua Kartu Workspace: Kiri (Materi & Hasil AI) dan Kanan (Prompt & Generator) -->
+      <div class="media-workspace-grid">
+
+        <!-- ================================================================
+             KARTU SEBELAH KIRI: SUMBER MATERI & HASIL GENERATE AI
+             ================================================================ -->
+        <div class="media-card media-card-left" id="cardLeft">
+
+          <!-- Header Tab Kiri -->
+          <div class="card-left-header">
+            <div class="left-tab-bar">
+              <button type="button" class="left-tab-btn active" id="tabBtnMateri" onclick="switchLeftTab('materi')">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+                  stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+                  <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+                </svg>
+                <span>Sumber Materi</span>
+              </button>
+
+              <button type="button" class="left-tab-btn" id="tabBtnHasil" onclick="switchLeftTab('hasil')">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+                  stroke-linecap="round" stroke-linejoin="round">
+                  <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                </svg>
+                <span>Hasil Generate AI</span>
+                <span class="tab-badge" id="badgeHasilStatus">Kosong</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- PANEL 1: SUMBER MATERI PEMBELAJARAN -->
+          <div class="left-tab-panel active" id="panelSumberMateri">
+
+            <!-- Pilihan Metode Sumber Materi -->
+            <div class="source-type-selector">
+              <label class="source-type-option active" id="optSourceModul" onclick="setSourceMode('modul')">
+                <input type="radio" name="sourceType" value="modul" class="source-radio" checked>
+                <div>
+                  <span class="source-text-title">Ambil dari Modul Ajar</span>
+                  <span class="source-text-sub">Gunakan modul tersimpan pada akun</span>
+                </div>
+              </label>
+
+              <label class="source-type-option" id="optSourceManual" onclick="setSourceMode('manual')">
+                <input type="radio" name="sourceType" value="manual" class="source-radio">
+                <div>
+                  <span class="source-text-title">Isi Materi Manual</span>
+                  <span class="source-text-sub">Tulis materi baru dari awal</span>
+                </div>
+              </label>
+            </div>
+
+            <!-- Bagian A: Pilihan Dropdown Modul Ajar Pengguna -->
+            <div id="sectionModulAjar">
+              <div class="form-group">
+                <label class="form-label" for="selectModulAjar">
+                  <span>Pilih Modul Ajar Anda</span>
+                  <span class="form-hint" id="modulCountHint">Memuat daftar modul...</span>
+                </label>
+                <select id="selectModulAjar" class="form-select" onchange="handleSelectModulChange(this.value)">
+                  <option value="">-- Pilih Modul Ajar Tersimpan --</option>
+                </select>
+              </div>
+
+              <!-- Pratinjau Info Modul Terpilih -->
+              <div class="modul-preview-box" id="modulPreviewBox">
+                <div class="modul-preview-header">
+                  <span class="modul-badge-subject" id="previewSubject">Mata Pelajaran</span>
+                  <span class="modul-badge-grade" id="previewGrade">Jenjang / Fase</span>
+                </div>
+                <h4 class="modul-preview-title" id="previewTitle">Topik Modul</h4>
+                <div class="modul-preview-summary" id="previewSummary">
+                  Ringkasan materi akan ditampilkan di sini setelah memilih modul ajar...
+                </div>
+              </div>
+            </div>
+
+            <!-- Bagian B: Input Materi Manual (Dari Awal) -->
+            <div id="sectionManual" style="display: none;">
+              <div class="form-row">
+                <div class="form-group">
+                  <label class="form-label" for="manualSubject">
+                    <span>Mata Pelajaran</span>
+                  </label>
+                  <input type="text" id="manualSubject" class="form-input"
+                    placeholder="Contoh: IPA / Bahasa Indonesia">
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label" for="manualGrade">
+                    <span>Jenjang / Fase / Kelas</span>
+                  </label>
+                  <input type="text" id="manualGrade" class="form-input"
+                    placeholder="Contoh: Kelas 7 SMP / Fase D">
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="manualTopic">
+                  <span>Topik / Judul Materi Pokok</span>
+                </label>
+                <input type="text" id="manualTopic" class="form-input"
+                  placeholder="Contoh: Ekosistem dan Rantai Makanan">
+              </div>
+            </div>
+
+            <!-- Textarea Ringkasan / Konten Materi Utama (Dapat Diedit untuk Kedua Mode) -->
+            <div class="form-group" style="margin-top: 14px;">
+              <label class="form-label" for="materiContentInput">
+                <span>Rincian & Poin Materi Pembelajaran</span>
+                <span class="form-hint">Materi acuan untuk AI</span>
+              </label>
+              <textarea id="materiContentInput" class="form-textarea"
+                placeholder="Tuliskan rincian materi, sub-topik, fakta kunci, atau tujuan pembelajaran yang ingin dijadikan media pembelajaran..."></textarea>
+            </div>
+
+            <div style="font-size: 0.8rem; color: #64748b; display: flex; align-items: center; gap: 6px; margin-top: 4px;">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" y1="16" x2="12" y2="12"></line>
+                <line x1="12" y1="8" x2="12.01" y2="8"></line>
+              </svg>
+              <span>Materi di atas akan diolah oleh Gemini AI sesuai instruksi prompt di kartu kanan.</span>
+            </div>
+
+          </div>
+
+          <!-- PANEL 2: AREA HASIL GENERATE AI -->
+          <div class="left-tab-panel" id="panelHasilGenerate">
+
+            <!-- Bar Aksi Atas Hasil -->
+            <div class="result-header-bar">
+              <div class="result-status-title">
+                <span id="resultFormatBadge" class="card-heading-badge" style="display: none;">Slide Presentasi</span>
+                <span id="resultHeadingText">Hasil Media Pembelajaran</span>
+              </div>
+
+              <div class="result-actions" id="resultActionsBar" style="display: none;">
+                <button type="button" class="btn-result-action" onclick="copyAiResult()" id="btnCopyResult" title="Salin Teks">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                  </svg>
+                  <span id="copyBtnText">Salin Teks</span>
+                </button>
+
+                <button type="button" class="btn-result-action" onclick="downloadAiResult()" title="Unduh File Teks">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                    <polyline points="7 10 12 15 17 10"></polyline>
+                    <line x1="12" y1="15" x2="12" y2="3"></line>
+                  </svg>
+                  <span>Unduh</span>
+                </button>
+
+                <button type="button" class="btn-result-action" onclick="window.print()" title="Cetak / Simpan PDF">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="6 9 6 2 18 2 18 9"></polyline>
+                    <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
+                    <rect x="6" y="14" width="12" height="8"></rect>
+                  </svg>
+                  <span>Cetak</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- State A: Empty State (Sebelum Generate) -->
+            <div class="ai-empty-state" id="aiEmptyState">
+              <div class="empty-state-icon">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                  <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                </svg>
+              </div>
+              <h3 class="empty-state-title">Hasil AI Akan Tampil di Sini</h3>
+              <p class="empty-state-desc">
+                Siapkan materi pembelajaran Anda di tab Sumber Materi, atur konfigurasi dan prompt di kartu kanan, lalu klik tombol Generate.
+              </p>
+            </div>
+
+            <!-- State B: Loading Progress Animation -->
+            <div class="ai-loading-state" id="aiLoadingState">
+              <div class="loading-spinner-box">
+                <div class="spinner-circle"></div>
+              </div>
+              <h3 class="loading-heading">AI Sedang Menyusun Media...</h3>
+              <p class="loading-step-text" id="aiLoadingStepText">Menghubungkan ke Google Gemini AI...</p>
+              <div class="loading-progress-track">
+                <div class="loading-progress-bar"></div>
+              </div>
+            </div>
+
+            <!-- State C: Hasil AI Terformat Visual -->
+            <div class="ai-content-rendered" id="aiContentRendered">
+              <div class="slide-cards-container" id="slideCardsContainer">
+                <!-- Diisi otomatis oleh media-pembelajaran.js -->
+              </div>
+              <div class="raw-output-box" id="rawOutputBox" style="display: none;">
+                <!-- Fallback teks mentah -->
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+
+        <!-- ================================================================
+             KARTU SEBELAH KANAN: PROMPT & GENERATOR DENGAN API PENGGUNA
+             ================================================================ -->
+        <div class="media-card media-card-right" id="cardRight">
+
+          <!-- Header Kartu Kanan -->
+          <div class="card-right-header">
+            <h2 class="card-heading-title">
+              <span>Prompt & Format Media</span>
+            </h2>
+            <span class="card-heading-badge">Google Gemini AI</span>
+          </div>
+
+          <!-- 1. Pilihan Bentuk Media Pembelajaran -->
+          <div class="form-group">
+            <label class="form-label">
+              <span>Pilih Format Media</span>
+              <span class="form-hint">Model keluaran yang diinginkan</span>
+            </label>
+
+            <div class="format-grid">
+              <!-- Opsi 1: Slide Presentasi -->
+              <div class="format-card-btn active" id="btnFmtSlide" onclick="selectFormat('slide')">
+                <span class="format-icon">📑</span>
+                <span class="format-title">Slide Presentasi</span>
+                <span class="format-desc">Struktur tayangan materi per slide lengkap dengan narasi guru</span>
+              </div>
+
+              <!-- Opsi 2: Infografis / Ringkasan Visual -->
+              <div class="format-card-btn" id="btnFmtInfografis" onclick="selectFormat('infografis')">
+                <span class="format-icon">📊</span>
+                <span class="format-title">Infografis & Konsep</span>
+                <span class="format-desc">Peta konsep terstruktur, alur materi, dan poin visual ringkas</span>
+              </div>
+
+              <!-- Opsi 3: Lembar Kerja Siswa (LKPD) -->
+              <div class="format-card-btn" id="btnFmtLkpd" onclick="selectFormat('lkpd')">
+                <span class="format-icon">📝</span>
+                <span class="format-title">Lembar Aktivitas (LKPD)</span>
+                <span class="format-desc">Instruksi kegiatan belajar aktif & latihan pemahaman siswa</span>
+              </div>
+
+              <!-- Opsi 4: Flashcard & Kuis Interaktif -->
+              <div class="format-card-btn" id="btnFmtFlashcard" onclick="selectFormat('flashcard')">
+                <span class="format-icon">🗂️</span>
+                <span class="format-title">Flashcard & Kuis</span>
+                <span class="format-desc">Kartu tanya jawab konsep cepat untuk apersepsi / evaluasi</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 2. Target Kedalaman / Jumlah Bagian -->
+          <div class="form-group">
+            <label class="form-label" for="selectDepth">
+              <span>Jumlah / Panjang Media</span>
+            </label>
+            <select id="selectDepth" class="form-select">
+              <option value="5_slide" selected>Standar (5 Slide / 5 Bagian Pokok)</option>
+              <option value="7_slide">Lengkap (7 Slide / 7 Bagian Pokok)</option>
+              <option value="10_slide">Mendalam (10 Slide / Pembahasan Komprehensif)</option>
+              <option value="ringkas">Ringkas & Padat (3-4 Poin Esensial)</option>
+            </select>
+          </div>
+
+          <!-- 3. Prompt / Instruksi Khusus AI -->
+          <div class="form-group">
+            <label class="form-label" for="customPromptInput">
+              <span>Instruksi / Prompt Khusus untuk AI</span>
+              <span class="form-hint">Kustomisasi gaya & isi</span>
+            </label>
+            <textarea id="customPromptInput" class="form-textarea" style="min-height: 110px;"
+              placeholder="Contoh: Buatkan slide yang interaktif dengan bahasa yang ceria dan mudah dipahami siswa SMP, sertakan 1 analogi kehidupan sehari-hari dan 1 kuis refleksi di akhir..."></textarea>
+
+            <!-- Quick Prompt Chips -->
+            <div class="prompt-chips-group">
+              <button type="button" class="prompt-chip" onclick="appendPromptChip('Bahasa interaktif dan mudah dipahami siswa')">
+                ✦ Bahasa Santai & Ramah
+              </button>
+              <button type="button" class="prompt-chip" onclick="appendPromptChip('Sertakan analogi atau contoh konkret kehidupan nyata')">
+                ✦ Analogi Konkret
+              </button>
+              <button type="button" class="prompt-chip" onclick="appendPromptChip('Sertakan pertanyaan pemantik diskusi kelompok di tiap bagian')">
+                ✦ Pemantik Diskusi
+              </button>
+              <button type="button" class="prompt-chip" onclick="appendPromptChip('Tambahkan rekomendasi ilustrasi visual dan tata letak')">
+                ✦ Rekomendasi Visual
+              </button>
+            </div>
+          </div>
+
+          <!-- 4. Status API Key Gemini Pengguna -->
+          <div class="api-status-card">
+            <div class="api-status-info">
+              <div class="api-status-dot" id="apiStatusDot"></div>
+              <div class="api-status-text">
+                <span class="api-status-title" id="apiStatusTitle">Memeriksa API Key...</span>
+                <span class="api-status-sub" id="apiStatusSub">Menggunakan Kunci Google Gemini Akun Anda</span>
+              </div>
+            </div>
+            <a href="../../dashboard-pengguna/api-key.html" class="btn-setup-key" id="btnManageKey">
+              Kelola Key
+            </a>
+          </div>
+
+          <!-- 5. Tombol Generate Utama Mengambil API Pengguna -->
+          <button type="button" id="btnGenerateMedia" class="btn-generate-media" onclick="handleGenerateMedia()">
+            <svg class="generate-sparkle-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 3l1.912 4.675a2 2 0 0 0 1.088 1.088L19.675 10.675a2 2 0 0 1 0 3.325l-4.675 1.912a2 2 0 0 0-1.088 1.088L12 21.675a2 2 0 0 1-3.325 0l-1.912-4.675a2 2 0 0 0-1.088-1.088L2.325 14a2 2 0 0 1 0-3.325l4.675-1.912a2 2 0 0 0 1.088-1.088L9.675 3a2 2 0 0 1 3.325 0z"></path>
+            </svg>
+            <span id="btnGenerateMediaText">Generate Media Pembelajaran</span>
+          </button>
+
+          <div class="generate-footer-note">
+            Didukung oleh Google Gemini AI menggunakan API Key resmi akun Anda.
+          </div>
+
+        </div>
+
+      </div>
+
     </div>
   </main>
 
+  <!-- Modal Konfirmasi / Notifikasi Logout (Diinjek global.js) -->
+
   <!-- Scripts -->
-  <script src="../../global.js?v=295"></script>
-  <script src="media-pembelajaran.js?v=1"></script>
+  <script src="../../global.js?v=298"></script>
+  <script src="media-pembelajaran.js?v=298"></script>
 </body>
 
 </html>
