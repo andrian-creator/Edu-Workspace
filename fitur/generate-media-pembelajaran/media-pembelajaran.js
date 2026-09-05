@@ -123,8 +123,18 @@ function getEffectiveNeosantaraApiKey() {
     if (currentUser) {
       if (currentUser.neosantaraApiKey && currentUser.neosantaraApiKey.trim()) return currentUser.neosantaraApiKey.trim();
       if (currentUser.email) {
-        const key = localStorage.getItem(`edu_neosantara_api_key_${currentUser.email.trim().toLowerCase()}`);
-        if (key && key.trim()) return key.trim();
+        const keyLow = localStorage.getItem(`edu_neosantara_api_key_${currentUser.email.trim().toLowerCase()}`);
+        if (keyLow && keyLow.trim()) return keyLow.trim();
+        const keyRaw = localStorage.getItem(`edu_neosantara_api_key_${currentUser.email.trim()}`);
+        if (keyRaw && keyRaw.trim()) return keyRaw.trim();
+      }
+    }
+    // Periksa apakah tersimpan dengan key prefix di localStorage
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (k && k.startsWith('edu_neosantara_api_key')) {
+        const val = localStorage.getItem(k);
+        if (val && val.trim()) return val.trim();
       }
     }
     return localStorage.getItem('edu_neosantara_api_key') || '';
@@ -819,24 +829,32 @@ async function handleGenerateMedia() {
       const s = currentOutlineSlides[i];
       const updateSub = document.getElementById('mediaLoadingSub');
       if (updateSub) {
-        updateSub.textContent = `Menghubungi Neosantara AI untuk Slide ${i + 1} dari ${currentOutlineSlides.length} (${s.title})...`;
+        updateSub.textContent = `Menghubungi Neosantara AI untuk Slide ${i + 1} dari ${currentOutlineSlides.length} ("${s.title}")...`;
       }
 
-      // Panggil Neosantara AI API untuk generate ilustrasi gambar materi
-      let neosantaraImgUrl = null;
+      // Panggil Neosantara AI API untuk generate ilustrasi visual materi
+      let neosantaraRes = null;
       try {
-        neosantaraImgUrl = await callNeosantaraImageGeneration(s, i, meta, neoApiKey);
+        neosantaraRes = await callNeosantaraImageGeneration(s, i, meta, neoApiKey);
       } catch (err) {
-        console.warn(`[Neosantara AI Slide ${i + 1} Warning]`, err);
+        console.warn(`[Neosantara AI Slide ${i + 1} Error]`, err);
+        // Jika slide pertama gagal karena otentikasi / kuota / token, hentikan dan beri tahu pengguna secara transparan
+        if (i === 0 && (err.message.includes('token') || err.message.includes('401') || err.message.includes('Unauthorized') || err.message.includes('credit') || err.message.includes('balance') || err.message.includes('expired'))) {
+          throw new Error(`Koneksi Neosantara API ditolak: "${err.message}". Pastikan API Key Neosantara Anda aktif dan memiliki kuota di menu Pengaturan API Key.`);
+        }
       }
 
-      // Render Visual Image Canvas 16:9 (menggunakan ilustrasi Neosantara AI)
-      const imgDataUrl = await generateEducationalSlideImage(s, i, meta, neosantaraImgUrl);
+      const imgUrl = neosantaraRes ? neosantaraRes.imageUrl : null;
+      const modelUsed = neosantaraRes ? neosantaraRes.model : 'Visual Edukasi';
+
+      // Render Visual Image Canvas 16:9 (menggabungkan materi teks & ilustrasi Neosantara AI)
+      const imgDataUrl = await generateEducationalSlideImage(s, i, meta, imgUrl);
       slidesWithImages.push({
         ...s,
         slideNumber: i + 1,
         imageUrl: imgDataUrl,
-        aiEngine: 'Neosantara AI'
+        rawAiImage: imgUrl,
+        aiEngine: modelUsed.includes('neosantara') ? 'Neosantara Gen 2045' : (modelUsed || 'Neosantara AI')
       });
     }
 
@@ -861,88 +879,32 @@ async function handleGenerateMedia() {
  * Panggilan ke API Neosantara untuk Menghasilkan Visual Presentasi Edukasi
  */
 async function callNeosantaraImageGeneration(slide, index, meta, apiKey) {
-  const prompt = `High quality educational illustration for presentation slide: "${slide.title}". Subject: ${meta.subject || 'Pendidikan'}. Concepts: ${slide.visualIdea ? slide.visualIdea + '. ' : ''}${(slide.points || []).join(', ')}. Vector educational presentation style, vivid crisp colors, clean lighting, 16:9 aspect ratio, high resolution.`;
+  const visualPrompt = slide.visualIdea ? `${slide.visualIdea}. ` : '';
+  const pointsPrompt = (slide.points || []).slice(0, 3).join(', ');
+  const prompt = `Educational illustration for: "${slide.title}". Subject: ${meta.subject || 'Pendidikan'}. Topic concepts: ${visualPrompt}${pointsPrompt}. Flat vector modern educational presentation style, vibrant clean colors, clear lighting, 16:9 aspect ratio, high detail artwork.`;
 
-  // A. Coba endpoint proxy backend server lokal (/api/neosantara/generate)
   try {
     const proxyRes = await fetch('/api/neosantara/generate', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         apiKey: apiKey,
-        prompt: prompt,
-        model: 'gemini-2.5-flash'
+        prompt: prompt
       })
     });
 
-    if (proxyRes.ok) {
-      const resData = await proxyRes.json();
-      if (resData.status === 'success' && resData.data) {
-        const msg = resData.data.choices && resData.data.choices[0] && resData.data.choices[0].message;
-        if (msg && msg.images && msg.images.length > 0) {
-          const u = msg.images[0].image_url?.url || msg.images[0].url;
-          if (u) return u;
-        }
-        if (resData.data.data && resData.data.data.length > 0) {
-          const u = resData.data.data[0].url || (resData.data.data[0].b64_json ? `data:image/png;base64,${resData.data.data[0].b64_json}` : null);
-          if (u) return u;
-        }
-      }
+    const resData = await proxyRes.json();
+    if (resData.status === 'success' && resData.imageUrl) {
+      return {
+        imageUrl: resData.imageUrl,
+        model: resData.model || 'Neosantara Gen 2045'
+      };
+    } else if (resData.status === 'error') {
+      throw new Error(resData.message || 'Gagal memproses gambar melalui Neosantara API');
     }
-  } catch (e) {}
-
-  // B. Coba langsung ke Neosantara Chat Completions API (OpenAI Compatible dengan modalities: ['text', 'image'])
-  try {
-    const directRes = await fetch('https://api.neosantara.xyz/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`
-      },
-      body: JSON.stringify({
-        model: 'gemini-2.5-flash',
-        messages: [{ role: 'user', content: prompt }],
-        modalities: ['text', 'image'],
-        stream: false
-      })
-    });
-
-    if (directRes.ok) {
-      const data = await directRes.json();
-      const msg = data.choices && data.choices[0] && data.choices[0].message;
-      if (msg && msg.images && msg.images.length > 0) {
-        const u = msg.images[0].image_url?.url || msg.images[0].url;
-        if (u) return u;
-      }
-    }
-  } catch (e) {
-    console.warn('[Direct Neosantara Chat Error]', e);
-  }
-
-  // C. Coba endpoint Neosantara /v1/images/generations
-  try {
-    const imgRes = await fetch('https://api.neosantara.xyz/v1/images/generations', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`
-      },
-      body: JSON.stringify({
-        prompt: prompt,
-        n: 1,
-        size: '1024x1024'
-      })
-    });
-
-    if (imgRes.ok) {
-      const data = await imgRes.json();
-      if (data.data && data.data.length > 0) {
-        const u = data.data[0].url || (data.data[0].b64_json ? `data:image/png;base64,${data.data[0].b64_json}` : null);
-        if (u) return u;
-      }
-    }
-  } catch (e) {
-    console.warn('[Direct Neosantara Images Error]', e);
+  } catch (err) {
+    console.warn(`[Neosantara API Error Slide ${index + 1}]`, err);
+    throw err;
   }
 
   return null;
@@ -959,6 +921,23 @@ function loadImageAsync(src) {
     img.onerror = (e) => reject(e);
     img.src = src;
   });
+}
+
+/**
+ * Menggambar gambar ke kanvas dengan mode cover (proporsional tanpa distorsi)
+ */
+function drawImageCover(ctx, img, x, y, w, h) {
+  const imgRatio = img.width / img.height;
+  const targetRatio = w / h;
+  let sx = 0, sy = 0, sw = img.width, sh = img.height;
+  if (imgRatio > targetRatio) {
+    sw = img.height * targetRatio;
+    sx = (img.width - sw) / 2;
+  } else {
+    sh = img.width / targetRatio;
+    sy = (img.height - sh) / 2;
+  }
+  ctx.drawImage(img, sx, sy, sw, sh, x, y, w, h);
 }
 
 /**
@@ -1052,8 +1031,18 @@ async function generateEducationalSlideImage(slide, index, meta, neosantaraImage
   if (neosantaraImageUrl) {
     try {
       const img = await loadImageAsync(neosantaraImageUrl);
-      ctx.drawImage(img, cardX, cardY, cardW, cardH);
+      drawImageCover(ctx, img, cardX, cardY, cardW, cardH);
       renderedNeosantara = true;
+
+      // Badge Neosantara AI di pojok bawah kartu visual
+      ctx.fillStyle = 'rgba(15, 23, 42, 0.75)';
+      ctx.beginPath();
+      roundRect(ctx, cardX + cardW - 175, cardY + cardH - 42, 160, 30, 15);
+      ctx.fill();
+      ctx.fillStyle = '#38bdf8';
+      ctx.font = '700 12px "Plus Jakarta Sans", sans-serif';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('✨ Neosantara AI Visual', cardX + cardW - 163, cardY + cardH - 27);
     } catch (err) {
       console.warn('[Neosantara Image Load Fallback]', err);
     }

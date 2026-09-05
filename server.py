@@ -3,6 +3,8 @@ import socketserver
 import json
 import urllib.parse
 import urllib.request
+import urllib.error
+import base64
 import os
 import sys
 
@@ -350,43 +352,34 @@ class EduWorkspaceHandler(http.server.SimpleHTTPRequestHandler):
         if parsed.path == '/api/neosantara/generate':
             api_key = (body.get('apiKey') or '').strip()
             prompt = (body.get('prompt') or '').strip()
-            model = body.get('model') or 'gemini-2.5-flash'
 
             if not api_key:
-                self._send_json_response({"status": "error", "message": "Neosantara API Key is required"}, 400)
+                self._send_json_response({"status": "error", "message": "Kunci API Neosantara belum diisi."}, 400)
                 return
 
-            # Coba chat completions dengan modalities image
-            try:
-                req_data = json.dumps({
-                    "model": model,
-                    "messages": [{"role": "user", "content": prompt}],
-                    "modalities": ["text", "image"],
-                    "stream": False
-                }).encode('utf-8')
+            def fetch_url_as_b64(url):
+                try:
+                    img_req = urllib.request.Request(url, headers={'User-Agent': 'EduWorkspace/1.0'})
+                    with urllib.request.urlopen(img_req, timeout=25) as img_resp:
+                        c_type = img_resp.headers.get('Content-Type') or 'image/png'
+                        b64_data = base64.b64encode(img_resp.read()).decode('utf-8')
+                        return f"data:{c_type};base64,{b64_data}"
+                except Exception as ex:
+                    print(f"⚠️ [IMAGE FETCH ERROR] {ex}")
+                    return url
 
-                req = urllib.request.Request(
-                    'https://api.neosantara.xyz/v1/chat/completions',
-                    data=req_data,
-                    headers={
-                        'Content-Type': 'application/json',
-                        'Authorization': f'Bearer {api_key}',
-                        'User-Agent': 'EduWorkspace/1.0'
-                    },
-                    method='POST'
-                )
-                with urllib.request.urlopen(req, timeout=35) as response:
-                    res_body = json.loads(response.read().decode('utf-8'))
-                    self._send_json_response({"status": "success", "data": res_body})
-                    return
-            except Exception as e:
-                # Fallback ke endpoint /v1/images/generations
+            last_error = None
+
+            # METODE 1: Endpoint Gambar Resmi Neosantara (/v1/images/generations)
+            for img_model in ['neosantara-gen-2045', 'imagen-4.0-fast']:
                 try:
                     img_req_data = json.dumps({
+                        "model": img_model,
                         "prompt": prompt,
                         "n": 1,
                         "size": "1024x1024"
                     }).encode('utf-8')
+
                     img_req = urllib.request.Request(
                         'https://api.neosantara.xyz/v1/images/generations',
                         data=img_req_data,
@@ -397,14 +390,88 @@ class EduWorkspaceHandler(http.server.SimpleHTTPRequestHandler):
                         },
                         method='POST'
                     )
-                    with urllib.request.urlopen(img_req, timeout=35) as img_resp:
+                    with urllib.request.urlopen(img_req, timeout=40) as img_resp:
                         img_res_body = json.loads(img_resp.read().decode('utf-8'))
-                        self._send_json_response({"status": "success", "data": img_res_body})
-                        return
-                except Exception as img_e:
-                    print(f"⚠️ [NEOSANTARA API ERROR] {img_e}")
-                    self._send_json_response({"status": "error", "message": str(img_e)}, 500)
-                    return
+                        if img_res_body.get('data') and len(img_res_body['data']) > 0:
+                            first_item = img_res_body['data'][0]
+                            final_url = None
+                            if first_item.get('b64_json'):
+                                final_url = f"data:image/png;base64,{first_item['b64_json']}"
+                            elif first_item.get('url'):
+                                final_url = fetch_url_as_b64(first_item['url'])
+                            if final_url:
+                                self._send_json_response({
+                                    "status": "success",
+                                    "imageUrl": final_url,
+                                    "model": img_model
+                                })
+                                return
+                except urllib.error.HTTPError as he:
+                    try:
+                        err_json = json.loads(he.read().decode('utf-8'))
+                        last_error = err_json.get('message') or err_json.get('error', {}).get('message') or str(he)
+                    except Exception:
+                        last_error = str(he)
+                    print(f"⚠️ [/v1/images/generations {img_model} error] {last_error}")
+                except Exception as e:
+                    last_error = str(e)
+                    print(f"⚠️ [/v1/images/generations {img_model} error] {e}")
+
+            # METODE 2: Chat Completions dengan Multimodal Modalities (gemini-3-flash / gemini-2.5-flash)
+            for chat_model in ['gemini-3-flash', 'gemini-2.5-flash']:
+                try:
+                    req_data = json.dumps({
+                        "model": chat_model,
+                        "messages": [{"role": "user", "content": f"Generate educational presentation visual illustration for: {prompt}"}],
+                        "modalities": ["text", "image"],
+                        "stream": False
+                    }).encode('utf-8')
+
+                    req = urllib.request.Request(
+                        'https://api.neosantara.xyz/v1/chat/completions',
+                        data=req_data,
+                        headers={
+                            'Content-Type': 'application/json',
+                            'Authorization': f'Bearer {api_key}',
+                            'User-Agent': 'EduWorkspace/1.0'
+                        },
+                        method='POST'
+                    )
+                    with urllib.request.urlopen(req, timeout=40) as response:
+                        res_body = json.loads(response.read().decode('utf-8'))
+                        choices = res_body.get('choices', [])
+                        if choices and choices[0].get('message'):
+                            msg = choices[0]['message']
+                            images = msg.get('images', [])
+                            if images and len(images) > 0:
+                                raw_img = images[0]
+                                img_url = raw_img.get('image_url', {}).get('url') if isinstance(raw_img.get('image_url'), dict) else (raw_img.get('url') or '')
+                                if img_url:
+                                    if img_url.startswith('http'):
+                                        img_url = fetch_url_as_b64(img_url)
+                                    self._send_json_response({
+                                        "status": "success",
+                                        "imageUrl": img_url,
+                                        "model": chat_model
+                                    })
+                                    return
+                except urllib.error.HTTPError as he:
+                    try:
+                        err_json = json.loads(he.read().decode('utf-8'))
+                        last_error = err_json.get('message') or err_json.get('error', {}).get('message') or str(he)
+                    except Exception:
+                        last_error = str(he)
+                    print(f"⚠️ [/v1/chat/completions {chat_model} error] {last_error}")
+                except Exception as e:
+                    last_error = str(e)
+                    print(f"⚠️ [/v1/chat/completions {chat_model} error] {e}")
+
+            # Jika semua metode gagal
+            self._send_json_response({
+                "status": "error",
+                "message": last_error or "Gagal menghubungi Neosantara API untuk pembuatan gambar."
+            }, 500)
+            return
 
         super().do_POST()
 
