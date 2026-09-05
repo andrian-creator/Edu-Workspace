@@ -15,10 +15,10 @@
     rel="stylesheet">
 
   <!-- Global & Page Stylesheet -->
-  <link rel="stylesheet" href="../../global.css?v=300">
-  <link rel="stylesheet" href="media-pembelajaran.css?v=300">
+  <link rel="stylesheet" href="../../global.css?v=301">
+  <link rel="stylesheet" href="media-pembelajaran.css?v=301">
 
-  <!-- PptxGenJS CDN: Library untuk menghasilkan file PowerPoint (.pptx) asli -->
+  <!-- PptxGenJS CDN: Library untuk menghasilkan file PowerPoint (.pptx) asli dengan gambar -->
   <script src="https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js"></script>
 </head>
 
@@ -31,14 +31,14 @@
   <main class="media-main-wrapper" id="mediaMainContent">
     <div class="media-main-container">
 
-      <!-- 1. Header Judul (Tanpa Sub Judul) -->
+      <!-- 1. Header Judul (Sama persis dengan halaman lain, tanpa sub judul) -->
       <section class="media-page-header">
         <h1 class="media-title">
           Generate <span class="text-yellow">Media Pembelajaran</span> With AI
         </h1>
       </section>
 
-      <!-- 2. Dua Kartu Workspace: Kiri (Input & Form) dan Kanan (Proses & Hasil) -->
+      <!-- 2. Dua Kartu Workspace: Kiri (Input & Form) dan Kanan (Proses, Outline, & Media Bergambar) -->
       <div class="media-workspace-grid">
 
         <!-- ================================================================
@@ -97,13 +97,13 @@
           </div>
 
           <!-- FORMULIR PARAMETER MEDIA PEMBELAJARAN -->
-          <form id="pptForm" onsubmit="event.preventDefault(); handleGenerate();">
+          <form id="pptForm" onsubmit="event.preventDefault(); handleGenerateOutline();">
 
             <!-- 1. Mata Pelajaran -->
             <div class="form-group">
               <label class="form-label" for="inputMataPelajaran">
                 <span>Mata Pelajaran <span style="color: #dc2626;">*</span></span>
-                <span class="form-hint">Contoh: Matematika, IPA, Bahasa Indonesia</span>
+                <span class="form-hint">Contoh: Matematika, IPA, Desain Grafis</span>
               </label>
               <input type="text" id="inputMataPelajaran" class="form-input"
                 placeholder="Ketik mata pelajaran atau pilih dari modul ajar" required>
@@ -116,7 +116,7 @@
                 <span class="form-hint">Topik & rincian konsep utama</span>
               </label>
               <textarea id="inputMateri" class="form-textarea" rows="4"
-                placeholder="Tuliskan topik, materi pokok, atau konsep kunci yang ingin dijelaskan pada slide PowerPoint..." required></textarea>
+                placeholder="Tuliskan topik, materi pokok, atau konsep kunci yang ingin dijelaskan pada slide presentasi..." required></textarea>
             </div>
 
             <!-- 3. Kelas / Jenjang -->
@@ -129,7 +129,7 @@
                 placeholder="Ketik kelas / jenjang atau pilih dari modul ajar" required>
             </div>
 
-            <!-- 4. Jumlah Slide -->
+            <!-- 4. Jumlah Slide (Hanya Rekomendasi AI & Isi Sendiri) -->
             <div class="form-group">
               <label class="form-label">
                 <span>Jumlah Slide</span>
@@ -138,40 +138,40 @@
 
               <div class="slide-count-grid">
                 <button type="button" class="slide-count-btn active" id="btnSlideAuto" onclick="selectSlideCount('auto')">
-                  Rekomendasi AI
-                </button>
-                <button type="button" class="slide-count-btn" id="btnSlide5" onclick="selectSlideCount('5')">
-                  5 Slide
-                </button>
-                <button type="button" class="slide-count-btn" id="btnSlide7" onclick="selectSlideCount('7')">
-                  7 Slide
-                </button>
-                <button type="button" class="slide-count-btn" id="btnSlide10" onclick="selectSlideCount('10')">
-                  10 Slide
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 3l1.912 4.675a2 2 0 0 0 1.088 1.088L19.675 10.675a2 2 0 0 1 0 3.325l-4.675 1.912a2 2 0 0 0-1.088 1.088L12 21.675a2 2 0 0 1-3.325 0l-1.912-4.675a2 2 0 0 0-1.088-1.088L2.325 14a2 2 0 0 1 0-3.325l4.675-1.912a2 2 0 0 0 1.088-1.088L9.675 3a2 2 0 0 1 3.325 0z"></path>
+                  </svg>
+                  <span>Rekomendasi AI</span>
                 </button>
                 <button type="button" class="slide-count-btn" id="btnSlideCustom" onclick="selectSlideCount('custom')">
-                  Isi Sendiri
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 20h9"></path>
+                    <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+                  </svg>
+                  <span>Isi Sendiri</span>
                 </button>
               </div>
 
-              <!-- Input Jumlah Slide Custom (Muncul jika tombol 'Isi Sendiri' dipilih) -->
+              <!-- Input Jumlah Slide Custom (Muncul jika 'Isi Sendiri' dipilih) -->
               <div id="customSlideContainer" style="display: none; margin-top: 10px;">
-                <input type="number" id="inputCustomSlide" class="form-input" min="2" max="20" value="6"
+                <input type="number" id="inputCustomSlide" class="form-input" min="2" max="25" value="6"
                   placeholder="Masukkan angka jumlah slide (misal: 6, 8, 12)">
               </div>
             </div>
 
-            <!-- 5. Tombol Generate -->
+            <!-- 5. Tombol Generate Outline -->
             <button type="submit" id="btnGenerate" class="btn-generate-ppt">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"
                 stroke-linecap="round" stroke-linejoin="round">
                 <path d="M12 3l1.912 4.675a2 2 0 0 0 1.088 1.088L19.675 10.675a2 2 0 0 1 0 3.325l-4.675 1.912a2 2 0 0 0-1.088 1.088L12 21.675a2 2 0 0 1-3.325 0l-1.912-4.675a2 2 0 0 0-1.088-1.088L2.325 14a2 2 0 0 1 0-3.325l4.675-1.912a2 2 0 0 0 1.088-1.088L9.675 3a2 2 0 0 1 3.325 0z"></path>
               </svg>
-              <span id="btnGenerateText">Generate PowerPoint</span>
+              <span id="btnGenerateText">Generate Outline Slide</span>
             </button>
 
             <div style="font-size: 0.78rem; color: #64748b; text-align: center; margin-top: 12px;">
-              Menggunakan Kunci Google Gemini API akun Anda • Format keluaran Microsoft PowerPoint (.pptx)
+              Menggunakan Kunci Google Gemini AI akun Anda • Tahap 1: Outline Slide (Bisa Diedit)
             </div>
 
           </form>
@@ -179,18 +179,18 @@
         </div>
 
         <!-- ================================================================
-             KARTU KANAN: HANYA PROSES AI GENERATE & HASIL GENERATE POWERPOINT
+             KARTU KANAN: HANYA PROSES, OUTLINE SLIDE, & MEDIA PPT BERGAMBAR
              ================================================================ -->
         <div class="media-card" id="cardRight">
 
           <!-- Header Kartu Kanan -->
           <div class="card-right-header">
             <div class="card-right-title-box">
-              <h2 class="card-title">Hasil Slide PowerPoint</h2>
+              <h2 class="card-title" id="cardRightTitle">Hasil Media Presentasi</h2>
               <span class="card-right-badge" id="cardRightBadge">Belum Ada Hasil</span>
             </div>
 
-            <!-- Aksi Atas (Hanya tampil setelah berhasil generate) -->
+            <!-- Aksi Atas (Tampil setelah berhasil generate media) -->
             <div class="header-action-btns" id="headerActionBtns">
               <button type="button" class="btn-secondary-action" onclick="copySlideContent()" title="Salin Teks Lengkap">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
@@ -222,50 +222,112 @@
                 <polygon points="10 8 15 10 10 12"></polygon>
               </svg>
             </div>
-            <h3 class="empty-state-title">Slide PowerPoint Akan Tampil di Sini</h3>
+            <h3 class="empty-state-title">Outline Slide Akan Tampil di Sini</h3>
             <p class="empty-state-desc">
-              Pilih modul ajar atau isi mata pelajaran, materi, dan kelas di kartu sebelah kiri, lalu klik tombol <strong>Generate PowerPoint</strong>.
+              Isi parameter di kartu kiri, lalu klik <strong>Generate Outline Slide</strong>. Anda dapat mengedit judul, materi, dan ide gambar sebelum menghasilkan media presentasi bergambar.
             </p>
           </div>
 
           <!-- KONDISI 2: PROSES AI GENERATE (Loading State) -->
           <div class="ppt-loading-state" id="pptLoadingState">
             <div class="spinner-box"></div>
-            <h3 class="loading-title">AI Sedang Menyusun Slide...</h3>
+            <h3 class="loading-title" id="loadingTitleText">AI Sedang Menyusun Slide...</h3>
             <p class="loading-subtitle" id="loadingSubtitleText">Menghubungkan ke Google Gemini AI...</p>
             <div class="progress-track">
               <div class="progress-bar-fill"></div>
             </div>
           </div>
 
-          <!-- KONDISI 3: HASIL GENERATE POWERPOINT (Result State) -->
-          <div class="ppt-result-container" id="pptResultContainer">
+          <!-- KONDISI 3: TAHAP 1 - OUTLINE SLIDE (DAPAT DI-EDIT OLEH PENGGUNA) -->
+          <div class="ppt-outline-container" id="pptOutlineContainer">
 
-            <!-- Ringkasan Singkat Presentasi -->
+            <!-- Kotak Pemberitahuan Panduan Edit -->
+            <div class="outline-notice-box">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" y1="16" x2="12" y2="12"></line>
+                <line x1="12" y1="8" x2="12.01" y2="8"></line>
+              </svg>
+              <div>
+                <strong>Outline Slide Siap Diedit:</strong> Anda dapat mengubah judul slide, menambahkan poin materi, atau memperbarui deskripsi visual gambar. Jika sudah sesuai, klik tombol <strong>Generate Media</strong> di bawah.
+              </div>
+            </div>
+
+            <!-- Ringkasan Info Outline -->
             <div class="ppt-summary-box">
               <div>
-                <span class="ppt-summary-title" id="summaryTopicTitle">Judul Materi Slide</span>
-                <div class="ppt-summary-meta" id="summaryMetaText">Mata Pelajaran • Kelas</div>
+                <span class="ppt-summary-title" id="outlineSummaryTitle">Topik Presentasi</span>
+                <div class="ppt-summary-meta" id="outlineSummaryMeta">Mata Pelajaran • Kelas</div>
               </div>
-              <span style="font-size: 0.82rem; font-weight: 800; color: #16a34a; background: #dcfce7; padding: 4px 12px; border-radius: 999px;" id="summarySlideCountBadge">
-                5 Slide
+              <span style="font-size: 0.82rem; font-weight: 800; color: #a16207; background: #fef9c3; border: 1px solid #fde047; padding: 4px 12px; border-radius: 999px;" id="outlineSlideCountBadge">
+                0 Slide
               </span>
             </div>
 
-            <!-- Daftar Kartu Slide Interaktif -->
-            <div class="ppt-slides-list" id="pptSlidesList">
+            <!-- Daftar Kartu Slide Outline yang Dapat Diedit -->
+            <div class="ppt-outline-list" id="pptOutlineList">
               <!-- Rendered by media-pembelajaran.js -->
             </div>
 
-            <!-- Tombol Unduh Utama di Bagian Bawah -->
-            <button type="button" class="btn-download-main" onclick="downloadPowerPointFile()">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                <polyline points="7 10 12 15 17 10"></polyline>
-                <line x1="12" y1="15" x2="12" y2="3"></line>
+            <!-- Tombol Tambah Slide Baru -->
+            <button type="button" class="btn-add-outline-slide" onclick="addNewOutlineSlide()">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="12" y1="5" x2="12" y2="19"></line>
+                <line x1="5" y1="12" x2="19" y2="12"></line>
               </svg>
-              <span id="btnDownloadMainText">Unduh File PowerPoint (.pptx)</span>
+              <span>Tambah Slide Baru ke Outline</span>
             </button>
+
+            <!-- Tombol Utama: Generate Media (Mencolok di Bawah Outline) -->
+            <button type="button" class="btn-generate-media" id="btnGenerateMedia" onclick="handleGenerateMedia()">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                <polyline points="21 15 16 10 5 21"></polyline>
+              </svg>
+              <span id="btnGenerateMediaText">Generate Media PPT Bergambar</span>
+            </button>
+
+          </div>
+
+          <!-- KONDISI 4: TAHAP 2 - HASIL MEDIA PPT BERGAMBAR (SLIDE DENGAN GAMBAR SIAP) -->
+          <div class="ppt-result-container" id="pptMediaResultContainer">
+
+            <!-- Ringkasan Singkat Presentasi Bergambar -->
+            <div class="ppt-summary-box">
+              <div>
+                <span class="ppt-summary-title" id="mediaSummaryTitle">Judul Materi Media</span>
+                <div class="ppt-summary-meta" id="mediaSummaryMeta">Mata Pelajaran • Kelas</div>
+              </div>
+              <span style="font-size: 0.82rem; font-weight: 800; color: #16a34a; background: #dcfce7; border: 1px solid #86efac; padding: 4px 12px; border-radius: 999px;" id="mediaSlideCountBadge">
+                Slide Bergambar Siap
+              </span>
+            </div>
+
+            <!-- Daftar Slide Bergambar (Preview Visual Grafis Gambar Slide) -->
+            <div class="ppt-slides-list" id="pptMediaSlidesList">
+              <!-- Rendered by media-pembelajaran.js -->
+            </div>
+
+            <!-- Tombol Aksi Utama di Bawah -->
+            <div class="result-action-bar">
+              <button type="button" class="btn-download-main" onclick="downloadPowerPointFile()">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                  <polyline points="7 10 12 15 17 10"></polyline>
+                  <line x1="12" y1="15" x2="12" y2="3"></line>
+                </svg>
+                <span>Unduh File PowerPoint Bergambar (.pptx)</span>
+              </button>
+
+              <button type="button" class="btn-edit-outline-again" onclick="backToOutlineView()">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 20h9"></path>
+                  <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+                </svg>
+                <span>Kembali Edit Outline Slide</span>
+              </button>
+            </div>
 
           </div>
 
@@ -277,8 +339,8 @@
   </main>
 
   <!-- Scripts -->
-  <script src="../../global.js?v=300"></script>
-  <script src="media-pembelajaran.js?v=300"></script>
+  <script src="../../global.js?v=301"></script>
+  <script src="media-pembelajaran.js?v=301"></script>
 </body>
 
 </html>

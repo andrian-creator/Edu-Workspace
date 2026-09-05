@@ -37,27 +37,26 @@ body {
   flex-direction: column;
 }
 
+/* ==========================================================================
+   1. MAIN WRAPPER & PAGE HEADER (Sama Persis dengan Halaman Lain)
+   ========================================================================== */
 .media-main-wrapper {
-  padding-top: 86px;
-  min-height: calc(100vh - 86px);
-  display: flex;
-  flex-direction: column;
-  padding-bottom: 60px;
+  flex: 1;
+  padding: 32px 64px 60px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .media-main-container {
   max-width: 1360px;
   margin: 0 auto;
   width: 100%;
-  padding: 24px 32px;
-  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
 }
 
-/* ==========================================================================
-   1. PAGE HEADER (Judul Saja, Tanpa Sub Judul)
-   ========================================================================== */
 .media-page-header {
-  margin-bottom: 28px;
+  margin-bottom: 32px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -83,7 +82,7 @@ body {
    ========================================================================== */
 .media-workspace-grid {
   display: grid;
-  grid-template-columns: 1fr 1.15fr;
+  grid-template-columns: minmax(400px, 480px) minmax(0, 1fr);
   gap: 28px;
   align-items: start;
   width: 100%;
@@ -180,35 +179,40 @@ body {
   border-radius: var(--radius-pill);
   cursor: pointer;
   transition: var(--transition);
-  white-space: nowrap;
 }
 
-.source-tab-btn:hover {
+.source-tab-btn:hover:not(.active) {
   color: var(--color-text-main);
 }
 
 .source-tab-btn.active {
   background: #ffffff;
-  color: var(--color-text-main);
+  color: #0f172a;
   box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
 }
 
-/* Container Input Group */
+/* Dropdown Modul Ajar */
+.modul-select-container {
+  margin-bottom: 20px;
+  background: #f8fafc;
+  border: 1.5px solid var(--color-border);
+  border-radius: 14px;
+  padding: 16px;
+}
+
+/* Form Styles */
 .form-group {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  margin-bottom: 16px;
-  width: 100%;
+  margin-bottom: 18px;
 }
 
 .form-label {
-  font-size: 0.88rem;
-  font-weight: 700;
-  color: var(--color-text-main);
   display: flex;
   align-items: center;
   justify-content: space-between;
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--color-text-main);
+  margin-bottom: 8px;
 }
 
 .form-hint {
@@ -218,26 +222,18 @@ body {
 }
 
 .form-input,
-.form-select,
-.form-textarea {
+.form-textarea,
+.form-select {
   width: 100%;
   font-family: inherit;
-  font-size: 0.92rem;
-  color: var(--color-text-main);
-  background: #ffffff;
+  font-size: 0.94rem;
+  padding: 12px 16px;
   border: 1.5px solid var(--color-border);
   border-radius: 12px;
-  padding: 11px 14px;
-  outline: none;
-  box-sizing: border-box;
+  background: #ffffff;
+  color: var(--color-text-main);
   transition: var(--transition);
-}
-
-.form-input:focus,
-.form-select:focus,
-.form-textarea:focus {
-  border-color: #2563eb;
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+  box-sizing: border-box;
 }
 
 .form-textarea {
@@ -246,26 +242,24 @@ body {
   line-height: 1.55;
 }
 
-/* Dropdown Modul Ajar Box */
-.modul-select-container {
-  background: #f8fafc;
-  border: 1.5px dashed #cbd5e1;
-  border-radius: 14px;
-  padding: 14px 16px;
-  margin-bottom: 18px;
+.form-input:focus,
+.form-textarea:focus,
+.form-select:focus {
+  border-color: #2563eb;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
 }
 
-/* Pilihan Jumlah Slide */
+/* Slide Count Grid (HANYA 2 TOMBOL: Rekomendasi AI & Isi Sendiri) */
 .slide-count-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 8px;
-  margin-top: 4px;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
 }
 
 .slide-count-btn {
-  padding: 8px 12px;
-  font-size: 0.82rem;
+  padding: 11px 16px;
+  font-size: 0.88rem;
   font-weight: 700;
   font-family: inherit;
   background: #f8fafc;
@@ -274,7 +268,10 @@ body {
   border-radius: 10px;
   cursor: pointer;
   transition: var(--transition);
-  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
 }
 
 .slide-count-btn:hover {
@@ -289,7 +286,7 @@ body {
   box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.12);
 }
 
-/* Tombol Generate PowerPoint */
+/* Tombol Generate Outline */
 .btn-generate-ppt {
   width: 100%;
   margin-top: 10px;
@@ -328,7 +325,7 @@ body {
 }
 
 /* ==========================================================================
-   4. KARTU SEBELAH KANAN: HANYA PROSES & HASIL GENERATE POWERPOINT
+   4. KARTU SEBELAH KANAN: PROSES, EDIT OUTLINE, & HASIL PPT BERGAMBAR
    ========================================================================== */
 .card-right-header {
   margin-bottom: 20px;
@@ -350,15 +347,22 @@ body {
 .card-right-badge {
   font-size: 0.76rem;
   font-weight: 700;
-  padding: 4px 10px;
+  padding: 4px 12px;
   border-radius: 999px;
   background: #e2e8f0;
   color: #475569;
 }
 
+.card-right-badge.badge-outline {
+  background: #fef9c3;
+  color: #a16207;
+  border: 1px solid #fde047;
+}
+
 .card-right-badge.badge-ready {
   background: #dcfce7;
   color: #16a34a;
+  border: 1px solid #86efac;
 }
 
 .card-right-badge.badge-loading {
@@ -448,7 +452,7 @@ body {
 .empty-state-desc {
   font-size: 0.92rem;
   color: #64748b;
-  max-width: 400px;
+  max-width: 440px;
   line-height: 1.55;
   margin: 0;
 }
@@ -516,7 +520,201 @@ body {
   100% { transform: translateX(250%); }
 }
 
-/* State 3: Hasil Generate PowerPoint */
+/* ==========================================================================
+   5. TAHAP 1: EDIT OUTLINE CONTAINER (Bisa Di-edit oleh Pengguna)
+   ========================================================================== */
+.ppt-outline-container {
+  display: none;
+  flex-direction: column;
+  gap: 18px;
+  width: 100%;
+}
+
+.ppt-outline-container.active {
+  display: flex;
+}
+
+.outline-notice-box {
+  background: #eff6ff;
+  border: 1.5px solid #bfdbfe;
+  border-radius: 12px;
+  padding: 13px 16px;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 0.88rem;
+  color: #1e40af;
+  line-height: 1.5;
+}
+
+.outline-notice-box svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.ppt-outline-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-height: 620px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.outline-slide-card {
+  background: #ffffff;
+  border: 1.5px solid var(--color-border);
+  border-radius: 16px;
+  padding: 18px 20px;
+  box-shadow: 0 2px 10px rgba(15, 23, 42, 0.03);
+  display: flex;
+  flex-direction: column;
+  gap: 13px;
+  transition: var(--transition);
+}
+
+.outline-slide-card:hover {
+  border-color: #cbd5e1;
+}
+
+.outline-slide-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1.5px solid #f1f5f9;
+  padding-bottom: 10px;
+}
+
+.outline-slide-badge {
+  font-size: 0.82rem;
+  font-weight: 800;
+  background: #0f172a;
+  color: #ffffff;
+  padding: 4px 12px;
+  border-radius: var(--radius-pill);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.btn-delete-outline-slide {
+  background: transparent;
+  border: 1px solid #fca5a5;
+  color: #dc2626;
+  padding: 4px 10px;
+  border-radius: 8px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: var(--transition);
+}
+
+.btn-delete-outline-slide:hover {
+  background: #fee2e2;
+}
+
+.outline-field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.outline-field-label {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #475569;
+}
+
+.outline-input-title,
+.outline-textarea {
+  width: 100%;
+  font-family: inherit;
+  font-size: 0.92rem;
+  padding: 10px 14px;
+  border: 1.5px solid var(--color-border);
+  border-radius: 10px;
+  background: #f8fafc;
+  color: var(--color-text-main);
+  transition: var(--transition);
+  box-sizing: border-box;
+}
+
+.outline-input-title:focus,
+.outline-textarea:focus {
+  background: #ffffff;
+  border-color: #2563eb;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+
+.outline-textarea-visual {
+  background: #fefce8 !important;
+  border-color: #fef08a !important;
+  color: #713f12 !important;
+}
+
+.outline-textarea-visual:focus {
+  background: #ffffff !important;
+  border-color: #eab308 !important;
+  box-shadow: 0 0 0 3px rgba(234, 179, 8, 0.15) !important;
+}
+
+.btn-add-outline-slide {
+  width: 100%;
+  padding: 12px;
+  background: #f8fafc;
+  border: 1.5px dashed #cbd5e1;
+  border-radius: 12px;
+  font-family: inherit;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #475569;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: var(--transition);
+}
+
+.btn-add-outline-slide:hover {
+  background: #ffffff;
+  border-color: #94a3b8;
+  color: #0f172a;
+}
+
+/* Tombol Generate Media (Mencolok di Bawah Outline) */
+.btn-generate-media {
+  width: 100%;
+  padding: 16px 28px;
+  font-size: 1.05rem;
+  font-weight: 800;
+  font-family: inherit;
+  background: #0f172a;
+  color: #ffffff;
+  border: none;
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  transition: var(--transition);
+  box-shadow: 0 6px 22px rgba(15, 23, 42, 0.22);
+}
+
+.btn-generate-media:hover {
+  background: #1e293b;
+  transform: translateY(-2px);
+  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.3);
+}
+
+/* ==========================================================================
+   6. TAHAP 2: HASIL GENERATE MEDIA PPT BERGAMBAR (Media Bergambar Siap)
+   ========================================================================== */
 .ppt-result-container {
   display: none;
   flex-direction: column;
@@ -551,34 +749,34 @@ body {
   color: #64748b;
 }
 
-/* List Kartu Slide 16:9 */
+/* List Kartu Slide Bergambar */
 .ppt-slides-list {
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  max-height: 600px;
+  gap: 20px;
+  max-height: 640px;
   overflow-y: auto;
   padding-right: 4px;
 }
 
-.ppt-slide-card {
+.media-slide-card {
   background: #ffffff;
   border: 1.5px solid var(--color-border);
-  border-radius: 16px;
-  padding: 20px 22px;
+  border-radius: 18px;
+  padding: 22px;
   box-shadow: 0 2px 10px rgba(15, 23, 42, 0.03);
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 16px;
   transition: var(--transition);
 }
 
-.ppt-slide-card:hover {
+.media-slide-card:hover {
   border-color: #cbd5e1;
-  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.06);
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
 }
 
-.ppt-slide-top {
+.media-slide-top {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -586,20 +784,67 @@ body {
   padding-bottom: 10px;
 }
 
-.ppt-slide-number {
+.media-slide-number {
   font-size: 0.78rem;
   font-weight: 800;
   background: #0f172a;
   color: #ffffff;
-  padding: 3px 10px;
-  border-radius: 6px;
+  padding: 4px 12px;
+  border-radius: var(--radius-pill);
 }
 
-.ppt-slide-title {
-  font-size: 1.1rem;
+.media-slide-title {
+  font-size: 1.15rem;
   font-weight: 800;
   color: #0f172a;
   margin: 0;
+}
+
+/* Frame Gambar Visual Slide (16:9) */
+.media-slide-image-frame {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1.5px solid #e2e8f0;
+  background: #0f172a;
+  position: relative;
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.1);
+}
+
+.media-slide-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.media-slide-image-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 2px 4px 0;
+}
+
+.btn-download-slide-img {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  background: #f8fafc;
+  color: #334155;
+  border: 1.5px solid #e2e8f0;
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.btn-download-slide-img:hover {
+  background: #ffffff;
+  border-color: #cbd5e1;
+  color: #0f172a;
 }
 
 .ppt-slide-content {
@@ -633,26 +878,16 @@ body {
   color: #1e3a8a;
 }
 
-.ppt-visual-idea {
-  background: #fefce8;
-  border-left: 4px solid #eab308;
-  border-radius: 0 10px 10px 0;
-  padding: 10px 14px;
-  font-size: 0.86rem;
-  color: #854d0e;
-  line-height: 1.5;
+/* Tombol Unduh Utama di Bagian Bawah */
+.result-action-bar {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
-.ppt-visual-idea strong {
-  display: block;
-  margin-bottom: 2px;
-  color: #713f12;
-}
-
-/* Tombol Download Utama di Bawah */
 .btn-download-main {
   width: 100%;
-  padding: 15px 24px;
+  padding: 16px 28px;
   font-size: 1.05rem;
   font-weight: 800;
   font-family: inherit;
@@ -666,40 +901,63 @@ body {
   justify-content: center;
   gap: 10px;
   transition: var(--transition);
-  box-shadow: 0 4px 18px rgba(210, 71, 38, 0.3);
+  box-shadow: 0 6px 20px rgba(210, 71, 38, 0.28);
 }
 
 .btn-download-main:hover {
   background: var(--color-ppt-hover);
   transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(210, 71, 38, 0.4);
+  box-shadow: 0 8px 24px rgba(210, 71, 38, 0.35);
+}
+
+.btn-edit-outline-again {
+  width: 100%;
+  padding: 12px 20px;
+  font-size: 0.92rem;
+  font-weight: 700;
+  font-family: inherit;
+  background: #ffffff;
+  color: var(--color-text-main);
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: var(--transition);
+}
+
+.btn-edit-outline-again:hover {
+  background: #f8fafc;
+  border-color: #cbd5e1;
 }
 
 /* ==========================================================================
-   5. RESPONSIVE (Mobile & Tablet)
+   7. RESPONSIVE DESIGN (Mobile & Tablet)
    ========================================================================== */
 @media (max-width: 1024px) {
+  .media-main-wrapper {
+    padding: 24px 32px 50px;
+  }
+
   .media-workspace-grid {
     grid-template-columns: 1fr;
     gap: 24px;
   }
-
-  .media-card {
-    padding: 24px 20px;
-  }
 }
 
-@media (max-width: 640px) {
-  .media-main-container {
-    padding: 18px 16px;
+@media (max-width: 768px) {
+  .media-main-wrapper {
+    padding: 20px 20px 40px;
   }
 
-  .media-title {
-    font-size: 1.75rem;
+  .media-page-header {
+    margin-bottom: 24px;
   }
 
-  .slide-count-grid {
-    grid-template-columns: repeat(2, 1fr);
+  .media-card {
+    padding: 20px;
   }
 
   .card-right-header {
@@ -709,6 +967,10 @@ body {
 
   .header-action-btns {
     width: 100%;
-    justify-content: space-between;
+    justify-content: flex-start;
+  }
+
+  .slide-count-grid {
+    grid-template-columns: 1fr;
   }
 }
