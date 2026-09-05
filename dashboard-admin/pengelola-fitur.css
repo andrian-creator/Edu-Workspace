@@ -361,12 +361,12 @@ tbody tr:last-child td {
    4B. KOLOM CATATAN & TOMBOL EDIT CATATAN
    ========================================================================== */
 .catatan-cell {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: flex-start;
   gap: 10px;
-  max-width: 100%;
-  margin: 0;
+  max-width: 280px;
+  margin: 0 auto;
   text-align: left;
 }
 
@@ -384,6 +384,7 @@ tbody tr:last-child td {
   word-break: break-word;
   cursor: pointer;
   flex: 1;
+  min-width: 0;
 }
 
 .catatan-text:hover {

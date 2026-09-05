@@ -197,7 +197,7 @@ function renderFeatureTable() {
             ${featureChipsHtml}
           </div>
         </td>
-        <td style="text-align: left;">
+        <td style="text-align: center;">
           ${catatanCellHtml}
         </td>
         <td style="text-align: center;">
