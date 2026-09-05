@@ -57,12 +57,6 @@ async function initUserDashboard() {
       }
       user = { ...user, ...dbUser };
       localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user));
-      try {
-        const allUsers = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-        const idx = allUsers.findIndex(u => (u.email || '').toLowerCase() === userEmail);
-        if (idx >= 0) allUsers[idx] = user; else allUsers.push(user);
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(allUsers));
-      } catch (e) {}
     } else {
       // Tidak ditemukan di Supabase = akun dihapus
       user.status = 'Dihapus';
@@ -73,15 +67,7 @@ async function initUserDashboard() {
       return;
     }
   } catch (e) {
-    // Fallback lokal jika offline
-    try {
-      const allUsers = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-      const latestUser = allUsers.find(u => (u.email || '').trim().toLowerCase() === (user.email || '').trim().toLowerCase());
-      if (latestUser) {
-        user = { ...user, ...latestUser };
-        localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user));
-      }
-    } catch (err) { }
+    console.warn('[Dashboard] Gagal koneksi Supabase:', e);
   }
 
   // Periksa masa aktif langganan

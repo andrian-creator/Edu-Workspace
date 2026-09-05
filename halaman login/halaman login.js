@@ -198,10 +198,23 @@ function processLogin(payload) {
 
   // Pengalihan Otomatis Berdasarkan Role dan Status Profil
   setTimeout(() => {
+    const curRaw = localStorage.getItem(CURRENT_USER_KEY);
+    const u = curRaw ? JSON.parse(curRaw) : matchedUser;
+
     if (isAdmin) {
       window.location.href = "../dashboard admin/dashboard admin.html";
     } else {
-      if (matchedUser.isProfileCompleted === true && matchedUser.institution && matchedUser.institution !== 'Sekolah / Instansi Guru') {
+      const isAktif = (u.status === 'Aktif' || u.isApproved === true) && 
+                      u.isProfileCompleted === true && 
+                      u.institution && 
+                      u.institution !== 'Sekolah / Instansi Guru' &&
+                      !u.isDeleted &&
+                      u.status !== 'Nonaktif' &&
+                      u.status !== 'Dinonaktifkan' &&
+                      u.status !== 'Ditolak' &&
+                      !isSubscriptionExpired(u);
+
+      if (isAktif) {
         window.location.href = "../dashboard pengguna/dashboard pengguna.html";
       } else {
         window.location.href = "../dashboard pengguna/profil.html";

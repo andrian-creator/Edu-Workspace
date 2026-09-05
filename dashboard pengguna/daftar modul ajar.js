@@ -36,23 +36,6 @@ function initDaftarModulPage() {
     return;
   }
 
-  // Verifikasi apakah akun masih ada di database
-  try {
-    const allUsers = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-    const isAdm = user.role === 'Admin' || (typeof ADMIN_EMAIL !== 'undefined' && (user.email || '').toLowerCase() === ADMIN_EMAIL.toLowerCase());
-    if (allUsers.length > 0 && !isAdm) {
-      const found = allUsers.find(u => (u.email || '').trim().toLowerCase() === (user.email || '').trim().toLowerCase());
-      if (!found) {
-        user.status = 'Dihapus';
-        user.isDeleted = true;
-        user.isApproved = false;
-        localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user));
-        window.location.replace("profil.html");
-        return;
-      }
-    }
-  } catch (e) {}
-
   // Render Header Global Terpusat (Hanya tombol Kembali dan Profil)
   if (typeof renderEduNavbar === 'function') {
     renderEduNavbar({
@@ -729,34 +712,7 @@ try {
 } catch (e) {}
 
 window.addEventListener('storage', (e) => {
-  if (e.key === 'edu_current_user' || e.key === 'edu_registered_users' || e.key === 'edu_sync_timestamp') {
-    let cur = null;
-    try { cur = JSON.parse(localStorage.getItem(CURRENT_USER_KEY)); } catch (e) {}
-    if (cur && cur.email) {
-      const allUsers = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-      const found = allUsers.find(u => (u.email || '').toLowerCase() === (cur.email || '').toLowerCase());
-      
-      // Jika akun tidak ditemukan di daftar pengguna lagi -> Dihapus oleh Admin!
-      if (!found) {
-        cur.status = 'Dihapus';
-        cur.isDeleted = true;
-        cur.isApproved = false;
-        localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(cur));
-        window.location.replace("profil.html");
-        return;
-      }
-
-      const isDeleted = cur.status === 'Dihapus' || cur.isDeleted === true;
-      const isExpired = typeof isSubscriptionExpired === 'function' && isSubscriptionExpired(found || cur);
-      const isDeactivated = (found.status === 'Nonaktif' || found.status === 'Dinonaktifkan' || found.status === 'Ditolak' || found.isApproved === false || isExpired);
-      
-      if (isDeleted || isDeactivated) {
-        window.location.replace("profil.html");
-        return;
-      }
-    }
-  }
-  if (e.key === 'edu_current_user' || e.key === 'edu_registered_users' || e.key === 'edu_sync_timestamp') {
+  if (e.key === 'edu_current_user' || e.key === 'edu_sync_timestamp') {
     renderModulTable();
     updateCreateModulButtonsState();
   }

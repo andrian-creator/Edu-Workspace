@@ -80,16 +80,7 @@ async function initPage() {
 
     renderPageState(user);
   } catch (e) {
-    // Fallback: Jika Supabase offline, baru gunakan cache lokal jika user belum berstatus Nonaktif/Dihapus
-    try {
-      const allUsers = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-      const latestUser = allUsers.find(u => (u.email || '').toLowerCase() === (user.email || '').toLowerCase());
-      if (latestUser && user.status !== 'Dihapus' && user.status !== 'Nonaktif') {
-        user = { ...user, ...latestUser };
-        localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user));
-        renderPageState(user);
-      }
-    } catch (err) { }
+    console.warn('[Profil] Gagal sinkronisasi Supabase:', e);
   }
 }
 
@@ -509,59 +500,9 @@ async function checkLiveStatus(force = false) {
       }
       return;
     }
-  } catch (e) { }
-
-  // Fallback ke /api/users
-  try {
-    const res = await fetch('/api/users');
-    if (res.ok) {
-      const data = await res.json();
-      const allUsers = data.users || [];
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(allUsers));
-
-      const target = allUsers.find(u => (u.email || '').trim().toLowerCase() === (user.email || '').trim().toLowerCase());
-      if (target) {
-        const domNeedsUpdate = target.status !== lastKnownStatus ||
-          target.isApproved !== lastKnownApproved ||
-          target.rejectReason !== lastKnownRejectReason;
-
-        user = { ...user, ...target, isDeleted: false };
-        localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user));
-        if (domNeedsUpdate) renderPageState(user);
-        return;
-      } else {
-        if (user.status !== 'Dihapus' || lastKnownStatus !== 'Dihapus') {
-          user.status = 'Dihapus';
-          user.isDeleted = true;
-          localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user));
-          renderPageState(user);
-        }
-        return;
-      }
-    }
-  } catch (e) { }
-
-  // Fallback ke localStorage lokal
-  try {
-    const allUsers = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-    const target = allUsers.find(u => (u.email || '').trim().toLowerCase() === (user.email || '').trim().toLowerCase());
-    if (target) {
-      const domNeedsUpdate = target.status !== lastKnownStatus ||
-        target.isApproved !== lastKnownApproved ||
-        target.rejectReason !== lastKnownRejectReason;
-
-      user = { ...user, ...target, isDeleted: false };
-      localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user));
-      if (domNeedsUpdate) renderPageState(user);
-    } else if (allUsers.length > 0) {
-      if (user.status !== 'Dihapus' || lastKnownStatus !== 'Dihapus') {
-        user.status = 'Dihapus';
-        user.isDeleted = true;
-        localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user));
-        renderPageState(user);
-      }
-    }
-  } catch (e) { }
+  } catch (e) {
+    console.warn('[Profil LiveStatus] Gagal koneksi Supabase:', e);
+  }
 }
 
 

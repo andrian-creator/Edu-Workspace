@@ -126,21 +126,6 @@ function initApiKeyPage() {
       window.location.replace("profil.html");
       return;
     }
-
-    // Verifikasi apakah akun masih ada di database
-    try {
-      const allUsers = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-      if (allUsers.length > 0) {
-        const found = allUsers.find(u => (u.email || '').trim().toLowerCase() === userEmail);
-        if (!found) {
-          user.status = 'Dihapus';
-          user.isDeleted = true;
-          localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user));
-          window.location.replace("profil.html");
-          return;
-        }
-      }
-    } catch (e) {}
   }
 
   // Render Header Global Terpusat
@@ -509,31 +494,4 @@ try {
   });
 } catch (e) {}
 
-window.addEventListener('storage', (e) => {
-  if (e.key === CURRENT_USER_KEY || e.key === STORAGE_KEY || e.key === 'edu_sync_timestamp') {
-    const curUser = getCurrentUser();
-    if (curUser && curUser.email) {
-      const allUsers = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-      const found = allUsers.find(u => (u.email || '').toLowerCase() === (curUser.email || '').toLowerCase());
-      
-      // Jika akun tidak ditemukan di daftar pengguna lagi -> Dihapus oleh Admin!
-      if (!found) {
-        curUser.status = 'Dihapus';
-        curUser.isDeleted = true;
-        curUser.isApproved = false;
-        localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(curUser));
-        window.location.replace("profil.html");
-        return;
-      }
 
-      const isDeleted = curUser.status === 'Dihapus' || curUser.isDeleted === true;
-      const isExpired = typeof isSubscriptionExpired === 'function' && isSubscriptionExpired(found || curUser);
-      const isDeactivated = (found.status === 'Nonaktif' || found.status === 'Dinonaktifkan' || found.status === 'Ditolak' || found.isApproved === false || isExpired);
-      
-      if (isDeleted || isDeactivated) {
-        window.location.replace("profil.html");
-        return;
-      }
-    }
-  }
-});

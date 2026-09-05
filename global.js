@@ -1183,7 +1183,11 @@ function initAccessTimeSync() {
            p.includes('profil');
   }
 
-  function checkAndRedirectIfBlocked(targetEmail = null, forceStatus = null) {
+  let isChecking = false;
+
+  async function verifyUserAccess() {
+    if (isChecking) return;
+
     let p = '';
     try {
       p = decodeURIComponent(window.location.pathname || '').toLowerCase().replace(/\\/g, '/');
@@ -1196,7 +1200,11 @@ function initAccessTimeSync() {
     }
 
     let raw = localStorage.getItem(CURRENT_USER_KEY);
-    if (!raw) return;
+    if (!raw) {
+      const loginTarget = p.includes('/fitur/') ? '../halaman login/halaman login.html' : (p.includes('/dashboard pengguna/') ? '../halaman login/halaman login.html' : 'halaman login/halaman login.html');
+      window.location.replace(loginTarget);
+      return;
+    }
 
     let user = null;
     try {
@@ -1209,15 +1217,32 @@ function initAccessTimeSync() {
     const userEmail = (user.email || '').trim().toLowerCase();
 
     // Jangan blokir akun Super Admin
-    if (user.role === 'Admin' || (typeof ADMIN_EMAIL !== 'undefined' && userEmail === ADMIN_EMAIL.toLowerCase())) {
+    if (user.role === 'Admin' || (typeof ADMIN_EMAILS !== 'undefined' && ADMIN_EMAILS.includes(userEmail)) || (typeof ADMIN_EMAIL !== 'undefined' && userEmail === ADMIN_EMAIL.toLowerCase())) {
       return;
     }
 
     const redirectTarget = getRedirectTarget(p);
 
-    // 1. Cek paksa jika ada event spesifik untuk email target ini
-    if (targetEmail && userEmail === targetEmail.trim().toLowerCase()) {
-      if (forceStatus === 'Dihapus' || !forceStatus) {
+    // 1. Pemeriksaan Cepat Status Sesi Lokal (Instant Fast Check)
+    const isLocalDeleted = user.status === 'Dihapus' || user.isDeleted === true;
+    const isLocalExpired = typeof isSubscriptionExpired === 'function' && isSubscriptionExpired(user);
+    const isLocalDeactivated = user.status === 'Nonaktif' || 
+                               user.status === 'Dinonaktifkan' || 
+                               user.status === 'Ditolak' || 
+                               user.isApproved === false || 
+                               isLocalExpired;
+
+    if (isLocalDeleted || isLocalDeactivated) {
+      window.location.replace(redirectTarget);
+      return;
+    }
+
+    // 2. Verifikasi Akurat & Terkini Langsung ke Cloud Supabase
+    isChecking = true;
+    try {
+      const dbUser = await SupabaseDB.getUserByEmail(userEmail);
+      if (!dbUser) {
+        // Akun tidak ditemukan di Supabase = telah dihapus oleh Admin
         user.status = 'Dihapus';
         user.isDeleted = true;
         user.isApproved = false;
@@ -1226,173 +1251,82 @@ function initAccessTimeSync() {
         localStorage.removeItem(`edu_modul_list_${userEmail}`);
         window.location.replace(redirectTarget);
         return;
-      } else if (forceStatus === 'Nonaktif' || forceStatus === 'Dinonaktifkan' || forceStatus === 'Ditolak') {
-        user.status = forceStatus;
+      }
+
+      if (dbUser.isDeleted || dbUser.status === 'Dihapus' || dbUser.is_deleted) {
+        user.status = 'Dihapus';
+        user.isDeleted = true;
         user.isApproved = false;
+        localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user));
+        localStorage.removeItem(`edu_api_key_${userEmail}`);
+        localStorage.removeItem(`edu_modul_list_${userEmail}`);
+        window.location.replace(redirectTarget);
+        return;
+      }
+
+      const isExpired = typeof isSubscriptionExpired === 'function' && isSubscriptionExpired(dbUser);
+      const isDeactivated = dbUser.status === 'Nonaktif' || 
+                            dbUser.status === 'Dinonaktifkan' || 
+                            dbUser.status === 'Ditolak' || 
+                            dbUser.isApproved === false || 
+                            isExpired;
+
+      if (isDeactivated) {
+        user = { ...user, ...dbUser, isApproved: false };
+        if (isExpired && user.status === 'Aktif') {
+          user.status = 'Nonaktif';
+          user.rejectReason = 'Masa langganan sudah habis, silahkan hubungi WhatsApp 085608673357 untuk memperpanjang langganan.';
+        }
         localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user));
         window.location.replace(redirectTarget);
         return;
       }
+
+      // Jika akun AKTIF & lolos semua verifikasi di Supabase:
+      // Sinkronkan data ke sesi lokal
+      user = {
+        ...user,
+        ...dbUser,
+        status: 'Aktif',
+        isApproved: true,
+        isDeleted: false
+      };
+      localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user));
+    } catch (err) {
+      console.warn('[Access Guard] Gagal sinkronisasi Supabase:', err);
+    } finally {
+      isChecking = false;
     }
-
-    // 2. Ambil data terbaru dari database users di localStorage (STORAGE_KEY)
-    try {
-      const allUsers = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-      if (allUsers && allUsers.length > 0) {
-        const found = allUsers.find(u => (u.email || '').trim().toLowerCase() === userEmail);
-        if (found) {
-          user = { ...user, ...found };
-          localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user));
-        } else {
-          // Akun pengguna TIDAK DITEMUKAN di daftar pengguna -> Telah Dihapus oleh Admin!
-          user.status = 'Dihapus';
-          user.isDeleted = true;
-          user.isApproved = false;
-          localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user));
-          localStorage.removeItem(`edu_api_key_${userEmail}`);
-          localStorage.removeItem(`edu_modul_list_${userEmail}`);
-          window.location.replace(redirectTarget);
-          return;
-        }
-      }
-    } catch (e) {}
-
-    const isDeleted = user.status === 'Dihapus' || user.isDeleted === true;
-    const isExpired = typeof isSubscriptionExpired === 'function' && isSubscriptionExpired(user);
-    const isDeactivated = user.status === 'Nonaktif' || 
-                          user.status === 'Dinonaktifkan' || 
-                          user.status === 'Ditolak' || 
-                          user.isApproved === false || 
-                          isExpired;
-
-    // JIKA AKUN DIHAPUS ATAU DINONAKTIFKAN:
-    // Pengguna DILARANG mengakses menu apapun di portal internal,
-    // langsung alihkan seketika ke profil.html!
-    if (isDeleted || isDeactivated) {
-      window.location.replace(redirectTarget);
-      return;
-    }
-  }
-
-  // Sinkronisasi status berkala langsung ke database backend server
-  function checkServerUserStatus() {
-    let p = '';
-    try {
-      p = decodeURIComponent(window.location.pathname || '').toLowerCase().replace(/\\/g, '/');
-    } catch (e) {
-      p = (window.location.pathname || '').toLowerCase().replace(/\\/g, '/');
-    }
-    if (isExcludedPublicPage(p)) return;
-
-    let raw = localStorage.getItem(CURRENT_USER_KEY);
-    if (!raw) return;
-    let user = null;
-    try { user = JSON.parse(raw); } catch (e) { return; }
-    if (!user || !user.email) return;
-
-    const userEmail = (user.email || '').trim().toLowerCase();
-    if (user.role === 'Admin' || (typeof ADMIN_EMAIL !== 'undefined' && userEmail === ADMIN_EMAIL.toLowerCase())) {
-      return;
-    }
-
-    const redirectTarget = getRedirectTarget(p);
-
-    // Cek status akun langsung dari Supabase
-    SupabaseDB.getUserByEmail(userEmail)
-      .then(dbUser => {
-        if (!dbUser) {
-          // Akun tidak ditemukan di Supabase = telah dihapus
-          user.status = 'Dihapus';
-          user.isDeleted = true;
-          user.isApproved = false;
-          localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user));
-          localStorage.removeItem(`edu_api_key_${userEmail}`);
-          localStorage.removeItem(`edu_modul_list_${userEmail}`);
-          window.location.replace(redirectTarget);
-        } else if (dbUser.is_deleted || dbUser.status === 'Dihapus') {
-          user.status = 'Dihapus';
-          user.isDeleted = true;
-          user.isApproved = false;
-          localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user));
-          window.location.replace(redirectTarget);
-        } else if (dbUser.status === 'Nonaktif' || dbUser.status === 'Dinonaktifkan' || dbUser.status === 'Ditolak' || dbUser.isApproved === false) {
-          user = { ...user, ...dbUser };
-          localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user));
-          window.location.replace(redirectTarget);
-        }
-      })
-      .catch(() => {
-        // Fallback ke /api/users jika Supabase tidak tersedia
-        fetch('/api/users')
-          .then(res => res.json())
-          .then(data => {
-            const users = data.users || [];
-            const found = users.find(u => (u.email || '').trim().toLowerCase() === userEmail);
-            if (!found) {
-              user.status = 'Dihapus';
-              user.isDeleted = true;
-              user.isApproved = false;
-              localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user));
-              localStorage.removeItem(`edu_api_key_${userEmail}`);
-              localStorage.removeItem(`edu_modul_list_${userEmail}`);
-              window.location.replace(redirectTarget);
-            } else if (found.status === 'Nonaktif' || found.status === 'Dinonaktifkan' || found.status === 'Ditolak' || found.isApproved === false) {
-              user = { ...user, ...found };
-              localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user));
-              window.location.replace(redirectTarget);
-            }
-          })
-          .catch(() => {});
-      });
   }
 
   // A. Jalankan pemeriksaan langsung saat script dimuat & saat DOM siap
-  checkAndRedirectIfBlocked();
+  verifyUserAccess();
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => checkAndRedirectIfBlocked());
+    document.addEventListener('DOMContentLoaded', () => verifyUserAccess());
   }
 
-  // B. Active Heartbeat Polling setiap 1 detik
-  // Menjamin jika pengguna sedang diam di halaman daftar modul ajar atau api key,
-  // begitu admin menghapus atau menonaktifkan akunnya, halaman seketika otomatis relog/redirect!
+  // B. Polling berkala setiap 3.5 detik untuk deteksi seketika bila admin menonaktifkan akun
   setInterval(() => {
-    checkAndRedirectIfBlocked();
-  }, 1000);
+    verifyUserAccess();
+  }, 3500);
 
-  // C. Server Database Check setiap 2.5 detik
-  setInterval(() => {
-    checkServerUserStatus();
-  }, 2500);
-
-  // D. Dengarkan sinyal broadcast realtime dari Dashboard Admin
+  // C. Sinyal broadcast realtime jika admin dan pengguna di browser yang sama
   try {
     const channel = new BroadcastChannel('edu_workspace_sync');
-    channel.addEventListener('message', (event) => {
-      if (event.data) {
-        if (event.data.type === 'USER_DELETED') {
-          const targetEmail = (event.data.email || '').trim().toLowerCase();
-          checkAndRedirectIfBlocked(targetEmail, 'Dihapus');
-        } else if (event.data.type === 'STATUS_UPDATED') {
-          const targetEmail = (event.data.email || '').trim().toLowerCase();
-          checkAndRedirectIfBlocked(targetEmail, event.data.status);
-        } else if (event.data.type === 'SYNC_USER') {
-          checkAndRedirectIfBlocked(event.data.email);
-        }
-      }
+    channel.addEventListener('message', () => {
+      verifyUserAccess();
     });
   } catch (e) {}
 
-  // E. Dengarkan storage event saat tab admin menghapus/mengubah status data pengguna
+  // D. Storage event & focus saat jendela browser kembali aktif
   window.addEventListener('storage', (e) => {
-    if (e.key === CURRENT_USER_KEY || e.key === STORAGE_KEY || e.key === 'edu_sync_timestamp') {
-      checkAndRedirectIfBlocked();
+    if (e.key === CURRENT_USER_KEY || e.key === 'edu_sync_timestamp') {
+      verifyUserAccess();
     }
   });
 
-  // F. Periksa ulang saat window kembali mendapatkan fokus
   window.addEventListener('focus', () => {
-    checkAndRedirectIfBlocked();
-    checkServerUserStatus();
+    verifyUserAccess();
   });
 })();
 
