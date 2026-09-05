@@ -488,14 +488,20 @@ function renderCanvaOutlineList() {
       <!-- Header Kartu -->
       <div class="canva-card-header" onclick="toggleExpandSlide(${idx})">
         <div class="canva-card-title-box">
-          <h3 class="canva-card-title">${escapeHtml(s.title || ('Slide ' + (idx + 1)))}</h3>
+          <h3 class="canva-card-title" 
+              contenteditable="true" 
+              spellcheck="false" 
+              title="Klik teks untuk langsung mengedit judul"
+              onclick="event.stopPropagation()"
+              onblur="updateSlideTitle(${idx}, this.innerText)"
+              onkeydown="handleTitleKeydown(event, ${idx}, this)">${escapeHtml(s.title || ('Slide ' + (idx + 1)))}</h3>
           ${!isExpanded && !isEditing ? `
             <span class="canva-card-subtitle-preview">${escapeHtml(previewSnippet)}</span>
           ` : ''}
         </div>
 
         <div class="canva-card-actions">
-          <button type="button" class="canva-action-btn" title="Edit Slide Ini" onclick="event.stopPropagation(); startEditSlide(${idx})">
+          <button type="button" class="canva-action-btn" title="Edit Ide Slide Ini" onclick="event.stopPropagation(); startEditSlide(${idx})">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3">
               <path d="M12 20h9"></path>
               <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
@@ -508,17 +514,6 @@ function renderCanvaOutlineList() {
               <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
             </svg>
           </button>
-
-          <div class="canva-action-btn canva-drag-handle" title="Tahan dan geser (drag) untuk memindahkan urutan slide" onclick="event.stopPropagation()">
-            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4">
-              <polyline points="5 9 2 12 5 15"></polyline>
-              <polyline points="9 5 12 2 15 5"></polyline>
-              <polyline points="15 19 12 22 9 19"></polyline>
-              <polyline points="19 9 22 12 19 15"></polyline>
-              <line x1="2" y1="12" x2="22" y2="12"></line>
-              <line x1="12" y1="2" x2="12" y2="22"></line>
-            </svg>
-          </div>
         </div>
       </div>
 
@@ -540,22 +535,12 @@ function renderCanvaOutlineList() {
         </div>
       ` : ''}
 
-      <!-- Form Edit Inline (Saat Tombol Pensil Diklik) -->
+      <!-- Form Edit Inline: CUMA ADA KOLOM LIST KEY IDEAS -->
       ${isEditing ? `
         <div class="canva-edit-form" onclick="event.stopPropagation()">
           <div class="canva-edit-field">
-            <label class="canva-edit-label">Judul Slide:</label>
-            <input type="text" class="canva-edit-input" id="editSlideTitle_${idx}" value="${escapeHtml(s.title || '')}" placeholder="Ketik judul slide...">
-          </div>
-
-          <div class="canva-edit-field">
             <label class="canva-edit-label">List Key Ideas (1 baris per poin):</label>
-            <textarea class="canva-edit-textarea" id="editSlidePoints_${idx}" rows="4" placeholder="Poin-poin ide slide...">${escapeHtml((s.points || []).join('\n'))}</textarea>
-          </div>
-
-          <div class="canva-edit-field">
-            <label class="canva-edit-label">Photo Feature / Ide Visual Gambar:</label>
-            <textarea class="canva-edit-textarea" id="editSlideVisual_${idx}" rows="2" placeholder="Deskripsi gambar atau ide grafis visual...">${escapeHtml(s.visualIdea || '')}</textarea>
+            <textarea class="canva-edit-textarea" id="editSlidePoints_${idx}" rows="5" placeholder="Poin-poin ide materi slide...">${escapeHtml((s.points || []).join('\n'))}</textarea>
           </div>
 
           <div class="canva-edit-actions">
@@ -574,6 +559,23 @@ function renderCanvaOutlineList() {
 }
 
 /**
+ * Update Judul Slide Secara Langsung Saat Diklik & Diedit
+ */
+function updateSlideTitle(idx, newTitle) {
+  const cleanTitle = (newTitle || '').trim();
+  if (currentOutlineSlides[idx]) {
+    currentOutlineSlides[idx].title = cleanTitle || `Slide ${idx + 1}`;
+  }
+}
+
+function handleTitleKeydown(event, idx, element) {
+  if (event.key === 'Enter') {
+    event.preventDefault();
+    element.blur();
+  }
+}
+
+/**
  * Handle Expand / Collapse Kartu
  */
 function toggleExpandSlide(idx) {
@@ -588,7 +590,7 @@ function toggleExpandSlide(idx) {
 }
 
 /**
- * Membuka Form Edit Inline Slide
+ * Membuka Form Edit Inline Slide (Hanya Kolom List Key Ideas)
  */
 function startEditSlide(idx) {
   expandedSlideIndex = idx;
@@ -596,8 +598,8 @@ function startEditSlide(idx) {
   renderCanvaOutlineList();
 
   setTimeout(() => {
-    const input = document.getElementById(`editSlideTitle_${idx}`);
-    if (input) input.focus();
+    const textarea = document.getElementById(`editSlidePoints_${idx}`);
+    if (textarea) textarea.focus();
   }, 50);
 }
 
@@ -605,16 +607,12 @@ function startEditSlide(idx) {
  * Simpan Hasil Edit Inline Slide
  */
 function saveEditSlide(idx) {
-  const titleVal = document.getElementById(`editSlideTitle_${idx}`)?.value.trim() || `Slide ${idx + 1}`;
   const pointsRaw = document.getElementById(`editSlidePoints_${idx}`)?.value || '';
   const pointsArr = pointsRaw.split('\n').map(p => p.trim()).filter(p => p.length > 0);
-  const visualVal = document.getElementById(`editSlideVisual_${idx}`)?.value.trim() || '';
 
   currentOutlineSlides[idx] = {
     ...currentOutlineSlides[idx],
-    title: titleVal,
-    points: pointsArr.length > 0 ? pointsArr : ['Penjelasan materi pokok pembelajaran.'],
-    visualIdea: visualVal
+    points: pointsArr.length > 0 ? pointsArr : ['Penjelasan materi pokok pembelajaran.']
   };
 
   editingSlideIndex = -1;
