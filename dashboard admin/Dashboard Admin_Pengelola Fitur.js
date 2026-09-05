@@ -304,7 +304,6 @@ function saveUserFeatures() {
       });
     }
   } catch (e) { }
-  } catch (e) { }
 
   closeManageFeaturesModal();
   renderFeatureTable();
@@ -330,7 +329,10 @@ function initAdminFeaturesDashboard() {
   // Render Global Navbar Terpusat
   renderEduNavbar();
 
-  // Load data terbaru dari Supabase, lalu render tabel
+  // 1. Tampilkan data lokal segera agar tabel tidak kosong saat loading
+  renderFeatureTable();
+
+  // 2. Sinkronkan data terbaru dari Supabase di background, lalu re-render tabel
   syncUsersFromSupabase().then(() => {
     renderFeatureTable();
   }).catch(() => {

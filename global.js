@@ -252,12 +252,38 @@ const SupabaseDB = {
  * Dipanggil saat load halaman atau setelah operasi admin
  */
 async function syncUsersFromSupabase() {
-  const users = await SupabaseDB.getUsers();
-  if (users && Array.isArray(users)) {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(users));
-    } catch (e) {}
-    return users;
+  try {
+    const users = await SupabaseDB.getUsers();
+    if (users && Array.isArray(users)) {
+      // Pastikan akun super admin selalu ada di daftar pengguna
+      const hasAdmin = users.some(u => (u.email || '').toLowerCase() === ADMIN_EMAIL.toLowerCase());
+      if (!hasAdmin) {
+        let localUsers = [];
+        try { localUsers = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); } catch (e) {}
+        const localAdmin = localUsers.find(u => (u.email || '').toLowerCase() === ADMIN_EMAIL.toLowerCase()) || {
+          id: 'ADM-001',
+          name: 'Rico Andrianto',
+          email: ADMIN_EMAIL,
+          avatar: localStorage.getItem('edu_admin_avatar') || 'https://lh3.googleusercontent.com/a/default-user=s96-c',
+          role: 'Admin',
+          institution: 'Edu Workspace',
+          subject: 'Super Admin',
+          registeredAt: '02 Sep 2026, 08:01',
+          provider: 'Google Account (@gmail.com)',
+          status: 'Aktif',
+          isApproved: true,
+          isProfileCompleted: true,
+          features: ['generate_modul_ajar']
+        };
+        users.unshift(localAdmin);
+      }
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(users));
+      } catch (e) {}
+      return users;
+    }
+  } catch (e) {
+    console.warn('[Sync] Supabase getUsers error:', e);
   }
   return null;
 }
