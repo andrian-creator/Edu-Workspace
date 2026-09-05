@@ -159,13 +159,19 @@ function renderFeatureTable() {
     // Catatan Khusus Admin (tidak muncul di akun pengguna)
     const userNote = (u.adminNote || notesMap[(u.email || '').toLowerCase()] || '').trim();
     const hasNote = userNote.length > 0;
-    const catatanCellHtml = `
-      <div class="catatan-cell">
-        <button type="button" class="btn-catatan-edit" onclick="openAdminNoteModal('${safeEmail}')" title="${hasNote ? 'Ubah Catatan' : 'Tulis Catatan'}">
-          <img data-icon="edit" src="${editIconUrl}" alt="Edit Catatan">
+    const catatanCellHtml = hasNote ? `
+      <div class="catatan-cell has-note">
+        <div class="catatan-text" onclick="openAdminNoteModal('${safeEmail}')" title="Klik untuk mengubah catatan">
+          ${escapeHtml(userNote)}
+        </div>
+      </div>
+    ` : `
+      <div class="catatan-cell empty-note">
+        <button type="button" class="btn-catatan-edit" onclick="openAdminNoteModal('${safeEmail}')" title="Tulis Catatan">
+          <img data-icon="edit" src="${editIconUrl}" alt="Tulis Catatan">
         </button>
-        <div class="catatan-text" onclick="openAdminNoteModal('${safeEmail}')" title="${hasNote ? escapeHtml(userNote) : 'Klik untuk menulis catatan'}">
-          ${hasNote ? escapeHtml(userNote) : '<span class="catatan-empty">Belum ada catatan</span>'}
+        <div class="catatan-text" onclick="openAdminNoteModal('${safeEmail}')" title="Klik untuk menulis catatan">
+          <span class="catatan-empty">Belum ada catatan</span>
         </div>
       </div>
     `;

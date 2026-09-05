@@ -391,6 +391,14 @@ tbody tr:last-child td {
   color: #2563eb;
 }
 
+.catatan-cell.has-note {
+  cursor: pointer;
+}
+
+.catatan-cell.has-note:hover .catatan-text {
+  color: #2563eb;
+}
+
 .catatan-empty {
   color: #94a3b8;
   font-size: 0.84rem;
