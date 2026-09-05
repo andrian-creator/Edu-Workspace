@@ -421,7 +421,6 @@ Format Keluaran WAJIB berupa JSON ARRAY murni tanpa teks pembuka atau penutup ma
       "Contoh aplikasi: pembelajaran online, game edukasi, presentasi interaktif",
       "Photo feature: ilustrasi interaksi pengguna dengan multimedia"
     ],
-    "teacherNote": "Panduan narasi ucapan guru saat menampilkan slide ini di depan kelas",
     "visualIdea": "Deskripsi visual gambar atau ilustrasi konsep materi untuk slide ini"
   }
 ]
@@ -537,11 +536,6 @@ function renderCanvaOutlineList() {
                 </li>
               `).join('')}
             </ul>
-            ${s.teacherNote ? `
-              <div class="canva-photo-feature">
-                <strong>Catatan Guru:</strong> ${escapeHtml(s.teacherNote)}
-              </div>
-            ` : ''}
           </div>
         </div>
       ` : ''}
@@ -562,11 +556,6 @@ function renderCanvaOutlineList() {
           <div class="canva-edit-field">
             <label class="canva-edit-label">Photo Feature / Ide Visual Gambar:</label>
             <textarea class="canva-edit-textarea" id="editSlideVisual_${idx}" rows="2" placeholder="Deskripsi gambar atau ide grafis visual...">${escapeHtml(s.visualIdea || '')}</textarea>
-          </div>
-
-          <div class="canva-edit-field">
-            <label class="canva-edit-label">Catatan Guru (Opsional):</label>
-            <textarea class="canva-edit-textarea" id="editSlideNotes_${idx}" rows="2" placeholder="Catatan ucapan guru di kelas...">${escapeHtml(s.teacherNote || '')}</textarea>
           </div>
 
           <div class="canva-edit-actions">
@@ -620,14 +609,12 @@ function saveEditSlide(idx) {
   const pointsRaw = document.getElementById(`editSlidePoints_${idx}`)?.value || '';
   const pointsArr = pointsRaw.split('\n').map(p => p.trim()).filter(p => p.length > 0);
   const visualVal = document.getElementById(`editSlideVisual_${idx}`)?.value.trim() || '';
-  const notesVal = document.getElementById(`editSlideNotes_${idx}`)?.value.trim() || '';
 
   currentOutlineSlides[idx] = {
     ...currentOutlineSlides[idx],
     title: titleVal,
     points: pointsArr.length > 0 ? pointsArr : ['Penjelasan materi pokok pembelajaran.'],
-    visualIdea: visualVal,
-    teacherNote: notesVal
+    visualIdea: visualVal
   };
 
   editingSlideIndex = -1;
@@ -681,8 +668,7 @@ function addNewOutlineSlide() {
       'Poin materi penting 2',
       'Photo feature: ilustrasi gambar materi terkait'
     ],
-    visualIdea: 'Ilustrasi konsep visual materi terkait',
-    teacherNote: 'Ajak siswa mendiskusikan topik ini secara interaktif'
+    visualIdea: 'Ilustrasi konsep visual materi terkait'
   });
 
   expandedSlideIndex = currentOutlineSlides.length - 1;
@@ -1092,13 +1078,6 @@ function renderMediaResultView(slides, meta) {
       <div class="ppt-slide-content">
         <ul class="slide-bullet-list">${pointsList}</ul>
       </div>
-
-      <!-- Panduan Narasi Pendidik -->
-      ${s.teacherNote ? `
-        <div class="teacher-notes-box">
-          <strong>🗣️ Panduan Narasi Pendidik:</strong> ${escapeHtml(s.teacherNote)}
-        </div>
-      ` : ''}
     `;
 
     listContainer.appendChild(card);
@@ -1210,8 +1189,8 @@ function downloadPowerPointFile() {
           });
         }
 
-        if (s.teacherNote) {
-          slide.addNotes(`PANDUAN GURU:\n${s.teacherNote}\n\nIDE VISUAL:\n${s.visualIdea || '-'}`);
+        if (s.visualIdea) {
+          slide.addNotes(`IDE VISUAL:\n${s.visualIdea}`);
         }
       });
 
@@ -1251,7 +1230,6 @@ function copySlideContent() {
     text += `===============================\n`;
     (s.points || []).forEach(p => { text += `• ${p}\n`; });
     if (s.visualIdea) text += `\n[Ide Visual]: ${s.visualIdea}\n`;
-    if (s.teacherNote) text += `[Panduan Guru]: ${s.teacherNote}\n`;
     text += `\n`;
   });
 
@@ -1379,7 +1357,6 @@ function createFallbackSlides(mapel, materi, kelas, count) {
       `Kelas: ${kelas}`,
       `Fokus Pembelajaran: Pemahaman konsep dasar dan penerapan praktis.`
     ],
-    teacherNote: "Sampaikan salam pembuka, tujuan pembelajaran, dan motivasi awal kepada siswa.",
     visualIdea: `Ilustrasi grafis tematik pengantar materi ${mapel} dengan tata letak visual modern`
   });
 
@@ -1394,7 +1371,6 @@ function createFallbackSlides(mapel, materi, kelas, count) {
         "Karakteristik, prinsip kerja, atau struktur penting.",
         "Photo feature: contoh penerapan nyata dalam kehidupan sehari-hari."
       ],
-      teacherNote: "Ajak siswa berpartisipasi dengan mengajukan pertanyaan pemantik mengenai konsep ini.",
       visualIdea: `Diagram konsep interaktif atau bagan skematis terkait ${chunkLine}`
     });
   }
@@ -1408,7 +1384,6 @@ function createFallbackSlides(mapel, materi, kelas, count) {
       "Pertanyaan refleksi untuk mengecek pemahaman mandiri.",
       "Tugas tindak lanjut atau proyek aplikasi praktis."
     ],
-    teacherNote: "Beri apresiasi kepada seluruh siswa dan lakukan kuis refleksi singkat sebelum menutup kelas.",
     visualIdea: "Ilustrasi rangkuman peta konsep atau refleksi siswa dengan ikon bintang capaian belajar"
   });
 
