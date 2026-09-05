@@ -102,24 +102,25 @@ html, body {
 .api-workspace-layout {
   display: grid;
   grid-template-columns: 200px 1fr;
-  gap: 32px;
-  align-items: start;
+  column-gap: 32px;
+  row-gap: 24px;
   width: 100%;
   box-sizing: border-box;
 }
 
-/* Sidebar Navigasi Kiri: Pill Buttons Teks Saja */
+/* Sidebar Navigasi Kiri: Pill Buttons Teks Saja & Rata Tengah terhadap Isi */
 .api-sidebar-nav {
+  grid-column: 1;
+  grid-row: 1;
+  align-self: center;
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  position: sticky;
-  top: 90px;
+  gap: 12px;
 }
 
 .api-tab-pill {
   width: 100%;
-  padding: 12px 22px;
+  padding: 13px 24px;
   border-radius: var(--radius-pill, 9999px);
   background: #ffffff;
   border: 1.5px solid #e2e8f0;
@@ -127,12 +128,12 @@ html, body {
   font-family: var(--font-main);
   font-size: 0.98rem;
   font-weight: 700;
-  text-align: left;
+  text-align: center;
   cursor: pointer;
   transition: var(--transition);
   display: flex;
   align-items: center;
-  justify-content: flex-start;
+  justify-content: center;
   box-sizing: border-box;
   outline: none;
   user-select: none;
@@ -153,8 +154,10 @@ html, body {
   box-shadow: 0 2px 10px rgba(15, 23, 42, 0.08);
 }
 
-/* Container Panel Konten */
+/* Container Panel Konten (Kolom 2, Baris 1) */
 .api-panel-container {
+  grid-column: 2;
+  grid-row: 1;
   width: 100%;
   min-width: 0;
 }
@@ -606,11 +609,13 @@ html, body {
 }
 
 /* ==========================================================================
-   BANNER PERINGATAN KEAMANAN (Bawah, Panjang Mepet Kanan-Kiri Penuh)
+   BANNER PERINGATAN KEAMANAN (Sejajar dengan Isinya di Kolom Kanan)
    ========================================================================== */
 .warning-alert-banner {
+  grid-column: 2;
+  grid-row: 2;
   width: 100%;
-  margin-top: 28px;
+  margin-top: 0;
   background: #fffbeb;
   border: 1.5px solid #fde047;
   border-radius: var(--radius-card);
@@ -747,6 +752,11 @@ html, body {
 
   .api-card, .guide-card {
     padding: 22px 20px;
+  }
+
+  .warning-alert-banner {
+    width: 100%;
+    margin-top: 0;
   }
 
   .api-btn-group {
