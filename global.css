@@ -988,4 +988,36 @@ a .btn-icon-img {
     background: transparent !important;
     color: var(--color-text-main, #1e293b) !important;
   }
+
+  /* Modal Konfirmasi: Pastikan tombol selalu sejajar horizontal dan rapi di mobile */
+  .confirm-modal-card {
+    padding: 28px 20px 24px !important;
+    max-width: min(440px, calc(100vw - 32px)) !important;
+    border-radius: 22px !important;
+  }
+
+  .confirm-btn-group {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 12px !important;
+    width: 100% !important;
+    margin-top: 18px !important;
+  }
+
+  .confirm-btn-group .btn-cancel-modal,
+  .confirm-btn-group .btn-confirm-logout,
+  .confirm-btn-group .btn-confirm-delete,
+  .confirm-btn-group .btn-confirm-reject,
+  .confirm-btn-group button {
+    flex: 1 1 0% !important;
+    min-width: 0 !important;
+    padding: 11px 16px !important;
+    font-size: 0.92rem !important;
+    white-space: nowrap !important;
+    text-align: center !important;
+    box-sizing: border-box !important;
+  }
 }
+

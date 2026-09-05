@@ -835,6 +835,24 @@ input:checked + .slider:before {
   }
 
   .confirm-btn-group {
-    flex-direction: column;
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 12px !important;
+    width: 100% !important;
+    margin-top: 18px !important;
+  }
+
+  .confirm-btn-group button,
+  .confirm-btn-group .btn-cancel-modal,
+  .confirm-btn-group .btn-confirm-logout {
+    flex: 1 1 0% !important;
+    min-width: 0 !important;
+    padding: 11px 16px !important;
+    font-size: 0.92rem !important;
+    white-space: nowrap !important;
+    text-align: center !important;
+    box-sizing: border-box !important;
   }
 }
