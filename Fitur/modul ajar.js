@@ -43,6 +43,8 @@ function safeSetLocalStorage(key, value) {
   }
 }
 
+let currentEditingModulId = null;
+let currentEditingOriginalCreatedAt = null;
 let notifAutoCloseTimer = null;
 
 function showNotificationModal(title, msg, type = 'success') {
@@ -1512,7 +1514,129 @@ function goToStep(targetStep) {
   }
 }
 
-function nextStep(target) {
+/**
+ * Mengumpulkan seluruh data isian formulir dari Tahap 1 dan Tahap 2
+ */
+function collectCurrentFormPayload() {
+  const nama = document.getElementById('namaPenyusun')?.value.trim() || '';
+  const institusi = document.getElementById('institusiPendidik')?.value.trim() || '';
+  const tahun = document.getElementById('tahunPenyusunan')?.value.trim() || '2026';
+  const jenjang = document.getElementById('jenjangSekolah')?.value || '';
+  const jurusan = document.getElementById('jurusanSekolah')?.value.trim() || 'Reguler';
+  const fase = document.getElementById('faseKelas')?.value || '';
+  const mapel = document.getElementById('mataPelajaran')?.value.trim() || '';
+  const elemenCP = document.getElementById('elemenCP')?.value.trim() || '';
+
+  const jenisInput = document.getElementById('jenisInputKonteks')?.value || 'Topik';
+  const topik = document.getElementById('isiTopikMateri')?.value.trim() || '';
+
+  let model = document.getElementById('modelPembelajaran')?.value || 'PBL (Problem Based)';
+  const rawModelSelect = model;
+  const inputModelManualVal = document.getElementById('inputModelManual')?.value.trim() || '';
+  if (model === 'Input Manual') {
+    model = inputModelManualVal || 'Model Mandiri';
+  }
+
+  let pendekatan = document.getElementById('pendekatanPembelajaran')?.value || 'Deep Learning';
+  const rawPendekatanSelect = pendekatan;
+  const inputPendekatanManualVal = document.getElementById('inputPendekatanManual')?.value.trim() || '';
+  if (pendekatan === 'Input Manual') {
+    pendekatan = inputPendekatanManualVal || 'Pendekatan Mandiri';
+  }
+
+  const pertemuanNum = document.getElementById('jumlahPertemuan')?.value.trim() || '4';
+  const matchPertemuan = pertemuanNum.match(/\d+/);
+  const countPertemuanVal = matchPertemuan ? Math.min(Math.max(parseInt(matchPertemuan[0]), 1), 16) : 4;
+  const pertemuan = `${countPertemuanVal} Pertemuan`;
+  const durasi = document.getElementById('totalJPDurasi')?.value.trim() || `${countPertemuanVal} JP x 45 Menit (${pertemuan})`;
+  const tujuan = document.getElementById('tujuanPembelajaran')?.value.trim() || '';
+  const materiTambahan = document.getElementById('materiTambahan')?.value.trim() || '';
+  const capaian = document.getElementById('capaianPembelajaran')?.value.trim() || '';
+
+  const gayaBelajar = document.getElementById('gayaBelajarMurid')?.value || 'Campuran / Multimodal';
+  const media = document.getElementById('mediaDigital')?.value.trim() || 'Slide Presentasi & Video Interaktif';
+  const fasilitasList = typeof getSelectedFasilitasList === 'function' ? getSelectedFasilitasList() : [];
+  const fasilitas = fasilitasList.length > 0 ? fasilitasList.join('; ') : 'Ruang Kelas Standar';
+  const inputFasilitasLainnyaVal = document.getElementById('inputFasilitasLainnya')?.value.trim() || '';
+
+  const idPeserta = document.getElementById('identifikasiPesertaDidik')?.value.trim() || '';
+  const idMateri = document.getElementById('identifikasiMateri')?.value.trim() || '';
+  const idProfil = document.getElementById('identifikasiProfilLulusan')?.value.trim() || '';
+
+  const metodeList = Array.from(document.querySelectorAll('input[name="metodePembelajaran"]:checked')).map(cb => cb.value);
+  const profilList = Array.from(document.querySelectorAll('input[name="dimensiProfil"]:checked')).map(cb => cb.value);
+
+  const modulId = currentEditingModulId || ('modul_' + Date.now());
+  if (!currentEditingModulId) {
+    currentEditingModulId = modulId;
+  }
+  const nowIso = new Date().toISOString();
+
+  return {
+    id: modulId,
+    namaPenyusun: nama,
+    institusi: institusi,
+    institusiPendidik: institusi,
+    tahunPenyusunan: tahun,
+    jenjangSekolah: jenjang,
+    jurusanSekolah: jurusan,
+    faseKelas: fase,
+    mataPelajaran: mapel,
+    elemenCP: elemenCP,
+    jenisInput: jenisInput,
+    jenisInputKonteks: jenisInput,
+    topikMateri: topik,
+    isiTopikMateri: topik,
+    modelPembelajaran: model,
+    modelPembelajaranSelect: rawModelSelect,
+    inputModelManual: inputModelManualVal,
+    pendekatanPembelajaran: pendekatan,
+    pendekatanPembelajaranSelect: rawPendekatanSelect,
+    inputPendekatanManual: inputPendekatanManualVal,
+    metodePembelajaran: metodeList,
+    jumlahPertemuan: pertemuan,
+    totalJPDurasi: durasi,
+    tujuanPembelajaran: tujuan,
+    materiTambahan: materiTambahan,
+    capaianPembelajaran: capaian,
+    ringkasCP: document.getElementById('ceklisRingkasCP')?.checked || false,
+    ceklisRingkasCP: document.getElementById('ceklisRingkasCP')?.checked || false,
+    gayaBelajarMurid: gayaBelajar,
+    mediaDigital: media,
+    fasilitasBelajar: fasilitas,
+    fasilitasList: fasilitasList,
+    inputFasilitasLainnya: inputFasilitasLainnyaVal,
+    identifikasiAwal: {
+      pesertaDidik: idPeserta,
+      materi: idMateri,
+      profilLulusan: idProfil
+    },
+    identifikasiPesertaDidik: idPeserta,
+    identifikasiMateri: idMateri,
+    identifikasiProfilLulusan: idProfil,
+    dimensiProfilLulusan: profilList,
+    dimensiProfil: profilList,
+    createdAt: currentEditingOriginalCreatedAt || nowIso,
+    updatedAt: nowIso
+  };
+}
+
+async function nextStep(target) {
+  if (target === 3) {
+    if (!validateStep(1) || !validateStep(2)) return;
+
+    // Simpan otomatis formulir saat ini ke daftar riwayat modul akun guru sebagai Draft
+    const draftPayload = collectCurrentFormPayload();
+    draftPayload.status = 'Draft';
+
+    try {
+      await saveModulToUserAccountList(draftPayload, 'Draft');
+      console.log('[Draft] Berhasil disimpan otomatis sebagai Draft:', draftPayload.id);
+    } catch (e) {
+      console.warn('[Draft] Gagal simpan otomatis draft:', e);
+    }
+  }
+
   goToStep(target);
 }
 
@@ -1640,104 +1764,7 @@ async function proceedGenerateModul() {
   }
 
   // Kumpulkan Seluruh Data Lengkap dari Tahap 1 dan Tahap 2
-  const nama = document.getElementById('namaPenyusun')?.value.trim() || '';
-  const institusi = document.getElementById('institusiPendidik')?.value.trim() || '';
-  const tahun = document.getElementById('tahunPenyusunan')?.value.trim() || '2026';
-  const jenjang = document.getElementById('jenjangSekolah')?.value || '';
-  const jurusan = document.getElementById('jurusanSekolah')?.value.trim() || 'Reguler';
-  const fase = document.getElementById('faseKelas')?.value || '';
-  const mapel = document.getElementById('mataPelajaran')?.value.trim() || '';
-  const elemenCP = document.getElementById('elemenCP')?.value.trim() || '';
-
-  const jenisInput = document.getElementById('jenisInputKonteks')?.value || 'Topik';
-  const topik = document.getElementById('isiTopikMateri')?.value.trim() || '';
-
-  let model = document.getElementById('modelPembelajaran')?.value || 'PBL (Problem Based)';
-  const rawModelSelect = model;
-  const inputModelManualVal = document.getElementById('inputModelManual')?.value.trim() || '';
-  if (model === 'Input Manual') {
-    model = inputModelManualVal || 'Model Mandiri';
-  }
-
-  let pendekatan = document.getElementById('pendekatanPembelajaran')?.value || 'Deep Learning';
-  const rawPendekatanSelect = pendekatan;
-  const inputPendekatanManualVal = document.getElementById('inputPendekatanManual')?.value.trim() || '';
-  if (pendekatan === 'Input Manual') {
-    pendekatan = inputPendekatanManualVal || 'Pendekatan Mandiri';
-  }
-
-  const pertemuanNum = document.getElementById('jumlahPertemuan')?.value.trim() || '4';
-  const matchPertemuan = pertemuanNum.match(/\d+/);
-  const countPertemuanVal = matchPertemuan ? Math.min(Math.max(parseInt(matchPertemuan[0]), 1), 16) : 4;
-  const pertemuan = `${countPertemuanVal} Pertemuan`;
-  const durasi = document.getElementById('totalJPDurasi')?.value.trim() || `${countPertemuanVal} JP x 45 Menit (${pertemuan})`;
-  const tujuan = document.getElementById('tujuanPembelajaran')?.value.trim() || '';
-  const materiTambahan = document.getElementById('materiTambahan')?.value.trim() || '';
-  const capaian = document.getElementById('capaianPembelajaran')?.value.trim() || '';
-
-  const gayaBelajar = document.getElementById('gayaBelajarMurid')?.value || 'Campuran / Multimodal';
-  const media = document.getElementById('mediaDigital')?.value.trim() || 'Slide Presentasi & Video Interaktif';
-  const fasilitasList = getSelectedFasilitasList();
-  const fasilitas = fasilitasList.length > 0 ? fasilitasList.join('; ') : 'Ruang Kelas Standar';
-  const inputFasilitasLainnyaVal = document.getElementById('inputFasilitasLainnya')?.value.trim() || '';
-
-  const idPeserta = document.getElementById('identifikasiPesertaDidik')?.value.trim() || '';
-  const idMateri = document.getElementById('identifikasiMateri')?.value.trim() || '';
-  const idProfil = document.getElementById('identifikasiProfilLulusan')?.value.trim() || '';
-
-  const metodeList = Array.from(document.querySelectorAll('input[name="metodePembelajaran"]:checked')).map(cb => cb.value);
-  const profilList = Array.from(document.querySelectorAll('input[name="dimensiProfil"]:checked')).map(cb => cb.value);
-
-  // Simpan data parameter lengkap ke local storage
-  const modulId = currentEditingModulId || ('modul_' + Date.now());
-  const nowIso = new Date().toISOString();
-  const modulPayload = {
-    id: modulId,
-    namaPenyusun: nama,
-    institusi: institusi,
-    institusiPendidik: institusi,
-    tahunPenyusunan: tahun,
-    jenjangSekolah: jenjang,
-    jurusanSekolah: jurusan,
-    faseKelas: fase,
-    mataPelajaran: mapel,
-    elemenCP: elemenCP,
-    jenisInput: jenisInput,
-    jenisInputKonteks: jenisInput,
-    topikMateri: topik,
-    isiTopikMateri: topik,
-    modelPembelajaran: model,
-    modelPembelajaranSelect: rawModelSelect,
-    inputModelManual: inputModelManualVal,
-    pendekatanPembelajaran: pendekatan,
-    pendekatanPembelajaranSelect: rawPendekatanSelect,
-    inputPendekatanManual: inputPendekatanManualVal,
-    metodePembelajaran: metodeList,
-    jumlahPertemuan: pertemuan,
-    totalJPDurasi: durasi,
-    tujuanPembelajaran: tujuan,
-    materiTambahan: materiTambahan,
-    capaianPembelajaran: capaian,
-    ringkasCP: document.getElementById('ceklisRingkasCP')?.checked || false,
-    ceklisRingkasCP: document.getElementById('ceklisRingkasCP')?.checked || false,
-    gayaBelajarMurid: gayaBelajar,
-    mediaDigital: media,
-    fasilitasBelajar: fasilitas,
-    fasilitasList: fasilitasList,
-    inputFasilitasLainnya: inputFasilitasLainnyaVal,
-    identifikasiAwal: {
-      pesertaDidik: idPeserta,
-      materi: idMateri,
-      profilLulusan: idProfil
-    },
-    identifikasiPesertaDidik: idPeserta,
-    identifikasiMateri: idMateri,
-    identifikasiProfilLulusan: idProfil,
-    dimensiProfilLulusan: profilList,
-    dimensiProfil: profilList,
-    createdAt: currentEditingOriginalCreatedAt || nowIso,
-    updatedAt: nowIso
-  };
+  const modulPayload = collectCurrentFormPayload();
 
   // Tampilkan Indikator Loading di Bawah Tombol
   const progressContainer = document.getElementById('generateProgressContainer');
@@ -1822,7 +1849,8 @@ async function proceedGenerateModul() {
 
     // 2. Simpan otomatis ke daftar riwayat akun guru (Daftar Modul Ajar & Supabase)
     try {
-      await saveModulToUserAccountList(modulPayload);
+      modulPayload.status = 'Lengkap';
+      await saveModulToUserAccountList(modulPayload, 'Lengkap');
     } catch (errList) {
       console.warn('[List] Gagal simpan ke daftar akun:', errList);
     }
@@ -3072,13 +3100,10 @@ function handleGenerateModul(e) {
  * INTEGRASI DAFTAR MODUL AJAR (PER-AKUN GOOGLE & MODE EDIT)
  * ==========================================================================
  */
-let currentEditingModulId = null;
-let currentEditingOriginalCreatedAt = null;
-
 /**
  * Simpan Modul Ajar ke Daftar Riwayat Akun Pengguna Aktif & Server Database
  */
-async function saveModulToUserAccountList(modulPayload) {
+async function saveModulToUserAccountList(modulPayload, status = 'Lengkap') {
   try {
     let user = null;
     try {
@@ -3137,6 +3162,9 @@ async function saveModulToUserAccountList(modulPayload) {
     }
     modulPayload.createdAt = originalCreatedAt;
 
+    const finalStatus = status || modulPayload.status || (modulPayload.aiGeneratedContent ? 'Lengkap' : 'Draft');
+    modulPayload.status = finalStatus;
+
     const itemRecord = {
       id: modulId,
       userEmail: userEmail,
@@ -3147,7 +3175,7 @@ async function saveModulToUserAccountList(modulPayload) {
       fase: fase,
       kelas: kelas,
       faseKelas: faseKelasRaw,
-      status: 'Lengkap',
+      status: finalStatus,
       createdAt: originalCreatedAt,
       updatedAt: now.toISOString(),
       updatedAtFormatted: updatedAtFormatted,
@@ -3166,7 +3194,7 @@ async function saveModulToUserAccountList(modulPayload) {
     safeSetLocalStorage('edu_editing_modul_payload', JSON.stringify(modulPayload));
     safeSetLocalStorage('edu_last_modul_payload', JSON.stringify(modulPayload));
     safeSetLocalStorage('edu_current_generated_modul', JSON.stringify(modulPayload));
-    console.log(`[Edu Workspace] Modul Ajar berhasil disimpan ke akun ${userEmail}:`, itemRecord.namaModul);
+    console.log(`[Edu Workspace] Modul Ajar (${finalStatus}) berhasil disimpan ke akun ${userEmail}:`, itemRecord.namaModul);
 
     // 2. Simpan ke Supabase Database Server
     try {
@@ -3180,9 +3208,9 @@ async function saveModulToUserAccountList(modulPayload) {
           gradeLevel: faseKelasRaw || '',
           topic: namaTopik || '',
           curriculum: modulPayload.kurikulum || 'Kurikulum Merdeka',
-          contentJson: modulPayload
+          contentJson: { ...modulPayload, status: finalStatus }
         });
-        console.log('[Supabase] Modul tersimpan:', modulId);
+        console.log(`[Supabase] Modul (${finalStatus}) tersimpan:`, modulId);
       }
     } catch (e) {
       console.warn('Gagal simpan ke Supabase, mencoba server lokal:', e);
@@ -3215,7 +3243,11 @@ async function checkAndLoadEditModul() {
   try {
     const urlParams = new URLSearchParams(window.location.search);
     const editId = urlParams.get('editId');
-    if (!editId) return;
+    if (!editId) {
+      currentEditingModulId = null;
+      currentEditingOriginalCreatedAt = null;
+      return;
+    }
 
     currentEditingModulId = editId;
     let editPayload = null;

@@ -139,6 +139,7 @@ async function loadUserModulList(user) {
       const remoteList = supabaseModuls.map(m => {
         const payload = m.content_json || m.contentJson || {};
         const now = m.created_at ? new Date(m.created_at) : new Date();
+        const detectedStatus = payload.status || (payload.aiGeneratedContent ? 'Lengkap' : 'Draft');
         return {
           id: m.id,
           userEmail: userEmail,
@@ -149,7 +150,7 @@ async function loadUserModulList(user) {
           fase: payload.fase || '',
           kelas: m.grade_level || payload.kelas || '',
           faseKelas: payload.faseKelas || m.grade_level || '',
-          status: 'Lengkap',
+          status: detectedStatus,
           createdAt: m.created_at || payload.createdAt || now.toISOString(),
           updatedAt: m.created_at || now.toISOString(),
           updatedAtFormatted: formatTanggal(m.created_at || now),
@@ -166,9 +167,11 @@ async function loadUserModulList(user) {
         if (item && item.id) mergedMap.set(item.id, item);
       });
 
-      // Masukkan modul lokal yang belum ada di remote & auto-push ke Supabase
+      // Masukkan / perbarui modul lokal (jika lokal lebih baru atau belum ada di remote)
       localList.forEach(localItem => {
-        if (localItem && localItem.id && !mergedMap.has(localItem.id)) {
+        if (!localItem || !localItem.id) return;
+        const existingRemote = mergedMap.get(localItem.id);
+        if (!existingRemote) {
           mergedMap.set(localItem.id, localItem);
           if (localItem.payload) {
             SupabaseDB.saveModul({
@@ -182,6 +185,17 @@ async function loadUserModulList(user) {
               curriculum: localItem.payload.kurikulum || 'Kurikulum Merdeka',
               contentJson: localItem.payload
             }).catch(e => console.warn('[AutoSync] Supabase save warning:', e));
+          }
+        } else {
+          // Utamakan data lokal jika lokal lebih mutakhir atau memiliki status lokal
+          const localTime = new Date(localItem.updatedAt || localItem.createdAt || 0).getTime();
+          const remoteTime = new Date(existingRemote.updatedAt || existingRemote.createdAt || 0).getTime();
+          if (localTime >= remoteTime) {
+            mergedMap.set(localItem.id, {
+              ...existingRemote,
+              ...localItem,
+              status: localItem.status || existingRemote.status || 'Draft'
+            });
           }
         }
       });
@@ -255,7 +269,7 @@ function createRecordFromPayload(payload) {
     fase: fase,
     kelas: kelas,
     faseKelas: faseKelasRaw,
-    status: 'Lengkap',
+    status: payload.status || (payload.aiGeneratedContent ? 'Lengkap' : 'Draft'),
     updatedAt: now.toISOString(),
     updatedAtFormatted: formatTanggal(now),
     payload: payload
