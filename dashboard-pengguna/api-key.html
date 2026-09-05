@@ -14,8 +14,8 @@
     rel="stylesheet">
 
   <!-- Global & Page Stylesheet -->
-  <link rel="stylesheet" href="../global.css?v=105">
-  <link rel="stylesheet" href="api-key.css?v=105">
+  <link rel="stylesheet" href="../global.css?v=106">
+  <link rel="stylesheet" href="api-key.css?v=106">
 </head>
 
 <body>
@@ -34,133 +34,292 @@
         </h1>
       </section>
 
-      <!-- Grid Konten Dual Column (Lebar Sama Sempurna 50% - 50%) -->
-      <div class="api-content-grid">
+      <!-- Layout Utama: Sidebar Daftar API di Kiri, Konten Kartu di Kanan -->
+      <div class="api-workspace-layout">
 
-        <!-- Kolom Kiri: Panduan Cara Mendapatkan Kunci API -->
-        <div class="guide-card">
-          <div class="card-header-group">
-            <div class="card-title-box">
-              <div class="card-icon-pill">
-                <img src="../Assets/icon/icon_word.png" alt="Panduan API">
-              </div>
-              <div>
-                <h2 class="card-title">Cara Mendapatkan Kunci API</h2>
-                <p class="card-desc">Ikuti 4 langkah mudah untuk mendapatkan Google Gemini API gratis</p>
-              </div>
-            </div>
-          </div>
+        <!-- Sidebar Kiri: Daftar API (Teks Saja Tanpa Ikon Sesuai Gambar 2) -->
+        <aside class="api-sidebar-nav">
+          <button type="button" class="api-tab-pill active" id="tabBtnGemini" onclick="switchApiTab('gemini')">
+            <span>Gemini</span>
+          </button>
+          <button type="button" class="api-tab-pill" id="tabBtnNeosantara" onclick="switchApiTab('neosantara')">
+            <span>Neosantara</span>
+          </button>
+        </aside>
 
-          <ul class="guide-step-list">
-            <li class="guide-step-item">
-              <div class="guide-step-number">1</div>
-              <div class="guide-step-content">
-                <div class="guide-step-title">Kunjungi Google AI Studio</div>
-                <p class="guide-step-desc">Buka situs resmi Google AI Studio pada browser Anda.</p>
-              </div>
-            </li>
-            <li class="guide-step-item">
-              <div class="guide-step-number">2</div>
-              <div class="guide-step-content">
-                <div class="guide-step-title">Masuk dengan Akun Google</div>
-                <p class="guide-step-desc">Gunakan akun Google yang aktif (gratis tanpa biaya langganan).</p>
-              </div>
-            </li>
-            <li class="guide-step-item">
-              <div class="guide-step-number">3</div>
-              <div class="guide-step-content">
-                <div class="guide-step-title">Klik "Get API Key"</div>
-                <p class="guide-step-desc">Pilih tombol <em>Create API key in new project</em> lalu salin kunci yang muncul.</p>
-              </div>
-            </li>
-            <li class="guide-step-item">
-              <div class="guide-step-number">4</div>
-              <div class="guide-step-content">
-                <div class="guide-step-title">Tempelkan & Simpan</div>
-                <p class="guide-step-desc">Tempelkan kunci ke form di sebelah kanan lalu klik <strong>Simpan Kunci API</strong>.</p>
-              </div>
-            </li>
-          </ul>
+        <!-- Konten Kanan: Panel Aktif Sesuai Tab API yang Dipilih -->
+        <div class="api-panel-container">
 
-          <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer" class="btn-external-guide">
-            <span>Buka Google AI Studio</span>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
-              <polyline points="15 3 21 3 21 9"></polyline>
-              <line x1="10" y1="14" x2="21" y2="3"></line>
-            </svg>
-          </a>
-        </div>
+          <!-- ==============================================================
+               1. PANEL GOOGLE GEMINI
+               ============================================================== -->
+          <div class="api-tab-pane active" id="paneGemini">
+            <div class="api-content-grid">
 
-        <!-- Kolom Kanan: Form Menempelkan Kunci API Google Gemini -->
-        <div class="api-card">
-          <div class="card-header-group">
-            <div class="card-title-box">
-              <div class="card-icon-pill">
-                <img data-icon="key" src="../Assets/icon/icon_key.png" alt="API Key Icon">
-              </div>
-              <div>
-                <h2 class="card-title">Google Gemini API Key</h2>
-                <p class="card-desc">Kunci API resmi dari Google AI Studio untuk generator AI pembelajaran</p>
-              </div>
-            </div>
-            <div id="apiStatusBadge" class="status-pill-badge status-pill-empty">
-              <span class="status-dot"></span> Belum Dikonfigurasi
-            </div>
-          </div>
+              <!-- Kolom Kiri Panel: Panduan Cara Mendapatkan Kunci API -->
+              <div class="guide-card">
+                <div class="card-header-group">
+                  <div class="card-title-box">
+                    <div class="card-icon-pill">
+                      <img src="../Assets/icon/icon_word.png" alt="Panduan API">
+                    </div>
+                    <div>
+                      <h2 class="card-title">Cara Mendapatkan Kunci API</h2>
+                      <p class="card-desc">Ikuti 4 langkah mudah untuk mendapatkan Google Gemini API gratis</p>
+                    </div>
+                  </div>
+                </div>
 
-          <!-- Input API Key -->
-          <div class="form-group">
-            <label class="form-label" for="apiKeyInput">
-              <span>Kunci Rahasia API (*Gemini API Key*)</span>
-              <span class="form-label-hint">Tersimpan di akun Anda</span>
-            </label>
-            <div class="input-with-actions">
-              <input type="password" id="apiKeyInput" class="api-key-input"
-                placeholder="AIzaSy... (Tempelkan Google Gemini API Key di sini)" autocomplete="off" spellcheck="false">
-              <div class="input-suffix-actions">
-                <button type="button" class="btn-icon-action" onclick="toggleKeyVisibility()" title="Lihat/Sembunyikan Kunci">
-                  <svg id="eyeIcon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                    <circle cx="12" cy="12" r="3"></circle>
+                <ul class="guide-step-list">
+                  <li class="guide-step-item">
+                    <div class="guide-step-number">1</div>
+                    <div class="guide-step-content">
+                      <div class="guide-step-title">Kunjungi Google AI Studio</div>
+                      <p class="guide-step-desc">Buka situs resmi Google AI Studio pada browser Anda.</p>
+                    </div>
+                  </li>
+                  <li class="guide-step-item">
+                    <div class="guide-step-number">2</div>
+                    <div class="guide-step-content">
+                      <div class="guide-step-title">Masuk dengan Akun Google</div>
+                      <p class="guide-step-desc">Gunakan akun Google yang aktif (gratis tanpa biaya langganan).</p>
+                    </div>
+                  </li>
+                  <li class="guide-step-item">
+                    <div class="guide-step-number">3</div>
+                    <div class="guide-step-content">
+                      <div class="guide-step-title">Klik "Get API Key"</div>
+                      <p class="guide-step-desc">Pilih tombol <em>Create API key in new project</em> lalu salin kunci yang muncul.</p>
+                    </div>
+                  </li>
+                  <li class="guide-step-item">
+                    <div class="guide-step-number">4</div>
+                    <div class="guide-step-content">
+                      <div class="guide-step-title">Tempelkan & Simpan</div>
+                      <p class="guide-step-desc">Tempelkan kunci ke form di sebelah kanan lalu klik <strong>Simpan Kunci API</strong>.</p>
+                    </div>
+                  </li>
+                </ul>
+
+                <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer" class="btn-external-guide">
+                  <span>Buka Google AI Studio</span>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                    <polyline points="15 3 21 3 21 9"></polyline>
+                    <line x1="10" y1="14" x2="21" y2="3"></line>
                   </svg>
-                </button>
-                <button type="button" class="btn-icon-action" onclick="copyApiKey()" title="Salin Kunci">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
-                  </svg>
-                </button>
+                </a>
               </div>
+
+              <!-- Kolom Kanan Panel: Form Menempelkan Kunci API Google Gemini -->
+              <div class="api-card">
+                <div class="card-header-group">
+                  <div class="card-title-box">
+                    <div class="card-icon-pill">
+                      <img data-icon="key" src="../Assets/icon/icon_key.png" alt="API Key Icon">
+                    </div>
+                    <div>
+                      <h2 class="card-title">Google Gemini API Key</h2>
+                      <p class="card-desc">Kunci API resmi dari Google AI Studio untuk generator AI pembelajaran</p>
+                    </div>
+                  </div>
+                  <div id="apiStatusBadge" class="status-pill-badge status-pill-empty">
+                    <span class="status-dot"></span> Belum Dikonfigurasi
+                  </div>
+                </div>
+
+                <!-- Input API Key -->
+                <div class="form-group">
+                  <label class="form-label" for="apiKeyInput">
+                    <span>Kunci Rahasia API (*Gemini API Key*)</span>
+                    <span class="form-label-hint">Tersimpan di akun Anda</span>
+                  </label>
+                  <div class="input-with-actions">
+                    <input type="password" id="apiKeyInput" class="api-key-input"
+                      placeholder="AIzaSy... (Tempelkan Google Gemini API Key di sini)" autocomplete="off" spellcheck="false">
+                    <div class="input-suffix-actions">
+                      <button type="button" class="btn-icon-action" onclick="toggleKeyVisibility()" title="Lihat/Sembunyikan Kunci">
+                        <svg id="eyeIcon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                          <circle cx="12" cy="12" r="3"></circle>
+                        </svg>
+                      </button>
+                      <button type="button" class="btn-icon-action" onclick="copyApiKey()" title="Salin Kunci">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                          <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Keterangan Status Koneksi Otomatis -->
+                <div id="connectionStatusBox" class="connection-status-box">
+                  <div class="connection-status-icon" id="connectionStatusIcon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <circle cx="12" cy="12" r="10"></circle>
+                      <line x1="12" y1="8" x2="12" y2="12"></line>
+                      <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                    </svg>
+                  </div>
+                  <div class="connection-status-content">
+                    <div class="connection-status-title" id="connectionStatusTitle">Belum Dikonfigurasi</div>
+                    <p class="connection-status-desc" id="connectionStatusDesc">Silakan masukkan Google Gemini API Key Anda lalu klik tombol Simpan. Sistem akan otomatis menguji koneksi.</p>
+                  </div>
+                </div>
+
+                <!-- Tombol Aksi (Sejajar Horizontal) -->
+                <div class="api-btn-group">
+                  <button type="button" class="btn-primary-api" id="btnSaveApiKey" onclick="saveAndTestApiKey()">
+                    <img src="../Assets/icon/icon_save.png" class="btn-icon-img" width="18" height="18" style="width: 18px !important; height: 18px !important; max-width: 18px !important; max-height: 18px !important; object-fit: contain; filter: brightness(0) invert(1);" alt="">
+                    <span>Simpan Kunci API</span>
+                  </button>
+                  <button type="button" class="btn-danger-api" id="btnDeleteApiKey" onclick="deleteApiKey('gemini')" title="Hapus kunci API dari akun">
+                    <img src="../Assets/icon/icon_trash.png" class="btn-icon-img" width="18" height="18" style="width: 18px !important; height: 18px !important; max-width: 18px !important; max-height: 18px !important; object-fit: contain;" alt="">
+                    <span>Hapus Kunci</span>
+                  </button>
+                </div>
+              </div>
+
             </div>
           </div>
 
-          <!-- Keterangan Status Koneksi Otomatis -->
-          <div id="connectionStatusBox" class="connection-status-box">
-            <div class="connection-status-icon" id="connectionStatusIcon">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="12" cy="12" r="10"></circle>
-                <line x1="12" y1="8" x2="12" y2="12"></line>
-                <line x1="12" y1="16" x2="12.01" y2="16"></line>
-              </svg>
-            </div>
-            <div class="connection-status-content">
-              <div class="connection-status-title" id="connectionStatusTitle">Belum Dikonfigurasi</div>
-              <p class="connection-status-desc" id="connectionStatusDesc">Silakan masukkan Google Gemini API Key Anda lalu klik tombol Simpan. Sistem akan otomatis menguji koneksi.</p>
+          <!-- ==============================================================
+               2. PANEL NEOSANTARA
+               ============================================================== -->
+          <div class="api-tab-pane" id="paneNeosantara">
+            <div class="api-content-grid">
+
+              <!-- Kolom Kiri Panel: Panduan Cara Mendapatkan Kunci API Neosantara -->
+              <div class="guide-card">
+                <div class="card-header-group">
+                  <div class="card-title-box">
+                    <div class="card-icon-pill">
+                      <img src="../Assets/icon/icon_word.png" alt="Panduan API">
+                    </div>
+                    <div>
+                      <h2 class="card-title">Cara Mendapatkan Kunci API</h2>
+                      <p class="card-desc">Ikuti 4 langkah mudah untuk mendapatkan Neosantara API</p>
+                    </div>
+                  </div>
+                </div>
+
+                <ul class="guide-step-list">
+                  <li class="guide-step-item">
+                    <div class="guide-step-number">1</div>
+                    <div class="guide-step-content">
+                      <div class="guide-step-title">Kunjungi Platform Neosantara</div>
+                      <p class="guide-step-desc">Buka situs resmi platform Neosantara pada browser Anda.</p>
+                    </div>
+                  </li>
+                  <li class="guide-step-item">
+                    <div class="guide-step-number">2</div>
+                    <div class="guide-step-content">
+                      <div class="guide-step-title">Masuk ke Akun Anda</div>
+                      <p class="guide-step-desc">Masuk dengan akun Neosantara Anda yang telah terdaftar.</p>
+                    </div>
+                  </li>
+                  <li class="guide-step-item">
+                    <div class="guide-step-number">3</div>
+                    <div class="guide-step-content">
+                      <div class="guide-step-title">Buka Menu "API Keys"</div>
+                      <p class="guide-step-desc">Masuk ke halaman <em>API Keys</em> lalu buat atau salin kunci API Anda.</p>
+                    </div>
+                  </li>
+                  <li class="guide-step-item">
+                    <div class="guide-step-number">4</div>
+                    <div class="guide-step-content">
+                      <div class="guide-step-title">Tempelkan & Simpan</div>
+                      <p class="guide-step-desc">Tempelkan kunci ke form di sebelah kanan lalu klik <strong>Simpan Kunci API</strong>.</p>
+                    </div>
+                  </li>
+                </ul>
+
+                <a href="https://neosantara.bytelabs.id" target="_blank" rel="noopener noreferrer" class="btn-external-guide">
+                  <span>Buka Platform Neosantara</span>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                    <polyline points="15 3 21 3 21 9"></polyline>
+                    <line x1="10" y1="14" x2="21" y2="3"></line>
+                  </svg>
+                </a>
+              </div>
+
+              <!-- Kolom Kanan Panel: Form Menempelkan Kunci API Neosantara -->
+              <div class="api-card">
+                <div class="card-header-group">
+                  <div class="card-title-box">
+                    <div class="card-icon-pill">
+                      <img data-icon="key" src="../Assets/icon/icon_key.png" alt="API Key Icon">
+                    </div>
+                    <div>
+                      <h2 class="card-title">Neosantara API Key</h2>
+                      <p class="card-desc">Kunci API resmi dari Neosantara untuk layanan integrasi AI pembelajaran</p>
+                    </div>
+                  </div>
+                  <div id="neosantaraStatusBadge" class="status-pill-badge status-pill-empty">
+                    <span class="status-dot"></span> Belum Dikonfigurasi
+                  </div>
+                </div>
+
+                <!-- Input API Key -->
+                <div class="form-group">
+                  <label class="form-label" for="neosantaraApiKeyInput">
+                    <span>Kunci Rahasia API (*Neosantara API Key*)</span>
+                    <span class="form-label-hint">Tersimpan di akun Anda</span>
+                  </label>
+                  <div class="input-with-actions">
+                    <input type="password" id="neosantaraApiKeyInput" class="api-key-input"
+                      placeholder="neo_... (Tempelkan Neosantara API Key di sini)" autocomplete="off" spellcheck="false">
+                    <div class="input-suffix-actions">
+                      <button type="button" class="btn-icon-action" onclick="toggleNeosantaraKeyVisibility()" title="Lihat/Sembunyikan Kunci">
+                        <svg id="neosantaraEyeIcon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                          <circle cx="12" cy="12" r="3"></circle>
+                        </svg>
+                      </button>
+                      <button type="button" class="btn-icon-action" onclick="copyNeosantaraApiKey()" title="Salin Kunci">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                          <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Keterangan Status Koneksi Otomatis -->
+                <div id="neosantaraConnectionStatusBox" class="connection-status-box">
+                  <div class="connection-status-icon" id="neosantaraConnectionStatusIcon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <circle cx="12" cy="12" r="10"></circle>
+                      <line x1="12" y1="8" x2="12" y2="12"></line>
+                      <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                    </svg>
+                  </div>
+                  <div class="connection-status-content">
+                    <div class="connection-status-title" id="neosantaraConnectionStatusTitle">Belum Dikonfigurasi</div>
+                    <p class="connection-status-desc" id="neosantaraConnectionStatusDesc">Silakan masukkan Neosantara API Key Anda lalu klik tombol Simpan.</p>
+                  </div>
+                </div>
+
+                <!-- Tombol Aksi (Sejajar Horizontal) -->
+                <div class="api-btn-group">
+                  <button type="button" class="btn-primary-api" id="btnSaveNeosantaraApiKey" onclick="saveAndTestNeosantaraApiKey()">
+                    <img src="../Assets/icon/icon_save.png" class="btn-icon-img" width="18" height="18" style="width: 18px !important; height: 18px !important; max-width: 18px !important; max-height: 18px !important; object-fit: contain; filter: brightness(0) invert(1);" alt="">
+                    <span>Simpan Kunci API</span>
+                  </button>
+                  <button type="button" class="btn-danger-api" id="btnDeleteNeosantaraApiKey" onclick="deleteApiKey('neosantara')" title="Hapus kunci API dari akun">
+                    <img src="../Assets/icon/icon_trash.png" class="btn-icon-img" width="18" height="18" style="width: 18px !important; height: 18px !important; max-width: 18px !important; max-height: 18px !important; object-fit: contain;" alt="">
+                    <span>Hapus Kunci</span>
+                  </button>
+                </div>
+              </div>
+
             </div>
           </div>
 
-          <!-- Tombol Aksi (Sejajar Horizontal) -->
-          <div class="api-btn-group">
-            <button type="button" class="btn-primary-api" id="btnSaveApiKey" onclick="saveAndTestApiKey()">
-              <img src="../Assets/icon/icon_save.png" class="btn-icon-img" width="18" height="18" style="width: 18px !important; height: 18px !important; max-width: 18px !important; max-height: 18px !important; object-fit: contain; filter: brightness(0) invert(1);" alt="">
-              <span>Simpan Kunci API</span>
-            </button>
-            <button type="button" class="btn-danger-api" id="btnDeleteApiKey" onclick="deleteApiKey()" title="Hapus kunci API dari akun">
-              <img src="../Assets/icon/icon_trash.png" class="btn-icon-img" width="18" height="18" style="width: 18px !important; height: 18px !important; max-width: 18px !important; max-height: 18px !important; object-fit: contain;" alt="">
-              <span>Hapus Kunci</span>
-            </button>
-          </div>
         </div>
 
       </div>
@@ -173,7 +332,7 @@
         <div class="warning-alert-content">
           <h4 class="warning-alert-title">Peringatan Keamanan Kunci API</h4>
           <p class="warning-alert-desc">
-            Kunci API Google Gemini bersifat sangat rahasia dan pribadi. <strong>Dilarang keras membagikan Kunci API Anda kepada siapapun</strong>. Kunci API ini tersimpan khusus pada akun Anda masing-masing untuk melindungi kuota pembuatan modul ajar dan menjaga privasi data pembelajaran Anda.
+            Kunci API bersifat sangat rahasia dan pribadi. <strong>Dilarang keras membagikan Kunci API Anda kepada siapapun</strong>. Kunci API ini tersimpan khusus pada akun Anda masing-masing untuk melindungi kuota dan menjaga privasi data pembelajaran Anda.
           </p>
         </div>
       </div>
@@ -207,8 +366,8 @@
       <div class="confirm-icon-box">
         <img data-icon="exit" src="../Assets/icon/icon_exit.png" alt="Hapus" class="confirm-icon-img">
       </div>
-      <h3 class="confirm-modal-title">Hapus Kunci API?</h3>
-      <p class="confirm-modal-desc">Apakah Anda yakin ingin menghapus Kunci API Google Gemini yang tersimpan? Anda dapat menambahkannya kembali kapan saja.</p>
+      <h3 class="confirm-modal-title" id="deleteModalTitle">Hapus Kunci API?</h3>
+      <p class="confirm-modal-desc" id="deleteModalDesc">Apakah Anda yakin ingin menghapus Kunci API yang tersimpan? Anda dapat menambahkannya kembali kapan saja.</p>
 
       <div class="confirm-btn-group">
         <button type="button" class="btn-cancel-modal" onclick="closeDeleteKeyModal()">Batal</button>
@@ -217,11 +376,9 @@
     </div>
   </div>
 
-  <!-- Modal logout diinjek otomatis oleh global.js -->
-
   <!-- Scripts -->
-  <script src="../global.js?v=297"></script>
-  <script src="api-key.js?v=297"></script>
+  <script src="../global.js?v=298"></script>
+  <script src="api-key.js?v=298"></script>
 </body>
 
 </html>

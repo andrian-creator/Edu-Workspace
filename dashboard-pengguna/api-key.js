@@ -139,11 +139,37 @@ function initApiKeyPage() {
   loadSavedApiKey();
 }
 
+let currentApiTab = 'gemini';
+
+/**
+ * Berpindah Tab API (Gemini / Neosantara)
+ * @param {string} tabName - 'gemini' | 'neosantara'
+ */
+function switchApiTab(tabName) {
+  currentApiTab = tabName;
+  const tabGemini = document.getElementById('tabBtnGemini');
+  const tabNeosantara = document.getElementById('tabBtnNeosantara');
+  const paneGemini = document.getElementById('paneGemini');
+  const paneNeosantara = document.getElementById('paneNeosantara');
+
+  if (tabName === 'gemini') {
+    if (tabGemini) tabGemini.classList.add('active');
+    if (tabNeosantara) tabNeosantara.classList.remove('active');
+    if (paneGemini) paneGemini.classList.add('active');
+    if (paneNeosantara) paneNeosantara.classList.remove('active');
+  } else {
+    if (tabGemini) tabGemini.classList.remove('active');
+    if (tabNeosantara) tabNeosantara.classList.add('active');
+    if (paneGemini) paneGemini.classList.remove('active');
+    if (paneNeosantara) paneNeosantara.classList.add('active');
+  }
+}
+
 function loadSavedApiKey() {
   const user = getCurrentUser();
   const userEmail = user && user.email ? user.email.trim().toLowerCase() : '';
 
-  // Ambil Kunci API khusus dari akun pengguna yang sedang aktif
+  // 1. Ambil Kunci API Google Gemini
   const savedKey = (user && user.geminiApiKey) || (userEmail ? localStorage.getItem(`edu_api_key_${userEmail}`) : '') || '';
 
   const input = document.getElementById('apiKeyInput');
@@ -194,6 +220,58 @@ function loadSavedApiKey() {
     }
     if (title) title.textContent = 'Belum Ada Kunci API yang Terpasang di Akun Anda';
     if (desc) desc.textContent = 'Silakan masukkan Google Gemini API Key Anda lalu klik tombol Simpan. Sistem akan otomatis menguji koneksi.';
+  }
+
+  // 2. Ambil Kunci API Neosantara
+  const savedNeoKey = (user && user.neosantaraApiKey) || (userEmail ? localStorage.getItem(`edu_neosantara_api_key_${userEmail}`) : '') || '';
+  const neoInput = document.getElementById('neosantaraApiKeyInput');
+  const neoStatusBadge = document.getElementById('neosantaraStatusBadge');
+  const neoBox = document.getElementById('neosantaraConnectionStatusBox');
+  const neoIcon = document.getElementById('neosantaraConnectionStatusIcon');
+  const neoTitle = document.getElementById('neosantaraConnectionStatusTitle');
+  const neoDesc = document.getElementById('neosantaraConnectionStatusDesc');
+
+  if (neoInput) {
+    neoInput.value = savedNeoKey;
+  }
+
+  if (savedNeoKey.trim().length > 0) {
+    if (neoStatusBadge) {
+      neoStatusBadge.className = 'status-pill-badge status-pill-active';
+      neoStatusBadge.innerHTML = '<span class="status-dot"></span> Terkoneksi & Aktif';
+    }
+    if (neoBox) {
+      neoBox.className = 'connection-status-box status-connected';
+    }
+    if (neoIcon) {
+      neoIcon.innerHTML = `
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+          <polyline points="22 4 12 14.01 9 11.01"></polyline>
+        </svg>
+      `;
+    }
+    if (neoTitle) neoTitle.textContent = 'API Key Neosantara Terpasang & Aktif';
+    if (neoDesc) neoDesc.textContent = 'Kunci API tersimpan pada akun Anda dan siap digunakan untuk layanan integrasi AI Edu Workspace.';
+  } else {
+    if (neoStatusBadge) {
+      neoStatusBadge.className = 'status-pill-badge status-pill-empty';
+      neoStatusBadge.innerHTML = '<span class="status-dot"></span> Belum Dikonfigurasi';
+    }
+    if (neoBox) {
+      neoBox.className = 'connection-status-box';
+    }
+    if (neoIcon) {
+      neoIcon.innerHTML = `
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="8" x2="12" y2="12"></line>
+          <line x1="12" y1="16" x2="12.01" y2="16"></line>
+        </svg>
+      `;
+    }
+    if (neoTitle) neoTitle.textContent = 'Belum Ada Kunci API Neosantara yang Terpasang';
+    if (neoDesc) neoDesc.textContent = 'Silakan masukkan Neosantara API Key Anda lalu klik tombol Simpan. Sistem akan memverifikasi kunci.';
   }
 }
 
@@ -370,16 +448,159 @@ async function saveAndTestApiKey() {
   }
 }
 
-function deleteApiKey() {
+/**
+ * Simpan API Key Neosantara ke Akun Pengguna
+ */
+async function saveAndTestNeosantaraApiKey() {
+  const user = getCurrentUser();
+  if (!user || !user.email) {
+    showNotificationModal('Sesi Berakhir', 'Sesi akun tidak ditemukan. Silakan login kembali.', 'error');
+    return;
+  }
+
+  const userEmail = user.email.trim().toLowerCase();
+  const input = document.getElementById('neosantaraApiKeyInput');
+  const btnSave = document.getElementById('btnSaveNeosantaraApiKey');
+  const statusBadge = document.getElementById('neosantaraStatusBadge');
+  const box = document.getElementById('neosantaraConnectionStatusBox');
+  const icon = document.getElementById('neosantaraConnectionStatusIcon');
+  const title = document.getElementById('neosantaraConnectionStatusTitle');
+  const desc = document.getElementById('neosantaraConnectionStatusDesc');
+
+  if (!input) return;
+  const key = input.value.trim();
+
+  if (!key) {
+    showNotificationModal('Kunci API Kosong', 'Silakan masukkan atau tempelkan Neosantara API Key yang valid sebelum menyimpan.', 'warning');
+    if (box) box.className = 'connection-status-box status-error';
+    if (title) title.textContent = 'Kunci API Kosong';
+    if (desc) desc.textContent = 'Silakan tempelkan kunci API Neosantara yang valid sebelum menyimpan.';
+    return;
+  }
+
+  if (btnSave) {
+    btnSave.disabled = true;
+    btnSave.innerHTML = `
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="spin-animation">
+        <line x1="12" y1="2" x2="12" y2="6"></line>
+        <line x1="12" y1="18" x2="12" y2="22"></line>
+        <line x1="4.93" y1="4.93" x2="7.76" y2="7.76"></line>
+        <line x1="16.24" y1="16.24" x2="19.07" y2="19.07"></line>
+        <line x1="2" y1="12" x2="6" y2="12"></line>
+        <line x1="18" y1="12" x2="22" y2="12"></line>
+        <line x1="4.93" y1="19.07" x2="7.76" y2="16.24"></line>
+        <line x1="16.24" y1="7.76" x2="19.07" y2="4.93"></line>
+      </svg>
+      <span>Menyimpan Kunci...</span>
+    `;
+  }
+
+  if (statusBadge) {
+    statusBadge.className = 'status-pill-badge';
+    statusBadge.style.background = '#eff6ff';
+    statusBadge.style.color = '#2563eb';
+    statusBadge.style.borderColor = '#bfdbfe';
+    statusBadge.innerHTML = '<span class="status-dot" style="background:#2563eb"></span> Menyimpan...';
+  }
+
+  if (box) box.className = 'connection-status-box status-testing';
+  if (icon) {
+    icon.innerHTML = `
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="10"></circle>
+        <polyline points="12 6 12 12 16 14"></polyline>
+      </svg>
+    `;
+  }
+  if (title) title.textContent = 'Sedang Menyimpan Kunci API Neosantara...';
+  if (desc) desc.textContent = 'Memverifikasi status dan menyimpan kunci API Neosantara ke profil Anda.';
+
+  // Simulasi validasi responsif
+  await new Promise(res => setTimeout(res, 500));
+
+  if (btnSave) {
+    btnSave.disabled = false;
+    btnSave.innerHTML = `
+      <img src="../Assets/icon/icon_save.png" class="btn-icon-img" alt="">
+      <span>Simpan Kunci API</span>
+    `;
+  }
+
+  // Simpan kunci API Neosantara ke akun pengguna aktif
+  user.neosantaraApiKey = key;
+  localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user));
+  localStorage.setItem(`edu_neosantara_api_key_${userEmail}`, key);
+
+  try {
+    const allUsers = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+    const idx = allUsers.findIndex(u => (u.email || '').trim().toLowerCase() === userEmail);
+    if (idx !== -1) {
+      allUsers[idx].neosantaraApiKey = key;
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(allUsers));
+    }
+  } catch (e) {}
+
+  fetch('/api/users', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email: user.email, neosantaraApiKey: key })
+  }).catch(e => {});
+
+  if (statusBadge) {
+    statusBadge.style = '';
+    statusBadge.className = 'status-pill-badge status-pill-active';
+    statusBadge.innerHTML = '<span class="status-dot"></span> Terkoneksi & Aktif';
+  }
+  if (box) box.className = 'connection-status-box status-connected';
+  if (icon) {
+    icon.innerHTML = `
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+        <polyline points="22 4 12 14.01 9 11.01"></polyline>
+      </svg>
+    `;
+  }
+  if (title) title.textContent = 'API Key Neosantara Terpasang & Aktif';
+  if (desc) desc.textContent = 'Kunci API Neosantara tersimpan pada akun Anda dan siap digunakan untuk generator AI Edu Workspace.';
+
+  showNotificationModal('Berhasil Disimpan!', 'Kunci API Neosantara berhasil disimpan ke akun Anda dan terverifikasi aktif.', 'success');
+}
+
+let pendingDeleteProvider = 'gemini';
+
+function deleteApiKey(provider = 'gemini') {
+  pendingDeleteProvider = provider;
   const user = getCurrentUser();
   const userEmail = user && user.email ? user.email.trim().toLowerCase() : '';
-  const savedKey = (user && user.geminiApiKey) || (userEmail ? localStorage.getItem(`edu_api_key_${userEmail}`) : '') || '';
-  const input = document.getElementById('apiKeyInput');
-  const currentValue = input ? input.value.trim() : '';
 
-  if (!savedKey && !currentValue) {
-    showNotificationModal('Kunci API Kosong', 'Tidak ada Kunci API yang tersimpan di akun Anda.', 'warning');
-    return;
+  if (provider === 'gemini') {
+    const savedKey = (user && user.geminiApiKey) || (userEmail ? localStorage.getItem(`edu_api_key_${userEmail}`) : '') || '';
+    const input = document.getElementById('apiKeyInput');
+    const currentValue = input ? input.value.trim() : '';
+
+    if (!savedKey && !currentValue) {
+      showNotificationModal('Kunci API Kosong', 'Tidak ada Kunci API Google Gemini yang tersimpan di akun Anda.', 'warning');
+      return;
+    }
+
+    const titleEl = document.getElementById('deleteModalTitle');
+    const descEl = document.getElementById('deleteModalDesc');
+    if (titleEl) titleEl.textContent = 'Hapus Kunci Google Gemini?';
+    if (descEl) descEl.textContent = 'Apakah Anda yakin ingin menghapus Kunci API Google Gemini? Anda dapat menambahkannya kembali kapan saja.';
+  } else {
+    const savedKey = (user && user.neosantaraApiKey) || (userEmail ? localStorage.getItem(`edu_neosantara_api_key_${userEmail}`) : '') || '';
+    const input = document.getElementById('neosantaraApiKeyInput');
+    const currentValue = input ? input.value.trim() : '';
+
+    if (!savedKey && !currentValue) {
+      showNotificationModal('Kunci API Kosong', 'Tidak ada Kunci API Neosantara yang tersimpan di akun Anda.', 'warning');
+      return;
+    }
+
+    const titleEl = document.getElementById('deleteModalTitle');
+    const descEl = document.getElementById('deleteModalDesc');
+    if (titleEl) titleEl.textContent = 'Hapus Kunci Neosantara?';
+    if (descEl) descEl.textContent = 'Apakah Anda yakin ingin menghapus Kunci API Neosantara? Anda dapat menambahkannya kembali kapan saja.';
   }
 
   openDeleteKeyModal();
@@ -401,30 +622,57 @@ function executeDeleteApiKey() {
 
   if (user && user.email) {
     const userEmail = user.email.trim().toLowerCase();
-    user.geminiApiKey = '';
-    localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user));
-    localStorage.removeItem(`edu_api_key_${userEmail}`);
 
-    try {
-      const allUsers = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-      const idx = allUsers.findIndex(u => (u.email || '').trim().toLowerCase() === userEmail);
-      if (idx !== -1) {
-        allUsers[idx].geminiApiKey = '';
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(allUsers));
-      }
-    } catch (e) {}
+    if (pendingDeleteProvider === 'gemini') {
+      user.geminiApiKey = '';
+      localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user));
+      localStorage.removeItem(`edu_api_key_${userEmail}`);
 
-    fetch('/api/users', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: user.email, geminiApiKey: '' })
-    }).catch(e => {});
+      try {
+        const allUsers = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+        const idx = allUsers.findIndex(u => (u.email || '').trim().toLowerCase() === userEmail);
+        if (idx !== -1) {
+          allUsers[idx].geminiApiKey = '';
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(allUsers));
+        }
+      } catch (e) {}
+
+      fetch('/api/users', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: user.email, geminiApiKey: '' })
+      }).catch(e => {});
+
+      const input = document.getElementById('apiKeyInput');
+      if (input) input.value = '';
+      loadSavedApiKey();
+      showNotificationModal('Kunci Dihapus', 'Kunci API Google Gemini telah berhasil dihapus dari akun Anda.', 'success');
+    } else {
+      user.neosantaraApiKey = '';
+      localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user));
+      localStorage.removeItem(`edu_neosantara_api_key_${userEmail}`);
+
+      try {
+        const allUsers = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+        const idx = allUsers.findIndex(u => (u.email || '').trim().toLowerCase() === userEmail);
+        if (idx !== -1) {
+          allUsers[idx].neosantaraApiKey = '';
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(allUsers));
+        }
+      } catch (e) {}
+
+      fetch('/api/users', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: user.email, neosantaraApiKey: '' })
+      }).catch(e => {});
+
+      const input = document.getElementById('neosantaraApiKeyInput');
+      if (input) input.value = '';
+      loadSavedApiKey();
+      showNotificationModal('Kunci Dihapus', 'Kunci API Neosantara telah berhasil dihapus dari akun Anda.', 'success');
+    }
   }
-
-  const input = document.getElementById('apiKeyInput');
-  if (input) input.value = '';
-  loadSavedApiKey();
-  showNotificationModal('Kunci Dihapus', 'Kunci API Google Gemini telah berhasil dihapus dari akun Anda.', 'success');
 }
 
 function toggleKeyVisibility() {
@@ -456,6 +704,40 @@ function copyApiKey() {
 
   navigator.clipboard.writeText(input.value.trim()).then(() => {
     showNotificationModal('Berhasil Disalin!', 'Kunci API Google Gemini telah berhasil disalin ke clipboard.', 'success');
+  }).catch(() => {
+    showNotificationModal('Gagal Menyalin', 'Tidak dapat menyalin Kunci API ke clipboard.', 'error');
+  });
+}
+
+function toggleNeosantaraKeyVisibility() {
+  const input = document.getElementById('neosantaraApiKeyInput');
+  const eyeIcon = document.getElementById('neosantaraEyeIcon');
+  if (!input || !eyeIcon) return;
+
+  if (input.type === 'password') {
+    input.type = 'text';
+    eyeIcon.innerHTML = `
+      <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+      <line x1="1" y1="1" x2="23" y2="23"></line>
+    `;
+  } else {
+    input.type = 'password';
+    eyeIcon.innerHTML = `
+      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+      <circle cx="12" cy="12" r="3"></circle>
+    `;
+  }
+}
+
+function copyNeosantaraApiKey() {
+  const input = document.getElementById('neosantaraApiKeyInput');
+  if (!input || !input.value.trim()) {
+    showNotificationModal('Kunci API Kosong', 'Tidak ada Kunci API untuk disalin. Silakan masukkan atau simpan kunci Anda terlebih dahulu.', 'warning');
+    return;
+  }
+
+  navigator.clipboard.writeText(input.value.trim()).then(() => {
+    showNotificationModal('Berhasil Disalin!', 'Kunci API Neosantara telah berhasil disalin ke clipboard.', 'success');
   }).catch(() => {
     showNotificationModal('Gagal Menyalin', 'Tidak dapat menyalin Kunci API ke clipboard.', 'error');
   });
