@@ -1524,6 +1524,8 @@ function nextStep(target) {
 }
 
 function prevStep(target) {
+  const btnUbah = document.getElementById('btnUbahKonteks');
+  if (btnUbah && btnUbah.disabled) return;
   goToStep(target);
 }
 
@@ -1668,8 +1670,10 @@ async function proceedGenerateModul() {
   }
 
   const pertemuanNum = document.getElementById('jumlahPertemuan')?.value.trim() || '4';
-  const pertemuan = `${pertemuanNum} Pertemuan`;
-  const durasi = document.getElementById('totalJPDurasi')?.value.trim() || `4 JP x 45 Menit (${pertemuan})`;
+  const matchPertemuan = pertemuanNum.match(/\d+/);
+  const countPertemuanVal = matchPertemuan ? Math.min(Math.max(parseInt(matchPertemuan[0]), 1), 16) : 4;
+  const pertemuan = `${countPertemuanVal} Pertemuan`;
+  const durasi = document.getElementById('totalJPDurasi')?.value.trim() || `${countPertemuanVal} JP x 45 Menit (${pertemuan})`;
   const tujuan = document.getElementById('tujuanPembelajaran')?.value.trim() || '';
   const materiTambahan = document.getElementById('materiTambahan')?.value.trim() || '';
   const capaian = document.getElementById('capaianPembelajaran')?.value.trim() || '';
@@ -1743,9 +1747,15 @@ async function proceedGenerateModul() {
   const progressLoading = document.getElementById('progressStateLoading');
   const progressSuccess = document.getElementById('progressStateSuccess');
   const btnGenerate = document.getElementById('btnGenerateModul');
+  const btnUbahKonteks = document.getElementById('btnUbahKonteks');
 
   if (btnGenerate) {
     btnGenerate.disabled = true;
+  }
+  if (btnUbahKonteks) {
+    btnUbahKonteks.disabled = true;
+    btnUbahKonteks.style.opacity = '0.5';
+    btnUbahKonteks.style.cursor = 'not-allowed';
   }
 
   if (progressContainer && progressLoading && progressSuccess) {
@@ -1832,14 +1842,24 @@ async function proceedGenerateModul() {
     } catch (errUi) {
       console.warn('[UI] Transisi sukses warning:', errUi);
     } finally {
-      // Aktifkan kembali tombol Generate Modul Ajar agar bisa diklik lagi kapan saja
+      // Aktifkan kembali tombol Generate Modul Ajar dan Ubah Konteks agar bisa digunakan lagi
       if (btnGenerate) {
         btnGenerate.disabled = false;
+      }
+      if (btnUbahKonteks) {
+        btnUbahKonteks.disabled = false;
+        btnUbahKonteks.style.opacity = '1';
+        btnUbahKonteks.style.cursor = 'pointer';
       }
     }
   } else {
     if (btnGenerate) {
       btnGenerate.disabled = false;
+    }
+    if (btnUbahKonteks) {
+      btnUbahKonteks.disabled = false;
+      btnUbahKonteks.style.opacity = '1';
+      btnUbahKonteks.style.cursor = 'pointer';
     }
   }
 }
@@ -1883,7 +1903,9 @@ async function generateFullModulWithAI(modulPayload) {
 
   // --- Alokasi Waktu ---
   const jumlahPertemuan = p.jumlahPertemuan || '4 Pertemuan';
-  const totalJP         = p.totalJPDurasi || '4 JP x 45 Menit';
+  const matchNum = (jumlahPertemuan || '4').match(/\d+/);
+  const targetPertemuanCount = matchNum ? Math.min(Math.max(parseInt(matchNum[0]), 1), 16) : 4;
+  const totalJP         = p.totalJPDurasi || `${targetPertemuanCount} JP x 45 Menit (${targetPertemuanCount} Pertemuan)`;
 
   // --- Tujuan, CP, Materi Tambahan ---
   const tujuanPembelajaran = p.tujuanPembelajaran || '-';
@@ -1956,13 +1978,8 @@ async function generateFullModulWithAI(modulPayload) {
 
   // ========================================================================
   // STEP 2: BANGUN SATU MASTER PROMPT SECARA DINAMIS
-  // Master prompt ini SELALU dibangun ulang dari inputData terbaru.
-  // Token unik (timestamp + hashInput) ditambahkan agar AI tidak mengembalikan
-  // cache response, sehingga setiap generate dengan data berbeda → output berbeda.
   // ========================================================================
-
-  // Buat fingerprint unik dari kombinasi input kunci agar AI menerima konteks segar
-  const inputFingerprint = [topik, model, pendekatan, metode, jumlahPertemuan, mapel, dimensi, tujuanPembelajaran.slice(0, 80)]
+  const inputFingerprint = [topik, model, pendekatan, metode, targetPertemuanCount, mapel, dimensi, tujuanPembelajaran.slice(0, 80)]
     .join('|').replace(/\s+/g, '_').slice(0, 120);
   const generateTimestamp = new Date().toISOString();
 
@@ -1991,7 +2008,7 @@ TAHAP 1 — IDENTITAS & MODEL PEMBELAJARAN:
 - Model Pembelajaran            : ${model}
 - Pendekatan Pembelajaran        : ${pendekatan}
 - Metode Pembelajaran           : ${metode}
-- Alokasi Waktu                 : ${totalJP} (${jumlahPertemuan})
+- Alokasi Waktu                 : ${totalJP} (${targetPertemuanCount} Pertemuan)
 - Media Digital yang Digunakan  : ${media}
 - Gaya Belajar Mayoritas Murid  : ${gayaBelajar}
 - Sarana / Fasilitas Belajar    : ${fasilitas}
@@ -2030,10 +2047,11 @@ ATURAN WAJIB DAN MENGIKAT — PELANGGARAN TIDAK DIIZINKAN:
    - Seluruh aktivitas guru, aktivitas murid, penugasan LKPD, dan asesmen WAJIB secara langsung mengacu dan menjabarkan Tujuan Pembelajaran (TP) yang telah diisi oleh guru di atas.
    - Jika TP memuat kompetensi spesifik (misalnya: analisis desain karakter, pengujian produk, penghitungan BEP, dsb.), maka SELURUH penugasan dalam modul HARUS mengarah ke penguasaan kompetensi tersebut.
 
-3. PERTEMUAN DAN WAKTU:
-   - WAJIB hasilkan pengalaman belajar sejumlah TEPAT ${jumlahPertemuan} — tidak boleh kurang, tidak boleh lebih.
+3. PERTEMUAN DAN WAKTU (SANGAT PENTING):
+   - WAJIB hasilkan pengalaman belajar sejumlah TEPAT ${targetPertemuanCount} PERTEMUAN (Pertemuan 1 sampai Pertemuan ${targetPertemuanCount}) pada array "pengalamanBelajar".
+   - DILARANG KERAS hanya menghasilkan 1 pertemuan jika jumlah pertemuan yang dipilih guru adalah ${targetPertemuanCount}! Array "pengalamanBelajar" HARUS berisi persis ${targetPertemuanCount} objek pertemuan lengkap.
    - Alokasi waktu setiap pertemuan mengacu pada: ${totalJP}.
-   - Setiap pertemuan harus memiliki sub-topik yang BERBEDA dan PROGRESIF (bukan mengulang topik yang sama).
+   - Setiap pertemuan harus memiliki sub-topik yang BERBEDA dan PROGRESIF (misal: Pertemuan 1 orientasi/konseptual awal, Pertemuan ${targetPertemuanCount} evaluasi/presentasi karya/refleksi akhir).
 
 4. FORMAT AKTIVITAS GURU & MURID — WAJIB POIN, BUKAN PARAGRAF:
    - aktivitasGuru dan aktivitasMurid pada setiap tahap (Awal, Inti, Penutup) WAJIB berupa Array of string.
@@ -2152,6 +2170,7 @@ FORMAT RESPONS — OUTPUT WAJIB JSON MURNI (VALID JSON TANPA TEKS PEMBUKA/PENUTU
         "deepLearningSintaks": "Sintaks ${model}: '[Nama Tahap Sintaks di Penutup]'. Metode: ${metode}. Penerapan ${pendekatan}: [Deskripsi penerapan konkret ${pendekatan} pada tahap penutup]."
       }
     }
+    /* WAJIB lanjutkan hingga Pertemuan ${targetPertemuanCount} lengkap */
   ],
   "materiAjarDeskriptif": "<p class=\\"doc-paragraph\\">Paragraf 1 tentang dasar konseptual ${topik} (min. 5 kalimat ilmiah dan teknis)</p><p class=\\"doc-paragraph\\">Paragraf 2 tentang penerapan model ${model} untuk ${topik} menggunakan fasilitas dan media yang tersedia</p><p class=\\"doc-paragraph\\">Paragraf 3 keterkaitan ${topik} dengan materi tambahan dan proyeksi ke dunia nyata</p>",
   "asesmen": [
@@ -2219,6 +2238,7 @@ FORMAT RESPONS — OUTPUT WAJIB JSON MURNI (VALID JSON TANPA TEKS PEMBUKA/PENUTU
         // Validasi: minimal memiliki pengalamanBelajar dan desainPembelajaran
         if (parsed && parsed.desainPembelajaran && parsed.pengalamanBelajar && Array.isArray(parsed.pengalamanBelajar)) {
           console.log('[Generate] AI berhasil menghasilkan output JSON valid dari master prompt.');
+          ensureCompleteMeetings(parsed, targetPertemuanCount, modulPayload);
           return parsed;
         }
       }
@@ -2234,6 +2254,31 @@ FORMAT RESPONS — OUTPUT WAJIB JSON MURNI (VALID JSON TANPA TEKS PEMBUKA/PENUTU
   // ========================================================================
   console.warn('[Generate] AI tidak merespons atau parse gagal. Menggunakan generator lokal berbasis data input.');
   return buildComprehensiveAiModulContent(modulPayload);
+}
+
+/**
+ * Pastikan Seluruh Pertemuan (1 s/d targetCount) Tersedia Lengkap
+ */
+function ensureCompleteMeetings(aiData, targetCount, p) {
+  if (!aiData) return;
+  if (!Array.isArray(aiData.pengalamanBelajar)) {
+    aiData.pengalamanBelajar = [];
+  }
+  const currentCount = aiData.pengalamanBelajar.length;
+  if (currentCount >= targetCount) return;
+
+  console.log(`[Pertemuan] Melengkapi pengalamanBelajar dari ${currentCount} pertemuan menjadi ${targetCount} pertemuan...`);
+  const fullFallback = buildComprehensiveAiModulContent({ ...p, jumlahPertemuan: `${targetCount} Pertemuan` });
+  const fallbackMeetings = fullFallback?.pengalamanBelajar || [];
+
+  for (let i = currentCount + 1; i <= targetCount; i++) {
+    const fallbackItem = fallbackMeetings.find(m => m.pertemuan === i) || fallbackMeetings[(i - 1) % fallbackMeetings.length];
+    if (fallbackItem) {
+      const copy = JSON.parse(JSON.stringify(fallbackItem));
+      copy.pertemuan = i;
+      aiData.pengalamanBelajar.push(copy);
+    }
+  }
 }
 
 
@@ -2308,77 +2353,134 @@ const media = p.mediaDigital || 'Slide Presentasi Canva, Video Pembelajaran';
   const isTeFa = mLower.includes('tefa') || mLower.includes('factory') || mLower.includes('teaching factory');
   const isCooperative = mLower.includes('cooperative') || mLower.includes('kooperatif');
 
-  // Hitung jumlah pertemuan
+  // Hitung jumlah pertemuan (Mendukung fleksibel 1 s/d 16 Pertemuan)
   let countPertemuan = 4;
   const matchNum = (p.jumlahPertemuan || '4').match(/\d+/);
-  if (matchNum) countPertemuan = Math.min(Math.max(parseInt(matchNum[0]), 1), 8);
+  if (matchNum) countPertemuan = Math.min(Math.max(parseInt(matchNum[0]), 1), 16);
 
-  // Sintesis Tema dan Alur Pertemuan Sesuai Model
+  // Sintesis Tema dan Alur Pertemuan Sesuai Model (Progressif hingga 16 Pertemuan)
   let subThemes = [];
   if (isPjBL) {
-    if (countPertemuan === 1) {
-      subThemes = [`Perancangan Desain Proyek, Eksekusi Produksi Karya, dan Presentasi Gelar Karya ${topik}`];
-    } else if (countPertemuan === 2) {
-      subThemes = [
-        `Penentuan Pertanyaan Mendasar, Desain Perencanaan Proyek, dan Perancangan Sketsa/Model ${topik}`,
-        `Eksekusi Produksi Karya, Finishing Produk, Pengujian Hasil, dan Gelar Karya (Showcase) ${topik}`
-      ];
-    } else if (countPertemuan === 3) {
-      subThemes = [
-        `Penentuan Pertanyaan Mendasar dan Perancangan Desain Konsep Proyek ${topik}`,
-        `Penyusunan Timeline dan Eksekusi Produksi Karya ${topik} di ${fasilitas.split(';')[0] || 'Laboratorium'}`,
-        `Quality Control (QC), Uji Fungsi Produk, dan Gelar Karya Presentasi Akhir ${topik}`
-      ];
-    } else {
-      subThemes = [
-        `Penentuan Pertanyaan Mendasar (Essential Question) dan Perancangan Desain Proyek ${topik}`,
-        `Penyusunan Jadwal (Timeline) Produksi dan Eksekusi Pengerjaan Karya Proyek ${topik}`,
-        `Monitoring Perkembangan Proyek, Uji Coba Fungsi Produk, dan Finishing Karya ${topik}`,
-        `Pameran Karya (Showcase), Presentasi Pleno Produk Proyek, dan Evaluasi Pengalaman Belajar ${topik}`
-      ];
-    }
+    subThemes = [
+      `Penentuan Pertanyaan Mendasar (Essential Question) dan Perancangan Desain Proyek ${topik}`,
+      `Penyusunan Desain Teknis, Sketsa Rancangan Karya, dan Pembagian Peran Tim ${topik}`,
+      `Penyusunan Jadwal (Timeline) Produksi dan Penyiapan Sarana/Bahan di ${fasilitas}`,
+      `Eksekusi Pengerjaan Tahap Awal dan Pembuatan Purwarupa (Prototype) ${topik}`,
+      `Pengerjaan Lanjutan dan Integrasi Komponen Karya Proyek ${topik}`,
+      `Monitoring Kemajuan Proyek, Asistensi Teknis, dan Konsultasi Progres ${topik}`,
+      `Uji Coba Fungsi Mandiri dan Pemecahan Kendala Teknis Karya ${topik}`,
+      `Pengujian Standar Kualitas (Quality Testing) dan Kalibrasi Produk ${topik}`,
+      `Perbaikan Karya Berdasarkan Data Uji dan Penyempurnaan Estetika ${topik}`,
+      `Finishing Akhir Karya Proyek dan Penulisan Lembar Spesifikasi Teknis ${topik}`,
+      `Penyusunan Laporan Proyek Komprehensif dan Dokumentasi Portofolio ${topik}`,
+      `Penyiapan Media Tayang Presentasi dan Simulasi Demo Karya ${topik}`,
+      `Gelar Karya (Showcase) Tahap 1: Demonstrasi Produk antar-Kelompok ${topik}`,
+      `Gelar Karya (Showcase) Pleno: Presentasi Terbuka dan Uji Kelayakan ${topik}`,
+      `Penilaian Sumatif Unjuk Kerja Produk Proyek dan Peer-Review Antar-Siswa ${topik}`,
+      `Evaluasi Pengalaman Belajar Keseluruhan dan Rencana Tindak Lanjut Inovasi ${topik}`
+    ];
   } else if (isInquiry) {
     subThemes = [
       `Orientasi Masalah Otentik, Perumusan Pertanyaan Eksploratif, dan Hipotesis Awal ${topik}`,
-      `Pengumpulan Data Eksploratif dan Investigasi Mandiri/Kelompok Materi ${topik}`,
-      `Pengujian Hipotesis, Analisis Data Temuan, dan Pembuktian Solusi ${topik}`,
-      `Penarikan Kesimpulan (Generalisasi), Publikasi Laporan, dan Refleksi Penyelidikan ${topik}`
+      `Penyusunan Desain Penyelidikan dan Penentuan Variabel Penelitian ${topik}`,
+      `Eksplorasi Mandiri dan Studi Literatur Menggunakan Media ${media}`,
+      `Pengumpulan Data Empiris dan Investigasi Praktik di Fasilitas ${fasilitas}`,
+      `Verifikasi Validitas Data Temuan dan Pengelompokan Parameter Kunci ${topik}`,
+      `Pengolahan Data Kualitatif dan Kuantitatif Berbantuan Media Digital ${media}`,
+      `Pengujian Hipotesis Awal dan Analisis Pembuktian Ilmiah ${topik}`,
+      `Diskusi Kritis: Komparasi Hasil Penyelidikan antar-Kelompok ${topik}`,
+      `Perumusan Solusi Penyelidikan dan Pembahasan Anomali Hasil Data ${topik}`,
+      `Sintesis Temuan Ilmiah dan Rekonstruksi Pemahaman Konseptual ${topik}`,
+      `Penarikan Kesimpulan (Generalisasi Teoretis dan Praktis) Materi ${topik}`,
+      `Penyusunan Laporan Hasil Penyelidikan Ilmiah dan Pembahasan Kritis ${topik}`,
+      `Publikasi dan Presentasi Sidang Mini Penyelidikan Kelompok ${topik}`,
+      `Uji Silang Pemikiran dan Sesi Tanya-Jawab Kritis Pembuktian Kasus ${topik}`,
+      `Asesmen Sumatif Kemampuan Bernalar Kritis dan Literasi Penyelidikan ${topik}`,
+      `Refleksi Metakognitif Proses Penyelidikan dan Tindak Lanjut Eksplorasi ${topik}`
     ];
   } else if (isDiscovery) {
     subThemes = [
-      `Pemberian Rangsangan (Stimulasi) dan Identifikasi Masalah Konseptual ${topik}`,
-      `Pengumpulan Data dan Eksplorasi Penyelidikan Terbimbing Terkait ${topik}`,
-      `Pengolahan Data, Verifikasi Pembuktian Hipotesis, dan Validasi Konsep ${topik}`,
-      `Generalisasi (Menarik Kesimpulan), Presentasi Simpulan, dan Refleksi Belajar ${topik}`
+      `Pemberian Rangsangan (Stimulasi) dan Observasi Fenomena Awal Materi ${topik}`,
+      `Identifikasi Masalah Konseptual dan Perumusan Fokus Penemuan ${topik}`,
+      `Perumusan Hipotesis Penemuan dan Pemetaan Arah Eksplorasi ${topik}`,
+      `Pengumpulan Data Tahap 1: Eksplorasi Terbimbing Menggunakan ${media}`,
+      `Pengumpulan Data Tahap 2: Pengamatan dan Pencatatan Fakta di ${fasilitas}`,
+      `Klasifikasi dan Kodifikasi Data Temuan Penyelidikan Konsep ${topik}`,
+      `Pengolahan Data dan Analisis Hubungan Antar-Variabel Pembelajaran ${topik}`,
+      `Diskusi Terarah: Interpretasi Hasil Pengolahan Data Penemuan ${topik}`,
+      `Pembuktian (Verifikasi) Hipotesis Melalui Pengujian Kasus Nyata ${topik}`,
+      `Uji Silang Temuan Antar-Kelompok dan Klarifikasi Pemahaman Konseptual ${topik}`,
+      `Generalisasi (Menarik Kesimpulan Bersama) Terkait Prinsip Materi ${topik}`,
+      `Konsolidasi Konsep dan Pengaitan Simpulan dengan Konteks Nyata ${topik}`,
+      `Aplikasi Prinsip Temuan pada Skenario dan Tantangan Masalah Baru ${topik}`,
+      `Presentasi Pleno Hasil Temuan Belajar dan Gelar Portofolio Eksplorasi ${topik}`,
+      `Asesmen Sumatif Pemahaman Konsep Mandiri Berbasis Hasil Penemuan ${topik}`,
+      `Refleksi Pengalaman Belajar dan Penguatan Budaya Inkuiri Mandiri ${topik}`
     ];
   } else if (isTeFa) {
     subThemes = [
-      `Analisis Lembar Kerja Order (Job Sheet) dan Spesifikasi Standar Industri Materi ${topik}`,
-      `Perencanaan Produksi Terpadu dan Eksekusi Pengerjaan Produk Sesuai SOP ${topik}`,
-      `Quality Assurance (QA), Verifikasi Spesifikasi, dan Pengujian Kelayakan Produk ${topik}`,
-      `Serah Terima Hasil Pekerjaan, Evaluasi Efisiensi Produksi, dan Dokumentasi Portofolio ${topik}`
+      `Analisis Lembar Kerja Order (Job Sheet) dan Spesifikasi Teknis Standar Industri ${topik}`,
+      `Briefing K3, Budaya Kerja 5R/5S, dan Pemeriksaan APD di Sarana ${fasilitas}`,
+      `Perencanaan Alur Produksi dan Pembagian Stasiun Kerja (Workstation) ${topik}`,
+      `Persiapan Bahan Baku, Kalibrasi Alat Ukur, dan Setup Mesin/Peralatan Kerja`,
+      `Eksekusi Tahap 1: Pembuatan Komponen Awal Sesuai Gambar Kerja ${topik}`,
+      `Pemeriksaan Dimensi dan Toleransi Mutu Tahap Awal (In-Process Inspection)`,
+      `Eksekusi Tahap 2: Perakitan dan Integrasi Sistem Komponen Materi ${topik}`,
+      `Uji Coba Fungsi Awal Produk dan Penanganan Kendala Teknis Perakitan`,
+      `Eksekusi Tahap 3: Finishing Produk dan Penyempurnaan Standar Estetika Industri`,
+      `Quality Assurance (QA) dan Verifikasi Standar Spesifikasi Mutu Akhir`,
+      `Pengujian Daya Tahan (Durability) dan Uji Keandalan Fungsi Produk ${topik}`,
+      `Perhitungan Efisiensi Waktu dan Analisis Biaya Produksi (Job Costing)`,
+      `Penyusunan Berita Acara Uji Kelayakan dan Dokumentasi Serah Terima Pekerjaan`,
+      `Simulasi Serah Terima Hasil Pekerjaan Produk kepada Klien/Konsumen ${topik}`,
+      `Asesmen Sumatif Praktik Kerja Industri dan Uji Sertifikasi Kompetensi Teknis`,
+      `Evaluasi Efisiensi Produksi, Refleksi Sikap Profesional, dan Rencana Kerja Berikutnya`
     ];
   } else if (isCooperative) {
     subThemes = [
-      `Penyampaian Tujuan Pembelajaran dan Pengorganisasian Tim Belajar Materi ${topik}`,
-      `Kerja Sama Tim Terstruktur dan Pendalaman Materi Kolaboratif ${topik}`,
-      `Sintesis Hasil Kerja Kelompok dan Diskusi Silang Antar-Tim ${topik}`,
-      `Presentasi Pleno Hasil Tim dan Pemberian Apresiasi/Penghargaan Kelompok ${topik}`
+      `Penyampaian Tujuan Pembelajaran dan Pembentukan Tim Kerja Heterogen Materi ${topik}`,
+      `Eksplorasi Konsep Dasar Bersama dan Pembagian Sub-Topik Peran Anggota`,
+      `Pendalaman Materi Kolaboratif (Tahap Diskusi Tim Ahli) Materi ${topik}`,
+      `Penyusunan Rangkuman Hasil Tim Ahli Berbantuan Media Digital ${media}`,
+      `Diskusi Silang Antar-Kelompok dan Transfer Wawasan Baru Materi ${topik}`,
+      `Penyusunan Peta Konsep Terpadu dan Klarifikasi Miskonsepsi Bersama Guru`,
+      `Investigasi Bersama Kasus Nyata di Fasilitas Belajar ${fasilitas}`,
+      `Sintesis Solusi Kelompok dan Perumusan Karya Analisis Bersama`,
+      `Latihan Kolaboratif Pemecahan Soal-Soal Terapan Tingkat Tinggi (HOTS)`,
+      `Peer-Tutoring (Bimbingan Teman Sebaya) dan Penguatan Pemahaman Tim`,
+      `Perancangan Media Presentasi Kelompok Menggunakan Alat Digital ${media}`,
+      `Gladi Presentasi dan Latihan Komunikasi Ilmiah Berkelompok`,
+      `Presentasi Pleno Kelompok di Hadapan Seluruh Murid dan Sesi Tanya Jawab`,
+      `Pemberian Umpan Balik Positif dan Tanggapan Kritis Antar-Kelompok`,
+      `Asesmen Sumatif Individual dan Penilaian Kinerja Kolaborasi Kelompok`,
+      `Pemberian Apresiasi / Reward Tim Terbaik dan Refleksi Kerja Sama Tim`
     ];
   } else {
-    // Default: Problem Based Learning (PBL) atau Model Mandiri
+    // Problem Based Learning (PBL) atau Model Lainnya
     subThemes = [
-      `Orientasi Murid pada Masalah Otentik dan Identifikasi Kebutuhan Belajar ${topik}`,
-      `Pengorganisasian Belajar dan Penyelidikan Mandiri/Kelompok Kasus ${topik}`,
-      `Pengembangan Alternatif Solusi, Perumusan Karya Pemecahan Masalah ${topik}`,
-      `Penyajian Hasil Karya Solutif, Evaluasi Proses Pemecahan Masalah ${topik}`
+      `Orientasi Murid pada Masalah Otentik dan Identifikasi Fenomena Riil ${topik}`,
+      `Perumusan Fokus Permasalahan dan Pembatasan Ruang Lingkup Analisis`,
+      `Pengorganisasian Kelompok Belajar dan Penetapan Tugas Investigasi Masalah`,
+      `Eksplorasi Data Awal dan Studi Pustaka Mandiri Menggunakan Media ${media}`,
+      `Pengumpulan Fakta dan Investigasi Lapangan Memanfaatkan Sarana ${fasilitas}`,
+      `Tabulasi dan Kodifikasi Temuan Data Permasalahan Terkait ${topik}`,
+      `Analisis Sebab-Akibat Fenomena Masalah Menggunakan Diagram Analitis`,
+      `Brainstorming Alternatif Solusi Pemecahan Masalah Bersama Tim`,
+      `Penilaian dan Pemilihan Solusi Paling Efektif Serta Aplikatif`,
+      `Perancangan Draf Desain Solutif dan Validasi Rencana Aksi Pemecahan Masalah`,
+      `Penyusunan Produk Karya Solutif / Prototipe Pemecahan Masalah ${topik}`,
+      `Pengujian dan Simulasi Penerapan Solusi pada Kasus Studi Permasalahan`,
+      `Penyempurnaan Karya Solutif Berdasarkan Feedback Awal dan Asistensi Guru`,
+      `Penyajian Hasil Karya Solutif di Forum Kelas dan Diskusi Pleno Uji Kasus`,
+      `Asesmen Sumatif Pemecahan Masalah dan Analisis Ketercapaian Tujuan Belajar`,
+      `Evaluasi Pengalaman Mengatasi Masalah dan Refleksi Pembelajaran Berkelanjutan`
     ];
   }
 
   // Sintesis Pengalaman Belajar Per Pertemuan (Array of string per poin tindakan)
   const pengalamanBelajar = [];
   for (let i = 1; i <= countPertemuan; i++) {
-    const theme = subThemes[(i - 1) % subThemes.length];
+    const theme = subThemes[i - 1] || subThemes[(i - 1) % subThemes.length];
 
     let awalGuru = [];
     let awalMurid = [];
