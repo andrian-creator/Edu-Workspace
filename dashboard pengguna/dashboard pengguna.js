@@ -65,14 +65,6 @@ async function initUserDashboard() {
           localStorage.setItem(STORAGE_KEY, JSON.stringify(allUsers));
         }
       } catch (e) {}
-    } else {
-      // Tidak ditemukan di Supabase = akun dihapus
-      user.status = 'Dihapus';
-      user.isDeleted = true;
-      user.isApproved = false;
-      localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user));
-      window.location.replace("profil.html");
-      return;
     }
   } catch (e) {
     console.warn('[Dashboard] Gagal koneksi Supabase:', e);

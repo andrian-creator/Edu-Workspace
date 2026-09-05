@@ -537,16 +537,8 @@ async function checkLiveStatus(force = false) {
       if (domNeedsUpdate) renderPageState(user);
       return;
     } else {
-      // User tidak ditemukan di Supabase
-      if (user.status !== 'Belum Lengkap' && user.status !== 'Menunggu Persetujuan') {
-        if (user.status !== 'Dihapus' || lastKnownStatus !== 'Dihapus') {
-          user.status = 'Dihapus';
-          user.isDeleted = true;
-          user.isApproved = false;
-          localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user));
-          renderPageState(user);
-        }
-      }
+      // Gagal mengambil data Supabase (koneksi terputus / rate limit)
+      // Pertahankan status lokal saat ini, jangan ubah status pengguna
       return;
     }
   } catch (e) {

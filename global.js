@@ -1183,8 +1183,8 @@ function initAccessTimeSync() {
   // C. Saat jendela kembali mendapatkan fokus
   window.addEventListener('focus', syncUserSubscription);
 
-  // D. Polling fallback berkala setiap 3 detik
-  setInterval(syncUserSubscription, 3000);
+  // D. Polling fallback berkala setiap 60 detik (bukan per 3 detik agar tidak memicu rate limit)
+  setInterval(syncUserSubscription, 60000);
 }
 
 /**
@@ -1288,14 +1288,8 @@ function initAccessTimeSync() {
     try {
       const dbUser = await SupabaseDB.getUserByEmail(userEmail);
       if (!dbUser) {
-        // Akun tidak ditemukan di Supabase = telah dihapus oleh Admin
-        user.status = 'Dihapus';
-        user.isDeleted = true;
-        user.isApproved = false;
-        localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user));
-        localStorage.removeItem(`edu_api_key_${userEmail}`);
-        localStorage.removeItem(`edu_modul_list_${userEmail}`);
-        window.location.replace(redirectTarget);
+        // Jika dbUser null (network error / timeout / rate limit), pertahankan sesi lokal pengguna saat ini
+        // DILARANG menganggap network error sebagai akun dihapus!
         return;
       }
 
@@ -1304,8 +1298,6 @@ function initAccessTimeSync() {
         user.isDeleted = true;
         user.isApproved = false;
         localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user));
-        localStorage.removeItem(`edu_api_key_${userEmail}`);
-        localStorage.removeItem(`edu_modul_list_${userEmail}`);
         window.location.replace(redirectTarget);
         return;
       }
@@ -1351,10 +1343,10 @@ function initAccessTimeSync() {
     document.addEventListener('DOMContentLoaded', () => verifyUserAccess());
   }
 
-  // B. Polling berkala setiap 3.5 detik untuk deteksi seketika bila admin menonaktifkan akun
+  // B. Polling berkala setiap 30 detik untuk deteksi sinkronisasi akun tanpa membebani server
   setInterval(() => {
     verifyUserAccess();
-  }, 3500);
+  }, 30000);
 
   // C. Sinyal broadcast realtime jika admin dan pengguna di browser yang sama
   try {
