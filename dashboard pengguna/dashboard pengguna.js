@@ -57,6 +57,14 @@ async function initUserDashboard() {
       }
       user = { ...user, ...dbUser };
       localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user));
+      try {
+        const allUsers = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+        const idx = allUsers.findIndex(u => (u.email || '').toLowerCase() === userEmail);
+        if (idx !== -1) {
+          allUsers[idx] = { ...allUsers[idx], ...user };
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(allUsers));
+        }
+      } catch (e) {}
     } else {
       // Tidak ditemukan di Supabase = akun dihapus
       user.status = 'Dihapus';
@@ -123,51 +131,13 @@ function renderUserFeatures(user) {
   const container = document.getElementById('fitur');
   if (!container) return;
 
-  // 1. Ambil activeFeatures dari objek user
-  let activeFeatures = [];
-  if (user && Array.isArray(user.features) && user.features.length > 0) {
-    activeFeatures = user.features;
-  } else {
-    try {
-      const allUsers = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-      const found = allUsers.find(u => (u.email || '').toLowerCase() === (user.email || '').toLowerCase());
-      if (found && Array.isArray(found.features) && found.features.length > 0) {
-        activeFeatures = found.features;
-      }
-    } catch (e) {
-      activeFeatures = [];
-    }
-  }
-
-  // 2. KUNCI PERBAIKAN: Jika akun berstatus Aktif atau disetujui (isApproved),
-  // tetapi activeFeatures masih kosong (misal setelah dinonaktifkan lalu diaktifkan kembali),
-  // otomatis pulihkan akses fitur modul pembelajaran 'generate_modul_ajar'!
   const isExpired = typeof isSubscriptionExpired === 'function' && isSubscriptionExpired(user);
-  const isAccountActive = (user.status === 'Aktif' || user.isApproved === true) && !isExpired;
+  const isDeactivated = user.status === 'Nonaktif' || user.status === 'Dinonaktifkan' || user.status === 'Ditolak' || user.isApproved === false || isExpired;
 
-  if (activeFeatures.length === 0 && isAccountActive) {
-    activeFeatures = ['generate_modul_ajar'];
-    user.features = activeFeatures;
-    user.status = 'Aktif';
-    user.isApproved = true;
-    try {
-      localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user));
-      const allUsers = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-      const idx = allUsers.findIndex(u => (u.email || '').toLowerCase() === (user.email || '').toLowerCase());
-      if (idx >= 0) {
-        allUsers[idx].features = activeFeatures;
-        allUsers[idx].status = 'Aktif';
-        allUsers[idx].isApproved = true;
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(allUsers));
-      }
-      if (typeof SupabaseDB !== 'undefined' && SupabaseDB.updateUserByEmail) {
-        SupabaseDB.updateUserByEmail(user.email, {
-          status: 'Aktif',
-          isApproved: true,
-          features: activeFeatures
-        }).catch(() => {});
-      }
-    } catch (e) {}
+  // 1. Ambil hak akses fitur persis seperti yang diatur oleh Admin
+  let activeFeatures = [];
+  if (!isDeactivated && user && Array.isArray(user.features)) {
+    activeFeatures = user.features;
   }
 
   const hasModulAjar = activeFeatures.includes('generate_modul_ajar');

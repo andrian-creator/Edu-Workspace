@@ -14,7 +14,7 @@ document.addEventListener('DOMContentLoaded', () => {
 /**
  * Inisialisasi Halaman & Autentikasi Pengguna
  */
-function initDaftarModulPage() {
+async function initDaftarModulPage() {
   let user = null;
   try {
     const raw = localStorage.getItem(CURRENT_USER_KEY);
@@ -25,6 +25,15 @@ function initDaftarModulPage() {
     window.location.replace("../halaman login/halaman login.html");
     return;
   }
+
+  // Sinkronisasi status akun dan hak akses fitur terakurat dari Supabase
+  try {
+    const dbUser = await SupabaseDB.getUserByEmail(user.email);
+    if (dbUser) {
+      user = { ...user, ...dbUser };
+      localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user));
+    }
+  } catch (e) {}
 
   // Jika akun telah dihapus atau dinonaktifkan oleh Admin, langsung alihkan ke halaman Profil (Akun Dihapus / Dinonaktifkan)
   const isExpired = typeof isSubscriptionExpired === 'function' && isSubscriptionExpired(user);

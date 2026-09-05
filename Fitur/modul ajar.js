@@ -1065,16 +1065,26 @@ ATURAN SANGAT KETAT:
 }
 
 
-function initModulAjarPage() {
-  const user = getCurrentUser();
+async function initModulAjarPage() {
+  let user = getCurrentUser();
   if (!user) {
     window.location.href = "../halaman login/halaman login.html";
     return;
   }
 
-  // Proteksi: Jika akun dihapus atau dinonaktifkan, dilarang mengakses generator modul ajar!
   const userEmail = (user.email || '').trim().toLowerCase();
   const isAdm = user.role === 'Admin' || (typeof ADMIN_EMAIL !== 'undefined' && userEmail === ADMIN_EMAIL.toLowerCase());
+
+  // Prioritas Utama: Ambil hak akses dan status terbaru langsung dari Supabase
+  try {
+    const dbUser = await SupabaseDB.getUserByEmail(userEmail);
+    if (dbUser) {
+      user = { ...user, ...dbUser };
+      localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user));
+    }
+  } catch (e) {}
+
+  // Proteksi: Jika akun dihapus atau dinonaktifkan, dilarang mengakses generator modul ajar!
   if (!isAdm) {
     const isDeleted = user.status === 'Dihapus' || user.isDeleted === true;
     const isExpired = typeof isSubscriptionExpired === 'function' && isSubscriptionExpired(user);
@@ -1086,18 +1096,7 @@ function initModulAjarPage() {
     }
 
     // Proteksi: Jika fitur generate_modul_ajar dinonaktifkan oleh Admin
-    let activeFeatures = [];
-    if (Array.isArray(user.features)) {
-      activeFeatures = user.features;
-    } else {
-      try {
-        const allUsers = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-        const found = allUsers.find(u => (u.email || '').toLowerCase() === userEmail);
-        if (found && Array.isArray(found.features)) {
-          activeFeatures = found.features;
-        }
-      } catch (e) {}
-    }
+    const activeFeatures = Array.isArray(user.features) ? user.features : [];
 
     if (!activeFeatures.includes('generate_modul_ajar')) {
       alert("Akses Fitur Dinonaktifkan: Fitur Pembuatan Modul Ajar saat ini dinonaktifkan oleh Administrator untuk akun Anda.");
@@ -1594,6 +1593,16 @@ function closeConfirmModalOnOverlay(e) {
  */
 async function proceedGenerateModul() {
   closeConfirmGenerateModal();
+
+  const curUser = getCurrentUser();
+  const curEmail = (curUser?.email || '').trim().toLowerCase();
+  const isAdm = curUser?.role === 'Admin' || (typeof ADMIN_EMAIL !== 'undefined' && curEmail === ADMIN_EMAIL.toLowerCase());
+  const activeFeatures = Array.isArray(curUser?.features) ? curUser.features : [];
+  if (!isAdm && !activeFeatures.includes('generate_modul_ajar')) {
+    alert("Akses Fitur Dinonaktifkan: Hak akses fitur Pembuatan Modul Ajar saat ini dinonaktifkan oleh Administrator untuk akun Anda.");
+    window.location.replace("../dashboard pengguna/daftar modul ajar.html");
+    return;
+  }
 
   // Kumpulkan Seluruh Data Lengkap dari Tahap 1 dan Tahap 2
   const nama = document.getElementById('namaPenyusun')?.value.trim() || '';

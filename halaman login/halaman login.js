@@ -145,7 +145,7 @@ function processLogin(payload) {
         finalUser = {
           ...matchedUser,
           id: dbUser.id,
-          features: dbUser.features && dbUser.features.length > 0 ? dbUser.features : matchedUser.features,
+          features: Array.isArray(dbUser.features) ? dbUser.features : (matchedUser.features || []),
           subscriptionStart: dbUser.subscriptionStart || matchedUser.subscriptionStart || null,
           subscriptionEnd: dbUser.subscriptionEnd || matchedUser.subscriptionEnd || null,
           status: dbUser.status !== 'Belum Lengkap' ? dbUser.status : matchedUser.status,
