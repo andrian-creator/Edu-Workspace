@@ -15,6 +15,15 @@ const ALL_SYSTEM_FEATURES = [
 ];
 
 let currentEditingUserEmail = null;
+let currentEditingNoteUserEmail = null;
+
+function getAdminNotesMap() {
+  try {
+    return JSON.parse(localStorage.getItem('edu_admin_notes') || '{}');
+  } catch (e) {
+    return {};
+  }
+}
 
 function escapeHtml(text) {
   const div = document.createElement('div');
@@ -79,11 +88,15 @@ function renderFeatureTable() {
 
   if (!tableBody) return;
 
+  const notesMap = getAdminNotesMap();
+
   const filteredUsers = users.filter(u => {
+    const userNote = (u.adminNote || notesMap[(u.email || '').toLowerCase()] || '').toLowerCase();
     const nameMatch = (u.name || '').toLowerCase().includes(searchInput);
     const emailMatch = (u.email || '').toLowerCase().includes(searchInput);
     const roleMatch = (u.role || '').toLowerCase().includes(searchInput);
-    return nameMatch || emailMatch || roleMatch;
+    const noteMatch = userNote.includes(searchInput);
+    return nameMatch || emailMatch || roleMatch || noteMatch;
   });
 
   if (tableInfo) {
@@ -93,7 +106,7 @@ function renderFeatureTable() {
   if (filteredUsers.length === 0) {
     tableBody.innerHTML = `
       <tr>
-        <td colspan="5" style="text-align: center; padding: 48px; color: var(--color-text-muted);">
+        <td colspan="6" style="text-align: center; padding: 48px; color: var(--color-text-muted);">
           Tidak ada pengguna yang cocok dengan pencarian.
         </td>
       </tr>
@@ -142,6 +155,21 @@ function renderFeatureTable() {
 
     const safeEmail = escapeHtml(u.email || '');
     const editIconUrl = getEduIconUrl('edit') || '../Assets/icon/icon_edit.png';
+
+    // Catatan Khusus Admin (tidak muncul di akun pengguna)
+    const userNote = (u.adminNote || notesMap[(u.email || '').toLowerCase()] || '').trim();
+    const hasNote = userNote.length > 0;
+    const catatanCellHtml = `
+      <div class="catatan-cell">
+        <div class="catatan-text" onclick="openAdminNoteModal('${safeEmail}')" title="${hasNote ? escapeHtml(userNote) : 'Klik untuk menulis catatan'}">
+          ${hasNote ? escapeHtml(userNote) : '<span class="catatan-empty">Belum ada catatan</span>'}
+        </div>
+        <button type="button" class="btn-catatan-edit" onclick="openAdminNoteModal('${safeEmail}')" title="${hasNote ? 'Ubah Catatan' : 'Tulis Catatan'}">
+          <img data-icon="edit" src="${editIconUrl}" alt="Edit Catatan">
+        </button>
+      </div>
+    `;
+
     const actionBtnHtml = isAdm 
       ? `<span style="font-size: 0.8rem; font-weight: 700; color: #854d0e; background: #fef08a; padding: 5px 14px; border-radius: 999px; white-space: nowrap; display: inline-block;">Akses Penuh</span>`
       : `<button type="button" class="btn-edit-features" onclick="openManageFeaturesModal('${safeEmail}')">
@@ -168,6 +196,9 @@ function renderFeatureTable() {
           <div class="features-cell">
             ${featureChipsHtml}
           </div>
+        </td>
+        <td style="text-align: center;">
+          ${catatanCellHtml}
         </td>
         <td style="text-align: center;">
           ${actionBtnHtml}
@@ -310,6 +341,133 @@ function saveUserFeatures() {
   showToast(`Hak akses fitur untuk ${users[userIndex].name} berhasil diperbarui.`);
 }
 
+function openAdminNoteModal(email) {
+  const users = getUsers();
+  const user = users.find(u => (u.email || '').toLowerCase() === email.toLowerCase());
+  if (!user) return;
+
+  currentEditingNoteUserEmail = email;
+
+  const notesMap = getAdminNotesMap();
+  const currentNote = (user.adminNote || notesMap[email.toLowerCase()] || '').trim();
+
+  const isAdm = user.role === 'Admin' || (user.email || '').toLowerCase() === ADMIN_EMAIL.toLowerCase();
+  let roleLabel = 'Guru';
+  let roleClass = 'role-text-guru';
+  if (isAdm) {
+    roleLabel = 'Admin';
+    roleClass = 'role-text-admin';
+  } else if (user.role === 'Dosen' || (user.gradeLevel && (user.gradeLevel.includes('Perguruan Tinggi') || user.gradeLevel.includes('Universitas')))) {
+    roleLabel = 'Dosen';
+    roleClass = 'role-text-dosen';
+  }
+
+  const avatarUrl = getGoogleAvatar(user.name, user.avatar);
+  const userInfoBox = document.getElementById('noteModalUserInfo');
+  if (userInfoBox) {
+    userInfoBox.innerHTML = `
+      <img src="${avatarUrl}" referrerpolicy="no-referrer" alt="Avatar" class="user-avatar-tiny" onerror="this.onerror=null; this.src=getGoogleAvatar('${escapeHtml(user.name || 'Pengguna')}', null);">
+      <div style="flex: 1; min-width: 0;">
+        <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+          <span style="font-weight: 700; font-size: 0.95rem; color: var(--color-text-main);">${escapeHtml(user.name || 'Pengguna')}</span>
+          <span class="role-badge-text ${roleClass}" style="font-size: 0.72rem; padding: 2px 8px;">${roleLabel}</span>
+        </div>
+        <div style="font-size: 0.82rem; color: var(--color-text-muted); margin-top: 2px;">${escapeHtml(user.email || '-')}</div>
+      </div>
+    `;
+  }
+
+  const noteInput = document.getElementById('adminNoteInput');
+  if (noteInput) {
+    noteInput.value = currentNote;
+  }
+
+  const modal = document.getElementById('adminNoteModal');
+  if (modal) {
+    modal.classList.add('active');
+    setTimeout(() => {
+      if (noteInput) {
+        noteInput.focus();
+        noteInput.setSelectionRange(noteInput.value.length, noteInput.value.length);
+      }
+    }, 100);
+  }
+}
+
+function closeAdminNoteModal() {
+  currentEditingNoteUserEmail = null;
+  const modal = document.getElementById('adminNoteModal');
+  if (modal) {
+    modal.classList.remove('active');
+  }
+}
+
+function saveAdminNote() {
+  if (!currentEditingNoteUserEmail) return;
+
+  const noteInput = document.getElementById('adminNoteInput');
+  const noteValue = (noteInput ? noteInput.value : '').trim();
+
+  const users = getUsers();
+  const userIndex = users.findIndex(u => (u.email || '').toLowerCase() === currentEditingNoteUserEmail.toLowerCase());
+  const userName = userIndex !== -1 ? users[userIndex].name : 'Pengguna';
+
+  if (userIndex !== -1) {
+    users[userIndex].adminNote = noteValue;
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(users));
+  }
+
+  // Simpan ke storage kamus catatan admin
+  try {
+    const notesMap = getAdminNotesMap();
+    if (noteValue) {
+      notesMap[currentEditingNoteUserEmail.toLowerCase()] = noteValue;
+    } else {
+      delete notesMap[currentEditingNoteUserEmail.toLowerCase()];
+    }
+    localStorage.setItem('edu_admin_notes', JSON.stringify(notesMap));
+  } catch (e) { }
+
+  // Update session jika akun yang diedit adalah akun yang sedang login
+  const currentUserStr = localStorage.getItem(CURRENT_USER_KEY);
+  if (currentUserStr) {
+    try {
+      const curUser = JSON.parse(currentUserStr);
+      if ((curUser.email || '').toLowerCase() === currentEditingNoteUserEmail.toLowerCase()) {
+        curUser.adminNote = noteValue;
+        localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(curUser));
+      }
+    } catch (e) { }
+  }
+
+  // Kirim ke backend lokal
+  fetch('/api/users', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email: currentEditingNoteUserEmail, adminNote: noteValue })
+  }).catch(err => console.warn("Error saving note to backend:", err));
+
+  // Sync ke Supabase (jika profil di Supabase memiliki kolom admin_note)
+  if (typeof SupabaseDB !== 'undefined' && SupabaseDB.updateUserByEmail) {
+    SupabaseDB.updateUserByEmail(currentEditingNoteUserEmail, { admin_note: noteValue })
+      .catch(() => { });
+  }
+
+  // Broadcast realtime sync ke tab admin lain
+  try {
+    const channel = new BroadcastChannel('edu_workspace_sync');
+    channel.postMessage({
+      type: 'NOTE_UPDATED',
+      email: currentEditingNoteUserEmail,
+      adminNote: noteValue
+    });
+  } catch (e) { }
+
+  closeAdminNoteModal();
+  renderFeatureTable();
+  showToast(noteValue ? `Catatan untuk ${userName} berhasil disimpan.` : `Catatan untuk ${userName} telah dihapus.`);
+}
+
 function initAdminFeaturesDashboard() {
   const loggedUserStr = localStorage.getItem(CURRENT_USER_KEY);
   if (!loggedUserStr) {
@@ -352,20 +510,37 @@ document.addEventListener('click', (e) => {
     if (dropdown) dropdown.classList.remove('active');
     wrapper.classList.remove('open');
   }
+
+  const manageModal = document.getElementById('manageFeaturesModal');
+  if (manageModal && e.target === manageModal) {
+    closeManageFeaturesModal();
+  }
+
+  const noteModal = document.getElementById('adminNoteModal');
+  if (noteModal && e.target === noteModal) {
+    closeAdminNoteModal();
+  }
+});
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    closeManageFeaturesModal();
+    closeAdminNoteModal();
+  }
 });
 
 // Sinkronisasi Realtime Perubahan Data / Status Pengguna dari Dashboard Admin Lainnya
 try {
   const syncChannel = new BroadcastChannel('edu_workspace_sync');
   syncChannel.onmessage = (event) => {
-    if (event.data && (event.data.type === 'STATUS_UPDATED' || event.data.type === 'FEATURES_UPDATED' || event.data.type === 'USER_DELETED' || event.data.type === 'SYNC_USER')) {
+    if (event.data && (event.data.type === 'STATUS_UPDATED' || event.data.type === 'FEATURES_UPDATED' || event.data.type === 'USER_DELETED' || event.data.type === 'SYNC_USER' || event.data.type === 'NOTE_UPDATED')) {
       renderFeatureTable();
     }
   };
 } catch (e) {}
 
 window.addEventListener('storage', (e) => {
-  if (e.key === STORAGE_KEY || e.key === 'edu_sync_timestamp' || e.key === 'edu_registered_users') {
+  if (e.key === STORAGE_KEY || e.key === 'edu_sync_timestamp' || e.key === 'edu_registered_users' || e.key === 'edu_admin_notes') {
     renderFeatureTable();
   }
 });

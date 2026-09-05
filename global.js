@@ -68,7 +68,8 @@ function mapDbToUser(row) {
     subscriptionEnd: row.subscription_end || null,
     rejectReason: row.reject_reason || '',
     geminiApiKey: row.gemini_api_key || '',
-    isDeleted: row.is_deleted || false
+    isDeleted: row.is_deleted || false,
+    adminNote: row.admin_note || row.adminNote || ''
   };
 }
 
@@ -96,7 +97,8 @@ function mapUserToDb(user) {
     subscription_end: user.subscriptionEnd || null,
     reject_reason: user.rejectReason || null,
     gemini_api_key: user.geminiApiKey || '',
-    is_deleted: user.isDeleted || false
+    is_deleted: user.isDeleted || false,
+    admin_note: user.adminNote || null
   };
   // Hapus key null agar tidak overwrite yang sudah ada di DB
   Object.keys(db).forEach(k => { if (db[k] === null || db[k] === undefined) delete db[k]; });
@@ -278,6 +280,24 @@ async function syncUsersFromSupabase() {
         };
         users.unshift(localAdmin);
       }
+      // Pertahankan adminNote lokal jika profiles Supabase belum memiliki kolomnya
+      let localNotes = {};
+      try { localNotes = JSON.parse(localStorage.getItem('edu_admin_notes') || '{}'); } catch (e) {}
+      let localUsers = [];
+      try { localUsers = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); } catch (e) {}
+      users.forEach(u => {
+        const uEmail = (u.email || '').toLowerCase();
+        if (!u.adminNote) {
+          if (localNotes[uEmail]) {
+            u.adminNote = localNotes[uEmail];
+          } else {
+            const lu = localUsers.find(x => (x.email || '').toLowerCase() === uEmail);
+            if (lu && lu.adminNote) {
+              u.adminNote = lu.adminNote;
+            }
+          }
+        }
+      });
       try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(users));
       } catch (e) {}
@@ -676,13 +696,20 @@ function getAppSubDirPrefix() {
     p = (window.location.pathname || '').toLowerCase().replace(/\\/g, '/');
   }
 
+  // Jika berada di sub-subfolder fitur (misal /fitur/generate-modul-ajar/)
+  if (
+    p.includes('/fitur/generate-modul-ajar/') ||
+    p.includes('/fitur/generate-modul-ajar') ||
+    p.includes('/fitur/generate modul ajar/') ||
+    p.includes('/fitur/generate modul ajar')
+  ) {
+    return '../../';
+  }
+
   if (
     p.includes('/fitur/') ||
     p.includes('/dashboard-pengguna/') ||
-    p.includes('/dashboard-pengguna/') ||
     p.includes('/dashboard-admin/') ||
-    p.includes('/dashboard-admin/') ||
-    p.includes('/halaman-login/') ||
     p.includes('/halaman-login/')
   ) {
     return '../';
@@ -954,6 +981,14 @@ function renderEduNavbar(options = {}) {
   const userAvatar = getGoogleAvatar(userName, user ? user.avatar : null);
 
   const isInFitur = p.includes('/fitur/');
+  const isNestedFitur = (
+    p.includes('/fitur/generate-modul-ajar/') ||
+    p.includes('/fitur/generate-modul-ajar') ||
+    p.includes('/fitur/generate modul ajar/') ||
+    p.includes('/fitur/generate modul ajar')
+  );
+  const fiturPrefix = isNestedFitur ? '../../' : (isInFitur ? '../' : '');
+
   const isDashboardPengguna = (
     p.includes('/dashboard-pengguna') || 
     p.includes('dashboard-pengguna') ||
@@ -963,7 +998,7 @@ function renderEduNavbar(options = {}) {
 
   let defaultPortalHome = 'dashboard-pengguna.html';
   if (isInFitur) {
-    defaultPortalHome = '../dashboard-pengguna/dashboard-pengguna.html';
+    defaultPortalHome = fiturPrefix + 'dashboard-pengguna/dashboard-pengguna.html';
   } else if (isAdminArea) {
     defaultPortalHome = 'dashboard-admin.html';
   }
@@ -982,7 +1017,7 @@ function renderEduNavbar(options = {}) {
   // Khusus Dashboard Pengguna: Otomatis tampilkan tombol Daftar Modul Ajar & API Key
   const defaultShowDaftarModul = isDashboardPengguna;
   const showDaftarModul = options.showDaftarModul !== undefined ? options.showDaftarModul : defaultShowDaftarModul;
-  const defaultDaftarModulUrl = isInFitur ? '../dashboard-pengguna/daftar-modul-ajar.html' : 'daftar-modul-ajar.html';
+  const defaultDaftarModulUrl = isInFitur ? (fiturPrefix + 'dashboard-pengguna/daftar-modul-ajar.html') : 'daftar-modul-ajar.html';
   const daftarModulUrl = options.daftarModulUrl || defaultDaftarModulUrl;
 
   const showBack = options.showBack !== undefined ? options.showBack : defaultShowBack;
@@ -991,7 +1026,7 @@ function renderEduNavbar(options = {}) {
 
   const defaultShowApiKey = isDashboardPengguna;
   const showApiKey = options.showApiKey !== undefined ? options.showApiKey : defaultShowApiKey;
-  const defaultApiKeyUrl = isInFitur ? '../dashboard-pengguna/api-key.html' : 'api-key.html';
+  const defaultApiKeyUrl = isInFitur ? (fiturPrefix + 'dashboard-pengguna/api-key.html') : 'api-key.html';
   const apiKeyUrl = options.apiKeyUrl || defaultApiKeyUrl;
 
   // Khusus Dashboard Pengguna (Bukan Admin): Tampilkan informasi Sisa Waktu Akses
@@ -1255,7 +1290,15 @@ function initAccessTimeSync() {
 
     let raw = localStorage.getItem(CURRENT_USER_KEY);
     if (!raw) {
-      const loginTarget = p.includes('/fitur/') ? '../halaman-login/halaman-login.html' : (p.includes('/dashboard-pengguna/') ? '../halaman-login/halaman-login.html' : 'halaman-login/halaman-login.html');
+      const isNestedFitur = (
+        p.includes('/fitur/generate-modul-ajar/') ||
+        p.includes('/fitur/generate-modul-ajar') ||
+        p.includes('/fitur/generate modul ajar/') ||
+        p.includes('/fitur/generate modul ajar')
+      );
+      const loginTarget = isNestedFitur 
+        ? '../../halaman-login/halaman-login.html' 
+        : (p.includes('/fitur/') ? '../halaman-login/halaman-login.html' : (p.includes('/dashboard-pengguna/') ? '../halaman-login/halaman-login.html' : 'halaman-login/halaman-login.html'));
       window.location.replace(loginTarget);
       return;
     }

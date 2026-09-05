@@ -636,7 +636,7 @@ function previewModulItem(modulId) {
   localStorage.setItem('edu_current_generated_modul', JSON.stringify(payloadToPreview));
 
   // Buka dokumen preview modul ajar di tab baru
-  window.open('../fitur/preview modul-ajar.html', '_blank');
+  window.open('../fitur/generate-modul-ajar/preview-modul-ajar.html', '_blank');
 }
 
 /**
@@ -675,7 +675,7 @@ function editModulItem(modulId) {
     localStorage.setItem('edu_last_modul_payload', JSON.stringify(payloadToEdit));
   }
 
-  window.location.href = `../fitur/modul-ajar.html?editId=${encodeURIComponent(modulId)}`;
+  window.location.href = `../fitur/generate-modul-ajar/modul-ajar.html?editId=${encodeURIComponent(modulId)}`;
 }
 
 /**

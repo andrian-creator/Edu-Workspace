@@ -820,7 +820,7 @@ ATURAN FORMAT OUTPUT SANGAT KETAT:
   if (btn) {
     btn.disabled = false;
     btn.classList.remove('loading');
-    btn.innerHTML = `<img src="../Assets/icon/icon_generate.png" class="btn-ai-icon" alt=""> <span>Generate With AI</span>`;
+    btn.innerHTML = `<img src="../../Assets/icon/icon_generate.png" class="btn-ai-icon" alt=""> <span>Generate With AI</span>`;
   }
 }
 
@@ -883,7 +883,7 @@ ATURAN WAJIB SANGAT KETAT:
   if (btn) {
     btn.disabled = false;
     btn.classList.remove('loading');
-    btn.innerHTML = `<img src="../Assets/icon/icon_generate.png" class="btn-ai-icon" alt=""> <span>Generate With AI</span>`;
+    btn.innerHTML = `<img src="../../Assets/icon/icon_generate.png" class="btn-ai-icon" alt=""> <span>Generate With AI</span>`;
   }
 }
 
@@ -945,7 +945,7 @@ ATURAN WAJIB SANGAT KETAT:
   if (btn) {
     btn.disabled = false;
     btn.classList.remove('loading');
-    btn.innerHTML = `<img src="../Assets/icon/icon_generate.png" class="btn-ai-icon" alt=""> <span>Generate With AI</span>`;
+    btn.innerHTML = `<img src="../../Assets/icon/icon_generate.png" class="btn-ai-icon" alt=""> <span>Generate With AI</span>`;
   }
 }
 
@@ -1017,7 +1017,7 @@ ATURAN WAJIB SANGAT KETAT:
   if (btn) {
     btn.disabled = false;
     btn.classList.remove('loading');
-    btn.innerHTML = `<img src="../Assets/icon/icon_generate.png" class="btn-ai-icon" alt=""> <span>Generate With AI</span>`;
+    btn.innerHTML = `<img src="../../Assets/icon/icon_generate.png" class="btn-ai-icon" alt=""> <span>Generate With AI</span>`;
   }
 }
 
@@ -1101,7 +1101,7 @@ ATURAN SANGAT KETAT:
   if (btn) {
     btn.disabled = false;
     btn.classList.remove('loading');
-    btn.innerHTML = `<img src="../Assets/icon/icon_generate.png" class="btn-ai-icon" alt=""> <span>Generate With AI</span>`;
+    btn.innerHTML = `<img src="../../Assets/icon/icon_generate.png" class="btn-ai-icon" alt=""> <span>Generate With AI</span>`;
   }
 }
 
@@ -1109,7 +1109,7 @@ ATURAN SANGAT KETAT:
 async function initModulAjarPage() {
   let user = getCurrentUser();
   if (!user) {
-    window.location.href = "../halaman-login/halaman-login.html";
+    window.location.href = "../../halaman-login/halaman-login.html";
     return;
   }
 
@@ -1132,7 +1132,7 @@ async function initModulAjarPage() {
     const isDeactivated = user.status === 'Nonaktif' || user.status === 'Dinonaktifkan' || user.status === 'Ditolak' || user.isApproved === false || isExpired;
 
     if (isDeleted || isDeactivated) {
-      window.location.replace("../dashboard-pengguna/profil.html");
+      window.location.replace("../../dashboard-pengguna/profil.html");
       return;
     }
 
@@ -1141,7 +1141,7 @@ async function initModulAjarPage() {
 
     if (!activeFeatures.includes('generate_modul_ajar')) {
       alert("Akses Fitur Dinonaktifkan: Fitur Pembuatan Modul Ajar saat ini dinonaktifkan oleh Administrator untuk akun Anda.");
-      window.location.replace("../dashboard-pengguna/daftar-modul-ajar.html");
+      window.location.replace("../../dashboard-pengguna/daftar-modul-ajar.html");
       return;
     }
   }
@@ -1149,7 +1149,7 @@ async function initModulAjarPage() {
   // Render Header Global Terpusat
   renderEduNavbar({
     showBack: true,
-    backUrl: '../dashboard-pengguna/dashboard-pengguna.html',
+    backUrl: '../../dashboard-pengguna/dashboard-pengguna.html',
     showApiKey: false
   });
 
@@ -1759,7 +1759,7 @@ async function proceedGenerateModul() {
   const activeFeatures = Array.isArray(curUser?.features) ? curUser.features : [];
   if (!isAdm && !activeFeatures.includes('generate_modul_ajar')) {
     alert("Akses Fitur Dinonaktifkan: Hak akses fitur Pembuatan Modul Ajar saat ini dinonaktifkan oleh Administrator untuk akun Anda.");
-    window.location.replace("../dashboard-pengguna/daftar-modul-ajar.html");
+    window.location.replace("../../dashboard-pengguna/daftar-modul-ajar.html");
     return;
   }
 
@@ -3567,7 +3567,7 @@ try {
         const isDeactivated = curUser.status === 'Nonaktif' || curUser.status === 'Dinonaktifkan' || curUser.status === 'Ditolak' || curUser.isApproved === false || isExpired;
 
         if (isDeleted || isDeactivated) {
-          window.location.replace("../dashboard-pengguna/profil.html");
+          window.location.replace("../../dashboard-pengguna/profil.html");
           return;
         }
       }
@@ -3581,7 +3581,7 @@ try {
           curUser.features = feats;
           localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(curUser));
           alert("Akses Fitur Dinonaktifkan: Hak akses fitur Pembuatan Modul Ajar telah dinonaktifkan oleh Administrator.");
-          window.location.replace("../dashboard-pengguna/daftar-modul-ajar.html");
+          window.location.replace("../../dashboard-pengguna/daftar-modul-ajar.html");
         }
       }
     }

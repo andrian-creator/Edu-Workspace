@@ -23,12 +23,22 @@
     },
     {
       "source": "/Fitur/modul%20ajar",
-      "destination": "/fitur/modul-ajar",
+      "destination": "/fitur/generate-modul-ajar/modul-ajar",
+      "permanent": true
+    },
+    {
+      "source": "/fitur/modul-ajar",
+      "destination": "/fitur/generate-modul-ajar/modul-ajar",
       "permanent": true
     },
     {
       "source": "/Fitur/preview%20modul%20ajar",
-      "destination": "/fitur/preview-modul-ajar",
+      "destination": "/fitur/generate-modul-ajar/preview-modul-ajar",
+      "permanent": true
+    },
+    {
+      "source": "/fitur/preview-modul-ajar",
+      "destination": "/fitur/generate-modul-ajar/preview-modul-ajar",
       "permanent": true
     },
     {

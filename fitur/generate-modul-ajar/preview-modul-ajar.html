@@ -12,7 +12,7 @@
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 
   <!-- Global CSS Edu Workspace -->
-  <link rel="stylesheet" href="../global.css?v=123">
+  <link rel="stylesheet" href="../../global.css?v=123">
 
   <style>
     :root {
@@ -445,7 +445,7 @@
   <!-- Header Global Edu Workspace Sesuai Desain Web Kita -->
   <header class="edu-navbar" id="eduGlobalNavbar">
     <div class="header-container">
-      <a href="../dashboard-pengguna/dashboard-pengguna.html" class="brand-logo" title="Edu Workspace">
+      <a href="../../dashboard-pengguna/dashboard-pengguna.html" class="brand-logo" title="Edu Workspace">
         <span class="brand-bold">Edu</span> <span class="brand-thin">Workspace</span>
       </a>
 
@@ -460,15 +460,15 @@
         <!-- Tombol Download Word, PDF & Tutup Sesuai Style Gambar 1 (.btn-back-home) -->
         <div class="header-download-group">
           <button type="button" id="btnDownloadWord" class="btn-doc-download" onclick="downloadModulWord(); if (typeof closeGlobalMobileNav === 'function') closeGlobalMobileNav();" title="Download Word">
-            <img src="../Assets/icon/icon_word.png" alt="Word" class="nav-btn-icon">
+            <img src="../../Assets/icon/icon_word.png" alt="Word" class="nav-btn-icon">
             <span>Download Word</span>
           </button>
           <button type="button" id="btnDownloadPDF" class="btn-doc-download" onclick="downloadModulPDF(); if (typeof closeGlobalMobileNav === 'function') closeGlobalMobileNav();" title="Download PDF">
-            <img src="../Assets/icon/icon_pdf.png" alt="PDF" class="nav-btn-icon">
+            <img src="../../Assets/icon/icon_pdf.png" alt="PDF" class="nav-btn-icon">
             <span>Download PDF</span>
           </button>
           <button type="button" id="btnCloseTab" class="btn-doc-download" onclick="closeCurrentTab()" title="Tutup">
-            <img src="../Assets/icon/icon_close.png" alt="Tutup" class="nav-btn-icon">
+            <img src="../../Assets/icon/icon_close.png" alt="Tutup" class="nav-btn-icon">
             <span>Tutup</span>
           </button>
         </div>
@@ -699,10 +699,10 @@
   </main>
 
   <!-- Library HTML to PDF Lokal -->
-  <script src="../Assets/js/html2pdf.bundle.min.js"></script>
+  <script src="../../Assets/js/html2pdf.bundle.min.js"></script>
 
   <!-- Global JS Edu Workspace -->
-  <script src="../global.js?v=300"></script>
+  <script src="../../global.js?v=300"></script>
 
   <!-- Logika Dokumen Modul Ajar Sesuai contoh modul.pdf -->
   <script>
@@ -1011,7 +1011,7 @@
           draftBanner.style.textAlign = 'center';
 
           const targetId = data.id ? encodeURIComponent(data.id) : '';
-          const editHref = targetId ? `../fitur/modul-ajar.html?editId=${targetId}` : `../fitur/modul-ajar.html`;
+          const editHref = targetId ? `modul-ajar.html?editId=${targetId}` : `modul-ajar.html`;
 
           draftBanner.innerHTML = `
             <div style="width: 52px; height: 52px; background: #fef3c7; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 14px;">
