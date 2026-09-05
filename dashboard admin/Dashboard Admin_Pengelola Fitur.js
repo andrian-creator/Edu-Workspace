@@ -154,7 +154,7 @@ function renderFeatureTable() {
         <td style="text-align: center; font-weight: 600; color: var(--color-text-muted);">${index + 1}</td>
         <td>
           <div class="user-info">
-            <img src="${avatarUrl}" alt="Avatar" class="user-avatar-tiny" onerror="this.src='https://lh3.googleusercontent.com/a/default-user=s96-c'">
+            <img src="${avatarUrl}" referrerpolicy="no-referrer" alt="Avatar" class="user-avatar-tiny" onerror="this.onerror=null; this.src=getGoogleAvatar('${escapeHtml(u.name || 'Pengguna')}', null);">
             <div>
               <div class="user-name">${escapeHtml(u.name || 'Pengguna')}</div>
               <div class="user-email">${escapeHtml(u.email || '-')}</div>
@@ -186,8 +186,7 @@ function openManageFeaturesModal(email) {
   document.getElementById('modalUserDesc').textContent = `Atur modul fitur aktif untuk ${user.name} (${user.email}).`;
 
   const isAdm = user.role === 'Admin' || (user.email || '').toLowerCase() === ADMIN_EMAIL.toLowerCase();
-  const isDeactivated = !isAdm && (user.status === 'Nonaktif' || user.status === 'Dinonaktifkan' || user.status === 'Ditolak');
-  const activeFeatureIds = isAdm ? ALL_SYSTEM_FEATURES.map(f => f.id) : (isDeactivated ? [] : (Array.isArray(user.features) ? user.features : []));
+  const activeFeatureIds = isAdm ? ALL_SYSTEM_FEATURES.map(f => f.id) : (Array.isArray(user.features) ? user.features : []);
   const toggleList = document.getElementById('featureToggleList');
 
   toggleList.innerHTML = ALL_SYSTEM_FEATURES.map(feat => {
@@ -235,6 +234,22 @@ function saveUserFeatures() {
   });
 
   users[userIndex].features = selectedFeatures;
+
+  // Jika admin mengaktifkan minimal 1 fitur dan akun sebelumnya non-aktif, otomatis jadikan Aktif
+  const shouldReactivate = selectedFeatures.length > 0 && (
+    users[userIndex].status === 'Nonaktif' || 
+    users[userIndex].status === 'Dinonaktifkan' || 
+    users[userIndex].status === 'Ditolak' || 
+    !users[userIndex].isApproved
+  );
+
+  if (shouldReactivate) {
+    users[userIndex].status = 'Aktif';
+    users[userIndex].isApproved = true;
+    users[userIndex].isProfileCompleted = true;
+    delete users[userIndex].rejectReason;
+  }
+
   localStorage.setItem(STORAGE_KEY, JSON.stringify(users));
 
   // Update current user session jika akun yang sedang login sama
@@ -244,19 +259,31 @@ function saveUserFeatures() {
       const curUser = JSON.parse(currentUserStr);
       if ((curUser.email || '').toLowerCase() === currentEditingUserEmail.toLowerCase()) {
         curUser.features = selectedFeatures;
+        if (shouldReactivate) {
+          curUser.status = 'Aktif';
+          curUser.isApproved = true;
+          delete curUser.rejectReason;
+        }
         localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(curUser));
       }
     } catch (e) { }
   }
 
   // Sync ke Supabase
-  SupabaseDB.updateUserByEmail(currentEditingUserEmail, { features: selectedFeatures })
+  const supabasePayload = { features: selectedFeatures };
+  if (shouldReactivate) {
+    supabasePayload.status = 'Aktif';
+    supabasePayload.isApproved = true;
+    supabasePayload.rejectReason = '';
+  }
+
+  SupabaseDB.updateUserByEmail(currentEditingUserEmail, supabasePayload)
     .catch(() => {
       // Fallback ke backend lokal
       fetch('/api/users', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: currentEditingUserEmail, features: selectedFeatures })
+        body: JSON.stringify({ email: currentEditingUserEmail, ...supabasePayload })
       }).catch(err => console.error("Error saving features to backend:", err));
     });
 
@@ -268,6 +295,15 @@ function saveUserFeatures() {
       email: currentEditingUserEmail,
       features: selectedFeatures
     });
+    if (shouldReactivate) {
+      channel.postMessage({
+        type: 'STATUS_UPDATED',
+        email: currentEditingUserEmail,
+        status: 'Aktif',
+        features: selectedFeatures
+      });
+    }
+  } catch (e) { }
   } catch (e) { }
 
   closeManageFeaturesModal();

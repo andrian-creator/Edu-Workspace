@@ -747,6 +747,48 @@ html {
     gap: 14px;
   }
 
+  /* Section 1 Kepercayaan: Urutan Mobile (Judul -> Gambar -> Sub Judul -> Stats) */
+  .trust-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .trust-content {
+    display: contents;
+  }
+
+  .trust-content .section-title {
+    order: 1;
+    margin-bottom: 20px;
+    text-align: center;
+  }
+
+  .trust-image-wrapper {
+    order: 2;
+    margin-bottom: 24px;
+    justify-content: center;
+    width: 100%;
+  }
+
+  .trust-image {
+    max-width: 420px;
+    width: 100%;
+    margin: 0 auto;
+  }
+
+  .trust-content .section-subtitle {
+    order: 3;
+    margin-bottom: 30px;
+    text-align: justify;
+    text-justify: inter-word;
+  }
+
+  .trust-content .trust-stats-grid {
+    order: 4;
+    width: 100%;
+  }
+
   .stat-card {
     padding: 18px 16px;
   }

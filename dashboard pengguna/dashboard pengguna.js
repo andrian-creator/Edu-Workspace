@@ -42,27 +42,38 @@ async function initUserDashboard() {
     return;
   }
 
-  // Selalu ambil status dan data verifikasi terbaru langsung dari backend database (/api/users)
+  // 1. Prioritas Utama: Cek status langsung dari Supabase
   try {
-    const res = await fetch('/api/users');
-    if (res.ok) {
-      const data = await res.json();
-      const allUsers = data.users || [];
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(allUsers));
-      const latestUser = allUsers.find(u => (u.email || '').trim().toLowerCase() === (user.email || '').trim().toLowerCase());
-      if (latestUser) {
-        user = { ...user, ...latestUser };
-        localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user));
-      } else {
+    const userEmail = (user.email || '').toLowerCase();
+    const dbUser = await SupabaseDB.getUserByEmail(userEmail);
+    if (dbUser) {
+      if (dbUser.isDeleted || dbUser.status === 'Dihapus' || dbUser.is_deleted) {
         user.status = 'Dihapus';
         user.isDeleted = true;
+        user.isApproved = false;
         localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user));
         window.location.replace("profil.html");
         return;
       }
+      user = { ...user, ...dbUser };
+      localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user));
+      try {
+        const allUsers = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+        const idx = allUsers.findIndex(u => (u.email || '').toLowerCase() === userEmail);
+        if (idx >= 0) allUsers[idx] = user; else allUsers.push(user);
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(allUsers));
+      } catch (e) {}
+    } else {
+      // Tidak ditemukan di Supabase = akun dihapus
+      user.status = 'Dihapus';
+      user.isDeleted = true;
+      user.isApproved = false;
+      localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user));
+      window.location.replace("profil.html");
+      return;
     }
   } catch (e) {
-    // Fallback localStorage jika offline
+    // Fallback lokal jika offline
     try {
       const allUsers = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
       const latestUser = allUsers.find(u => (u.email || '').trim().toLowerCase() === (user.email || '').trim().toLowerCase());
@@ -126,22 +137,51 @@ function renderUserFeatures(user) {
   const container = document.getElementById('fitur');
   if (!container) return;
 
-  // Cek apakah fitur generate_modul_ajar aktif
+  // 1. Ambil activeFeatures dari objek user
   let activeFeatures = [];
-  if (user && Array.isArray(user.features)) {
+  if (user && Array.isArray(user.features) && user.features.length > 0) {
     activeFeatures = user.features;
   } else {
     try {
       const allUsers = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
       const found = allUsers.find(u => (u.email || '').toLowerCase() === (user.email || '').toLowerCase());
-      if (found && Array.isArray(found.features)) {
+      if (found && Array.isArray(found.features) && found.features.length > 0) {
         activeFeatures = found.features;
-      } else {
-        activeFeatures = []; // Default akun baru non-aktif semua
       }
     } catch (e) {
       activeFeatures = [];
     }
+  }
+
+  // 2. KUNCI PERBAIKAN: Jika akun berstatus Aktif atau disetujui (isApproved),
+  // tetapi activeFeatures masih kosong (misal setelah dinonaktifkan lalu diaktifkan kembali),
+  // otomatis pulihkan akses fitur modul pembelajaran 'generate_modul_ajar'!
+  const isExpired = typeof isSubscriptionExpired === 'function' && isSubscriptionExpired(user);
+  const isAccountActive = (user.status === 'Aktif' || user.isApproved === true) && !isExpired;
+
+  if (activeFeatures.length === 0 && isAccountActive) {
+    activeFeatures = ['generate_modul_ajar'];
+    user.features = activeFeatures;
+    user.status = 'Aktif';
+    user.isApproved = true;
+    try {
+      localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user));
+      const allUsers = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+      const idx = allUsers.findIndex(u => (u.email || '').toLowerCase() === (user.email || '').toLowerCase());
+      if (idx >= 0) {
+        allUsers[idx].features = activeFeatures;
+        allUsers[idx].status = 'Aktif';
+        allUsers[idx].isApproved = true;
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(allUsers));
+      }
+      if (typeof SupabaseDB !== 'undefined' && SupabaseDB.updateUserByEmail) {
+        SupabaseDB.updateUserByEmail(user.email, {
+          status: 'Aktif',
+          isApproved: true,
+          features: activeFeatures
+        }).catch(() => {});
+      }
+    } catch (e) {}
   }
 
   const hasModulAjar = activeFeatures.includes('generate_modul_ajar');
@@ -217,7 +257,7 @@ window.addEventListener('focus', () => {
 try {
   const channel = new BroadcastChannel('edu_workspace_sync');
   channel.onmessage = (event) => {
-    if (event.data && (event.data.type === 'USER_DELETED' || event.data.type === 'STATUS_UPDATED' || event.data.type === 'SYNC_USER')) {
+    if (event.data) {
       const loggedUserStr = localStorage.getItem(CURRENT_USER_KEY);
       if (loggedUserStr) {
         const user = JSON.parse(loggedUserStr);
@@ -226,17 +266,34 @@ try {
             user.status = 'Dihapus';
             user.isDeleted = true;
             user.isApproved = false;
-          } else if (event.data.status) {
+          } else if (event.data.type === 'STATUS_UPDATED' || event.data.status) {
             user.status = event.data.status;
-            if (event.data.status === 'Nonaktif' || event.data.status === 'Dinonaktifkan' || event.data.status === 'Ditolak') {
+            if (event.data.status === 'Aktif') {
+              user.isApproved = true;
+              user.isProfileCompleted = true;
+              delete user.rejectReason;
+              if (event.data.features && event.data.features.length > 0) {
+                user.features = event.data.features;
+              } else if (!user.features || user.features.length === 0) {
+                user.features = ['generate_modul_ajar'];
+              }
+            } else if (event.data.status === 'Nonaktif' || event.data.status === 'Dinonaktifkan' || event.data.status === 'Ditolak') {
               user.isApproved = false;
+              user.features = [];
+            }
+          } else if (event.data.type === 'FEATURES_UPDATED') {
+            user.features = event.data.features || [];
+            if (user.features.length > 0 && user.status !== 'Dihapus') {
+              user.status = 'Aktif';
+              user.isApproved = true;
+              delete user.rejectReason;
             }
           }
           localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user));
 
           const isDeleted = user.status === 'Dihapus' || user.isDeleted === true;
           const isExpired = typeof isSubscriptionExpired === 'function' && isSubscriptionExpired(user);
-          const isDeactivated = user.status === 'Nonaktif' || user.status === 'Dinonaktifkan' || user.status === 'Ditolak' || user.isApproved === false || isExpired;
+          const isDeactivated = (user.status === 'Nonaktif' || user.status === 'Dinonaktifkan' || user.status === 'Ditolak' || isExpired) && !isDeleted;
 
           if (isDeleted || isDeactivated) {
             window.location.replace("profil.html");

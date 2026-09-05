@@ -8,7 +8,7 @@ let lastKnownApproved = null;
 let lastKnownRejectReason = null;
 let customAlertCallback = null;
 
-function initPage() {
+async function initPage() {
   const loggedUserStr = localStorage.getItem(CURRENT_USER_KEY);
   if (!loggedUserStr) {
     alert("Silakan login terlebih dahulu.");
@@ -31,16 +31,6 @@ function initPage() {
     return;
   }
 
-  // Selalu ambil status dan data verifikasi terbaru langsung dari database (STORAGE_KEY)
-  try {
-    const allUsers = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-    const latestUser = allUsers.find(u => (u.email || '').toLowerCase() === (user.email || '').toLowerCase());
-    if (latestUser) {
-      user = { ...user, ...latestUser };
-      localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user));
-    }
-  } catch (e) { }
-
   // Render Header Global Terpusat (Tanpa tombol API Key, Kembali ke Landing Page)
   renderEduNavbar({
     homeUrl: '../index.html',
@@ -50,27 +40,162 @@ function initPage() {
     showDaftarModul: false
   });
 
+  // Render state awal dari sesi lokal terlebih dahulu agar UI instan
   renderPageState(user);
+
+  // Prioritas Utama: Ambil data & status verifikasi terakurat langsung dari Supabase
+  try {
+    const userEmail = (user.email || '').toLowerCase();
+    const dbUser = await SupabaseDB.getUserByEmail(userEmail);
+    if (dbUser) {
+      if ((dbUser.isDeleted || dbUser.status === 'Dihapus' || dbUser.is_deleted) && user.status !== 'Belum Lengkap') {
+        user.status = 'Dihapus';
+        user.isDeleted = true;
+        user.isApproved = false;
+      } else if (user.status !== 'Belum Lengkap') {
+        user = { ...user, ...dbUser };
+      }
+    } else {
+      // Akun tidak ditemukan di Supabase -> Jadikan akun baru (Belum Lengkap)
+      if (user.status !== 'Belum Lengkap') {
+        user.status = 'Belum Lengkap';
+        user.isDeleted = false;
+        user.isApproved = false;
+      }
+    }
+    localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user));
+
+    // Sinkronkan ke STORAGE_KEY juga
+    try {
+      const allUsers = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+      const idx = allUsers.findIndex(u => (u.email || '').toLowerCase() === userEmail);
+      if (user.status === 'Dihapus') {
+        if (idx !== -1) allUsers.splice(idx, 1);
+      } else {
+        if (idx !== -1) allUsers[idx] = { ...allUsers[idx], ...user };
+        else allUsers.push(user);
+      }
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(allUsers));
+    } catch (e) { }
+
+    renderPageState(user);
+  } catch (e) {
+    // Fallback: Jika Supabase offline, baru gunakan cache lokal jika user belum berstatus Nonaktif/Dihapus
+    try {
+      const allUsers = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+      const latestUser = allUsers.find(u => (u.email || '').toLowerCase() === (user.email || '').toLowerCase());
+      if (latestUser && user.status !== 'Dihapus' && user.status !== 'Nonaktif') {
+        user = { ...user, ...latestUser };
+        localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user));
+        renderPageState(user);
+      }
+    } catch (err) { }
+  }
 }
 
-function reRegisterUser() {
+let isReRegistering = false;
+
+async function reRegisterUser() {
+  stopLiveStatusPolling();
   const loggedUserStr = localStorage.getItem(CURRENT_USER_KEY);
-  if (loggedUserStr) {
+  if (!loggedUserStr) {
+    window.location.href = "../halaman login/halaman login.html";
+    return;
+  }
+
+  isReRegistering = true;
+  let user = JSON.parse(loggedUserStr);
+  const email = (user.email || '').trim().toLowerCase();
+
+  // Bersihkan data modul & API key lama
+  if (email) {
     try {
-      const u = JSON.parse(loggedUserStr);
-      const email = (u.email || '').trim().toLowerCase();
-      if (email) {
-        localStorage.removeItem(`edu_api_key_${email}`);
-        localStorage.removeItem(`edu_modul_list_${email}`);
-      }
-    } catch(e) {}
+      localStorage.removeItem(`edu_api_key_${email}`);
+      localStorage.removeItem(`edu_modul_list_${email}`);
+    } catch (e) {}
   }
   localStorage.removeItem('edu_current_generated_modul');
   localStorage.removeItem('edu_editing_modul_payload');
   localStorage.removeItem('edu_last_modul_payload');
   localStorage.removeItem('edu_gemini_api_key');
-  localStorage.removeItem(CURRENT_USER_KEY);
-  window.location.href = "../halaman login/halaman login.html";
+
+  // Reset status akun kembali ke Akun Baru (Belum Lengkap) agar dapat input profil baru
+  user.status = 'Belum Lengkap';
+  user.isDeleted = false;
+  user.is_deleted = false;
+  user.isApproved = false;
+  user.isProfileCompleted = false;
+  user.institution = '';
+  user.gradeLevel = '';
+  user.subject = '';
+  user.features = [];
+  delete user.rejectReason;
+
+  lastKnownStatus = 'Belum Lengkap';
+  lastKnownApproved = false;
+  lastKnownRejectReason = null;
+
+  localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user));
+
+  // Simpan ke daftar user lokal
+  try {
+    const allUsers = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+    const idx = allUsers.findIndex(u => (u.email || '').toLowerCase() === email);
+    if (idx !== -1) {
+      allUsers[idx] = { ...allUsers[idx], ...user };
+    } else {
+      allUsers.push(user);
+    }
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(allUsers));
+  } catch (e) {}
+
+  // Update langsung ke Supabase: un-delete dan ubah status menjadi Belum Lengkap
+  if (typeof SupabaseDB !== 'undefined' && SupabaseDB.updateUserByEmail) {
+    SupabaseDB.updateUserByEmail(email, {
+      isDeleted: false,
+      status: 'Belum Lengkap',
+      isApproved: false,
+      isProfileCompleted: false,
+      institution: '',
+      gradeLevel: '',
+      subject: '',
+      rejectReason: '',
+      features: []
+    }).catch(err => console.warn("Gagal reset status di Supabase:", err));
+  }
+
+  // Sinkronisasi ke backend lokal jika aktif
+  fetch('/api/users/status', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      email: email,
+      status: 'Belum Lengkap',
+      isApproved: false,
+      isDeleted: false,
+      institution: '',
+      gradeLevel: ''
+    })
+  }).catch(() => {});
+
+  // Langsung tampilkan formulir pengisian profil baru di halaman ini!
+  renderPageState(user);
+  const form = document.getElementById('profileForm');
+  const statusContainer = document.getElementById('statusStateContainer');
+  if (form && statusContainer) {
+    form.style.display = 'block';
+    statusContainer.style.display = 'none';
+
+    document.getElementById('inputName').value = user.name || '';
+    document.getElementById('inputEmail').value = user.email || '';
+    document.getElementById('inputInstitution').value = '';
+    document.getElementById('inputGrade').value = '';
+
+    document.getElementById('profileTitleText').textContent = 'Pendaftaran Ulang Profil';
+    document.getElementById('profileDescText').textContent = 'Lengkapi identitas instansi dan jenjang pendidikan Anda untuk mengajukan akun baru.';
+
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
 }
 
 function renderPageState(user) {
@@ -86,7 +211,13 @@ function renderPageState(user) {
   lastKnownRejectReason = user.rejectReason;
 
   if (document.getElementById('userAvatar')) {
-    document.getElementById('userAvatar').src = getGoogleAvatar(user.name, user.avatar);
+    const avatarEl = document.getElementById('userAvatar');
+    avatarEl.referrerPolicy = 'no-referrer';
+    avatarEl.onerror = function() {
+      this.onerror = null;
+      this.src = getGoogleAvatar(user.name || 'User', null);
+    };
+    avatarEl.src = getGoogleAvatar(user.name, user.avatar);
   }
 
   document.getElementById('inputName').value = user.name || '';
@@ -118,6 +249,7 @@ function renderPageState(user) {
   const isPending = isProfileSubmitted && !isDeleted && (user.status === 'Menunggu Persetujuan' || user.status === 'Pending' || (!isApproved && !isRejected));
 
   if (isDeleted) {
+    stopLiveStatusPolling();
     form.style.display = 'none';
     statusContainer.style.display = 'block';
     pendingBox.style.display = 'none';
@@ -128,9 +260,11 @@ function renderPageState(user) {
     document.getElementById('profileTitleText').textContent = user.name || 'Akun Dihapus';
     document.getElementById('profileDescText').textContent = user.email || '';
   } else if (isApproved) {
+    stopLiveStatusPolling();
     window.location.replace("dashboard pengguna.html");
     return;
   } else if (isRejected) {
+    stopLiveStatusPolling();
     form.style.display = 'none';
     statusContainer.style.display = 'block';
     pendingBox.style.display = 'none';
@@ -155,6 +289,7 @@ function renderPageState(user) {
     document.getElementById('profileTitleText').textContent = user.name || 'Profil Guru';
     document.getElementById('profileDescText').textContent = user.email || '';
   } else if (isPending) {
+    startLiveStatusPolling();
     form.style.display = 'none';
     statusContainer.style.display = 'block';
     pendingBox.style.display = 'block';
@@ -165,6 +300,7 @@ function renderPageState(user) {
     document.getElementById('profileTitleText').textContent = user.name || 'Profil Guru';
     document.getElementById('profileDescText').textContent = user.email || '';
   } else {
+    stopLiveStatusPolling();
     // Akun Baru / Belum Mengisi Profil -> Tampilkan Form Pengajuan
     form.style.display = 'block';
     statusContainer.style.display = 'none';
@@ -242,7 +378,10 @@ function saveProfile(event) {
   // Status reset menjadi Menunggu Persetujuan
   user.status = 'Menunggu Persetujuan';
   user.isApproved = false;
+  user.isDeleted = false;
+  user.is_deleted = false;
   delete user.rejectReason;
+  isReRegistering = false;
 
   const now = new Date();
   user.registeredAt = now.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' }) + ', ' +
@@ -263,19 +402,83 @@ function saveProfile(event) {
   renderPageState(user);
 }
 
-// Polling dan Event Listener Realtime Sinkronisasi
-async function checkLiveStatus() {
+let liveStatusTimer = null;
+
+function startLiveStatusPolling() {
+  stopLiveStatusPolling();
   const loggedUserStr = localStorage.getItem(CURRENT_USER_KEY);
   if (!loggedUserStr) return;
-  let user = JSON.parse(loggedUserStr);
+  let user = null;
+  try { user = JSON.parse(loggedUserStr); } catch (e) { return; }
+  
+  // Polling hanya aktif jika akun dalam status Menunggu Persetujuan (Pending)
+  const isPending = user && (user.status === 'Menunggu Persetujuan' || user.status === 'Pending');
+  if (isPending) {
+    liveStatusTimer = setInterval(() => {
+      checkLiveStatus(false);
+    }, 8000);
+  }
+}
+
+function stopLiveStatusPolling() {
+  if (liveStatusTimer) {
+    clearInterval(liveStatusTimer);
+    liveStatusTimer = null;
+  }
+}
+
+// Polling dan Event Listener Realtime Sinkronisasi
+async function checkLiveStatus(force = false) {
+  const loggedUserStr = localStorage.getItem(CURRENT_USER_KEY);
+  if (!loggedUserStr) return;
+  let user = null;
+  try { user = JSON.parse(loggedUserStr); } catch (e) { return; }
+  if (!user || !user.email) return;
 
   const isSuperAdmin = (user.email || '').toLowerCase() === ADMIN_EMAIL.toLowerCase() || user.role === 'Admin';
   if (isSuperAdmin) return;
+
+  const isDeleted = user.status === 'Dihapus' || user.isDeleted === true || user.is_deleted === true;
+  const isDeactivated = user.status === 'Nonaktif' || user.status === 'Dinonaktifkan' || user.status === 'Ditolak';
+  const isFormActive = isReRegistering || (user.status === 'Belum Lengkap' && !user.isProfileCompleted);
+
+  // JANGAN jalankan polling jika akun berstatus Dihapus, Nonaktif, atau sedang mengisi formulir profil
+  if (isDeleted || isDeactivated || isFormActive) {
+    stopLiveStatusPolling();
+    if (!force) return;
+  }
 
   // Prioritas: Supabase
   try {
     const dbUser = await SupabaseDB.getUserByEmail((user.email || '').toLowerCase());
     if (dbUser) {
+      // Jika akun telah diaktifkan kembali oleh Admin, langsung bawa ke dashboard pengguna
+      if ((dbUser.status === 'Aktif' || dbUser.is_approved) && !dbUser.is_deleted && dbUser.status !== 'Dihapus') {
+        user = { ...user, ...dbUser, status: 'Aktif', isApproved: true, isDeleted: false, rejectReason: '' };
+        delete user.rejectReason;
+        localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user));
+        try {
+          const all = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+          const idx = all.findIndex(u => (u.email || '').toLowerCase() === (user.email || '').toLowerCase());
+          if (idx >= 0) all[idx] = user; else all.push(user);
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(all));
+        } catch (e) {}
+        window.location.replace("dashboard pengguna.html");
+        return;
+      }
+
+      // Jika di Supabase user ini berstatus Dihapus, dan user lokal bukan sedang Belum Lengkap
+      if ((dbUser.isDeleted || dbUser.status === 'Dihapus' || dbUser.is_deleted) && user.status !== 'Belum Lengkap') {
+        if (user.status !== 'Dihapus' || lastKnownStatus !== 'Dihapus') {
+          user.status = 'Dihapus';
+          user.isDeleted = true;
+          user.isApproved = false;
+          localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user));
+          renderPageState(user);
+        }
+        return;
+      }
+
       const domNeedsUpdate = dbUser.status !== lastKnownStatus ||
         dbUser.isApproved !== lastKnownApproved ||
         dbUser.rejectReason !== lastKnownRejectReason;
@@ -294,12 +497,15 @@ async function checkLiveStatus() {
       if (domNeedsUpdate) renderPageState(user);
       return;
     } else {
-      // User tidak ditemukan = dihapus
-      if (user.status !== 'Dihapus' || lastKnownStatus !== 'Dihapus') {
-        user.status = 'Dihapus';
-        user.isDeleted = true;
-        localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user));
-        renderPageState(user);
+      // User tidak ditemukan di Supabase
+      if (user.status !== 'Belum Lengkap' && user.status !== 'Menunggu Persetujuan') {
+        if (user.status !== 'Dihapus' || lastKnownStatus !== 'Dihapus') {
+          user.status = 'Dihapus';
+          user.isDeleted = true;
+          user.isApproved = false;
+          localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user));
+          renderPageState(user);
+        }
       }
       return;
     }
@@ -418,13 +624,6 @@ window.addEventListener('focus', () => {
   checkLiveStatus();
 });
 
-try {
-  const channel = new BroadcastChannel('edu_workspace_sync');
-  channel.onmessage = () => {
-    checkLiveStatus();
-  };
-} catch (e) { }
-
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'visible') {
     checkLiveStatus();
@@ -441,12 +640,17 @@ try {
         if ((user.email || '').toLowerCase() === (event.data.email || '').toLowerCase()) {
           user.status = 'Dihapus';
           user.isDeleted = true;
+          user.isApproved = false;
           localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user));
           renderPageState(user);
           return;
         }
       }
     }
-    checkLiveStatus();
+    // Jika ada event sinkronisasi dari admin, lakukan satu kali pengecekan
+    checkLiveStatus(true);
   };
 } catch (e) { }
+
+// Jalankan polling terjadwal hanya jika akun dalam status Menunggu Persetujuan
+startLiveStatusPolling();

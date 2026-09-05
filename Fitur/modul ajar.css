@@ -921,10 +921,22 @@ body {
   .card-desc {
     font-size: 0.8rem;
   }
-  .custom-checkbox-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 12px 14px;
+  .custom-checkbox-grid,
+  .custom-checkbox-grid.five-cols {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 10px 12px !important;
     padding: 4px 0 2px 0;
+  }
+  .custom-checkbox-grid.five-cols > .custom-checkbox-item:last-child {
+    grid-column: 1 / -1;
+  }
+  .custom-checkbox-item {
+    padding: 8px 10px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    box-sizing: border-box;
+    font-size: 0.86rem;
   }
   .btn-primary-generate {
     padding: 13px 20px;
@@ -934,6 +946,9 @@ body {
   }
 
   /* Responsive Stepper & Review Mobile */
+  .step-label-mobile {
+    display: none;
+  }
   .stepper-track {
     gap: 4px;
     padding: 8px 12px;
@@ -963,12 +978,23 @@ body {
     gap: 14px;
   }
   .step-nav-footer.between-align {
-    flex-direction: column-reverse;
+    display: flex;
+    flex-direction: column;
     gap: 10px;
   }
-  .btn-step-next, .btn-step-prev {
+  .step-nav-footer.between-align .btn-step-next {
+    order: 1;
     width: 100%;
     justify-content: center;
+    padding: 13px 20px;
+    font-size: 0.96rem;
+  }
+  .step-nav-footer.between-align .btn-step-prev {
+    order: 2;
+    width: 100%;
+    justify-content: center;
+    padding: 12px 20px;
+    font-size: 0.92rem;
   }
   .review-row-dual {
     grid-template-columns: 1fr;
@@ -979,8 +1005,102 @@ body {
     gap: 14px;
   }
   .step-nav-footer-dual {
-    grid-template-columns: 1fr;
-    gap: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .step-nav-footer-dual .btn-generate-action {
+    order: 1;
+    width: 100%;
+    justify-content: center;
+    padding: 14px 20px;
+    font-size: 1rem;
+    min-height: 48px;
+  }
+  .step-nav-footer-dual .btn-prev-action {
+    order: 2;
+    width: 100%;
+    justify-content: center;
+    padding: 12px 20px;
+    font-size: 0.92rem;
+    min-height: 44px;
+  }
+  .form-section-header.between-space {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+  .form-section-header.between-space .btn-ai-generator {
+    width: 100%;
+    justify-content: center;
+    padding: 9px 16px;
+    font-size: 0.88rem;
+  }
+  .form-label-action-wrap {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 6px;
+  }
+  .form-label-action-right {
+    margin-left: 0;
+    width: 100%;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+  .form-label-action-right .btn-ai-generator {
+    width: 100%;
+    justify-content: center;
+    padding: 9px 16px;
+    font-size: 0.88rem;
+  }
+}
+
+@media (max-width: 580px) {
+  .step-label-desktop {
+    display: none;
+  }
+  .step-label-mobile {
+    display: inline;
+  }
+  .stepper-track {
+    padding: 8px 10px;
+    gap: 3px;
+    justify-content: space-between;
+  }
+  .step-item {
+    padding: 4px 5px;
+    gap: 5px;
+  }
+  .step-circle {
+    width: 24px;
+    height: 24px;
+    font-size: 0.74rem;
+  }
+  .step-name {
+    font-size: 0.75rem;
+    letter-spacing: -0.01em;
+  }
+  .step-line {
+    margin: 0 3px;
+    min-width: 6px;
+  }
+  .form-section-block {
+    padding: 18px 16px;
+  }
+  .review-card-box {
+    padding: 14px 16px;
+  }
+  .review-table-kv .review-key {
+    width: 95px !important;
+    font-size: 0.82rem;
+  }
+  .review-table-kv .review-colon {
+    width: 12px !important;
+  }
+  .review-table-kv .review-value {
+    font-size: 0.85rem;
+    word-break: break-word;
   }
 }
 
@@ -1416,6 +1536,72 @@ body {
   .btn-buka-modul-ajar {
     width: 100% !important;
     max-width: 300px !important;
+  }
+
+  /* Tahap 3 Review Mobile Precision Sesuai Gambar 1 */
+  .review-clean-container {
+    gap: 16px !important;
+  }
+  .review-row-dual {
+    grid-template-columns: 1fr !important;
+    gap: 20px !important;
+    padding-bottom: 16px !important;
+  }
+  .review-table-kv td {
+    padding: 6px 0 !important;
+  }
+  .review-table-kv .review-key {
+    width: 100px !important;
+    font-size: 0.84rem !important;
+    color: #64748b !important;
+  }
+  .review-table-kv .review-colon {
+    width: 16px !important;
+    text-align: left !important;
+    color: #94a3b8 !important;
+  }
+  .review-table-kv .review-value {
+    font-size: 0.88rem !important;
+    font-weight: 600 !important;
+    color: #0f172a !important;
+    word-break: break-word !important;
+  }
+  .review-grid-2x2 {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+  .review-grid-cell {
+    padding: 6px 0 !important;
+    border-bottom: 1px dashed #f1f5f9;
+  }
+  .review-grid-cell:last-child {
+    border-bottom: none;
+  }
+  .review-card-box {
+    padding: 16px 18px !important;
+  }
+  .review-cp-narrative {
+    font-size: 0.86rem !important;
+    line-height: 1.6 !important;
+  }
+  .step-nav-footer-dual {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 12px !important;
+    margin-top: 20px !important;
+    padding-top: 18px !important;
+  }
+  .step-nav-footer-dual .btn-step-action {
+    width: 100% !important;
+    height: 48px !important;
+    font-size: 0.95rem !important;
+  }
+  .step-nav-footer-dual .btn-generate-action {
+    order: 1 !important;
+  }
+  .step-nav-footer-dual .btn-prev-action {
+    order: 2 !important;
+    border: 1.5px solid #e2e8f0 !important;
   }
 }
 

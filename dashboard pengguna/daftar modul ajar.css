@@ -695,11 +695,27 @@ body {
   .modul-page-header {
     flex-direction: column;
     align-items: flex-start;
+    gap: 16px;
+    margin-bottom: 20px;
+  }
+
+  .modul-title {
+    font-size: 1.85rem;
+  }
+
+  .modul-subtitle {
+    font-size: 0.92rem;
+  }
+
+  .header-action-group {
+    width: 100%;
   }
 
   .btn-create-modul {
     width: 100%;
     justify-content: center;
+    padding: 13px 20px;
+    font-size: 0.98rem;
   }
 
   .table-toolbar {
@@ -717,5 +733,66 @@ body {
 
   .filter-select {
     flex: 1;
+  }
+}
+
+@media (max-width: 640px) {
+  .stat-summary-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+
+  .stat-summary-card {
+    padding: 14px;
+    border-radius: 16px;
+  }
+
+  .stat-summary-card:nth-child(1),
+  .stat-summary-card:nth-child(2) {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .stat-summary-card:nth-child(1) .stat-icon-box,
+  .stat-summary-card:nth-child(2) .stat-icon-box {
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+  }
+
+  .stat-summary-card:nth-child(1) .stat-number,
+  .stat-summary-card:nth-child(2) .stat-number {
+    font-size: 1.6rem;
+    line-height: 1.1;
+  }
+
+  .stat-summary-card:nth-child(1) .stat-label,
+  .stat-summary-card:nth-child(2) .stat-label {
+    font-size: 0.72rem;
+    line-height: 1.25;
+  }
+
+  .stat-summary-card:nth-child(3) {
+    grid-column: 1 / -1;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 14px 16px;
+    gap: 14px;
+  }
+
+  .stat-summary-card:nth-child(3) .stat-icon-box {
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+  }
+
+  .stat-summary-card:nth-child(3) .stat-label {
+    font-size: 0.72rem;
+  }
+
+  .stat-summary-card:nth-child(3) .stat-meta {
+    font-size: 0.96rem;
   }
 }

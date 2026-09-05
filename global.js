@@ -121,7 +121,7 @@ const SupabaseDB = {
    * Ambil user berdasarkan email
    */
   async getUserByEmail(email) {
-    const rows = await supabaseRequest(`/profiles?select=*&email=eq.${encodeURIComponent(email)}&limit=1`);
+    const rows = await supabaseRequest(`/profiles?select=*&email=ilike.${encodeURIComponent(email)}&limit=1`);
     if (!rows || rows.length === 0) return null;
     return mapDbToUser(rows[0]);
   },
@@ -164,7 +164,7 @@ const SupabaseDB = {
     if (fields.name !== undefined) dbFields.name = fields.name;
 
     const result = await supabaseRequest(
-      `/profiles?email=eq.${encodeURIComponent(email)}`,
+      `/profiles?email=ilike.${encodeURIComponent(email)}`,
       { method: 'PATCH', body: dbFields }
     );
     return result;
@@ -1022,7 +1022,7 @@ function renderEduNavbar(options = {}) {
               <span class="profile-name-text" id="userNameDisplay">${escapeHtml(userName)}</span>
               <span class="profile-email-text" id="userEmailDisplay">${escapeHtml(userEmail)}</span>
             </div>
-            <img id="userAvatarImg" src="${userAvatar}" alt="Avatar" class="user-avatar-modern">
+            <img id="userAvatarImg" referrerpolicy="no-referrer" src="${userAvatar}" alt="Avatar" class="user-avatar-modern" onerror="this.onerror=null; this.src=getGoogleAvatar('${escapeHtml(userName)}', null);">
           </div>
 
           <div class="profile-dropdown-menu" id="profileDropdown">
@@ -1163,7 +1163,10 @@ function initAccessTimeSync() {
     if (p.includes('/fitur/')) {
       return '../dashboard pengguna/profil.html';
     }
-    return 'profil.html';
+    if (p.includes('/dashboard pengguna/') || p.includes('/dashboard%20pengguna/')) {
+      return 'profil.html';
+    }
+    return '../dashboard pengguna/profil.html';
   }
 
   function isExcludedPublicPage(p) {
@@ -1173,10 +1176,11 @@ function initAccessTimeSync() {
            p.endsWith('index.html') || 
            p.endsWith('07.%20eduworkspace/') || 
            p.endsWith('07. eduworkspace/') ||
-           p.includes('/halaman login/') || 
-           p.includes('/halaman%20login/') ||
-           p.endsWith('/profil.html') ||
-           p.endsWith('profil.html');
+           p.includes('/halaman login') || 
+           p.includes('/halaman%20login') ||
+           p.includes('/dashboard admin') ||
+           p.includes('/dashboard%20admin') ||
+           p.includes('profil');
   }
 
   function checkAndRedirectIfBlocked(targetEmail = null, forceStatus = null) {

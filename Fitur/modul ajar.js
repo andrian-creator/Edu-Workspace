@@ -1366,31 +1366,7 @@ function validateStep(stepNum) {
 
     // CATATAN: E. Materi Tambahan DIKECUALIKAN / OPSIONAL (TIDAK DIVALIDASI)
 
-    // 8. Media Digital (WAJIB)
-    const mediaInput = document.getElementById('mediaDigital');
-    if (!mediaInput || !mediaInput.value.trim()) {
-      showNotificationModal('Kolom Wajib Diisi', 'Silakan isi Media Digital yang digunakan (contoh: Slide Canva, Video YouTube, Quizizz).', 'warning');
-      mediaInput?.focus();
-      return false;
-    }
-
-    // 9. Fasilitas (WAJIB minimal pilih 1)
-    const fasilitasChecked = document.querySelectorAll('input[name="fasilitasBelajar"]:checked');
-    if (fasilitasChecked.length === 0) {
-      showNotificationModal('Pilihan Wajib Dipilih', 'Silakan pilih minimal satu Fasilitas pembelajaran.', 'warning');
-      return false;
-    }
-
-    // 10. Jika opsi Fasilitas "Lainnya" dicentang, kolom isiannya WAJIB diisi
-    const cbLainnya = document.getElementById('cbFasilitasLainnya');
-    const inputLainnya = document.getElementById('inputFasilitasLainnya');
-    if (cbLainnya && cbLainnya.checked) {
-      if (!inputLainnya || !inputLainnya.value.trim()) {
-        showNotificationModal('Kolom Wajib Diisi', 'Silakan isi nama fasilitas lainnya (pisahkan dengan tanda titik koma jika lebih dari 1).', 'warning');
-        inputLainnya?.focus();
-        return false;
-      }
-    }
+    // CATATAN: Media Digital & Fasilitas bersifat OPSIONAL (TIDAK DIVALIDASI WAJIB)
 
     // 11. Capaian Pembelajaran (CP) (WAJIB)
     const cpInput = document.getElementById('capaianPembelajaran');

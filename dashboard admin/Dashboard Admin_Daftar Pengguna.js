@@ -145,49 +145,60 @@ function saveUsers(users) {
 
 function approveUserByEmail(email) {
   let users = getUsers();
-  const targetUser = users.find(u => (u.email || '').toLowerCase() === email.toLowerCase());
-  if (!targetUser) return;
+  const index = users.findIndex(u => (u.email || '').toLowerCase() === email.toLowerCase());
+  if (index === -1) return;
+  const targetUser = users[index];
 
-  // Cek apakah masa langganan habis
   const today = new Date();
   const todayStr = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0') + '-' + String(today.getDate()).padStart(2, '0');
-  if (targetUser.subscriptionEnd && todayStr > targetUser.subscriptionEnd && targetUser.role !== 'Admin') {
-    showAdminToast("⚠️ Masa langganan akun ini telah habis. Silakan perpanjang tanggal masa langganan terlebih dahulu untuk mengaktifkan akun!");
-    return;
+
+  // Jika masa langganan kosong atau sudah habis, otomatis aktifkan masa langganan baru 30 hari ke depan
+  if (!targetUser.subscriptionEnd || todayStr > targetUser.subscriptionEnd) {
+    const nextMonth = new Date();
+    nextMonth.setMonth(nextMonth.getMonth() + 1);
+    const nextMonthStr = nextMonth.getFullYear() + '-' + String(nextMonth.getMonth() + 1).padStart(2, '0') + '-' + String(nextMonth.getDate()).padStart(2, '0');
+    targetUser.subscriptionStart = targetUser.subscriptionStart || todayStr;
+    targetUser.subscriptionEnd = nextMonthStr;
   }
 
   targetUser.status = 'Aktif';
   targetUser.isApproved = true;
+  targetUser.isProfileCompleted = true;
+  targetUser.rejectReason = '';
   delete targetUser.rejectReason;
   targetUser.approvedAt = new Date().toISOString();
 
-  // Fitur TIDAK boleh ikut aktif otomatis saat akun diaktifkan.
-  // Harus diaktifkan secara manual oleh Admin di menu Pengelola Fitur!
-  const isTargetAdm = targetUser.role === 'Admin' || ADMIN_EMAILS.includes((targetUser.email || '').toLowerCase());
-  if (!isTargetAdm) {
-    targetUser.features = [];
-  }
+  // Aktifkan seluruh fitur modul pembelajaran untuk akun yang telah disetujui / diaktifkan
+  targetUser.features = ['generate_modul_ajar'];
 
   saveUsers(users);
 
-  // Sync ke Supabase
+  // Sync ke Supabase (Prioritas Utama Cloud)
   SupabaseDB.updateUserByEmail(targetUser.email, {
     status: 'Aktif',
     isApproved: true,
-    features: isTargetAdm ? (targetUser.features || ['generate_modul_ajar']) : []
-  }).catch(() => {
-    // Fallback ke backend lokal
-    fetch('/api/users/status', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        email: targetUser.email,
-        status: 'Aktif',
-        isApproved: true,
-        features: isTargetAdm ? (targetUser.features || ['generate_modul_ajar']) : []
-      })
-    }).catch(e => { });
+    isProfileCompleted: true,
+    rejectReason: '',
+    features: ['generate_modul_ajar'],
+    subscriptionStart: targetUser.subscriptionStart,
+    subscriptionEnd: targetUser.subscriptionEnd
+  }).catch((err) => {
+    console.warn("Gagal update status persetujuan akun di Supabase:", err);
   });
+
+  // Fallback ke backend lokal jika aktif
+  fetch('/api/users/status', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      email: targetUser.email,
+      status: 'Aktif',
+      isApproved: true,
+      features: ['generate_modul_ajar'],
+      subscriptionStart: targetUser.subscriptionStart,
+      subscriptionEnd: targetUser.subscriptionEnd
+    })
+  }).catch(e => { });
 
   // Kirim Notifikasi Email
   sendEmailNotification(targetUser.email, targetUser.name, 'approved', {
@@ -203,10 +214,12 @@ function approveUserByEmail(email) {
       if ((cur.email || '').toLowerCase() === email.toLowerCase()) {
         cur.status = 'Aktif';
         cur.isApproved = true;
+        cur.isProfileCompleted = true;
+        cur.rejectReason = '';
         delete cur.rejectReason;
-        if (!isTargetAdm) {
-          cur.features = [];
-        }
+        cur.features = ['generate_modul_ajar'];
+        cur.subscriptionStart = targetUser.subscriptionStart;
+        cur.subscriptionEnd = targetUser.subscriptionEnd;
         localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(cur));
       }
     } catch (e) { }
@@ -217,12 +230,11 @@ function approveUserByEmail(email) {
   try {
     const channel = new BroadcastChannel('edu_workspace_sync');
     channel.postMessage({ type: 'STATUS_UPDATED', email: targetUser.email, status: 'Aktif' });
-    if (!isTargetAdm) {
-      channel.postMessage({ type: 'FEATURES_UPDATED', email: targetUser.email, features: [] });
-    }
+    channel.postMessage({ type: 'FEATURES_UPDATED', email: targetUser.email, features: ['generate_modul_ajar'] });
+    channel.postMessage({ type: 'SYNC_USER', email: targetUser.email });
   } catch (e) { }
 
-  showAdminToast(`✓ Akun "${targetUser.name}" berhasil disetujui! Notifikasi & email terkirim.`);
+  showAdminToast(`✓ Akun "${targetUser.name}" berhasil diaktifkan dengan akses penuh ke seluruh fitur!`);
   renderTable();
 }
 
@@ -504,7 +516,7 @@ function closeSubscriptionModal() {
   currentSubTargetEmail = null;
 }
 
-function confirmSaveSubscription() {
+async function confirmSaveSubscription() {
   if (!currentSubTargetEmail) return;
   const email = currentSubTargetEmail;
   const startDate = document.getElementById('subStartDateInput').value;
@@ -530,9 +542,63 @@ function confirmSaveSubscription() {
   users[index].subscriptionStart = startDate;
   users[index].subscriptionEnd = endDate;
 
+  // Jika sebelumnya dinonaktifkan karena masa langganan habis, dan sekarang diperpanjang
+  const today = new Date();
+  const todayStr = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0') + '-' + String(today.getDate()).padStart(2, '0');
+  let statusUpdated = false;
+  if (users[index].status === 'Nonaktif' && (users[index].rejectReason || '').includes('Masa langganan') && endDate >= todayStr) {
+    users[index].status = 'Aktif';
+    users[index].isApproved = true;
+    delete users[index].rejectReason;
+    statusUpdated = true;
+  }
+
   saveUsers(users);
 
-  // Sync ke backend server
+  // Tutup modal dan render tabel seketika agar UI responsif tanpa jeda
+  closeSubscriptionModal();
+  renderTable();
+  showAdminToast(`🗓️ Menyimpan masa langganan "${users[index].name}"...`);
+
+  // Sinkronkan akun sesi jika yang diedit adalah akun yang sedang aktif di tab ini
+  const currentLogged = localStorage.getItem(CURRENT_USER_KEY);
+  if (currentLogged) {
+    try {
+      const cur = JSON.parse(currentLogged);
+      if ((cur.email || '').toLowerCase() === email.toLowerCase()) {
+        cur.subscriptionStart = startDate;
+        cur.subscriptionEnd = endDate;
+        if (statusUpdated) {
+          cur.status = 'Aktif';
+          cur.isApproved = true;
+          delete cur.rejectReason;
+        }
+        localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(cur));
+      }
+    } catch (e) { }
+  }
+
+  // 1. Sync ke Supabase (Prioritas Utama untuk Publish Cloud / Vercel)
+  const supabasePayload = {
+    subscriptionStart: startDate,
+    subscriptionEnd: endDate
+  };
+  if (statusUpdated) {
+    supabasePayload.status = 'Aktif';
+    supabasePayload.isApproved = true;
+    supabasePayload.rejectReason = '';
+  }
+
+  if (window.SupabaseDB && typeof SupabaseDB.updateUserByEmail === 'function') {
+    try {
+      await SupabaseDB.updateUserByEmail(users[index].email, supabasePayload);
+      showAdminToast(`🗓️ Masa langganan "${users[index].name}" berhasil disimpan.`);
+    } catch (err) {
+      console.warn("Gagal update masa langganan di Supabase:", err);
+    }
+  }
+
+  // 2. Sync ke backend server lokal (fallback jika server.py aktif)
   fetch('/api/users', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -545,8 +611,6 @@ function confirmSaveSubscription() {
     channel.postMessage({ type: 'SYNC_USER', email: users[index].email });
   } catch (e) { }
 
-  closeSubscriptionModal();
-  showAdminToast(`🗓️ Masa langganan "${users[index].name}" berhasil disimpan.`);
   renderTable();
 }
 
@@ -555,6 +619,14 @@ async function fetchUsersFromBackend() {
   try {
     const supabaseUsers = await SupabaseDB.getUsers();
     if (supabaseUsers && Array.isArray(supabaseUsers)) {
+      // Pastikan akun admin utama tidak hilang
+      const hasAdmin = supabaseUsers.some(u => (u.email || '').toLowerCase() === 'ric04ndri4nt0@gmail.com');
+      if (!hasAdmin) {
+        const localUsers = getUsers();
+        const localAdmin = localUsers.find(u => (u.email || '').toLowerCase() === 'ric04ndri4nt0@gmail.com');
+        if (localAdmin) supabaseUsers.unshift(localAdmin);
+      }
+
       const currentStr = localStorage.getItem(STORAGE_KEY) || '[]';
       const newStr = JSON.stringify(supabaseUsers);
       if (currentStr !== newStr) {
@@ -869,7 +941,7 @@ function renderTable() {
         <td>${i + 1}</td>
         <td>
           <div class="user-info">
-            <img src="${avatarUrl}" alt="Avatar" class="user-avatar-tiny" onerror="this.src='https://lh3.googleusercontent.com/a/default-user=s96-c'">
+            <img src="${avatarUrl}" referrerpolicy="no-referrer" alt="Avatar" class="user-avatar-tiny" onerror="this.onerror=null; this.src=getGoogleAvatar('${escapeHtml(u.name || 'Guru')}', null);">
             <div>
               <div class="user-name">${escapeHtml(u.name || 'Guru')}</div>
               <div class="user-email">${escapeHtml(u.email || '-')}</div>

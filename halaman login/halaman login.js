@@ -112,27 +112,54 @@ function processLogin(payload) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(users));
   localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(matchedUser));
 
-  // Cek Supabase: jika user sudah ada di DB, ambil data lengkapnya (termasuk fitur & tanggal langganan dari admin)
+  // Cek Supabase: jika user sudah ada di DB, ambil data lengkapnya
   SupabaseDB.getUserByEmail(email).then(dbUser => {
     let finalUser = matchedUser;
-    if (dbUser && !dbUser.isDeleted) {
-      // Merge: prioritaskan data Supabase untuk field yang dikelola admin
-      finalUser = {
-        ...matchedUser,
-        features: dbUser.features && dbUser.features.length > 0 ? dbUser.features : matchedUser.features,
-        subscriptionStart: dbUser.subscriptionStart || matchedUser.subscriptionStart || null,
-        subscriptionEnd: dbUser.subscriptionEnd || matchedUser.subscriptionEnd || null,
-        status: dbUser.status !== 'Belum Lengkap' ? dbUser.status : matchedUser.status,
-        isApproved: dbUser.isApproved !== undefined ? dbUser.isApproved : matchedUser.isApproved,
-        isProfileCompleted: dbUser.isProfileCompleted !== undefined ? dbUser.isProfileCompleted : matchedUser.isProfileCompleted,
-        institution: dbUser.institution || matchedUser.institution,
-        subject: dbUser.subject || matchedUser.subject,
-        gradeLevel: dbUser.gradeLevel || matchedUser.gradeLevel,
-        // Update info login terbaru
-        name: name,
-        avatar: picture
-      };
+    if (dbUser) {
+      finalUser.id = dbUser.id; // Gunakan ID Supabase yang sah
+      if (dbUser.isDeleted || dbUser.status === 'Dihapus') {
+        // Akun sebelumnya pernah dihapus, sekarang login kembali untuk mendaftar profil baru
+        finalUser.status = 'Belum Lengkap';
+        finalUser.isDeleted = false;
+        finalUser.isApproved = false;
+        finalUser.isProfileCompleted = false;
+        finalUser.institution = '';
+        finalUser.gradeLevel = '';
+        finalUser.features = [];
+        delete finalUser.rejectReason;
+
+        // Un-delete langsung di Supabase via PATCH
+        SupabaseDB.updateUserByEmail(email, {
+          isDeleted: false,
+          status: 'Belum Lengkap',
+          isApproved: false,
+          isProfileCompleted: false,
+          institution: '',
+          gradeLevel: '',
+          subject: '',
+          rejectReason: '',
+          features: []
+        }).catch(() => {});
+      } else {
+        // Merge: prioritaskan data Supabase untuk field yang dikelola admin
+        finalUser = {
+          ...matchedUser,
+          id: dbUser.id,
+          features: dbUser.features && dbUser.features.length > 0 ? dbUser.features : matchedUser.features,
+          subscriptionStart: dbUser.subscriptionStart || matchedUser.subscriptionStart || null,
+          subscriptionEnd: dbUser.subscriptionEnd || matchedUser.subscriptionEnd || null,
+          status: dbUser.status !== 'Belum Lengkap' ? dbUser.status : matchedUser.status,
+          isApproved: dbUser.isApproved !== undefined ? dbUser.isApproved : matchedUser.isApproved,
+          isProfileCompleted: dbUser.isProfileCompleted !== undefined ? dbUser.isProfileCompleted : matchedUser.isProfileCompleted,
+          institution: dbUser.institution || matchedUser.institution,
+          subject: dbUser.subject || matchedUser.subject,
+          gradeLevel: dbUser.gradeLevel || matchedUser.gradeLevel,
+          name: name,
+          avatar: picture
+        };
+      }
     }
+    localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(finalUser));
     // Upsert ke Supabase
     supabaseUpsertLoginUser(finalUser).catch(() => {
       // Fallback: kirim ke server lokal

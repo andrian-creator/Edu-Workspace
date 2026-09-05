@@ -355,12 +355,17 @@ html, body {
   .illustration-wrapper {
     justify-content: center;
   }
-  .actions-container {
-    grid-template-columns: repeat(2, 1fr);
+  .actions-container,
+  .actions-container.count-2,
+  .actions-container.count-3,
+  .actions-container:has(> :nth-child(2):last-child),
+  .actions-container:has(> :nth-child(3):last-child) {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 16px;
   }
 }
 
-@media (max-width: 680px) {
+@media (max-width: 768px) {
   .admin-main-wrapper {
     padding: 0 20px 32px;
   }
@@ -372,7 +377,17 @@ html, body {
     font-size: 0.94rem;
     line-height: 1.5;
   }
-  .actions-container {
-    grid-template-columns: 1fr;
+  .actions-container,
+  .actions-container.count-2,
+  .actions-container.count-3,
+  .actions-container:has(> :nth-child(2):last-child),
+  .actions-container:has(> :nth-child(3):last-child) {
+    grid-template-columns: 1fr !important;
+    gap: 14px;
+  }
+  .admin-action-card {
+    min-height: auto;
+    padding: 20px 22px;
+    gap: 12px;
   }
 }
