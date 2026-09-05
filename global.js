@@ -127,19 +127,39 @@ const SupabaseDB = {
   },
 
   /**
-   * Upsert user (insert jika baru, update jika sudah ada berdasarkan id)
+   * Upsert user (update via PATCH jika email sudah ada, insert via POST jika baru)
    */
   async upsertUser(user) {
     const dbRow = mapUserToDb(user);
-    if (!dbRow || !dbRow.id) return null;
-    const result = await supabaseRequest('/profiles', {
+    if (!dbRow || !dbRow.email) return null;
+
+    if (!dbRow.id) {
+      dbRow.id = 'USR-' + String(Date.now()).slice(-6);
+    }
+
+    // 1. Coba PATCH terlebih dahulu berdasarkan email
+    // Menjamin update profil berhasil tanpa memicu pelanggaran unique constraint 'profiles_email_key'
+    try {
+      const patchData = { ...dbRow };
+      delete patchData.id; // Jangan overwrite primary key id saat PATCH!
+
+      const patchResult = await supabaseRequest(
+        `/profiles?email=ilike.${encodeURIComponent(user.email)}`,
+        { method: 'PATCH', body: patchData }
+      );
+      if (patchResult && patchResult.length > 0) {
+        return mapDbToUser(patchResult[0]);
+      }
+    } catch (e) {}
+
+    // 2. Jika data belum ada di Supabase, lakukan INSERT baru
+    const insertResult = await supabaseRequest('/profiles', {
       method: 'POST',
-      prefer: 'return=representation,resolution=merge-duplicates',
-      headers: { 'Prefer': 'return=representation,resolution=merge-duplicates' },
+      prefer: 'return=representation',
       body: dbRow
     });
-    if (!result || result.length === 0) return null;
-    return mapDbToUser(result[0]);
+    if (!insertResult || insertResult.length === 0) return null;
+    return mapDbToUser(insertResult[0]);
   },
 
   /**

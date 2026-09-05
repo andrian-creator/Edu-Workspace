@@ -48,16 +48,26 @@ async function initPage() {
     const userEmail = (user.email || '').toLowerCase();
     const dbUser = await SupabaseDB.getUserByEmail(userEmail);
     if (dbUser) {
-      if ((dbUser.isDeleted || dbUser.status === 'Dihapus' || dbUser.is_deleted) && user.status !== 'Belum Lengkap') {
+      if ((dbUser.isDeleted || dbUser.status === 'Dihapus' || dbUser.is_deleted) && !isReRegistering) {
         user.status = 'Dihapus';
         user.isDeleted = true;
         user.isApproved = false;
-      } else if (user.status !== 'Belum Lengkap') {
-        user = { ...user, ...dbUser };
+      } else if (!isReRegistering) {
+        // Jangan timpa data lokal jika lokal baru saja submit profil (Menunggu Persetujuan)
+        // sedangkan Supabase belum sempat menyelesaikan sinkronisasi
+        const localIsSubmitted = user.isProfileCompleted === true && user.institution && (user.status === 'Menunggu Persetujuan' || user.status === 'Pending');
+        const dbIsUncompleted = dbUser.status === 'Belum Lengkap' || !dbUser.isProfileCompleted;
+
+        if (localIsSubmitted && dbIsUncompleted) {
+          console.log('[Profil] Melakukan sinkronisasi ulang pengajuan profil ke Supabase...');
+          SupabaseDB.upsertUser(user).catch(() => {});
+        } else {
+          user = { ...user, ...dbUser };
+        }
       }
     } else {
-      // Akun tidak ditemukan di Supabase -> Jadikan akun baru (Belum Lengkap)
-      if (user.status !== 'Belum Lengkap') {
+      // Akun tidak ditemukan di Supabase -> Jadikan akun baru (Belum Lengkap) jika belum mengajukan profil
+      if (user.status !== 'Menunggu Persetujuan' && !user.isProfileCompleted) {
         user.status = 'Belum Lengkap';
         user.isDeleted = false;
         user.isApproved = false;
@@ -308,7 +318,7 @@ function enableEditProfile() {
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-function syncToDatabase(user) {
+async function syncToDatabase(user) {
   try {
     let allUsers = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
 
@@ -323,24 +333,33 @@ function syncToDatabase(user) {
     }
     localStorage.setItem(STORAGE_KEY, JSON.stringify(allUsers));
 
-    // Sync ke Supabase
-    SupabaseDB.upsertUser(user).catch(() => {
-      // Fallback ke Backend Server
-      fetch('/api/users', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(user)
-      }).catch(e => { });
-    });
+    // Sync ke Supabase dan tunggu hasilnya
+    let dbUser = null;
+    try {
+      dbUser = await SupabaseDB.upsertUser(user);
+    } catch (e) {
+      console.warn('[Profil] Gagal upsert ke Supabase:', e);
+    }
+
+    // Fallback ke Backend Server
+    fetch('/api/users', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(user)
+    }).catch(e => { });
 
     try {
       const channel = new BroadcastChannel('edu_workspace_sync');
       channel.postMessage({ type: 'SYNC_USER', email: user.email });
     } catch (e) { }
-  } catch (e) { }
+
+    return dbUser;
+  } catch (e) {
+    return null;
+  }
 }
 
-function saveProfile(event) {
+async function saveProfile(event) {
   event.preventDefault();
   const name = document.getElementById('inputName').value.trim();
   const institution = document.getElementById('inputInstitution').value.trim();
@@ -349,6 +368,14 @@ function saveProfile(event) {
   if (!name || !institution || !gradeLevel) {
     showCustomAlert("Data Belum Lengkap", "Mohon lengkapi seluruh kolom formulir profil wajib sebelum mengajukan verifikasi.", "warning");
     return;
+  }
+
+  const btnSubmit = document.getElementById('btnSubmitProfile');
+  const originalBtnHtml = btnSubmit ? btnSubmit.innerHTML : '';
+  if (btnSubmit) {
+    btnSubmit.disabled = true;
+    btnSubmit.style.opacity = '0.7';
+    btnSubmit.innerHTML = `<span>Sedang Mengajukan...</span>`;
   }
 
   const loggedUserStr = localStorage.getItem(CURRENT_USER_KEY);
@@ -371,6 +398,7 @@ function saveProfile(event) {
   user.isApproved = false;
   user.isDeleted = false;
   user.is_deleted = false;
+  user.rejectReason = '';
   delete user.rejectReason;
   isReRegistering = false;
 
@@ -378,9 +406,25 @@ function saveProfile(event) {
   user.registeredAt = now.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' }) + ', ' +
     now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
 
-  // Simpan sesi dan database
+  // Simpan segera ke sesi lokal
   localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user));
-  syncToDatabase(user);
+
+  try {
+    // Tunggu penyimpanan ke Supabase selesai agar data pertama pasti ter-save
+    const savedUser = await syncToDatabase(user);
+    if (savedUser && savedUser.id) {
+      user.id = savedUser.id;
+      localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user));
+    }
+  } catch (e) {
+    console.warn('[Profil] Error sync database:', e);
+  } finally {
+    if (btnSubmit) {
+      btnSubmit.disabled = false;
+      btnSubmit.style.opacity = '1';
+      btnSubmit.innerHTML = originalBtnHtml;
+    }
+  }
 
   showCustomAlert(
     "Pengajuan Berhasil Dikirim!",
@@ -467,6 +511,11 @@ async function checkLiveStatus(force = false) {
           localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user));
           renderPageState(user);
         }
+        return;
+      }
+
+      // Jangan timpa status jika user lokal berstatus Menunggu Persetujuan tapi di DB Supabase masih Belum Lengkap
+      if ((user.status === 'Menunggu Persetujuan' || user.status === 'Pending') && (dbUser.status === 'Belum Lengkap' || !dbUser.isProfileCompleted)) {
         return;
       }
 
