@@ -124,6 +124,9 @@ function closeNotificationModalOnOverlay(e) {
   }
 }
 
+// State untuk melacak apakah tombol Generate Modul Ajar telah diklik pada sesi saat ini
+let modulGeneratedInThisSession = false;
+
 // Pemetaan Pilihan Kelas & Fase Berdasarkan Jenjang Sekolah
 const FASE_KELAS_OPTIONS = {
   'SD / MI': [
@@ -1184,21 +1187,13 @@ async function initModulAjarPage() {
   }
   syncTotalJPDurasi();
 
-  // E. Tampilkan tombol "Buka Modul Ajar" jika sudah ada hasil generate sebelumnya
-  // Sehingga pengguna tetap bisa membuka hasil generate lama meskipun baru kembali ke form
-  try {
-    const existingModul = localStorage.getItem('edu_current_generated_modul') || localStorage.getItem('edu_last_modul_payload');
-    if (existingModul) {
-      const progressContainer = document.getElementById('generateProgressContainer');
-      const progressLoading = document.getElementById('progressStateLoading');
-      const progressSuccess = document.getElementById('progressStateSuccess');
-      if (progressContainer && progressLoading && progressSuccess) {
-        progressContainer.style.display = (typeof currentStep !== 'undefined' && currentStep === 3) ? 'block' : 'none';
-        progressLoading.style.display = 'none';
-        progressSuccess.style.display = 'flex';
-      }
-    }
-  } catch (e) { /* Abaikan error jika localStorage tidak tersedia */ }
+  // E. Kontainer hasil generate / tombol Buka Modul Ajar selalu tersembunyi diawal
+  // Hanya boleh muncul setelah pengguna benar-benar menekan tombol 'Generate Modul Ajar'
+  modulGeneratedInThisSession = false;
+  const progressContainer = document.getElementById('generateProgressContainer');
+  if (progressContainer) {
+    progressContainer.style.display = 'none';
+  }
 
   // F. Periksa apakah dalam mode edit dari halaman Daftar Modul Ajar
   checkAndLoadEditModul();
@@ -1495,10 +1490,8 @@ function goToStep(targetStep) {
   if (targetStep === 3) {
     updateReviewSummary();
     if (progressContainer) {
-      const hasGenerated = localStorage.getItem('edu_current_generated_modul') || localStorage.getItem('edu_last_modul_payload');
-      if (hasGenerated) {
-        progressContainer.style.display = 'block';
-      }
+      // HANYA muncul jika pengguna sudah benar-benar mengklik 'Generate Modul Ajar' pada sesi ini
+      progressContainer.style.display = modulGeneratedInThisSession ? 'block' : 'none';
     }
   } else if (progressContainer) {
     progressContainer.style.display = 'none';
@@ -1526,6 +1519,10 @@ function nextStep(target) {
 function prevStep(target) {
   const btnUbah = document.getElementById('btnUbahKonteks');
   if (btnUbah && btnUbah.disabled) return;
+  // Jika pengguna kembali untuk mengubah konteks, sembunyikan kotak hasil generate sebelumnya
+  modulGeneratedInThisSession = false;
+  const progressContainer = document.getElementById('generateProgressContainer');
+  if (progressContainer) progressContainer.style.display = 'none';
   goToStep(target);
 }
 
@@ -1759,6 +1756,7 @@ async function proceedGenerateModul() {
   }
 
   if (progressContainer && progressLoading && progressSuccess) {
+    modulGeneratedInThisSession = true;
     progressContainer.style.display = 'block';
     progressLoading.style.display = 'flex';
     progressSuccess.style.display = 'none';
@@ -3494,14 +3492,11 @@ function applyEditPayloadToForm(p) {
     localStorage.setItem('edu_last_modul_payload', JSON.stringify(p));
   } catch (e) {}
 
-  // Aktifkan tombol Buka Modul Ajar Kamu di Tahap 3
+  // Kontainer hasil generate selalu tersembunyi diawal, baru muncul setelah klik 'Generate Modul Ajar'
+  modulGeneratedInThisSession = false;
   const progressContainer = document.getElementById('generateProgressContainer');
-  const progressLoading = document.getElementById('progressStateLoading');
-  const progressSuccess = document.getElementById('progressStateSuccess');
-  if (progressContainer && progressLoading && progressSuccess) {
-    progressContainer.style.display = (typeof currentStep !== 'undefined' && currentStep === 3) ? 'block' : 'none';
-    progressLoading.style.display = 'none';
-    progressSuccess.style.display = 'flex';
+  if (progressContainer) {
+    progressContainer.style.display = 'none';
   }
 
   // ==========================================================
