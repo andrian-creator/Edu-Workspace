@@ -343,7 +343,7 @@ async function saveAndTestApiKey() {
     if (title) title.textContent = 'Koneksi Berhasil! API Key Tersimpan di Akun Anda';
     if (desc) desc.textContent = 'Kunci API valid dan berhasil terhubung dengan server Google Gemini. Modul Ajar dan generator AI pada akun Anda siap digunakan.';
 
-    showNotificationModal('Koneksi Berhasil!', 'Kunci API Google Gemini berhasil disimpan ke akun Anda dan terverifikasi aktif. 🚀', 'success');
+    showNotificationModal('Koneksi Berhasil!', 'Kunci API Google Gemini berhasil disimpan ke akun Anda dan terverifikasi aktif.', 'success');
   } else {
     if (statusBadge) {
       statusBadge.style = '';
