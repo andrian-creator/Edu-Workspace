@@ -161,12 +161,12 @@ function renderFeatureTable() {
     const hasNote = userNote.length > 0;
     const catatanCellHtml = `
       <div class="catatan-cell">
-        <div class="catatan-text" onclick="openAdminNoteModal('${safeEmail}')" title="${hasNote ? escapeHtml(userNote) : 'Klik untuk menulis catatan'}">
-          ${hasNote ? escapeHtml(userNote) : '<span class="catatan-empty">Belum ada catatan</span>'}
-        </div>
         <button type="button" class="btn-catatan-edit" onclick="openAdminNoteModal('${safeEmail}')" title="${hasNote ? 'Ubah Catatan' : 'Tulis Catatan'}">
           <img data-icon="edit" src="${editIconUrl}" alt="Edit Catatan">
         </button>
+        <div class="catatan-text" onclick="openAdminNoteModal('${safeEmail}')" title="${hasNote ? escapeHtml(userNote) : 'Klik untuk menulis catatan'}">
+          ${hasNote ? escapeHtml(userNote) : '<span class="catatan-empty">Belum ada catatan</span>'}
+        </div>
       </div>
     `;
 
@@ -197,7 +197,7 @@ function renderFeatureTable() {
             ${featureChipsHtml}
           </div>
         </td>
-        <td style="text-align: center;">
+        <td style="text-align: left;">
           ${catatanCellHtml}
         </td>
         <td style="text-align: center;">
