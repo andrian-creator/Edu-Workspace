@@ -133,9 +133,12 @@ function renderUserFeatures(user) {
   }
 
   const hasModulAjar = activeFeatures.includes('generate_modul_ajar');
+  const hasMediaPembelajaran = activeFeatures.includes('generate_media_pembelajaran');
+
+  let cardsHtml = '';
 
   if (hasModulAjar) {
-    container.innerHTML = `
+    cardsHtml += `
       <!-- Tombol: Generate Modul Ajar -->
       <div class="user-action-card active-card" onclick="handleFeatureClick('Generate Modul Ajar')">
         <div class="action-card-header">
@@ -153,6 +156,31 @@ function renderUserFeatures(user) {
         </div>
       </div>
     `;
+  }
+
+  if (hasMediaPembelajaran) {
+    cardsHtml += `
+      <!-- Tombol: Generate Media Pembelajaran -->
+      <div class="user-action-card active-card" onclick="handleFeatureClick('Generate Media Pembelajaran')">
+        <div class="action-card-header">
+          <div class="action-card-icon-box">
+            <img data-icon="feature" src="${getEduIconUrl('feature')}" alt="Generate Media Pembelajaran" class="action-card-icon-img">
+          </div>
+          <span class="action-badge-active">Aktif</span>
+        </div>
+        <div class="action-card-body">
+          <h3 class="action-card-title">Generate Media Pembelajaran</h3>
+          <p class="action-card-desc">Generator media visual, presentasi materi, dan bahan pembelajaran interaktif bertenaga AI.</p>
+        </div>
+        <div class="action-card-footer">
+          <span class="action-card-link">Buka Generator &rarr;</span>
+        </div>
+      </div>
+    `;
+  }
+
+  if (cardsHtml) {
+    container.innerHTML = cardsHtml;
   } else {
     container.innerHTML = `
       <div class="locked-features-box">
@@ -184,6 +212,8 @@ function renderUserFeatures(user) {
 function handleFeatureClick(featureName) {
   if (featureName === 'Generate Modul Ajar') {
     window.location.href = "../fitur/generate-modul-ajar/modul-ajar.html";
+  } else if (featureName === 'Generate Media Pembelajaran') {
+    window.location.href = "../fitur/generate-media-pembelajaran/media-pembelajaran.html";
   } else {
     showUserToast(`Membuka ${featureName}... Modul siap digunakan.`);
   }

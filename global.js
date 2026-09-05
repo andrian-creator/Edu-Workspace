@@ -696,12 +696,12 @@ function getAppSubDirPrefix() {
     p = (window.location.pathname || '').toLowerCase().replace(/\\/g, '/');
   }
 
-  // Jika berada di sub-subfolder fitur (misal /fitur/generate-modul-ajar/)
+  // Jika berada di sub-subfolder fitur (misal /fitur/generate-modul-ajar/ atau /fitur/generate-media-pembelajaran/)
   if (
-    p.includes('/fitur/generate-modul-ajar/') ||
     p.includes('/fitur/generate-modul-ajar') ||
-    p.includes('/fitur/generate modul ajar/') ||
-    p.includes('/fitur/generate modul ajar')
+    p.includes('/fitur/generate modul ajar') ||
+    p.includes('/fitur/generate-media-pembelajaran') ||
+    p.includes('/fitur/generate media pembelajaran')
   ) {
     return '../../';
   }
@@ -736,6 +736,9 @@ const EDU_GLOBAL_ICONS = {
   lock: 'Assets/icon/icon_lock.png',
   modul_ajar: 'Assets/icon/icon_modul_ajar.png',
   'modul-ajar': 'Assets/icon/icon_modul_ajar.png',
+  media_pembelajaran: 'Assets/icon/icon_feature.png',
+  'media-pembelajaran': 'Assets/icon/icon_feature.png',
+  generate_media_pembelajaran: 'Assets/icon/icon_feature.png',
   file: 'Assets/icon/icon_file.png',
   daftar_modul: 'Assets/icon/icon_file.png',
   'daftar-modul': 'Assets/icon/icon_file.png',
@@ -1174,10 +1177,10 @@ function renderEduNavbar(options = {}) {
 
   const isInFitur = p.includes('/fitur/');
   const isNestedFitur = (
-    p.includes('/fitur/generate-modul-ajar/') ||
     p.includes('/fitur/generate-modul-ajar') ||
-    p.includes('/fitur/generate modul ajar/') ||
-    p.includes('/fitur/generate modul ajar')
+    p.includes('/fitur/generate modul ajar') ||
+    p.includes('/fitur/generate-media-pembelajaran') ||
+    p.includes('/fitur/generate media pembelajaran')
   );
   const fiturPrefix = isNestedFitur ? '../../' : (isInFitur ? '../' : '');
 

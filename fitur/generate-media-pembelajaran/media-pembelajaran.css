@@ -1,0 +1,27 @@
+/* ==========================================================================
+   Edu Workspace - Generate Media Pembelajaran Stylesheet
+   ========================================================================== */
+
+body {
+  background-color: var(--color-bg-light, #f8fafc);
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  color: var(--color-text-main, #0f172a);
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+}
+
+.media-main-wrapper {
+  padding-top: 86px;
+  min-height: calc(100vh - 86px);
+  display: flex;
+  flex-direction: column;
+}
+
+.media-main-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  width: 100%;
+  padding: 32px 24px;
+  box-sizing: border-box;
+}

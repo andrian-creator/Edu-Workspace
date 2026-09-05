@@ -11,6 +11,14 @@ const ALL_SYSTEM_FEATURES = [
     get iconImg() {
       return getEduIconUrl('modul_ajar') || '../Assets/icon/icon_modul_ajar.png';
     }
+  },
+  {
+    id: 'generate_media_pembelajaran',
+    name: 'Generate Media Pembelajaran',
+    desc: 'Generator Media, Bahan Visual & Presentasi Pembelajaran AI',
+    get iconImg() {
+      return getEduIconUrl('feature') || '../Assets/icon/icon_feature.png';
+    }
   }
 ];
 
