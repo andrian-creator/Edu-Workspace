@@ -1,17 +1,22 @@
 /**
- * Edu Workspace - Generate Media Pembelajaran Logic
- * Integrasi Google Gemini API, Pengambilan Data Modul Ajar Pengguna, dan Render Pratinjau Interaktif
+ * Edu Workspace - Generate Media Pembelajaran (PowerPoint Generator) Logic
+ * Menghasilkan Slide Presentasi PowerPoint (.pptx) Otomatis Berbasis Google Gemini AI
  */
 
 let currentUser = null;
 let userModulList = [];
-let selectedFormat = 'slide';
-let currentSourceMode = 'modul';
-let lastGeneratedRawText = '';
+let currentSourceTab = 'modul';
+let selectedSlideCountMode = 'auto';
+let currentGeneratedSlides = [];
+let currentPresentationMeta = {
+  subject: '',
+  materi: '',
+  grade: ''
+};
 let isGenerating = false;
 
 document.addEventListener('DOMContentLoaded', async () => {
-  // 1. Validasi Autentikasi Sesi Pengguna
+  // 1. Validasi Autentikasi Pengguna
   const loggedUserStr = localStorage.getItem(CURRENT_USER_KEY);
   if (!loggedUserStr) {
     if (typeof showEduAlert === 'function') {
@@ -69,15 +74,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 
-  // 4. Periksa Status API Key Gemini Pengguna
-  checkUserApiKeyStatus();
-
-  // 5. Muat Daftar Modul Ajar Milik Pengguna
-  await loadUserModuls();
+  // 4. Muat Modul Ajar Tersimpan untuk Dropdown Otomatis
+  await loadUserModulDropdown();
 });
 
 /**
- * Mendapatkan Kunci Google Gemini API Aktif Pengguna
+ * Mendapatkan Kunci Google Gemini API Pengguna Aktif
  */
 function getEffectiveApiKey() {
   try {
@@ -96,47 +98,9 @@ function getEffectiveApiKey() {
 }
 
 /**
- * Cek dan Tampilkan Status Kunci API Gemini pada UI Kartu Kanan
+ * Muat Seluruh Modul Ajar Milik Akun Pengguna
  */
-function checkUserApiKeyStatus() {
-  const dot = document.getElementById('apiStatusDot');
-  const title = document.getElementById('apiStatusTitle');
-  const sub = document.getElementById('apiStatusSub');
-  const btn = document.getElementById('btnManageKey');
-
-  const key = getEffectiveApiKey();
-
-  if (key && key.length >= 10) {
-    if (dot) {
-      dot.className = 'api-status-dot';
-      dot.style.background = '#10b981';
-    }
-    if (title) title.textContent = 'API Key Gemini Terhubung';
-    if (sub) {
-      const masked = key.slice(0, 7) + '...' + key.slice(-4);
-      sub.textContent = `Kunci aktif: ${masked}`;
-    }
-    if (btn) btn.textContent = 'Ubah Key';
-  } else {
-    if (dot) {
-      dot.className = 'api-status-dot missing';
-      dot.style.background = '#f59e0b';
-    }
-    if (title) title.textContent = 'API Key Belum Diatur';
-    if (sub) sub.textContent = 'Wajib menambahkan kunci Gemini untuk generate AI';
-    if (btn) {
-      btn.textContent = '+ Atur Key';
-      btn.style.background = '#fef3c7';
-      btn.style.borderColor = '#fde68a';
-      btn.style.color = '#b45309';
-    }
-  }
-}
-
-/**
- * Memuat Seluruh Modul Ajar Milik Pengguna dari LocalStorage & Supabase / Backend
- */
-async function loadUserModuls() {
+async function loadUserModulDropdown() {
   if (!currentUser) return;
   const userEmail = (currentUser.email || '').trim().toLowerCase();
   const selectEl = document.getElementById('selectModulAjar');
@@ -144,7 +108,7 @@ async function loadUserModuls() {
 
   let list = [];
 
-  // 1. Ambil dari cache lokal
+  // A. Dari cache lokal
   try {
     const listKey = `edu_modul_list_${userEmail}`;
     const raw = localStorage.getItem(listKey);
@@ -154,16 +118,15 @@ async function loadUserModuls() {
     }
   } catch (e) {}
 
-  // 2. Jika di Supabase tersedia, ambil data terbaru
+  // B. Dari Supabase
   if (typeof SupabaseDB !== 'undefined' && SupabaseDB.getModuls) {
     try {
       const remote = await SupabaseDB.getModuls(userEmail);
       if (remote && Array.isArray(remote) && remote.length > 0) {
-        // Gabungkan dengan prioritas data terbaru
         const map = new Map();
         list.forEach(m => { if (m.id) map.set(m.id, m); });
         remote.forEach(r => {
-          const item = {
+          map.set(r.id, {
             id: r.id,
             namaModul: r.topic || r.subject || 'Modul Ajar',
             topic: r.topic || '',
@@ -171,15 +134,14 @@ async function loadUserModuls() {
             gradeLevel: r.grade_level || '',
             contentJson: r.content_json,
             payload: r.content_json
-          };
-          map.set(r.id, item);
+          });
         });
         list = Array.from(map.values());
       }
     } catch (e) {}
   }
 
-  // 3. Fallback server lokal jika list masih kosong
+  // C. Fallback backend lokal jika masih kosong
   if (list.length === 0) {
     try {
       const res = await fetch(`/api/moduls?email=${encodeURIComponent(userEmail)}`);
@@ -192,7 +154,6 @@ async function loadUserModuls() {
 
   userModulList = list;
 
-  // Render opsi ke dropdown
   if (selectEl) {
     selectEl.innerHTML = '<option value="">-- Pilih Modul Ajar Tersimpan --</option>';
     if (list.length > 0) {
@@ -207,348 +168,220 @@ async function loadUserModuls() {
       });
       if (countHint) countHint.textContent = `${list.length} modul ditemukan`;
     } else {
-      if (countHint) countHint.textContent = 'Belum ada modul tersimpan';
+      if (countHint) countHint.textContent = 'Belum ada modul (Gunakan Isi Manual)';
       const opt = document.createElement('option');
       opt.value = "";
       opt.disabled = true;
-      opt.textContent = "(Belum ada Modul Ajar. Anda bisa pilih Isi Manual)";
+      opt.textContent = "(Belum ada modul tersimpan. Silakan gunakan Isi Manual Sendiri)";
       selectEl.appendChild(opt);
     }
   }
 }
 
 /**
- * Handle saat pengguna memilih Modul Ajar pada Dropdown
+ * Handle Pemilihan Tab Sumber: Ambil dari Modul Ajar vs Isi Sendiri
  */
-function handleSelectModulChange(modulId) {
-  const previewBox = document.getElementById('modulPreviewBox');
-  const previewSubject = document.getElementById('previewSubject');
-  const previewGrade = document.getElementById('previewGrade');
-  const previewTitle = document.getElementById('previewTitle');
-  const previewSummary = document.getElementById('previewSummary');
-  const materiInput = document.getElementById('materiContentInput');
+function setSourceTab(mode) {
+  currentSourceTab = mode;
+  const btnModul = document.getElementById('btnSourceModul');
+  const btnManual = document.getElementById('btnSourceManual');
+  const container = document.getElementById('modulSelectContainer');
 
-  if (!modulId) {
-    if (previewBox) previewBox.classList.remove('active');
-    return;
+  if (mode === 'modul') {
+    if (btnModul) btnModul.classList.add('active');
+    if (btnManual) btnManual.classList.remove('active');
+    if (container) container.style.display = 'block';
+  } else {
+    if (btnManual) btnManual.classList.add('active');
+    if (btnModul) btnModul.classList.remove('active');
+    if (container) container.style.display = 'none';
   }
+}
+
+/**
+ * Saat Pengguna Memilih Modul Ajar pada Dropdown:
+ * Otomatis mengisi Mata Pelajaran, Materi, dan Kelas
+ */
+function onSelectModulChange(modulId) {
+  if (!modulId) return;
 
   const modul = userModulList.find(m => m.id === modulId || String(m.id) === String(modulId));
   if (!modul) return;
 
   const p = modul.payload || modul.contentJson || {};
 
-  const topic = modul.topic || p.topikMateri || modul.namaModul || p.namaModul || 'Topik Pembelajaran';
-  const subject = modul.subject || p.mataPelajaran || 'Mata Pelajaran Umum';
-  const grade = modul.gradeLevel || p.faseKelas || p.jenjangSekolah || 'Fase Pembelajaran';
+  const mapel = modul.subject || p.mataPelajaran || '';
+  const topic = modul.topic || p.topikMateri || modul.namaModul || p.namaModul || '';
+  const grade = modul.gradeLevel || p.faseKelas || p.jenjangSekolah || '';
 
-  // Ekstrak ringkasan isi materi dari modul
-  let summary = '';
-  if (p.materiPembelajaran) summary += p.materiPembelajaran + '\n\n';
-  if (p.tujuanPembelajaran) summary += `Tujuan Pembelajaran: ${p.tujuanPembelajaran}\n\n`;
-  if (p.kataKunci) summary += `Konsep Kunci: ${p.kataKunci}\n\n`;
-
-  if (!summary && Array.isArray(p.pengalamanBelajar)) {
-    summary = p.pengalamanBelajar.map((pb, idx) => `Pertemuan ${idx + 1}: ${pb.fokus || pb.kegiatanInti || ''}`).join('\n');
+  // Ekstrak ringkasan isi materi dari modul ajar
+  let materiDetail = topic;
+  if (p.materiPembelajaran) {
+    materiDetail += '\n' + p.materiPembelajaran;
+  } else if (p.tujuanPembelajaran) {
+    materiDetail += '\nTujuan: ' + p.tujuanPembelajaran;
   }
 
-  if (!summary) {
-    summary = `Materi pembelajaran ${subject} mengenai ${topic} untuk jenjang ${grade}.`;
-  }
+  // Isi ke input form
+  const inputMapel = document.getElementById('inputMataPelajaran');
+  const inputMateri = document.getElementById('inputMateri');
+  const inputKelas = document.getElementById('inputKelas');
 
-  if (previewSubject) previewSubject.textContent = subject;
-  if (previewGrade) previewGrade.textContent = grade;
-  if (previewTitle) previewTitle.textContent = topic;
-  if (previewSummary) previewSummary.textContent = summary;
-  if (previewBox) previewBox.classList.add('active');
-
-  // Otomatis masukkan isi ringkasan ke textarea materi acuan AI
-  if (materiInput) {
-    materiInput.value = `[${subject} - ${grade}]\nTopik: ${topic}\n\nRincian Materi:\n${summary.trim()}`;
-  }
+  if (inputMapel && mapel) inputMapel.value = mapel;
+  if (inputMateri && materiDetail) inputMateri.value = materiDetail.trim();
+  if (inputKelas && grade) inputKelas.value = grade;
 }
 
 /**
- * Alihkan Tab pada Kartu Kiri: Sumber Materi vs Hasil AI
+ * Pemilihan Jumlah Slide (Rekomendasi AI / 5 / 7 / 10 / Isi Sendiri)
  */
-function switchLeftTab(tab) {
-  const btnMateri = document.getElementById('tabBtnMateri');
-  const btnHasil = document.getElementById('tabBtnHasil');
-  const panelMateri = document.getElementById('panelSumberMateri');
-  const panelHasil = document.getElementById('panelHasilGenerate');
+function selectSlideCount(mode) {
+  selectedSlideCountMode = mode;
+  const ids = ['btnSlideAuto', 'btnSlide5', 'btnSlide7', 'btnSlide10', 'btnSlideCustom'];
 
-  if (tab === 'materi') {
-    if (btnMateri) btnMateri.classList.add('active');
-    if (btnHasil) btnHasil.classList.remove('active');
-    if (panelMateri) panelMateri.classList.add('active');
-    if (panelHasil) panelHasil.classList.remove('active');
-  } else {
-    if (btnHasil) btnHasil.classList.add('active');
-    if (btnMateri) btnMateri.classList.remove('active');
-    if (panelHasil) panelHasil.classList.add('active');
-    if (panelMateri) panelMateri.classList.remove('active');
-  }
-}
-
-/**
- * Ganti Metode Pengisian Sumber Materi: Modul Ajar vs Manual
- */
-function setSourceMode(mode) {
-  currentSourceMode = mode;
-  const optModul = document.getElementById('optSourceModul');
-  const optManual = document.getElementById('optSourceManual');
-  const secModul = document.getElementById('sectionModulAjar');
-  const secManual = document.getElementById('sectionManual');
-
-  if (mode === 'modul') {
-    if (optModul) optModul.classList.add('active');
-    if (optManual) optManual.classList.remove('active');
-    if (secModul) secModul.style.display = 'block';
-    if (secManual) secManual.style.display = 'none';
-  } else {
-    if (optManual) optManual.classList.add('active');
-    if (optModul) optModul.classList.remove('active');
-    if (secManual) secManual.style.display = 'block';
-    if (secModul) secModul.style.display = 'none';
-
-    // Update materi jika user mengisi form manual
-    updateManualMateriInput();
-  }
-}
-
-function updateManualMateriInput() {
-  const subj = document.getElementById('manualSubject')?.value.trim() || '';
-  const gr = document.getElementById('manualGrade')?.value.trim() || '';
-  const top = document.getElementById('manualTopic')?.value.trim() || '';
-  const input = document.getElementById('materiContentInput');
-
-  if (input && !input.value.trim() && (subj || top)) {
-    input.value = `[${subj || 'Mata Pelajaran'} - ${gr || 'Jenjang'}]\nTopik: ${top || 'Topik Materi'}\n\nRincian Materi:\n`;
-  }
-}
-
-document.addEventListener('input', (e) => {
-  if (['manualSubject', 'manualGrade', 'manualTopic'].includes(e.target.id)) {
-    updateManualMateriInput();
-  }
-});
-
-/**
- * Pemilihan Format Media Pembelajaran di Kartu Kanan
- */
-function selectFormat(fmt) {
-  selectedFormat = fmt;
-  const map = {
-    slide: 'btnFmtSlide',
-    infografis: 'btnFmtInfografis',
-    lkpd: 'btnFmtLkpd',
-    flashcard: 'btnFmtFlashcard'
-  };
-
-  Object.keys(map).forEach(key => {
-    const el = document.getElementById(map[key]);
-    if (el) {
-      if (key === fmt) el.classList.add('active');
-      else el.classList.remove('active');
+  ids.forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    if (
+      (mode === 'auto' && id === 'btnSlideAuto') ||
+      (mode === '5' && id === 'btnSlide5') ||
+      (mode === '7' && id === 'btnSlide7') ||
+      (mode === '10' && id === 'btnSlide10') ||
+      (mode === 'custom' && id === 'btnSlideCustom')
+    ) {
+      el.classList.add('active');
+    } else {
+      el.classList.remove('active');
     }
   });
 
-  const badge = document.getElementById('resultFormatBadge');
-  if (badge) {
-    const titles = {
-      slide: 'Slide Presentasi',
-      infografis: 'Infografis Konsep',
-      lkpd: 'Lembar Aktivitas Siswa',
-      flashcard: 'Flashcard & Kuis'
-    };
-    badge.textContent = titles[fmt] || 'Media Pembelajaran';
-    badge.style.display = 'inline-block';
+  const customContainer = document.getElementById('customSlideContainer');
+  if (customContainer) {
+    customContainer.style.display = mode === 'custom' ? 'block' : 'none';
   }
 }
 
 /**
- * Tambahkan chip prompt ke textarea instruksi khusus
- */
-function appendPromptChip(text) {
-  const input = document.getElementById('customPromptInput');
-  if (!input) return;
-  const current = input.value.trim();
-  if (current) {
-    input.value = current + '. ' + text;
-  } else {
-    input.value = text;
-  }
-  input.focus();
-}
-
-/**
  * ==========================================================================
- * PROSES UTAMA: GENERATE MEDIA PEMBELAJARAN DENGAN GOOGLE GEMINI AI
+ * PROSES GENERATE POWERPOINT (AI)
  * ==========================================================================
  */
-async function handleGenerateMedia() {
+async function handleGenerate() {
   if (isGenerating) return;
 
-  // 1. Periksa Kunci API Gemini
-  const apiKey = getEffectiveApiKey();
-  if (!apiKey || apiKey.trim().length < 8) {
-    if (typeof showEduAlert === 'function') {
-      showEduAlert({
-        title: "Kunci API Gemini Belum Diatur",
-        message: "Untuk menggunakan generator AI ini, Anda wajib memasukkan Kunci Google Gemini API pribadi Anda di menu Kelola Kunci API.",
-        iconType: "warning",
-        buttonText: "Buka Menu Kunci API",
-        redirectUrl: "../../dashboard-pengguna/api-key.html"
-      });
-    } else {
-      alert("Kunci API Gemini belum diatur. Silakan atur di menu Kunci API.");
-    }
-    return;
-  }
+  const mapel = document.getElementById('inputMataPelajaran')?.value.trim();
+  const materi = document.getElementById('inputMateri')?.value.trim();
+  const kelas = document.getElementById('inputKelas')?.value.trim();
 
-  // 2. Periksa Materi Acuan
-  const materiText = document.getElementById('materiContentInput')?.value.trim() || '';
-  if (!materiText || materiText.length < 15) {
+  // Validasi Input Wajib
+  if (!mapel || !materi || !kelas) {
     if (typeof showEduAlert === 'function') {
       showEduAlert({
-        title: "Materi Pembelajaran Kosong",
-        message: "Silakan pilih Modul Ajar tersimpan Anda atau ketikkan rincian materi di kolom sebelah kiri sebelum menekan tombol Generate.",
+        title: "Kolom Belum Lengkap",
+        message: "Mohon lengkapi kolom Mata Pelajaran, Materi, dan Kelas sebelum menekan tombol Generate.",
         iconType: "warning",
         buttonText: "Mengerti"
       });
     } else {
-      alert("Silakan isi rincian materi terlebih dahulu di kartu sebelah kiri.");
+      alert("Mohon lengkapi Mata Pelajaran, Materi, dan Kelas.");
     }
-    switchLeftTab('materi');
     return;
   }
 
-  // 3. Persiapkan Parameter dan UI State
-  const customPrompt = document.getElementById('customPromptInput')?.value.trim() || '';
-  const depth = document.getElementById('selectDepth')?.value || '5_slide';
+  // Validasi Kunci API Gemini
+  const apiKey = getEffectiveApiKey();
+  if (!apiKey || apiKey.length < 8) {
+    if (typeof showEduAlert === 'function') {
+      showEduAlert({
+        title: "Kunci API Gemini Belum Diatur",
+        message: "Untuk menghasilkan slide presentasi otomatis dengan AI, silakan masukkan Kunci Google Gemini API Anda terlebih dahulu di menu Kunci API.",
+        iconType: "warning",
+        buttonText: "Atur Kunci API",
+        redirectUrl: "../../dashboard-pengguna/api-key.html"
+      });
+    } else {
+      alert("Kunci API Google Gemini belum diatur.");
+    }
+    return;
+  }
+
+  // Tentukan Target Jumlah Slide
+  let targetSlideCount = 6;
+  if (selectedSlideCountMode === '5') targetSlideCount = 5;
+  else if (selectedSlideCountMode === '7') targetSlideCount = 7;
+  else if (selectedSlideCountMode === '10') targetSlideCount = 10;
+  else if (selectedSlideCountMode === 'custom') {
+    const customNum = parseInt(document.getElementById('inputCustomSlide')?.value, 10);
+    targetSlideCount = (!isNaN(customNum) && customNum >= 2 && customNum <= 25) ? customNum : 6;
+  } else {
+    targetSlideCount = 6; // Rekomendasi AI default
+  }
+
+  currentPresentationMeta = {
+    subject: mapel,
+    materi: materi,
+    grade: kelas,
+    slideCount: targetSlideCount
+  };
 
   isGenerating = true;
-  setGeneratingUiState(true);
+  setLoadingState(true);
 
-  // Alihkan otomatis kartu kiri ke tab Hasil Generate AI
-  switchLeftTab('hasil');
+  // Susun Prompt Khusus Pembuatan Slide PowerPoint
+  const promptText = `
+Anda adalah Pakar Desain Media Presentasi PowerPoint Pembelajaran Edukasi Kurikulum Merdeka.
+Tugas Anda adalah merancang ${targetSlideCount} slide presentasi PowerPoint (.pptx) yang profesional, menarik, terstruktur, dan siap diajarkan untuk:
 
-  // 4. Susun System & User Prompt Komprehensif
-  const promptText = buildMediaGenerationPrompt({
-    format: selectedFormat,
-    depth: depth,
-    materi: materiText,
-    customPrompt: customPrompt
-  });
-
-  // 5. Panggil Google Gemini API (dengan rotasi model andal)
-  try {
-    const rawResult = await executeGeminiGeneration(apiKey, promptText);
-
-    if (rawResult && rawResult.trim()) {
-      lastGeneratedRawText = rawResult;
-      renderAiMediaResult(rawResult, selectedFormat);
-      updateHasilBadge('ready');
-    } else {
-      throw new Error("Respon AI kosong atau tidak dapat diuraikan.");
-    }
-  } catch (err) {
-    console.error("[Generate Media Error]", err);
-    showGenerationError(err.message || "Terjadi kendala saat menghubungi server Google Gemini AI.");
-  } finally {
-    isGenerating = false;
-    setGeneratingUiState(false);
-  }
-}
-
-/**
- * Format Instruksi Prompt Profesional untuk Google Gemini
- */
-function buildMediaGenerationPrompt(options) {
-  const { format, depth, materi, customPrompt } = options;
-
-  let formatInstruction = '';
-
-  if (format === 'slide') {
-    formatInstruction = `
-Format Hasil: RANCANGAN SLIDE PRESENTASI PEMBELAJARAN
-Struktur yang WAJIB digunakan untuk setiap slide:
-=== SLIDE [Nomor Slide]: [Judul Slide yang Menarik] ===
-- POIN MATERI:
-  * [Poin materi 1]
-  * [Poin materi 2]
-  * [Poin materi 3]
-- NARASI GURU: [Teks apa yang harus diucapkan atau dijelaskan oleh guru saat slide ini tampil di depan kelas]
-- REKOMENDASI VISUAL: [Saran gambar, ikon, atau ilustrasi grafis yang cocok untuk slide ini]
-`;
-  } else if (format === 'infografis') {
-    formatInstruction = `
-Format Hasil: RANCANGAN INFOGRAFIS & PETA KONSEP VISUAL
-Struktur yang WAJIB digunakan:
-=== BAGIAN 1: JUDUL UTAMA & PESAN SENTRAL ===
-[Judul dan pesan inti pembelajaran yang mudah diingat]
-
-=== BAGIAN 2: CABANG KONSEP POKOK & ALUR PEMIKIRAN ===
-[Uraian poin konsep berurutan secara visual: Konsep 1 -> Konsep 2 -> Konsep 3]
-
-=== BAGIAN 3: FAKTA KUNCI & CONTOH PENERAPAN ===
-[Ringkasan fakta terpenting atau studi kasus nyata]
-
-=== BAGIAN 4: TIPS MEMAHAMI & KESIMPULAN RINGKAS ===
-[Catatan ringkas penutup untuk siswa]
-`;
-  } else if (format === 'lkpd') {
-    formatInstruction = `
-Format Hasil: LEMBAR AKTIVITAS PESERTA DIDIK (LKPD) INTERAKTIF
-Struktur yang WAJIB digunakan:
-=== BAGIAN 1: IDENTITAS & TUJUAN AKTIVITAS ===
-[Tujuan kegiatan dan ringkasan stimulus materi]
-
-=== BAGIAN 2: STIMULUS / KASUS PEMANTIK ===
-[Cerita singkat, data, atau masalah kontekstual yang harus dipecahkan siswa]
-
-=== BAGIAN 3: LANGKAH EKSPLORASI MANDIRI / KELOMPOK ===
-[Instruksi langkah kerja terarah untuk peserta didik]
-
-=== BAGIAN 4: PERTANYAAN ANALISIS & REFLEKSI ===
-[3-5 soal penalaran kritis yang melatih pemahaman mendalam]
-`;
-  } else {
-    formatInstruction = `
-Format Hasil: FLASHCARD & KUIS TANYA JAWAB CEPAT
-Struktur yang WAJIB digunakan untuk setiap kartu:
-=== KARTU [Nomor Kartu]: [Topik / Konsep] ===
-- DEPAN (PERTANYAAN / TANTANGAN): [Pertanyaan atau kasus singkat]
-- BELAKANG (JAWABAN & PENJELASAN): [Kunci jawaban beserta penjelasan logis yang mudah dipahami]
-- LEVEL: [Mudah / Sedang / Menantang]
-`;
-  }
-
-  return `
-Anda adalah Pakar Desain Instruksional dan Media Pembelajaran Interaktif Kurikulum Merdeka.
-Tugas Anda adalah merancang Media Pembelajaran siap pakai yang menarik, efektif, dan bermakna berdasarkan materi acuan berikut:
-
---- MATERI ACUAN PEMBELAJARAN ---
+- Mata Pelajaran: ${mapel}
+- Kelas / Jenjang: ${kelas}
+- Materi Pembelajaran:
 ${materi}
 
---- KETENTUAN DAN SPESIFIKASI MEDIA ---
-Target Format: ${format.toUpperCase()}
-Kedalaman / Panjang Target: ${depth}
-${customPrompt ? `Instruksi Tambahan dari Pendidik: "${customPrompt}"` : ''}
+Spesifikasi Struktur:
+- Slide 1: Judul Presentasi Pembelajaran, Nama Mata Pelajaran & Kelas, dan Sub-judul Pemantik.
+- Slide 2 s/d ${targetSlideCount - 1}: Pembahasan konsep esensial, contoh nyata, aktivitas interaktif, dan visualisasi pemahaman.
+- Slide ${targetSlideCount}: Kesimpulan & Refleksi / Kuis Ringkas Pemahaman.
 
-${formatInstruction}
-
-PANDUAN KUALITAS:
-1. Gunakan Bahasa Indonesia baku namun komunikatif, ramah, dan memotivasi peserta didik.
-2. Tuliskan konten yang konkret, aplikatif, dan tidak abstrak.
-3. Pertahankan format penanda "=== SLIDE ... ===" atau "=== BAGIAN ... ===" atau "=== KARTU ... ===" agar dapat ditampilkan sebagai kartu visual yang rapi pada aplikasi.
+Format Keluaran WAJIB berupa JSON ARRAY murni tanpa teks pembuka atau penutup markdown (hanya format [ ... ]):
+[
+  {
+    "slideNumber": 1,
+    "title": "Judul Slide Singkat & Menarik",
+    "points": [
+      "Poin materi penting 1",
+      "Poin materi penting 2",
+      "Poin materi penting 3"
+    ],
+    "teacherNote": "Panduan narasi ucapan guru saat menampilkan slide ini di depan kelas",
+    "visualIdea": "Rekomendasi visual, gambar, ikon, atau ilustrasi grafis untuk slide ini"
+  }
+]
 `.trim();
+
+  try {
+    const aiResponse = await callGeminiApiForPpt(apiKey, promptText);
+
+    let slidesData = parseSlideJsonResponse(aiResponse);
+
+    if (!slidesData || slidesData.length === 0) {
+      slidesData = createFallbackSlides(mapel, materi, kelas, targetSlideCount);
+    }
+
+    currentGeneratedSlides = slidesData;
+    renderGeneratedSlides(slidesData, currentPresentationMeta);
+  } catch (err) {
+    console.error("[PowerPoint Generator Error]", err);
+    showErrorState(err.message || "Gagal menghubungi server Google Gemini AI.");
+  } finally {
+    isGenerating = false;
+    setLoadingState(false);
+  }
 }
 
 /**
- * Panggil REST API Google Gemini dengan rotasi model resmi
+ * Panggil Google Gemini API
  */
-async function executeGeminiGeneration(apiKey, promptText) {
+async function callGeminiApiForPpt(apiKey, promptText) {
   const models = [
     'gemini-2.5-flash',
     'gemini-2.0-flash',
@@ -556,16 +389,16 @@ async function executeGeminiGeneration(apiKey, promptText) {
     'gemini-flash-latest'
   ];
 
-  const updateStep = (text) => {
-    const el = document.getElementById('aiLoadingStepText');
-    if (el) el.textContent = text;
+  const updateSub = (txt) => {
+    const el = document.getElementById('loadingSubtitleText');
+    if (el) el.textContent = txt;
   };
 
   let lastError = null;
 
   for (const model of models) {
     try {
-      updateStep(`Menghubungkan ke AI (${model})...`);
+      updateSub(`Menghubungkan ke Gemini AI (${model})...`);
       const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(apiKey)}`;
 
       const controller = new AbortController();
@@ -587,15 +420,13 @@ async function executeGeminiGeneration(apiKey, promptText) {
 
       if (response.ok) {
         const json = await response.json();
-        const output = json?.candidates?.[0]?.content?.parts?.[0]?.text;
-        if (output && output.trim()) {
-          return output.trim();
-        }
+        const text = json?.candidates?.[0]?.content?.parts?.[0]?.text;
+        if (text && text.trim()) return text.trim();
       } else {
         const errJson = await response.json().catch(() => ({}));
         const msg = errJson?.error?.message || `HTTP ${response.status}`;
         if (msg.toLowerCase().includes('api key not valid') || response.status === 400 || response.status === 403) {
-          throw new Error("Kunci Google Gemini API pada akun Anda tidak valid. Silakan periksa kembali di menu Kunci API.");
+          throw new Error("Kunci Google Gemini API Anda tidak valid atau dinonaktifkan. Silakan periksa di menu Kunci API.");
         }
         lastError = new Error(msg);
       }
@@ -605,214 +436,204 @@ async function executeGeminiGeneration(apiKey, promptText) {
     }
   }
 
-  throw lastError || new Error("Gagal menerima respons dari Gemini AI setelah beberapa percobaan.");
+  throw lastError || new Error("Gagal menerima respons dari AI.");
 }
 
 /**
- * Render Hasil AI ke Komponen Visual pada Kartu Kiri
+ * Parsing Respons JSON dari AI
  */
-function renderAiMediaResult(rawText, format) {
-  const emptyState = document.getElementById('aiEmptyState');
-  const loadingState = document.getElementById('aiLoadingState');
-  const renderedState = document.getElementById('aiContentRendered');
-  const container = document.getElementById('slideCardsContainer');
-  const rawBox = document.getElementById('rawOutputBox');
-  const actionsBar = document.getElementById('resultActionsBar');
-  const formatBadge = document.getElementById('resultFormatBadge');
-  const headingText = document.getElementById('resultHeadingText');
+function parseSlideJsonResponse(rawText) {
+  if (!rawText) return null;
+
+  let cleaned = rawText.trim();
+  // Hilangkan tag markdown code blocks jika ada
+  cleaned = cleaned.replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/\s*```$/i, '').trim();
+
+  // Cari blok array [...]
+  const startIdx = cleaned.indexOf('[');
+  const endIdx = cleaned.lastIndexOf(']');
+
+  if (startIdx !== -1 && endIdx !== -1 && endIdx > startIdx) {
+    cleaned = cleaned.substring(startIdx, endIdx + 1);
+  }
+
+  try {
+    const parsed = JSON.parse(cleaned);
+    if (Array.isArray(parsed) && parsed.length > 0) {
+      return parsed;
+    }
+  } catch (e) {
+    console.warn("Gagal parse JSON langsung, mencoba ekstraksi regex...", e);
+  }
+
+  return null;
+}
+
+/**
+ * Fallback jika respons AI bukan format JSON murni
+ */
+function createFallbackSlides(mapel, materi, kelas, count) {
+  const slides = [];
+  const lines = materi.split('\n').map(l => l.trim()).filter(Boolean);
+
+  slides.push({
+    slideNumber: 1,
+    title: `Pengantar: ${lines[0] || 'Materi Pembelajaran'}`,
+    points: [
+      `Mata Pelajaran: ${mapel}`,
+      `Jenjang / Kelas: ${kelas}`,
+      `Fokus Pembelajaran: Memahami konsep esensial secara menyeluruh`
+    ],
+    teacherNote: `Sambut peserta didik dan sampaikan tujuan pembelajaran hari ini dengan antusias.`,
+    visualIdea: `Ilustrasi cover bertema ${mapel} dengan tata letak minimalis dan judul besar.`
+  });
+
+  for (let i = 2; i < count; i++) {
+    slides.push({
+      slideNumber: i,
+      title: `Konsep Inti Bagian ${i - 1}`,
+      points: [
+        `Uraian materi pokok bagian ${i - 1}`,
+        `Contoh konkret dalam kehidupan sehari-hari`,
+        `Diskusi pemantik untuk siswa`
+      ],
+      teacherNote: `Jelaskan poin-poin utama dan berikan kesempatan bertanya kepada siswa.`,
+      visualIdea: `Diagram alur konsep atau bagan representasi materi.`
+    });
+  }
+
+  slides.push({
+    slideNumber: count,
+    title: `Kesimpulan & Refleksi`,
+    points: [
+      `Rangkuman poin pembelajaran hari ini`,
+      `Pertanyaan refleksi untuk menguji pemahaman`,
+      `Tindak lanjut dan aktivitas mandiri`
+    ],
+    teacherNote: `Ajak siswa menyimpulkan apa yang telah dipelajari bersama.`,
+    visualIdea: `Peta konsep ringkasan dengan ikon centang sukses.`
+  });
+
+  return slides;
+}
+
+/**
+ * Render Daftar Slide Hasil Generate ke Kartu Kanan
+ */
+function renderGeneratedSlides(slides, meta) {
+  const emptyState = document.getElementById('pptEmptyState');
+  const loadingState = document.getElementById('pptLoadingState');
+  const resultContainer = document.getElementById('pptResultContainer');
+  const actionBtns = document.getElementById('headerActionBtns');
+  const badge = document.getElementById('cardRightBadge');
+
+  const summaryTopic = document.getElementById('summaryTopicTitle');
+  const summaryMeta = document.getElementById('summaryMetaText');
+  const summaryCount = document.getElementById('summarySlideCountBadge');
+  const listContainer = document.getElementById('pptSlidesList');
 
   if (emptyState) emptyState.style.display = 'none';
   if (loadingState) loadingState.classList.remove('active');
-  if (renderedState) renderedState.classList.add('active');
-  if (actionsBar) actionsBar.style.display = 'flex';
+  if (resultContainer) resultContainer.classList.add('active');
+  if (actionBtns) actionBtns.style.display = 'flex';
 
-  if (formatBadge) {
-    const titles = {
-      slide: 'Slide Presentasi',
-      infografis: 'Infografis & Peta Konsep',
-      lkpd: 'Lembar Aktivitas Siswa',
-      flashcard: 'Flashcard & Kuis'
-    };
-    formatBadge.textContent = titles[format] || 'Media Pembelajaran';
-    formatBadge.style.display = 'inline-block';
+  if (badge) {
+    badge.className = 'card-right-badge badge-ready';
+    badge.textContent = 'Slide Tersedia';
   }
 
-  if (headingText) headingText.textContent = "Media Berhasil Dibuat";
+  const topicName = meta.materi.split('\n')[0] || meta.subject;
+  if (summaryTopic) summaryTopic.textContent = topicName;
+  if (summaryMeta) summaryMeta.textContent = `${meta.subject} • ${meta.grade}`;
+  if (summaryCount) summaryCount.textContent = `${slides.length} Slide`;
 
-  if (rawBox) rawBox.textContent = rawText;
+  if (listContainer) {
+    listContainer.innerHTML = '';
+    slides.forEach((s, idx) => {
+      const card = document.createElement('div');
+      card.className = 'ppt-slide-card';
 
-  // Parsing berdasarkan penanda bagian "=== ... ==="
-  const sections = rawText.split(/(?====\s*(?:SLIDE|BAGIAN|KARTU))/i).map(s => s.trim()).filter(Boolean);
+      const pointsHtml = (s.points || []).map(p => `<li>${escapeHtml(p)}</li>`).join('');
 
-  if (container) {
-    container.innerHTML = '';
-
-    if (sections.length > 0) {
-      sections.forEach((sec, idx) => {
-        const cardEl = createVisualSectionCard(sec, idx + 1);
-        container.appendChild(cardEl);
-      });
-    } else {
-      // Fallback jika AI tidak memunculkan separator standar
-      const fallbackCard = document.createElement('div');
-      fallbackCard.className = 'slide-card-item';
-      fallbackCard.innerHTML = `
-        <div class="slide-card-header">
-          <span class="slide-badge-num">Dokumen Media</span>
-          <h4 class="slide-card-title">Media Pembelajaran Siap Pakai</h4>
+      card.innerHTML = `
+        <div class="ppt-slide-top">
+          <span class="ppt-slide-number">Slide ${s.slideNumber || (idx + 1)}</span>
+          <h4 class="ppt-slide-title">${escapeHtml(s.title || `Slide ${idx + 1}`)}</h4>
         </div>
-        <div class="slide-card-body" style="white-space: pre-wrap;">
-          ${escapeHtml(rawText)}
+
+        <div class="ppt-slide-content">
+          <ul>${pointsHtml}</ul>
         </div>
+
+        ${s.teacherNote ? `
+          <div class="ppt-speaker-notes">
+            <strong>🎙️ Panduan Narasi Pendidik:</strong>
+            ${escapeHtml(s.teacherNote)}
+          </div>
+        ` : ''}
+
+        ${s.visualIdea ? `
+          <div class="ppt-visual-idea">
+            <strong>💡 Saran Visual & Desain Slide:</strong>
+            ${escapeHtml(s.visualIdea)}
+          </div>
+        ` : ''}
       `;
-      container.appendChild(fallbackCard);
-    }
+
+      listContainer.appendChild(card);
+    });
   }
 }
 
 /**
- * Buat kartu visual untuk tiap slide atau bagian
+ * Atur State Loading pada UI Kartu Kanan
  */
-function createVisualSectionCard(sectionText, index) {
-  const card = document.createElement('div');
-  card.className = 'slide-card-item';
+function setLoadingState(isLoading) {
+  const btn = document.getElementById('btnGenerate');
+  const btnText = document.getElementById('btnGenerateText');
+  const emptyState = document.getElementById('pptEmptyState');
+  const loadingState = document.getElementById('pptLoadingState');
+  const resultContainer = document.getElementById('pptResultContainer');
+  const badge = document.getElementById('cardRightBadge');
 
-  // Ekstrak judul header (misal: "=== SLIDE 1: Pengenalan Ekosistem ===")
-  const headerMatch = sectionText.match(/^===\s*([^=]+)\s*===/);
-  let titleText = `Bagian ${index}`;
-  let contentBody = sectionText;
-
-  if (headerMatch) {
-    titleText = headerMatch[1].trim();
-    contentBody = sectionText.replace(headerMatch[0], '').trim();
-  }
-
-  // Parse bagian narasi guru dan visual jika ada
-  let teacherNote = '';
-  let visualTip = '';
-  let cleanPoints = [];
-
-  const lines = contentBody.split('\n');
-  let currentMode = 'points';
-
-  lines.forEach(line => {
-    const trimmed = line.trim();
-    if (!trimmed) return;
-
-    if (trimmed.match(/^(?:-\s*)?NARASI GURU\s*:/i)) {
-      currentMode = 'teacher';
-      teacherNote += trimmed.replace(/^(?:-\s*)?NARASI GURU\s*:/i, '').trim() + ' ';
-    } else if (trimmed.match(/^(?:-\s*)?REKOMENDASI VISUAL\s*:/i)) {
-      currentMode = 'visual';
-      visualTip += trimmed.replace(/^(?:-\s*)?REKOMENDASI VISUAL\s*:/i, '').trim() + ' ';
-    } else if (trimmed.match(/^(?:-\s*)?POIN MATERI\s*:/i)) {
-      currentMode = 'points';
-    } else {
-      if (currentMode === 'teacher') {
-        teacherNote += trimmed + ' ';
-      } else if (currentMode === 'visual') {
-        visualTip += trimmed + ' ';
-      } else {
-        cleanPoints.push(trimmed);
-      }
-    }
-  });
-
-  // Render HTML Kartu
-  let pointsHtml = '';
-  if (cleanPoints.length > 0) {
-    pointsHtml = '<ul>' + cleanPoints.map(p => `<li>${escapeHtml(p.replace(/^[-*•]\s*/, ''))}</li>`).join('') + '</ul>';
-  }
-
-  let teacherHtml = '';
-  if (teacherNote.trim()) {
-    teacherHtml = `
-      <div class="slide-teacher-note">
-        <strong>🎙️ Panduan Narasi Pendidik:</strong>
-        ${escapeHtml(teacherNote.trim())}
-      </div>
-    `;
-  }
-
-  let visualHtml = '';
-  if (visualTip.trim()) {
-    visualHtml = `
-      <div class="slide-visual-tip">
-        <strong>💡 Saran Visual & Tata Letak:</strong>
-        ${escapeHtml(visualTip.trim())}
-      </div>
-    `;
-  }
-
-  card.innerHTML = `
-    <div class="slide-card-header">
-      <span class="slide-badge-num">#${index}</span>
-      <h4 class="slide-card-title">${escapeHtml(titleText)}</h4>
-    </div>
-    <div class="slide-card-body">
-      ${pointsHtml || `<p style="white-space: pre-wrap;">${escapeHtml(contentBody)}</p>`}
-    </div>
-    ${teacherHtml}
-    ${visualHtml}
-  `;
-
-  return card;
-}
-
-/**
- * Atur State Tampilan saat Sedang Memproses AI
- */
-function setGeneratingUiState(loading) {
-  const btn = document.getElementById('btnGenerateMedia');
-  const btnText = document.getElementById('btnGenerateMediaText');
-  const emptyState = document.getElementById('aiEmptyState');
-  const loadingState = document.getElementById('aiLoadingState');
-  const renderedState = document.getElementById('aiContentRendered');
-
-  if (loading) {
+  if (isLoading) {
     if (btn) btn.disabled = true;
-    if (btnText) btnText.textContent = 'Menyusun Media Pembelajaran...';
+    if (btnText) btnText.textContent = 'Sedang Menyusun Slide...';
     if (emptyState) emptyState.style.display = 'none';
-    if (renderedState) renderedState.classList.remove('active');
+    if (resultContainer) resultContainer.classList.remove('active');
     if (loadingState) loadingState.classList.add('active');
-    updateHasilBadge('loading');
+    if (badge) {
+      badge.className = 'card-right-badge badge-loading';
+      badge.textContent = 'Memproses AI...';
+    }
   } else {
     if (btn) btn.disabled = false;
-    if (btnText) btnText.textContent = 'Generate Media Pembelajaran';
+    if (btnText) btnText.textContent = 'Generate PowerPoint';
     if (loadingState) loadingState.classList.remove('active');
   }
 }
 
-function updateHasilBadge(status) {
-  const badge = document.getElementById('badgeHasilStatus');
-  if (!badge) return;
-  if (status === 'ready') {
-    badge.className = 'tab-badge badge-ready';
-    badge.textContent = 'Tersedia';
-  } else if (status === 'loading') {
-    badge.className = 'tab-badge badge-loading';
-    badge.textContent = 'Proses...';
-  } else {
-    badge.className = 'tab-badge';
-    badge.textContent = 'Kosong';
-  }
-}
+function showErrorState(errMsg) {
+  const emptyState = document.getElementById('pptEmptyState');
+  const loadingState = document.getElementById('pptLoadingState');
+  const resultContainer = document.getElementById('pptResultContainer');
+  const listContainer = document.getElementById('pptSlidesList');
 
-function showGenerationError(message) {
-  const container = document.getElementById('slideCardsContainer');
-  const renderedState = document.getElementById('aiContentRendered');
-  if (renderedState) renderedState.classList.add('active');
-  if (container) {
-    container.innerHTML = `
-      <div style="background: #fef2f2; border: 1.5px solid #fecaca; border-radius: 16px; padding: 24px; text-align: center; color: #991b1b;">
-        <svg style="margin: 0 auto 10px; display: block;" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+  if (loadingState) loadingState.classList.remove('active');
+  if (emptyState) emptyState.style.display = 'none';
+  if (resultContainer) resultContainer.classList.add('active');
+
+  if (listContainer) {
+    listContainer.innerHTML = `
+      <div style="background: #fef2f2; border: 1.5px solid #fecaca; border-radius: 16px; padding: 28px; text-align: center; color: #991b1b;">
+        <svg style="margin: 0 auto 12px; display: block;" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <circle cx="12" cy="12" r="10"></circle>
           <line x1="12" y1="8" x2="12" y2="12"></line>
           <line x1="12" y1="16" x2="12.01" y2="16"></line>
         </svg>
-        <h4 style="font-size: 1.1rem; font-weight: 800; margin: 0 0 6px;">Gagal Membuat Media Pembelajaran</h4>
-        <p style="font-size: 0.9rem; line-height: 1.5; margin: 0 0 16px;">${escapeHtml(message)}</p>
-        <button type="button" class="btn-result-action" onclick="handleGenerateMedia()" style="margin: 0 auto; background: #ffffff; color: #dc2626; border-color: #fca5a5;">
+        <h4 style="font-size: 1.15rem; font-weight: 800; margin: 0 0 6px;">Gagal Menghasilkan Slide PowerPoint</h4>
+        <p style="font-size: 0.92rem; line-height: 1.5; margin: 0 0 16px;">${escapeHtml(errMsg)}</p>
+        <button type="button" class="btn-secondary-action" onclick="handleGenerate()" style="margin: 0 auto; background: #ffffff; color: #dc2626; border-color: #fca5a5;">
           Coba Generate Lagi
         </button>
       </div>
@@ -821,40 +642,133 @@ function showGenerationError(message) {
 }
 
 /**
- * Salin Teks Hasil AI ke Clipboard
+ * ==========================================================================
+ * UNDUH FILE POWERPOINT (.PPTX) ASLI MENGGUNAKAN PPTXGENJS
+ * ==========================================================================
  */
-function copyAiResult() {
-  if (!lastGeneratedRawText) return;
-  navigator.clipboard.writeText(lastGeneratedRawText).then(() => {
-    const btnText = document.getElementById('copyBtnText');
-    if (btnText) {
-      btnText.textContent = 'Tersalin!';
-      setTimeout(() => { btnText.textContent = 'Salin Teks'; }, 2000);
-    }
-    if (typeof showEduAlert === 'function') {
-      showEduAlert({
-        title: "Berhasil Disalin!",
-        message: "Seluruh rancangan media pembelajaran berhasil disalin ke clipboard.",
-        iconType: "success",
-        buttonText: "Selesai"
+function downloadPowerPointFile() {
+  if (!currentGeneratedSlides || currentGeneratedSlides.length === 0) return;
+
+  const meta = currentPresentationMeta;
+  const topicTitle = meta.materi.split('\n')[0] || meta.subject || 'Presentasi';
+  const safeFilename = `${topicTitle.replace(/[^a-zA-Z0-9_-]/g, '_')}_EduWorkspace.pptx`;
+
+  // Cek apakah library PptxGenJS tersedia
+  if (typeof PptxGenJS !== 'undefined') {
+    try {
+      const pptx = new PptxGenJS();
+      pptx.layout = 'LAYOUT_16x9';
+
+      // 1. SLIDE COVER (Slide 1)
+      const coverSlide = pptx.addSlide();
+      coverSlide.background = { color: '0F172A' }; // Dark Slate
+
+      // Tag Edu Workspace
+      coverSlide.addText('EDU WORKSPACE PRESENTATION', {
+        x: 1.0, y: 1.2, w: 11.3, h: 0.5,
+        fontSize: 13, bold: true, color: 'EAB308', letterSpacing: 2, align: 'center'
       });
+
+      // Judul Utama
+      coverSlide.addText(topicTitle, {
+        x: 1.0, y: 2.2, w: 11.3, h: 1.8,
+        fontSize: 34, bold: true, color: 'FFFFFF', align: 'center', breakLine: true
+      });
+
+      // Sub-judul Mata Pelajaran & Kelas
+      coverSlide.addText(`${meta.subject} • ${meta.grade}`, {
+        x: 1.0, y: 4.2, w: 11.3, h: 0.8,
+        fontSize: 18, color: '94A3B8', align: 'center'
+      });
+
+      // 2. SLIDE KONTEN (Slide 2 s/d Selesai)
+      currentGeneratedSlides.forEach((s, idx) => {
+        const slide = pptx.addSlide();
+        slide.background = { color: 'F8FAFC' };
+
+        // Banner Header Atas
+        slide.addShape(pptx.shapes.RECTANGLE, {
+          x: 0, y: 0, w: '100%', h: 1.1,
+          fill: { color: '1E293B' }, line: { color: '1E293B' }
+        });
+
+        slide.addText(`Slide ${s.slideNumber || (idx + 1)}: ${s.title || ''}`, {
+          x: 0.8, y: 0.2, w: 11.5, h: 0.7,
+          fontSize: 20, bold: true, color: 'FFFFFF'
+        });
+
+        // Konten Poin-poin Materi di Sisi Kiri
+        const bulletObjects = (s.points || []).map(pt => ({
+          text: pt,
+          options: { bullet: true, fontSize: 15, color: '334155', breakLine: true }
+        }));
+
+        if (bulletObjects.length > 0) {
+          slide.addText(bulletObjects, {
+            x: 0.8, y: 1.5, w: 7.2, h: 4.5,
+            lineSpacing: 26, valign: 'top'
+          });
+        }
+
+        // Box Catatan Pendidik di Sisi Kanan
+        slide.addShape(pptx.shapes.ROUNDED_RECTANGLE, {
+          x: 8.4, y: 1.5, w: 4.2, h: 4.6,
+          fill: { color: 'EFF6FF' }, line: { color: 'BFDBFE', width: 1.5 }
+        });
+
+        const notesText = [
+          { text: 'PANDUAN PENDIDIK:\n', options: { bold: true, fontSize: 12, color: '1E40AF' } },
+          { text: (s.teacherNote || '') + '\n\n', options: { fontSize: 11, color: '1E3A8A' } },
+          { text: 'SARAN VISUAL:\n', options: { bold: true, fontSize: 11, color: '854D0E' } },
+          { text: s.visualIdea || '-', options: { fontSize: 11, color: '713F12' } }
+        ];
+
+        slide.addText(notesText, {
+          x: 8.6, y: 1.7, w: 3.8, h: 4.2,
+          valign: 'top', breakLine: true
+        });
+      });
+
+      // Simpan file .pptx ke perangkat pengguna
+      pptx.writeFile({ fileName: safeFilename });
+
+      if (typeof showEduAlert === 'function') {
+        showEduAlert({
+          title: "File PowerPoint Diunduh!",
+          message: `File presentasi PowerPoint '${safeFilename}' berhasil dibuat dan tersimpan di perangkat Anda.`,
+          iconType: "success",
+          buttonText: "Selesai"
+        });
+      }
+      return;
+    } catch (e) {
+      console.warn("PptxGenJS gagal, beralih ke format teks outline:", e);
     }
-  }).catch(() => {
-    alert("Gagal menyalin teks secara otomatis.");
-  });
+  }
+
+  // Fallback: Unduh file outline teks jika PptxGenJS tidak termuat
+  downloadTextOutline(safeFilename.replace('.pptx', '_Outline.txt'));
 }
 
 /**
- * Unduh Teks Hasil Media Pembelajaran
+ * Fallback Unduh Outline Teks
  */
-function downloadAiResult() {
-  if (!lastGeneratedRawText) return;
-  const topic = document.getElementById('manualTopic')?.value.trim() ||
-                document.getElementById('previewTitle')?.textContent.trim() ||
-                'Media_Pembelajaran';
+function downloadTextOutline(filename) {
+  let text = `RANCANGAN SLIDE PRESENTASI POWERPOINT - EDU WORKSPACE\n`;
+  text += `Mata Pelajaran: ${currentPresentationMeta.subject}\n`;
+  text += `Kelas: ${currentPresentationMeta.grade}\n\n`;
 
-  const filename = `${topic.replace(/[^a-zA-Z0-9_-]/g, '_')}_Media_AI.txt`;
-  const blob = new Blob([lastGeneratedRawText], { type: 'text/plain;charset=utf-8' });
+  currentGeneratedSlides.forEach((s, idx) => {
+    text += `=====================================================\n`;
+    text += `SLIDE ${s.slideNumber || (idx + 1)}: ${s.title}\n`;
+    text += `=====================================================\n`;
+    (s.points || []).forEach(p => { text += `• ${p}\n`; });
+    if (s.teacherNote) text += `\n[Narasi Guru]: ${s.teacherNote}\n`;
+    if (s.visualIdea) text += `[Saran Visual]: ${s.visualIdea}\n`;
+    text += `\n\n`;
+  });
+
+  const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
@@ -863,6 +777,39 @@ function downloadAiResult() {
   a.click();
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
+}
+
+/**
+ * Salin Semua Teks Slide ke Clipboard
+ */
+function copySlideContent() {
+  if (!currentGeneratedSlides || currentGeneratedSlides.length === 0) return;
+
+  let text = `SLIDE PRESENTASI POWERPOINT: ${currentPresentationMeta.subject} (${currentPresentationMeta.grade})\n\n`;
+  currentGeneratedSlides.forEach((s, idx) => {
+    text += `[Slide ${s.slideNumber || (idx + 1)}]: ${s.title}\n`;
+    (s.points || []).forEach(p => { text += `- ${p}\n`; });
+    if (s.teacherNote) text += `Panduan Guru: ${s.teacherNote}\n`;
+    text += `\n`;
+  });
+
+  navigator.clipboard.writeText(text).then(() => {
+    const lbl = document.getElementById('copyBtnLabel');
+    if (lbl) {
+      lbl.textContent = 'Tersalin!';
+      setTimeout(() => { lbl.textContent = 'Salin Teks'; }, 2000);
+    }
+    if (typeof showEduAlert === 'function') {
+      showEduAlert({
+        title: "Teks Slide Tersalin!",
+        message: "Seluruh rancangan teks slide presentasi berhasil disalin ke clipboard.",
+        iconType: "success",
+        buttonText: "Selesai"
+      });
+    }
+  }).catch(() => {
+    alert("Gagal menyalin teks slide.");
+  });
 }
 
 function escapeHtml(str) {
