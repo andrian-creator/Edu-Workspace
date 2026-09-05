@@ -193,10 +193,18 @@ const SupabaseDB = {
   },
 
   /**
-   * Soft-delete user berdasarkan email
+   * Soft-delete user berdasarkan email (otomatis reset masa langganan dan status)
    */
   async deleteUserByEmail(email) {
-    return await SupabaseDB.updateUserByEmail(email, { isDeleted: true, status: 'Dihapus' });
+    return await SupabaseDB.updateUserByEmail(email, {
+      isDeleted: true,
+      status: 'Dihapus',
+      isApproved: false,
+      isProfileCompleted: false,
+      features: [],
+      subscriptionStart: null,
+      subscriptionEnd: null
+    });
   },
 
   /**
@@ -1148,7 +1156,7 @@ function renderEduNavbar(options = {}) {
     try {
       const allUsers = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
       const found = allUsers.find(u => (u.email || '').trim().toLowerCase() === (user.email || '').trim().toLowerCase());
-      if (found && found.subscriptionEnd) {
+      if (found && found.subscriptionEnd && !found.isDeleted && found.status !== 'Dihapus') {
         user = { ...user, subscriptionEnd: found.subscriptionEnd, subscriptionStart: found.subscriptionStart };
       }
     } catch (e) {}

@@ -174,7 +174,9 @@ function ensureInitialData() {
 function getUsers() {
   try {
     const data = localStorage.getItem(STORAGE_KEY);
-    return data ? JSON.parse(data) : [];
+    const list = data ? JSON.parse(data) : [];
+    // Jangan pernah tampilkan user yang berstatus Dihapus / isDeleted
+    return list.filter(u => !u.isDeleted && u.status !== 'Dihapus');
   } catch (e) {
     return [];
   }
@@ -435,6 +437,19 @@ function confirmDeleteUser() {
   if (index === -1) return;
   const targetUser = users[index];
 
+  // Reset total masa langganan dan status pengguna yang dihapus
+  targetUser.subscriptionStart = null;
+  targetUser.subscriptionEnd = null;
+  targetUser.subscriptionDays = null;
+  delete targetUser.subscriptionStart;
+  delete targetUser.subscriptionEnd;
+  delete targetUser.subscriptionDays;
+  targetUser.isDeleted = true;
+  targetUser.status = 'Dihapus';
+  targetUser.isApproved = false;
+  targetUser.isProfileCompleted = false;
+  targetUser.features = [];
+
   users.splice(index, 1);
   saveUsers(users);
 
@@ -443,7 +458,7 @@ function confirmDeleteUser() {
     localStorage.removeItem(`edu_api_key_${email}`);
     localStorage.removeItem(`edu_modul_list_${email}`);
 
-    // Jika akun yang dihapus kebetulan sedang aktif di browser ini, tandai statusnya sebagai Dihapus
+    // Jika akun yang dihapus kebetulan sedang aktif di browser ini, tandai statusnya sebagai Dihapus & reset langganannya
     const curRaw = localStorage.getItem(CURRENT_USER_KEY);
     if (curRaw) {
       const curUser = JSON.parse(curRaw);
@@ -451,6 +466,14 @@ function confirmDeleteUser() {
         curUser.status = 'Dihapus';
         curUser.isDeleted = true;
         curUser.isApproved = false;
+        curUser.isProfileCompleted = false;
+        curUser.subscriptionStart = null;
+        curUser.subscriptionEnd = null;
+        curUser.subscriptionDays = null;
+        delete curUser.subscriptionStart;
+        delete curUser.subscriptionEnd;
+        delete curUser.subscriptionDays;
+        curUser.features = [];
         localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(curUser));
         localStorage.removeItem('edu_current_generated_modul');
         localStorage.removeItem('edu_editing_modul_payload');

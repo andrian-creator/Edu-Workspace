@@ -101,7 +101,9 @@ function processLogin(payload) {
       isApproved: isAdmin ? true : false,
       isProfileCompleted: isAdmin ? true : false,
       features: isAdmin ? ['generate_modul_ajar'] : [],
-      geminiApiKey: ''
+      geminiApiKey: '',
+      subscriptionStart: null,
+      subscriptionEnd: null
     };
     users.push(matchedUser);
   } else {
@@ -135,9 +137,12 @@ function processLogin(payload) {
         finalUser.institution = '';
         finalUser.gradeLevel = '';
         finalUser.features = [];
+        finalUser.subscriptionStart = null;
+        finalUser.subscriptionEnd = null;
+        delete finalUser.subscriptionDays;
         delete finalUser.rejectReason;
 
-        // Un-delete langsung di Supabase via PATCH
+        // Un-delete langsung di Supabase via PATCH dan pastikan subscriptionStart & subscriptionEnd tereset null
         SupabaseDB.updateUserByEmail(email, {
           isDeleted: false,
           status: 'Belum Lengkap',
@@ -147,7 +152,9 @@ function processLogin(payload) {
           gradeLevel: '',
           subject: '',
           rejectReason: '',
-          features: []
+          features: [],
+          subscriptionStart: null,
+          subscriptionEnd: null
         }).catch(() => {});
       } else {
         // Merge: prioritaskan data Supabase untuk field yang dikelola admin
@@ -169,6 +176,14 @@ function processLogin(payload) {
       }
     }
     localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(finalUser));
+    // Update users array in STORAGE_KEY as well
+    const uIdx = users.findIndex(u => (u.email || '').toLowerCase() === email);
+    if (uIdx !== -1) {
+      users[uIdx] = finalUser;
+    } else {
+      users.push(finalUser);
+    }
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(users));
     // Upsert ke Supabase
     supabaseUpsertLoginUser(finalUser).catch(() => {
       // Fallback: kirim ke server lokal
