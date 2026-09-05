@@ -216,15 +216,14 @@ function onSelectModulChange(modulId) {
   const p = modul.payload || modul.contentJson || {};
 
   const mapel = modul.subject || p.mataPelajaran || '';
-  const topic = modul.topic || p.topikMateri || modul.namaModul || p.namaModul || '';
-  const grade = modul.gradeLevel || p.faseKelas || p.jenjangSekolah || '';
+  const topic = (p.topikMateri || p.isiTopikMateri || modul.topic || modul.topikMateri || p.topik || modul.namaModul || p.namaModul || '').trim();
+  const grade = modul.kelas || p.kelas || modul.gradeLevel || p.faseKelas || p.jenjangSekolah || '';
 
-  // Ekstrak ringkasan isi materi dari modul ajar
+  // Ekstrak materi/topik murni dari modul ajar (bukan dari tujuan pembelajaran)
   let materiDetail = topic;
-  if (p.materiPembelajaran) {
-    materiDetail += '\n' + p.materiPembelajaran;
-  } else if (p.tujuanPembelajaran) {
-    materiDetail += '\nTujuan: ' + p.tujuanPembelajaran;
+  const materiTambahan = (p.materiTambahan || p.materiPokok || p.materiPembelajaran || p.ringkasanMateri || '').trim();
+  if (materiTambahan && materiTambahan !== '-' && !topic.toLowerCase().includes(materiTambahan.toLowerCase())) {
+    materiDetail = topic ? `${topic}\n${materiTambahan}` : materiTambahan;
   }
 
   // Isi ke input form
@@ -233,7 +232,7 @@ function onSelectModulChange(modulId) {
   const inputKelas = document.getElementById('inputKelas');
 
   if (inputMapel && mapel) inputMapel.value = mapel;
-  if (inputMateri && materiDetail) inputMateri.value = materiDetail.trim();
+  if (inputMateri) inputMateri.value = (materiDetail || topic).trim();
   if (inputKelas && grade) inputKelas.value = grade;
 }
 
