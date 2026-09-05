@@ -3077,13 +3077,14 @@ const media = p.mediaDigital || 'Slide Presentasi Canva, Video Pembelajaran';
  * Buka Modul Ajar di Halaman Tab Baru
  */
 function openGeneratedModulTab() {
+  const targetUrl = window.location.protocol.startsWith('http') ? '/preview-modul' : 'preview modul ajar.html';
   try {
-    const newWin = window.open('preview modul ajar.html', '_blank');
+    const newWin = window.open(targetUrl, '_blank');
     if (!newWin || newWin.closed || typeof newWin.closed === 'undefined') {
-      window.location.href = 'preview modul ajar.html';
+      window.location.href = targetUrl;
     }
   } catch (e) {
-    window.location.href = 'preview modul ajar.html';
+    window.location.href = targetUrl;
   }
 }
 
