@@ -2,6 +2,7 @@ import http.server
 import socketserver
 import json
 import urllib.parse
+import urllib.request
 import os
 import sys
 
@@ -344,6 +345,66 @@ class EduWorkspaceHandler(http.server.SimpleHTTPRequestHandler):
                 "subject": subject
             })
             return
+
+        # 5. API: Proxy Neosantara API (Generasi Visual & Multimodal Edukasi)
+        if parsed.path == '/api/neosantara/generate':
+            api_key = (body.get('apiKey') or '').strip()
+            prompt = (body.get('prompt') or '').strip()
+            model = body.get('model') or 'gemini-2.5-flash'
+
+            if not api_key:
+                self._send_json_response({"status": "error", "message": "Neosantara API Key is required"}, 400)
+                return
+
+            # Coba chat completions dengan modalities image
+            try:
+                req_data = json.dumps({
+                    "model": model,
+                    "messages": [{"role": "user", "content": prompt}],
+                    "modalities": ["text", "image"],
+                    "stream": False
+                }).encode('utf-8')
+
+                req = urllib.request.Request(
+                    'https://api.neosantara.xyz/v1/chat/completions',
+                    data=req_data,
+                    headers={
+                        'Content-Type': 'application/json',
+                        'Authorization': f'Bearer {api_key}',
+                        'User-Agent': 'EduWorkspace/1.0'
+                    },
+                    method='POST'
+                )
+                with urllib.request.urlopen(req, timeout=35) as response:
+                    res_body = json.loads(response.read().decode('utf-8'))
+                    self._send_json_response({"status": "success", "data": res_body})
+                    return
+            except Exception as e:
+                # Fallback ke endpoint /v1/images/generations
+                try:
+                    img_req_data = json.dumps({
+                        "prompt": prompt,
+                        "n": 1,
+                        "size": "1024x1024"
+                    }).encode('utf-8')
+                    img_req = urllib.request.Request(
+                        'https://api.neosantara.xyz/v1/images/generations',
+                        data=img_req_data,
+                        headers={
+                            'Content-Type': 'application/json',
+                            'Authorization': f'Bearer {api_key}',
+                            'User-Agent': 'EduWorkspace/1.0'
+                        },
+                        method='POST'
+                    )
+                    with urllib.request.urlopen(img_req, timeout=35) as img_resp:
+                        img_res_body = json.loads(img_resp.read().decode('utf-8'))
+                        self._send_json_response({"status": "success", "data": img_res_body})
+                        return
+                except Exception as img_e:
+                    print(f"⚠️ [NEOSANTARA API ERROR] {img_e}")
+                    self._send_json_response({"status": "error", "message": str(img_e)}, 500)
+                    return
 
         super().do_POST()
 

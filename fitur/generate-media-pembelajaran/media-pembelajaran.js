@@ -116,6 +116,24 @@ function getEffectiveApiKey() {
 }
 
 /**
+ * Mendapatkan Kunci Neosantara API Pengguna Aktif
+ */
+function getEffectiveNeosantaraApiKey() {
+  try {
+    if (currentUser) {
+      if (currentUser.neosantaraApiKey && currentUser.neosantaraApiKey.trim()) return currentUser.neosantaraApiKey.trim();
+      if (currentUser.email) {
+        const key = localStorage.getItem(`edu_neosantara_api_key_${currentUser.email.trim().toLowerCase()}`);
+        if (key && key.trim()) return key.trim();
+      }
+    }
+    return localStorage.getItem('edu_neosantara_api_key') || '';
+  } catch (e) {
+    return '';
+  }
+}
+
+/**
  * Muat Seluruh Modul Ajar Milik Akun Pengguna
  */
 async function loadUserModulDropdown() {
@@ -517,35 +535,23 @@ function renderCanvaOutlineList() {
         </div>
       </div>
 
-      <!-- Body Kartu: Tampilan Key Ideas (Gambar 2) -->
-      ${isExpanded && !isEditing ? `
+      <!-- Body Kartu: Tampilan Key Ideas (Gambar 2) yang Sepenuhnya Bisa Diedit Langsung -->
+      ${isExpanded ? `
         <div class="canva-card-body">
           <div class="canva-ideas-label">List key ideas (not final wording)</div>
-          <div class="canva-ideas-box">
+          <div class="canva-ideas-box canva-ideas-editable" 
+               id="ideasBox_${idx}"
+               contenteditable="true" 
+               spellcheck="false" 
+               title="Klik teks untuk langsung mengedit ide materi slide"
+               onclick="event.stopPropagation()"
+               onblur="updateSlideKeyIdeas(${idx}, this)">
             ${s.visualIdea ? `<div class="canva-intro-text">${escapeHtml(s.visualIdea)}</div>` : ''}
             <ul class="canva-bullet-list">
               ${(s.points || []).map(p => `
-                <li class="canva-bullet-item">
-                  <span class="canva-bullet-dot"></span>
-                  <span>${escapeHtml(p)}</span>
-                </li>
+                <li class="canva-bullet-item">${escapeHtml(p)}</li>
               `).join('')}
             </ul>
-          </div>
-        </div>
-      ` : ''}
-
-      <!-- Form Edit Inline: CUMA ADA KOLOM LIST KEY IDEAS -->
-      ${isEditing ? `
-        <div class="canva-edit-form" onclick="event.stopPropagation()">
-          <div class="canva-edit-field">
-            <label class="canva-edit-label">List Key Ideas (1 baris per poin):</label>
-            <textarea class="canva-edit-textarea" id="editSlidePoints_${idx}" rows="5" placeholder="Poin-poin ide materi slide...">${escapeHtml((s.points || []).join('\n'))}</textarea>
-          </div>
-
-          <div class="canva-edit-actions">
-            <button type="button" class="btn-cancel-inline" onclick="cancelEditSlide()">Batal</button>
-            <button type="button" class="btn-save-inline" onclick="saveEditSlide(${idx})">Simpan Perubahan</button>
           </div>
         </div>
       ` : ''}
@@ -568,6 +574,46 @@ function updateSlideTitle(idx, newTitle) {
   }
 }
 
+/**
+ * Update Seluruh Isi Key Ideas & Pengantar Visual Saat Diedit Langsung
+ */
+function updateSlideKeyIdeas(idx, element) {
+  if (!currentOutlineSlides[idx] || !element) return;
+
+  const introEl = element.querySelector('.canva-intro-text');
+  let introText = '';
+  if (introEl) {
+    introText = introEl.innerText.trim();
+  } else {
+    // Ambil teks apapun sebelum tag UL jika ada
+    const clone = element.cloneNode(true);
+    const ul = clone.querySelector('ul');
+    if (ul) {
+      ul.remove();
+      introText = clone.innerText.trim();
+    }
+  }
+
+  const listItems = Array.from(element.querySelectorAll('li'))
+    .map(li => li.innerText.trim())
+    .filter(Boolean);
+
+  if (listItems.length > 0) {
+    currentOutlineSlides[idx].points = listItems;
+    currentOutlineSlides[idx].visualIdea = introText;
+  } else {
+    // Jika pengguna mengedit atau mengetik bebas per baris
+    const rawLines = element.innerText.split('\n').map(l => l.trim()).filter(Boolean);
+    if (rawLines.length > 1 && !rawLines[0].startsWith('•') && !rawLines[0].startsWith('-')) {
+      currentOutlineSlides[idx].visualIdea = rawLines[0];
+      currentOutlineSlides[idx].points = rawLines.slice(1).map(l => l.replace(/^[•\-\*]\s*/, ''));
+    } else {
+      currentOutlineSlides[idx].visualIdea = '';
+      currentOutlineSlides[idx].points = rawLines.length > 0 ? rawLines.map(l => l.replace(/^[•\-\*]\s*/, '')) : ['Poin materi pembelajaran.'];
+    }
+  }
+}
+
 function handleTitleKeydown(event, idx, element) {
   if (event.key === 'Enter') {
     event.preventDefault();
@@ -579,53 +625,35 @@ function handleTitleKeydown(event, idx, element) {
  * Handle Expand / Collapse Kartu
  */
 function toggleExpandSlide(idx) {
-  if (editingSlideIndex === idx) return; // Jangan toggle saat sedang edit
   if (expandedSlideIndex === idx) {
     expandedSlideIndex = null;
   } else {
     expandedSlideIndex = idx;
-    editingSlideIndex = -1;
   }
   renderCanvaOutlineList();
 }
 
 /**
- * Membuka Form Edit Inline Slide (Hanya Kolom List Key Ideas)
+ * Membuka & Memfokuskan Kursor ke Kotak Key Ideas untuk Pengeditan Langsung
  */
 function startEditSlide(idx) {
   expandedSlideIndex = idx;
-  editingSlideIndex = idx;
   renderCanvaOutlineList();
 
   setTimeout(() => {
-    const textarea = document.getElementById(`editSlidePoints_${idx}`);
-    if (textarea) textarea.focus();
-  }, 50);
-}
-
-/**
- * Simpan Hasil Edit Inline Slide
- */
-function saveEditSlide(idx) {
-  const pointsRaw = document.getElementById(`editSlidePoints_${idx}`)?.value || '';
-  const pointsArr = pointsRaw.split('\n').map(p => p.trim()).filter(p => p.length > 0);
-
-  currentOutlineSlides[idx] = {
-    ...currentOutlineSlides[idx],
-    points: pointsArr.length > 0 ? pointsArr : ['Penjelasan materi pokok pembelajaran.']
-  };
-
-  editingSlideIndex = -1;
-  expandedSlideIndex = idx;
-  renderCanvaOutlineList();
-}
-
-/**
- * Batalkan Edit Inline
- */
-function cancelEditSlide() {
-  editingSlideIndex = -1;
-  renderCanvaOutlineList();
+    const box = document.getElementById(`ideasBox_${idx}`);
+    if (box) {
+      box.focus();
+      try {
+        const range = document.createRange();
+        range.selectNodeContents(box);
+        range.collapse(false);
+        const sel = window.getSelection();
+        sel.removeAllRanges();
+        sel.addRange(range);
+      } catch (e) {}
+    }
+  }, 60);
 }
 
 /**
@@ -748,14 +776,28 @@ function attachDragAndDropEvents(card, index) {
 
 /**
  * ==========================================================================
- * SESI 2 -> SESI 3: GENERATE MEDIA PPT BERGAMBAR (Gambar 16:9 + PPTX)
+ * SESI 2 -> SESI 3: GENERATE MEDIA PPT BERGAMBAR DENGAN NEOSANTARA AI
  * ==========================================================================
  */
 async function handleGenerateMedia() {
   if (isGeneratingMedia) return;
 
   if (!currentOutlineSlides || currentOutlineSlides.length === 0) {
-    alert("Outline slide kosong. Silakan generate outline terlebih dahulu.");
+    alert("Outline slide kosong. Silakan susun outline terlebih dahulu.");
+    return;
+  }
+
+  // 1. Validasi Kunci API Neosantara Pengguna
+  const neoApiKey = getEffectiveNeosantaraApiKey();
+  if (!neoApiKey) {
+    const confirmGo = confirm(
+      "Kunci API Neosantara belum terpasang di akun Anda.\n\n" +
+      "Fitur Generate Media Pembelajaran menggunakan Neosantara AI untuk memproses dan menghasilkan visual presentasi.\n\n" +
+      "Klik OK untuk membuka Manajemen API Key dan menyimpan kunci Neosantara Anda."
+    );
+    if (confirmGo) {
+      window.location.href = "../dashboard-pengguna/api-key.html";
+    }
     return;
   }
 
@@ -772,20 +814,29 @@ async function handleGenerateMedia() {
     const meta = currentPresentationMeta;
     const slidesWithImages = [];
 
-    // Generate Gambar Visual Edukasi 16:9 per Slide
+    // Generate Gambar Visual Edukasi 16:9 per Slide Menggunakan Neosantara AI
     for (let i = 0; i < currentOutlineSlides.length; i++) {
       const s = currentOutlineSlides[i];
       const updateSub = document.getElementById('mediaLoadingSub');
       if (updateSub) {
-        updateSub.textContent = `Membuat ilustrasi gambar untuk Slide ${i + 1} dari ${currentOutlineSlides.length} (${s.title})...`;
+        updateSub.textContent = `Menghubungi Neosantara AI untuk Slide ${i + 1} dari ${currentOutlineSlides.length} (${s.title})...`;
       }
 
-      // Render Visual Image Canvas 16:9
-      const imgDataUrl = await generateEducationalSlideImage(s, i, meta);
+      // Panggil Neosantara AI API untuk generate ilustrasi gambar materi
+      let neosantaraImgUrl = null;
+      try {
+        neosantaraImgUrl = await callNeosantaraImageGeneration(s, i, meta, neoApiKey);
+      } catch (err) {
+        console.warn(`[Neosantara AI Slide ${i + 1} Warning]`, err);
+      }
+
+      // Render Visual Image Canvas 16:9 (menggunakan ilustrasi Neosantara AI)
+      const imgDataUrl = await generateEducationalSlideImage(s, i, meta, neosantaraImgUrl);
       slidesWithImages.push({
         ...s,
         slideNumber: i + 1,
-        imageUrl: imgDataUrl
+        imageUrl: imgDataUrl,
+        aiEngine: 'Neosantara AI'
       });
     }
 
@@ -797,21 +848,126 @@ async function handleGenerateMedia() {
     if (loadingEl) loadingEl.style.display = 'none';
     if (contentEl) contentEl.style.display = 'block';
   } catch (err) {
-    console.error("[Generate Media Error]", err);
+    console.error("[Generate Media Neosantara Error]", err);
     if (loadingEl) loadingEl.style.display = 'none';
     goToSession(2);
-    showErrorState(err.message || "Gagal menghasilkan media presentasi bergambar.");
+    showErrorState(err.message || "Gagal menghasilkan media presentasi bergambar dengan Neosantara AI.");
   } finally {
     isGeneratingMedia = false;
   }
 }
 
 /**
+ * Panggilan ke API Neosantara untuk Menghasilkan Visual Presentasi Edukasi
+ */
+async function callNeosantaraImageGeneration(slide, index, meta, apiKey) {
+  const prompt = `High quality educational illustration for presentation slide: "${slide.title}". Subject: ${meta.subject || 'Pendidikan'}. Concepts: ${slide.visualIdea ? slide.visualIdea + '. ' : ''}${(slide.points || []).join(', ')}. Vector educational presentation style, vivid crisp colors, clean lighting, 16:9 aspect ratio, high resolution.`;
+
+  // A. Coba endpoint proxy backend server lokal (/api/neosantara/generate)
+  try {
+    const proxyRes = await fetch('/api/neosantara/generate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        apiKey: apiKey,
+        prompt: prompt,
+        model: 'gemini-2.5-flash'
+      })
+    });
+
+    if (proxyRes.ok) {
+      const resData = await proxyRes.json();
+      if (resData.status === 'success' && resData.data) {
+        const msg = resData.data.choices && resData.data.choices[0] && resData.data.choices[0].message;
+        if (msg && msg.images && msg.images.length > 0) {
+          const u = msg.images[0].image_url?.url || msg.images[0].url;
+          if (u) return u;
+        }
+        if (resData.data.data && resData.data.data.length > 0) {
+          const u = resData.data.data[0].url || (resData.data.data[0].b64_json ? `data:image/png;base64,${resData.data.data[0].b64_json}` : null);
+          if (u) return u;
+        }
+      }
+    }
+  } catch (e) {}
+
+  // B. Coba langsung ke Neosantara Chat Completions API (OpenAI Compatible dengan modalities: ['text', 'image'])
+  try {
+    const directRes = await fetch('https://api.neosantara.xyz/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`
+      },
+      body: JSON.stringify({
+        model: 'gemini-2.5-flash',
+        messages: [{ role: 'user', content: prompt }],
+        modalities: ['text', 'image'],
+        stream: false
+      })
+    });
+
+    if (directRes.ok) {
+      const data = await directRes.json();
+      const msg = data.choices && data.choices[0] && data.choices[0].message;
+      if (msg && msg.images && msg.images.length > 0) {
+        const u = msg.images[0].image_url?.url || msg.images[0].url;
+        if (u) return u;
+      }
+    }
+  } catch (e) {
+    console.warn('[Direct Neosantara Chat Error]', e);
+  }
+
+  // C. Coba endpoint Neosantara /v1/images/generations
+  try {
+    const imgRes = await fetch('https://api.neosantara.xyz/v1/images/generations', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`
+      },
+      body: JSON.stringify({
+        prompt: prompt,
+        n: 1,
+        size: '1024x1024'
+      })
+    });
+
+    if (imgRes.ok) {
+      const data = await imgRes.json();
+      if (data.data && data.data.length > 0) {
+        const u = data.data[0].url || (data.data[0].b64_json ? `data:image/png;base64,${data.data[0].b64_json}` : null);
+        if (u) return u;
+      }
+    }
+  } catch (e) {
+    console.warn('[Direct Neosantara Images Error]', e);
+  }
+
+  return null;
+}
+
+/**
+ * Memuat gambar secara asinkronus untuk digambar ke kanvas
+ */
+function loadImageAsync(src) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => resolve(img);
+    img.onerror = (e) => reject(e);
+    img.src = src;
+  });
+}
+
+/**
  * ==========================================================================
  * GENERATOR GAMBAR SLIDE EDUKASI BERESOLUSI TINGGI (16:9 CANVAS ENGINE)
+ * Mendukung integrasi visual hasil generate Neosantara AI
  * ==========================================================================
  */
-async function generateEducationalSlideImage(slide, index, meta) {
+async function generateEducationalSlideImage(slide, index, meta, neosantaraImageUrl = null) {
   const canvas = document.createElement('canvas');
   const width = 1280;
   const height = 720;
@@ -876,7 +1032,7 @@ async function generateEducationalSlideImage(slide, index, meta) {
   ctx.font = '600 16px "Plus Jakarta Sans", sans-serif';
   ctx.fillText(`${subject.toUpperCase()} • ${grade.toUpperCase()}`, 190, 68);
 
-  // E. Kartu Kanan: Artwork Diagram & Visual Grafis
+  // E. Kartu Kanan: Artwork Diagram & Visual Grafis (Neosantara AI / Thematic Art)
   const cardX = 640;
   const cardY = 120;
   const cardW = 580;
@@ -892,7 +1048,20 @@ async function generateEducationalSlideImage(slide, index, meta) {
   ctx.stroke();
   ctx.clip();
 
-  drawThematicArtwork(ctx, cardX, cardY, cardW, cardH, subject, visualIdea, accentColor, secondaryAccent, index);
+  let renderedNeosantara = false;
+  if (neosantaraImageUrl) {
+    try {
+      const img = await loadImageAsync(neosantaraImageUrl);
+      ctx.drawImage(img, cardX, cardY, cardW, cardH);
+      renderedNeosantara = true;
+    } catch (err) {
+      console.warn('[Neosantara Image Load Fallback]', err);
+    }
+  }
+
+  if (!renderedNeosantara) {
+    drawThematicArtwork(ctx, cardX, cardY, cardW, cardH, subject, visualIdea, accentColor, secondaryAccent, index);
+  }
   ctx.restore();
 
   // F. Teks Judul & Ringkasan Konsep di Sisi Kiri

@@ -680,19 +680,34 @@ body {
   border: 1.5px solid var(--color-border);
   border-radius: 12px;
   padding: 16px 18px;
+  cursor: text;
+  transition: var(--transition);
+}
+
+.canva-ideas-box:hover {
+  border-color: #cbd5e1;
+  background: #f1f5f9;
+}
+
+.canva-ideas-box:focus,
+.canva-ideas-box:focus-within {
+  outline: none;
+  background: #ffffff;
+  border-color: #0f172a;
+  box-shadow: 0 0 0 3px rgba(15, 23, 42, 0.08);
 }
 
 .canva-intro-text {
   font-size: 0.92rem;
   color: #334155;
   font-weight: 600;
-  line-height: 1.5;
+  line-height: 1.55;
   margin-bottom: 12px;
 }
 
 .canva-bullet-list {
-  list-style: none;
-  padding: 0;
+  list-style: disc outside;
+  padding-left: 20px;
   margin: 0;
   display: flex;
   flex-direction: column;
@@ -700,21 +715,9 @@ body {
 }
 
 .canva-bullet-item {
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
   font-size: 0.88rem;
   color: #334155;
   line-height: 1.55;
-}
-
-.canva-bullet-dot {
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  background: #64748b;
-  margin-top: 8px;
-  flex-shrink: 0;
 }
 
 .canva-photo-feature {
