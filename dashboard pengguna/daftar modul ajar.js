@@ -597,7 +597,7 @@ function renderModulTable() {
         <div class="action-buttons-group">
           <!-- Tombol Preview (Review) -->
           <button type="button" class="btn-table-action btn-action-preview ${!isLengkap ? 'btn-action-draft-preview' : ''}" onclick="previewModulItem('${escapeHtml(String(item.id))}')" title="${isLengkap ? 'Pratinjau Modul' : 'Modul masih Draft (belum digenerate)'}">
-            <img src="../Assets/icon/icon_eye.png" alt="Review" class="action-icon-img" ${!isLengkap ? 'style="opacity: 0.45;"' : ''}>
+            <img src="../Assets/icon/icon_eye.png" alt="Review" class="action-icon-img">
           </button>
 
           <!-- Tombol Edit (Otomatis Dinonaktifkan Jika Admin Mematikan Akses Fitur) -->

@@ -513,6 +513,25 @@ body {
   box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
 }
 
+/* Tombol Preview Khusus Modul Draft: Background Abu-abu, Ikon Mata Tetap Putih */
+.btn-table-action.btn-action-draft-preview {
+  background: #94a3b8;
+  border-color: #94a3b8;
+  box-shadow: 0 2px 6px rgba(148, 163, 184, 0.25);
+}
+
+.btn-table-action.btn-action-draft-preview:hover:not(:disabled) {
+  background: #64748b;
+  border-color: #64748b;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(100, 116, 139, 0.35);
+}
+
+.btn-table-action.btn-action-draft-preview .action-icon-img {
+  filter: brightness(0) invert(1) !important;
+  opacity: 1 !important;
+}
+
 /* State Disabled (Saat Fitur Modul Ajar Dinonaktifkan oleh Admin) */
 .btn-table-action:disabled,
 .btn-table-action.btn-action-disabled {
