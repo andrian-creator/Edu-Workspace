@@ -100,8 +100,14 @@ function mapUserToDb(user) {
     is_deleted: user.isDeleted || false,
     admin_note: user.adminNote || null
   };
-  // Hapus key null agar tidak overwrite yang sudah ada di DB
-  Object.keys(db).forEach(k => { if (db[k] === null || db[k] === undefined) delete db[k]; });
+  // Hapus key null/undefined agar tidak overwrite yang sudah ada di DB,
+  // KECUALI subscription_start & subscription_end jika sengaja di-reset menjadi null
+  Object.keys(db).forEach(k => {
+    if ((k === 'subscription_start' || k === 'subscription_end') && (user.subscriptionStart === null || user.subscriptionEnd === null)) {
+      return; // Pertahankan null agar kolom di Supabase benar-benar ter-reset
+    }
+    if (db[k] === null || db[k] === undefined) delete db[k];
+  });
   return db;
 }
 

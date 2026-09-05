@@ -176,7 +176,21 @@ function getUsers() {
     const data = localStorage.getItem(STORAGE_KEY);
     const list = data ? JSON.parse(data) : [];
     // Jangan pernah tampilkan user yang berstatus Dihapus / isDeleted
-    return list.filter(u => !u.isDeleted && u.status !== 'Dihapus');
+    return list.filter(u => !u.isDeleted && u.status !== 'Dihapus').map(u => {
+      // Jika akun masih berstatus Menunggu, Belum Mengisi, Belum Lengkap, atau belum disetujui (misal pengguna baru / daftar ulang),
+      // otomatis masa langganan wajib bersih (null) sehingga tertulis "Atur Hari"
+      const isUnapproved = !u.isApproved || 
+                           u.status === 'Menunggu' || 
+                           u.status === 'Menunggu Persetujuan' || 
+                           u.status === 'Belum Lengkap' || 
+                           u.status === 'Belum Mengisi';
+      if (isUnapproved && u.role !== 'Admin') {
+        u.subscriptionStart = null;
+        u.subscriptionEnd = null;
+        delete u.subscriptionDays;
+      }
+      return u;
+    });
   } catch (e) {
     return [];
   }
@@ -486,14 +500,14 @@ function confirmDeleteUser() {
   }
 
   // Sinkronisasi Cascade Delete ke Supabase (soft-delete)
-  SupabaseDB.deleteUserByEmail(targetUser.email).catch(() => {
-    // Fallback ke backend lokal
-    fetch('/api/users/delete', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: targetUser.email })
-    }).catch(e => console.error("Gagal sinkronisasi hapus user:", e));
-  });
+  SupabaseDB.deleteUserByEmail(email).catch(() => {});
+
+  // Selalu kirim juga ke backend lokal agar users_database.json bersih permanen
+  fetch('/api/users/delete', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email: email })
+  }).catch(e => console.error("Gagal sinkronisasi hapus user lokal:", e));
 
   // Soft-delete semua modul milik pengguna di Supabase
   SupabaseDB.getModuls(targetUser.email).then(moduls => {
@@ -839,9 +853,17 @@ function renderTable() {
 
     // Masa Langganan (Otomatis hitung sisa ... Hari, clickable langsung untuk setting)
     let subInfoHtml = '';
+    const isUserActiveAndApproved = (u.isApproved === true || u.status === 'Aktif') &&
+                                    u.status !== 'Menunggu' &&
+                                    u.status !== 'Menunggu Persetujuan' &&
+                                    u.status !== 'Belum Mengisi' &&
+                                    u.status !== 'Belum Lengkap' &&
+                                    u.status !== 'Ditolak' &&
+                                    u.status !== 'Dihapus';
+
     if (isAdm) {
       subInfoHtml = `<span style="color: #94a3b8; font-size: 0.85rem;">Permanen</span>`;
-    } else if (u.subscriptionEnd) {
+    } else if (u.subscriptionEnd && isUserActiveAndApproved) {
       const endParts = u.subscriptionEnd.split('-');
       const formattedEnd = endParts.length === 3 ? `${endParts[2]}/${endParts[1]}/${endParts[0]}` : u.subscriptionEnd;
 
@@ -886,9 +908,9 @@ function renderTable() {
         `;
       }
     } else {
-      // Belum diatur
+      // Belum diatur atau akun baru / belum disetujui -> Wajib tampil tombol [ Atur Hari ]
       subInfoHtml = `
-        <button type="button" class="sub-badge-clickable sub-badge-unset" onclick="openSubscriptionModal('${safeEmail}')" title="Belum diatur. Klik untuk atur masa langganan">
+        <button type="button" class="sub-badge-clickable sub-badge-unset" onclick="openSubscriptionModal('${safeEmail}')" title="Klik untuk atur masa langganan">
           <span>Atur Hari</span>
         </button>
       `;

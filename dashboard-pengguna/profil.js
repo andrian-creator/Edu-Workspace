@@ -139,6 +139,12 @@ async function reRegisterUser() {
   user.gradeLevel = '';
   user.subject = '';
   user.features = [];
+  user.subscriptionStart = null;
+  user.subscriptionEnd = null;
+  user.subscriptionDays = null;
+  delete user.subscriptionStart;
+  delete user.subscriptionEnd;
+  delete user.subscriptionDays;
   delete user.rejectReason;
 
   lastKnownStatus = 'Belum Lengkap';
@@ -159,7 +165,7 @@ async function reRegisterUser() {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(allUsers));
   } catch (e) {}
 
-  // Update langsung ke Supabase: un-delete dan ubah status menjadi Belum Lengkap
+  // Update langsung ke Supabase: un-delete, ubah status menjadi Belum Lengkap, dan kosongkan masa langganan
   if (typeof SupabaseDB !== 'undefined' && SupabaseDB.updateUserByEmail) {
     SupabaseDB.updateUserByEmail(email, {
       isDeleted: false,
@@ -170,7 +176,9 @@ async function reRegisterUser() {
       gradeLevel: '',
       subject: '',
       rejectReason: '',
-      features: []
+      features: [],
+      subscriptionStart: null,
+      subscriptionEnd: null
     }).catch(err => console.warn("Gagal reset status di Supabase:", err));
   }
 
@@ -335,6 +343,13 @@ async function syncToDatabase(user) {
     if (targetEmail && targetEmail !== ADMIN_EMAIL.toLowerCase()) {
       let index = allUsers.findIndex(u => (u.email || '').toLowerCase() === targetEmail);
       if (index !== -1) {
+        if (!user.isApproved || user.status !== 'Aktif') {
+          allUsers[index].subscriptionStart = null;
+          allUsers[index].subscriptionEnd = null;
+          delete allUsers[index].subscriptionStart;
+          delete allUsers[index].subscriptionEnd;
+          delete allUsers[index].subscriptionDays;
+        }
         allUsers[index] = { ...allUsers[index], ...user };
       } else {
         allUsers.push(user);
@@ -346,6 +361,12 @@ async function syncToDatabase(user) {
     let dbUser = null;
     try {
       dbUser = await SupabaseDB.upsertUser(user);
+      if (!user.isApproved || user.status !== 'Aktif') {
+        SupabaseDB.updateUserByEmail(user.email, {
+          subscriptionStart: null,
+          subscriptionEnd: null
+        }).catch(() => {});
+      }
     } catch (e) {
       console.warn('[Profil] Gagal upsert ke Supabase:', e);
     }
@@ -410,6 +431,14 @@ async function saveProfile(event) {
   user.rejectReason = '';
   delete user.rejectReason;
   isReRegistering = false;
+
+  // Akun baru atau pengajuan profil ulang WAJIB bersih dari masa langganan lama
+  user.subscriptionStart = null;
+  user.subscriptionEnd = null;
+  user.subscriptionDays = null;
+  delete user.subscriptionStart;
+  delete user.subscriptionEnd;
+  delete user.subscriptionDays;
 
   const now = new Date();
   user.registeredAt = now.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' }) + ', ' +

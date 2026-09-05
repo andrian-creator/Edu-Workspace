@@ -179,6 +179,11 @@ class EduWorkspaceHandler(http.server.SimpleHTTPRequestHandler):
 
             if idx is not None:
                 # Update existing user data
+                if body.get('status') in ['Belum Lengkap', 'Menunggu Persetujuan', 'Pending'] or body.get('isApproved') is False:
+                    if 'subscriptionEnd' not in body or body.get('subscriptionEnd') is None:
+                        users[idx]['subscriptionStart'] = None
+                        users[idx]['subscriptionEnd'] = None
+                        users[idx].pop('subscriptionDays', None)
                 users[idx].update(body)
                 if users[idx].get('status') in ['Nonaktif', 'Dinonaktifkan', 'Ditolak'] and 'features' not in body:
                     users[idx]['features'] = []
