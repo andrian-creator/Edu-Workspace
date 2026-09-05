@@ -47,7 +47,16 @@ function processLogin(payload) {
   const picture = getGoogleAvatar(name, payload.picture);
 
   if (!email.endsWith('@gmail.com')) {
-    alert("Akses Ditolak! Hanya dapat menggunakan akun Google personal yang berakhiran @gmail.com");
+    if (typeof showEduAlert === 'function') {
+      showEduAlert({
+        title: "Akses Ditolak",
+        message: "Hanya dapat menggunakan akun Google personal yang berakhiran @gmail.com.",
+        iconType: "warning",
+        buttonText: "Mengerti"
+      });
+    } else {
+      alert("Akses Ditolak! Hanya dapat menggunakan akun Google personal yang berakhiran @gmail.com");
+    }
     return;
   }
 

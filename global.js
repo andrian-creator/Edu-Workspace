@@ -842,6 +842,110 @@ function injectLogoutModal() {
 }
 
 /**
+ * Tampilkan Modal Dialog Interaktif Modern Edu Workspace
+ * Pengganti alert() bawaan browser yang kaku
+ */
+function showEduAlert(options = {}) {
+  const title = options.title || 'Pemberitahuan';
+  const message = options.message || '';
+  const iconType = options.iconType || 'lock';
+  const buttonText = options.buttonText || 'Mengerti';
+  const redirectUrl = options.redirectUrl || null;
+  const onConfirm = options.onConfirm || null;
+
+  const existing = document.getElementById('eduGlobalAlertModal');
+  if (existing) existing.remove();
+
+  let iconBoxStyle = 'background: #eff6ff; border: 1.5px solid #bfdbfe; color: #2563eb;';
+  let iconSvg = `
+    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+      <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+    </svg>
+  `;
+
+  if (iconType === 'warning') {
+    iconBoxStyle = 'background: #fef3c7; border: 1.5px solid #fde68a; color: #d97706;';
+    iconSvg = `
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+        <line x1="12" y1="9" x2="12" y2="13"></line>
+        <line x1="12" y1="17" x2="12.01" y2="17"></line>
+      </svg>
+    `;
+  } else if (iconType === 'success') {
+    iconBoxStyle = 'background: #dcfce7; border: 1.5px solid #86efac; color: #16a34a;';
+    iconSvg = `
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="20 6 9 17 4 12"></polyline>
+      </svg>
+    `;
+  }
+
+  const safeTitle = typeof escapeHtml === 'function' ? escapeHtml(title) : title;
+  const safeMessage = typeof escapeHtml === 'function' ? escapeHtml(message) : message;
+  const safeBtnText = typeof escapeHtml === 'function' ? escapeHtml(buttonText) : buttonText;
+
+  const modalHtml = `
+    <div class="confirm-modal-overlay active" id="eduGlobalAlertModal" style="z-index: 999999;">
+      <div class="confirm-modal-card" style="max-width: 440px; padding: 36px 32px 30px; text-align: center; border-radius: 24px; box-shadow: 0 20px 50px rgba(15, 23, 42, 0.18); background: #ffffff; width: 100%; box-sizing: border-box;">
+        <div class="confirm-icon-box" style="width: 64px; height: 64px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 18px; ${iconBoxStyle}">
+          ${iconSvg}
+        </div>
+        <h3 class="confirm-modal-title" style="font-size: 1.35rem; font-weight: 800; color: #0f172a; margin-bottom: 10px; letter-spacing: -0.02em;">
+          ${safeTitle}
+        </h3>
+        <p class="confirm-modal-desc" style="font-size: 0.95rem; color: #64748b; line-height: 1.55; margin-bottom: 24px;">
+          ${safeMessage}
+        </p>
+        <div style="width: 100%; box-sizing: border-box;">
+          <button type="button" id="btnEduGlobalAlertConfirm" style="width: 100%; padding: 13px 24px; font-weight: 700; font-size: 0.95rem; border-radius: 9999px; background: #2563eb; color: #ffffff; border: none; cursor: pointer; box-shadow: 0 4px 16px rgba(37, 99, 235, 0.28); transition: all 0.2s ease;">
+            <span>${safeBtnText}</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  `;
+
+  document.body.insertAdjacentHTML('beforeend', modalHtml);
+
+  function handleDismiss() {
+    const modalEl = document.getElementById('eduGlobalAlertModal');
+    if (modalEl) modalEl.remove();
+    if (typeof onConfirm === 'function') {
+      onConfirm();
+    } else if (redirectUrl) {
+      window.location.href = redirectUrl;
+    }
+  }
+
+  const btn = document.getElementById('btnEduGlobalAlertConfirm');
+  if (btn) {
+    btn.addEventListener('click', handleDismiss);
+    setTimeout(() => btn.focus(), 50);
+  }
+
+  const overlay = document.getElementById('eduGlobalAlertModal');
+  if (overlay) {
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay) handleDismiss();
+    });
+  }
+
+  function handleKeydown(e) {
+    if (e.key === 'Escape' || e.key === 'Enter') {
+      document.removeEventListener('keydown', handleKeydown);
+      handleDismiss();
+    }
+  }
+  document.addEventListener('keydown', handleKeydown);
+}
+
+if (typeof window !== 'undefined') {
+  window.showEduAlert = showEduAlert;
+}
+
+/**
  * Render Header / Navbar Global Edu Workspace Terpusat
  * @param {Object} options
 /**

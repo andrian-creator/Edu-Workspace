@@ -11,8 +11,17 @@ let customAlertCallback = null;
 async function initPage() {
   const loggedUserStr = localStorage.getItem(CURRENT_USER_KEY);
   if (!loggedUserStr) {
-    alert("Silakan login terlebih dahulu.");
-    window.location.href = "../halaman-login/halaman-login.html";
+    if (typeof showEduAlert === 'function') {
+      showEduAlert({
+        title: "Silakan Login Terlebih Dahulu",
+        message: "Sesi Anda belum terautentikasi. Silakan masuk untuk melihat profil akun Anda.",
+        iconType: "lock",
+        buttonText: "Ke Halaman Login",
+        redirectUrl: "../halaman-login/halaman-login.html"
+      });
+    } else {
+      window.location.href = "../halaman-login/halaman-login.html";
+    }
     return;
   }
 

@@ -5,16 +5,26 @@
 function initAdminDashboard() {
   const loggedUserStr = localStorage.getItem(CURRENT_USER_KEY);
   if (!loggedUserStr) {
-    alert("Silakan login terlebih dahulu.");
-    window.location.href = "../halaman-login/halaman-login.html";
+    showEduAlert({
+      title: "Silakan Login Terlebih Dahulu",
+      message: "Sesi Anda belum terautentikasi. Silakan masuk dengan akun Google terdaftar untuk mengakses Dashboard Admin.",
+      iconType: "lock",
+      buttonText: "Ke Halaman Login",
+      redirectUrl: "../halaman-login/halaman-login.html"
+    });
     return;
   }
 
   let user = JSON.parse(loggedUserStr);
   const isAdmin = (user.email || '').toLowerCase() === ADMIN_EMAIL.toLowerCase() || user.role === 'Admin';
   if (!isAdmin) {
-    alert("Akses Terbatas: Halaman ini hanya untuk Administrator.");
-    window.location.href = "../dashboard-pengguna/dashboard-pengguna.html";
+    showEduAlert({
+      title: "Akses Terbatas",
+      message: "Halaman ini hanya dapat diakses oleh Administrator Edu Workspace.",
+      iconType: "warning",
+      buttonText: "Ke Dashboard Pengguna",
+      redirectUrl: "../dashboard-pengguna/dashboard-pengguna.html"
+    });
     return;
   }
 }
