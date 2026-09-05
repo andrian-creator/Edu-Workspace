@@ -434,14 +434,18 @@ html {
   grid-template-columns: repeat(2, 1fr);
   gap: 20px;
   width: 100%;
-  max-width: 480px;
+  max-width: 540px;
 }
 
 .stat-card {
   background: #ffffff;
   border: 1.5px solid var(--color-border);
   border-radius: var(--radius-card);
-  padding: 22px 24px;
+  padding: 20px 24px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 18px;
   transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.02);
 }
@@ -453,29 +457,34 @@ html {
 }
 
 .stat-icon-box {
-  width: 48px;
-  height: 48px;
-  border-radius: 14px;
-  background: #fffdf0;
-  border: 1.5px solid #fef08a;
+  width: auto;
+  height: auto;
+  background: transparent;
+  border: none;
+  border-radius: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 16px;
-  transition: all 0.25s ease;
-}
-
-.stat-card:hover .stat-icon-box {
-  background: #fef9c3;
-  border-color: #fde047;
-  transform: scale(1.05);
+  flex-shrink: 0;
+  margin-bottom: 0;
 }
 
 .stat-icon-img {
-  width: 24px;
-  height: 24px;
+  width: 44px;
+  height: 44px;
   object-fit: contain;
   display: block;
+  transition: transform 0.25s ease;
+}
+
+.stat-card:hover .stat-icon-img {
+  transform: scale(1.08);
+}
+
+.stat-info {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 
 .stat-number {
@@ -483,12 +492,13 @@ html {
   font-weight: 800;
   letter-spacing: -0.035em;
   line-height: 1.1;
-  color: var(--color-text-main);
-  margin-bottom: 6px;
+  color: var(--color-yellow-text);
+  margin-bottom: 4px;
 }
 
 .stat-number.stat-yellow,
-#statPenggunaAktif {
+#statPenggunaAktif,
+#statTotalModul {
   color: var(--color-yellow-text);
 }
 
@@ -496,6 +506,7 @@ html {
   font-size: 0.95rem;
   font-weight: 700;
   color: var(--color-text-main);
+  line-height: 1.25;
 }
 
 /* ==========================================================================
