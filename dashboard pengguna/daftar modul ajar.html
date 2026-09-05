@@ -14,7 +14,7 @@
 
   <!-- Global & Page Stylesheet -->
   <link rel="stylesheet" href="../global.css?v=150">
-  <link rel="stylesheet" href="daftar%20modul%20ajar.css?v=160">
+  <link rel="stylesheet" href="daftar%20modul%20ajar.css?v=161">
 </head>
 
 <body>
@@ -98,14 +98,12 @@
           </div>
 
           <div class="filter-controls-group">
-            <select id="filterFase" class="filter-select" onchange="handleSearchFilter()">
-              <option value="">Semua Fase</option>
-              <option value="Fase A">Fase A (Kelas 1-2 SD)</option>
-              <option value="Fase B">Fase B (Kelas 3-4 SD)</option>
-              <option value="Fase C">Fase C (Kelas 5-6 SD)</option>
-              <option value="Fase D">Fase D (Kelas 7-9 SMP)</option>
-              <option value="Fase E">Fase E (Kelas 10 SMA/SMK)</option>
-              <option value="Fase F">Fase F (Kelas 11-12 SMA/SMK)</option>
+            <select id="filterJenjang" class="filter-select" onchange="handleSearchFilter()">
+              <option value="">Semua Jenjang</option>
+              <option value="SD">SD / MI</option>
+              <option value="SMP">SMP / MTs</option>
+              <option value="SMA">SMA / MA</option>
+              <option value="SMK">SMK / MAK</option>
             </select>
 
             <select id="filterStatus" class="filter-select" onchange="handleSearchFilter()">
@@ -122,11 +120,11 @@
             <thead>
               <tr>
                 <th style="width: 5%; text-align: center;">No.</th>
-                <th style="width: 26%; text-align: center;">Nama Modul</th>
+                <th style="width: 25%; text-align: center;">Nama Modul</th>
                 <th style="width: 17%; text-align: center;">Mata Pelajaran</th>
-                <th style="width: 9%; text-align: center;">Fase</th>
+                <th style="width: 11%; text-align: center;">Jenjang Sekolah</th>
                 <th style="width: 9%; text-align: center;">Kelas</th>
-                <th style="width: 11%; text-align: center;">Status</th>
+                <th style="width: 10%; text-align: center;">Status</th>
                 <th style="width: 13%; text-align: center;">Tanggal Update</th>
                 <th style="width: 10%; text-align: center;">Aksi</th>
               </tr>
@@ -194,8 +192,8 @@
   </div>
 
   <!-- Skrip Pendukung -->
-  <script src="../global.js?v=303"></script>
-  <script src="daftar%20modul%20ajar.js?v=303"></script>
+  <script src="../global.js?v=304"></script>
+  <script src="daftar%20modul%20ajar.js?v=304"></script>
 </body>
 
 </html>

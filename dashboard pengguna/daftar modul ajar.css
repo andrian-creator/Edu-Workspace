@@ -425,6 +425,30 @@ body {
   white-space: nowrap;
 }
 
+.cell-timestamp-dual {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  line-height: 1.25;
+}
+
+.timestamp-date {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #1e293b;
+  white-space: nowrap;
+}
+
+.timestamp-time {
+  font-size: 0.80rem;
+  font-weight: 500;
+  color: #64748b;
+  font-family: 'JetBrains Mono', monospace;
+  white-space: nowrap;
+}
+
 /* ==========================================================================
    ACTION BUTTONS (Style Edu Workspace: Background Gelap / Hitam & Icon Putih)
    ========================================================================== */

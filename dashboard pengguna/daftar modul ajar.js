@@ -93,6 +93,49 @@ function parseIndoDate(dateStr) {
 }
 
 /**
+ * Ekstraksi nama jenjang sekolah secara akurat
+ */
+function extractJenjang(payload, faseKelas) {
+  if (payload) {
+    if (payload.jenjangSekolah) return payload.jenjangSekolah;
+    if (payload.jenjang) return payload.jenjang;
+  }
+  const str = String(faseKelas || (payload && payload.faseKelas) || '');
+  if (str.includes('SMK') || str.includes('MAK')) return 'SMK / MAK';
+  if (str.includes('SMA') || str.includes('MA')) return 'SMA / MA';
+  if (str.includes('SMP') || str.includes('MTs')) return 'SMP / MTs';
+  if (str.includes('SD') || str.includes('MI')) return 'SD / MI';
+  return 'SMA / MA';
+}
+
+/**
+ * Memecah tanggal update menjadi objek { date, time } untuk tampilan 2 baris
+ */
+function formatTanggalParts(dateInput) {
+  if (!dateInput) return { date: '-', time: '' };
+  const d = new Date(dateInput);
+  if (isNaN(d.getTime())) {
+    const str = String(dateInput).trim();
+    if (str.includes(',')) {
+      const [p1, p2] = str.split(',');
+      return { date: p1.trim(), time: p2 ? p2.trim() : '' };
+    }
+    return { date: str, time: '' };
+  }
+
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+  const day = String(d.getDate()).padStart(2, '0');
+  const month = months[d.getMonth()];
+  const year = d.getFullYear();
+  const hours = String(d.getHours()).padStart(2, '0');
+  const minutes = String(d.getMinutes()).padStart(2, '0');
+  return {
+    date: `${day} ${month} ${year}`,
+    time: `${hours}:${minutes}`
+  };
+}
+
+/**
  * Muat daftar Modul Ajar khusus akun pengguna aktif dari Server & Cache
  */
 async function loadUserModulList(user) {
@@ -126,6 +169,15 @@ async function loadUserModulList(user) {
     }
   } catch (e) {}
 
+  // Pastikan setiap item lokal memiliki field jenjangSekolah
+  localList.forEach(item => {
+    if (!item.jenjangSekolah && !item.jenjang) {
+      const j = extractJenjang(item.payload, item.faseKelas);
+      item.jenjangSekolah = j;
+      item.jenjang = j;
+    }
+  });
+
   // Render seketika dari data lokal (zero delay untuk pengguna, daftar tidak pernah hilang)
   allModulList = [...localList];
   filteredModulList = [...allModulList];
@@ -140,6 +192,7 @@ async function loadUserModulList(user) {
         const payload = m.content_json || m.contentJson || {};
         const now = m.created_at ? new Date(m.created_at) : new Date();
         const detectedStatus = payload.status || (payload.aiGeneratedContent ? 'Lengkap' : 'Draft');
+        const detectedJenjang = extractJenjang(payload, payload.faseKelas || m.grade_level);
         return {
           id: m.id,
           userEmail: userEmail,
@@ -147,6 +200,8 @@ async function loadUserModulList(user) {
           topikMateri: m.topic || payload.topikMateri || '',
           jurusanSekolah: payload.jurusanSekolah || 'Reguler',
           mataPelajaran: m.subject || payload.mataPelajaran || 'Mata Pelajaran',
+          jenjangSekolah: detectedJenjang,
+          jenjang: detectedJenjang,
           fase: payload.fase || '',
           kelas: m.grade_level || payload.kelas || '',
           faseKelas: payload.faseKelas || m.grade_level || '',
@@ -170,6 +225,11 @@ async function loadUserModulList(user) {
       // Masukkan / perbarui modul lokal (jika lokal lebih baru atau belum ada di remote)
       localList.forEach(localItem => {
         if (!localItem || !localItem.id) return;
+        if (!localItem.jenjangSekolah && !localItem.jenjang) {
+          const j = extractJenjang(localItem.payload, localItem.faseKelas);
+          localItem.jenjangSekolah = j;
+          localItem.jenjang = j;
+        }
         const existingRemote = mergedMap.get(localItem.id);
         if (!existingRemote) {
           mergedMap.set(localItem.id, localItem);
@@ -194,6 +254,8 @@ async function loadUserModulList(user) {
             mergedMap.set(localItem.id, {
               ...existingRemote,
               ...localItem,
+              jenjangSekolah: localItem.jenjangSekolah || existingRemote.jenjangSekolah,
+              jenjang: localItem.jenjang || existingRemote.jenjang,
               status: localItem.status || existingRemote.status || 'Draft'
             });
           }
@@ -259,6 +321,7 @@ function createRecordFromPayload(payload) {
     kelas = faseKelasRaw;
   }
 
+  const detectedJenjang = extractJenjang(payload, faseKelasRaw);
   const now = new Date();
   return {
     id: modulId,
@@ -266,6 +329,8 @@ function createRecordFromPayload(payload) {
     topikMateri: namaTopik,
     jurusanSekolah: namaJurusan,
     mataPelajaran: payload.mataPelajaran || 'Mata Pelajaran',
+    jenjangSekolah: detectedJenjang,
+    jenjang: detectedJenjang,
     fase: fase,
     kelas: kelas,
     faseKelas: faseKelasRaw,
@@ -321,7 +386,7 @@ function updateSummaryStats() {
  */
 function handleSearchFilter() {
   const query = (document.getElementById('searchInput')?.value || '').toLowerCase().trim();
-  const faseFilter = document.getElementById('filterFase')?.value || '';
+  const jenjangFilter = (document.getElementById('filterJenjang')?.value || document.getElementById('filterFase')?.value || '').toLowerCase();
   const statusFilter = (document.getElementById('filterStatus')?.value || '').toLowerCase();
 
   filteredModulList = allModulList.filter(item => {
@@ -332,13 +397,15 @@ function handleSearchFilter() {
       (item.mataPelajaran || '').toLowerCase().includes(query) ||
       (item.jurusanSekolah || '').toLowerCase().includes(query);
 
-    // 2. Filter Fase
-    const matchFase = !faseFilter || (item.fase || '').includes(faseFilter) || (item.faseKelas || '').includes(faseFilter);
+    // 2. Filter Jenjang Sekolah
+    const itemJenjang = (item.jenjangSekolah || item.jenjang || extractJenjang(item.payload, item.faseKelas)).toLowerCase();
+    const itemFaseKelas = (item.faseKelas || '').toLowerCase();
+    const matchJenjang = !jenjangFilter || itemJenjang.includes(jenjangFilter) || itemFaseKelas.includes(jenjangFilter);
 
     // 3. Filter Status
     const matchStatus = !statusFilter || (item.status || 'lengkap').toLowerCase() === statusFilter;
 
-    return matchQuery && matchFase && matchStatus;
+    return matchQuery && matchJenjang && matchStatus;
   });
 
   renderModulTable();
@@ -473,6 +540,9 @@ function renderModulTable() {
     const statusClass = isLengkap ? 'status-lengkap' : 'status-draft';
     const statusLabel = isLengkap ? 'Lengkap' : 'Draft';
 
+    const dateParts = formatTanggalParts(item.updatedAt || item.updatedAtFormatted || item.createdAt);
+    const jenjangDisplay = item.jenjangSekolah || item.jenjang || extractJenjang(item.payload, item.faseKelas);
+
     // Format penulisan kolom Nama Modul persis seperti Gambar 2:
     // Baris 1 (tebal): Mata Pelajaran / Nama Modul
     // Baris 2 (abu-abu): Jurusan / Topik Materi
@@ -507,7 +577,7 @@ function renderModulTable() {
         <strong>${escapeHtml(item.mataPelajaran || '-')}</strong>
       </td>
       <td class="cell-center">
-        <span class="cell-text-plain">${escapeHtml(item.fase || 'Fase E')}</span>
+        <span class="cell-text-plain">${escapeHtml(jenjangDisplay)}</span>
       </td>
       <td class="cell-center">
         <span class="cell-text-plain">${escapeHtml(item.kelas || 'Kelas 10')}</span>
@@ -518,7 +588,10 @@ function renderModulTable() {
         </span>
       </td>
       <td class="cell-center">
-        <span class="cell-timestamp">${escapeHtml(item.updatedAtFormatted || formatTanggal(item.updatedAt))}</span>
+        <div class="cell-timestamp-dual">
+          <span class="timestamp-date">${escapeHtml(dateParts.date)}</span>
+          ${dateParts.time ? `<span class="timestamp-time">${escapeHtml(dateParts.time)}</span>` : ''}
+        </div>
       </td>
       <td class="cell-center">
         <div class="action-buttons-group">

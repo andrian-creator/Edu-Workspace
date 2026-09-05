@@ -3172,6 +3172,8 @@ async function saveModulToUserAccountList(modulPayload, status = 'Lengkap') {
       topikMateri: namaTopik,
       jurusanSekolah: namaJurusan,
       mataPelajaran: modulPayload.mataPelajaran || 'Mata Pelajaran',
+      jenjangSekolah: modulPayload.jenjangSekolah || 'SMA / MA',
+      jenjang: modulPayload.jenjangSekolah || 'SMA / MA',
       fase: fase,
       kelas: kelas,
       faseKelas: faseKelasRaw,
