@@ -40,16 +40,16 @@ function escapeHtml(text) {
 }
 
 function showToast(message) {
-  const toast = document.getElementById('adminToast');
-  const toastText = document.getElementById('adminToastText');
-  if (toast && toastText) {
-    toastText.textContent = message;
-    toast.classList.add('show');
-    setTimeout(() => {
-      toast.classList.remove('show');
-    }, 3000);
+  if (typeof showAdminToast === 'function') {
+    showAdminToast(message);
+    return;
+  }
+  if (typeof showEduToast === 'function') {
+    showEduToast(message);
+    return;
   }
 }
+
 
 function updateStatsCards(users) {
   const totalUsers = users.length;

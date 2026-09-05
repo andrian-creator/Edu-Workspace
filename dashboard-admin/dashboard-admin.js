@@ -47,17 +47,15 @@ function initAdminDashboard() {
 initAdminDashboard();
 
 function showComingSoonToast(menuName) {
-  const toast = document.getElementById('adminToast');
-  const toastText = document.getElementById('adminToastText');
-  if (toast && toastText) {
-    toastText.textContent = `Fitur "${menuName}" sedang dalam tahap pengembangan (Segera Hadir).`;
-    toast.classList.add('show');
-    setTimeout(() => {
-      toast.classList.remove('show');
-    }, 3000);
-  } else {
-    alert(`Fitur "${menuName}" sedang dalam tahap pengembangan (Segera Hadir).`);
+  if (typeof showAdminToast === 'function') {
+    showAdminToast(`Fitur "${menuName}" sedang dalam tahap pengembangan (Segera Hadir).`, 'info');
+    return;
   }
+  if (typeof showEduToast === 'function') {
+    showEduToast(`Fitur "${menuName}" sedang dalam tahap pengembangan (Segera Hadir).`, 'info');
+    return;
+  }
+  alert(`Fitur "${menuName}" sedang dalam tahap pengembangan (Segera Hadir).`);
 }
 
 // Event Listeners
