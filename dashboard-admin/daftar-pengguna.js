@@ -20,7 +20,7 @@ function showAdminToast(msg) {
 
 // Proteksi Keamanan: Periksa apakah user saat ini adalah Admin
 function checkAdminAuth() {
-  // Render Global Navbar Terpusat (Otomatis: homeUrl & backUrl ke dashboard admin.html)
+  // Render Global Navbar Terpusat (Otomatis: homeUrl & backUrl ke dashboard-admin.html)
   renderEduNavbar();
   return true;
 }

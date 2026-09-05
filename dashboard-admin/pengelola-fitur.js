@@ -9,7 +9,7 @@ const ALL_SYSTEM_FEATURES = [
     name: 'Generate Modul Ajar',
     desc: 'Generator RPP & Perangkat Pembelajaran Berbasis AI Otomatis',
     get iconImg() {
-      return getEduIconUrl('modul_ajar') || '../Assets/icon/icon_modul ajar.png';
+      return getEduIconUrl('modul_ajar') || '../Assets/icon/icon_modul_ajar.png';
     }
   }
 ];
@@ -314,7 +314,7 @@ function initAdminFeaturesDashboard() {
   const loggedUserStr = localStorage.getItem(CURRENT_USER_KEY);
   if (!loggedUserStr) {
     alert("Silakan login terlebih dahulu.");
-    window.location.href = "../halaman login/halaman login.html";
+    window.location.href = "../halaman-login/halaman-login.html";
     return;
   }
 
@@ -322,7 +322,7 @@ function initAdminFeaturesDashboard() {
   const isAdmin = (user.email || '').toLowerCase() === ADMIN_EMAIL.toLowerCase() || user.role === 'Admin';
   if (!isAdmin) {
     alert("Akses Terbatas: Halaman ini hanya untuk Administrator.");
-    window.location.href = "../dashboard pengguna/dashboard pengguna.html";
+    window.location.href = "../dashboard-pengguna/dashboard-pengguna.html";
     return;
   }
 

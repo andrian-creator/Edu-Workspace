@@ -12,16 +12,16 @@
       if (user && user.email) {
         const isAdmin = user.email.toLowerCase() === ADMIN_EMAIL.toLowerCase() || user.role === 'Admin';
         if (isAdmin) {
-          window.location.replace("../dashboard admin/dashboard admin.html");
+          window.location.replace("../dashboard-admin/dashboard-admin.html");
         } else {
           if (user.status === 'Dihapus' || user.isDeleted === true) {
-            window.location.replace("../dashboard pengguna/profil.html");
+            window.location.replace("../dashboard-pengguna/profil.html");
             return;
           }
           if (user.isProfileCompleted === true && user.institution && user.institution !== 'Sekolah / Instansi Guru') {
-            window.location.replace("../dashboard pengguna/dashboard pengguna.html");
+            window.location.replace("../dashboard-pengguna/dashboard-pengguna.html");
           } else {
-            window.location.replace("../dashboard pengguna/profil.html");
+            window.location.replace("../dashboard-pengguna/profil.html");
           }
         }
       }
@@ -202,7 +202,7 @@ function processLogin(payload) {
     const u = curRaw ? JSON.parse(curRaw) : matchedUser;
 
     if (isAdmin) {
-      window.location.href = "../dashboard admin/dashboard admin.html";
+      window.location.href = "../dashboard-admin/dashboard-admin.html";
     } else {
       const isAktif = (u.status === 'Aktif' || u.isApproved === true) && 
                       u.isProfileCompleted === true && 
@@ -215,9 +215,9 @@ function processLogin(payload) {
                       !isSubscriptionExpired(u);
 
       if (isAktif) {
-        window.location.href = "../dashboard pengguna/dashboard pengguna.html";
+        window.location.href = "../dashboard-pengguna/dashboard-pengguna.html";
       } else {
-        window.location.href = "../dashboard pengguna/profil.html";
+        window.location.href = "../dashboard-pengguna/profil.html";
       }
     }
   }, 1200);

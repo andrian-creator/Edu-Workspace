@@ -291,7 +291,7 @@ async function syncUsersFromSupabase() {
 
 /**
  * Upsert user login ke Supabase + localStorage sekaligus
- * Dipanggil dari proses login Google (halaman login.js)
+ * Dipanggil dari proses login Google (halaman-login.js)
  */
 async function supabaseUpsertLoginUser(userObj) {
   const saved = await SupabaseDB.upsertUser(userObj);
@@ -678,12 +678,12 @@ function getAppSubDirPrefix() {
 
   if (
     p.includes('/fitur/') ||
-    p.includes('/dashboard pengguna/') ||
-    p.includes('/dashboard%20pengguna/') ||
-    p.includes('/dashboard admin/') ||
-    p.includes('/dashboard%20admin/') ||
-    p.includes('/halaman login/') ||
-    p.includes('/halaman%20login/')
+    p.includes('/dashboard-pengguna/') ||
+    p.includes('/dashboard-pengguna/') ||
+    p.includes('/dashboard-admin/') ||
+    p.includes('/dashboard-admin/') ||
+    p.includes('/halaman-login/') ||
+    p.includes('/halaman-login/')
   ) {
     return '../';
   }
@@ -707,8 +707,8 @@ const EDU_GLOBAL_ICONS = {
   home: 'Assets/icon/icon_home.png',
   key: 'Assets/icon/icon_key.png',
   lock: 'Assets/icon/icon_lock.png',
-  modul_ajar: 'Assets/icon/icon_modul ajar.png',
-  'modul-ajar': 'Assets/icon/icon_modul ajar.png',
+  modul_ajar: 'Assets/icon/icon_modul_ajar.png',
+  'modul-ajar': 'Assets/icon/icon_modul_ajar.png',
   file: 'Assets/icon/icon_file.png',
   daftar_modul: 'Assets/icon/icon_file.png',
   'daftar-modul': 'Assets/icon/icon_file.png',
@@ -788,7 +788,7 @@ if (typeof window !== 'undefined') {
 function executeLogout() {
   localStorage.removeItem(CURRENT_USER_KEY);
   const subPrefix = getAppSubDirPrefix();
-  const loginUrl = subPrefix ? (subPrefix + 'halaman login/halaman login.html') : 'halaman login/halaman login.html';
+  const loginUrl = subPrefix ? (subPrefix + 'halaman-login/halaman-login.html') : 'halaman-login/halaman-login.html';
   window.location.href = loginUrl;
 }
 
@@ -838,7 +838,7 @@ if (typeof window !== 'undefined') {
  * Render Header / Navbar Global Edu Workspace Terpusat
  * Mendukung 3 mode:
  * 1. Landing (index.html) -> Logo + Hamburger + Nav Links (Home, Benefit, Fitur)
- * 2. Login (halaman login.html) -> Logo + Tombol Kembali
+ * 2. Login (halaman-login.html) -> Logo + Tombol Kembali
  * 3. Dashboard / Portal (Default) -> Logo + Api Key + Kembali + Profil Dropdown + Mobile Logout
  * @param {Object} options
  */
@@ -896,8 +896,8 @@ function renderEduNavbar(options = {}) {
     return;
   }
 
-  // 2. Mode Login / Simple Back Header (halaman login.html)
-  const isLogin = options.type === 'login' || options.showProfile === false || p.includes('/halaman login/') || p.includes('/halaman%20login/');
+  // 2. Mode Login / Simple Back Header (halaman-login.html)
+  const isLogin = options.type === 'login' || options.showProfile === false || p.includes('/halaman-login/') || p.includes('/halaman-login/');
   if (isLogin) {
     const backHref = options.backUrl || (subPrefix ? subPrefix + 'index.html' : '../index.html');
     const backText = options.backText || 'Kembali';
@@ -937,8 +937,13 @@ function renderEduNavbar(options = {}) {
     } catch (e) {}
   }
 
-  const isAdminArea = p.includes('/dashboard admin/') || p.includes('/dashboard%20admin/');
-  const isMainAdmin = isAdminArea && (p.endsWith('/dashboard admin.html') || p.endsWith('/dashboard%20admin.html') || p.endsWith('/dashboard admin/') || p.endsWith('/dashboard%20admin/'));
+  const isAdminArea = p.includes('/dashboard-admin/') || p.includes('/dashboard admin/');
+  const isMainAdmin = isAdminArea && (
+    p.endsWith('/dashboard-admin.html') || 
+    p.endsWith('/dashboard-admin') || 
+    p.endsWith('/dashboard admin.html') || 
+    p.endsWith('/dashboard admin')
+  );
   const isUserAdmin = (user && (user.role === 'Admin' || (typeof ADMIN_EMAILS !== 'undefined' && ADMIN_EMAILS.includes((user.email || '').toLowerCase()))));
 
   let defaultName = (isAdminArea || isUserAdmin) ? 'Super Admin' : 'Bapak/Ibu Guru';
@@ -950,17 +955,17 @@ function renderEduNavbar(options = {}) {
 
   const isInFitur = p.includes('/fitur/');
   const isDashboardPengguna = (
+    p.includes('/dashboard-pengguna') || 
+    p.includes('dashboard-pengguna') ||
     p.includes('/dashboard pengguna') || 
-    p.includes('/dashboard%20pengguna') || 
-    p.includes('dashboard pengguna') || 
-    p.includes('dashboard%20pengguna')
-  ) && !p.includes('daftar modul') && !p.includes('api key') && !p.includes('profil');
+    p.includes('dashboard pengguna')
+  ) && !p.includes('daftar-modul') && !p.includes('daftar modul') && !p.includes('api-key') && !p.includes('api key') && !p.includes('profil');
 
-  let defaultPortalHome = 'dashboard pengguna.html';
+  let defaultPortalHome = 'dashboard-pengguna.html';
   if (isInFitur) {
-    defaultPortalHome = '../dashboard pengguna/dashboard pengguna.html';
+    defaultPortalHome = '../dashboard-pengguna/dashboard-pengguna.html';
   } else if (isAdminArea) {
-    defaultPortalHome = 'dashboard admin.html';
+    defaultPortalHome = 'dashboard-admin.html';
   }
 
   // URL Brand Logo (Kiri Atas): Selalu mengarah ke Landing Page (index.html) sesuai permintaan pengguna
@@ -971,13 +976,13 @@ function renderEduNavbar(options = {}) {
   let defaultBackUrl = defaultPortalHome;
   if (isAdminArea && !isMainAdmin) {
     defaultShowBack = true;
-    defaultBackUrl = 'dashboard admin.html';
+    defaultBackUrl = 'dashboard-admin.html';
   }
 
   // Khusus Dashboard Pengguna: Otomatis tampilkan tombol Daftar Modul Ajar & API Key
   const defaultShowDaftarModul = isDashboardPengguna;
   const showDaftarModul = options.showDaftarModul !== undefined ? options.showDaftarModul : defaultShowDaftarModul;
-  const defaultDaftarModulUrl = isInFitur ? '../dashboard pengguna/daftar modul ajar.html' : 'daftar modul ajar.html';
+  const defaultDaftarModulUrl = isInFitur ? '../dashboard-pengguna/daftar-modul-ajar.html' : 'daftar-modul-ajar.html';
   const daftarModulUrl = options.daftarModulUrl || defaultDaftarModulUrl;
 
   const showBack = options.showBack !== undefined ? options.showBack : defaultShowBack;
@@ -986,7 +991,7 @@ function renderEduNavbar(options = {}) {
 
   const defaultShowApiKey = isDashboardPengguna;
   const showApiKey = options.showApiKey !== undefined ? options.showApiKey : defaultShowApiKey;
-  const defaultApiKeyUrl = isInFitur ? '../dashboard pengguna/api key.html' : 'api key.html';
+  const defaultApiKeyUrl = isInFitur ? '../dashboard-pengguna/api-key.html' : 'api-key.html';
   const apiKeyUrl = options.apiKeyUrl || defaultApiKeyUrl;
 
   // Khusus Dashboard Pengguna (Bukan Admin): Tampilkan informasi Sisa Waktu Akses
@@ -1208,12 +1213,12 @@ function initAccessTimeSync() {
 (function setupUserAccountMonitor() {
   function getRedirectTarget(p) {
     if (p.includes('/fitur/')) {
-      return '../dashboard pengguna/profil.html';
+      return '../dashboard-pengguna/profil.html';
     }
-    if (p.includes('/dashboard pengguna/') || p.includes('/dashboard%20pengguna/')) {
+    if (p.includes('/dashboard-pengguna/') || p.includes('/dashboard-pengguna/')) {
       return 'profil.html';
     }
-    return '../dashboard pengguna/profil.html';
+    return '../dashboard-pengguna/profil.html';
   }
 
   function isExcludedPublicPage(p) {
@@ -1223,9 +1228,11 @@ function initAccessTimeSync() {
            p.endsWith('index.html') || 
            p.endsWith('07.%20eduworkspace/') || 
            p.endsWith('07. eduworkspace/') ||
+           p.includes('/halaman-login') || 
            p.includes('/halaman login') || 
            p.includes('/halaman%20login') ||
-           p.includes('/dashboard admin') ||
+           p.includes('/dashboard-admin') || 
+           p.includes('/dashboard admin') || 
            p.includes('/dashboard%20admin') ||
            p.includes('profil');
   }
@@ -1248,7 +1255,7 @@ function initAccessTimeSync() {
 
     let raw = localStorage.getItem(CURRENT_USER_KEY);
     if (!raw) {
-      const loginTarget = p.includes('/fitur/') ? '../halaman login/halaman login.html' : (p.includes('/dashboard pengguna/') ? '../halaman login/halaman login.html' : 'halaman login/halaman login.html');
+      const loginTarget = p.includes('/fitur/') ? '../halaman-login/halaman-login.html' : (p.includes('/dashboard-pengguna/') ? '../halaman-login/halaman-login.html' : 'halaman-login/halaman-login.html');
       window.location.replace(loginTarget);
       return;
     }

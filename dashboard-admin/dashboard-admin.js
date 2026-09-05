@@ -6,7 +6,7 @@ function initAdminDashboard() {
   const loggedUserStr = localStorage.getItem(CURRENT_USER_KEY);
   if (!loggedUserStr) {
     alert("Silakan login terlebih dahulu.");
-    window.location.href = "../halaman login/halaman login.html";
+    window.location.href = "../halaman-login/halaman-login.html";
     return;
   }
 
@@ -14,7 +14,7 @@ function initAdminDashboard() {
   const isAdmin = (user.email || '').toLowerCase() === ADMIN_EMAIL.toLowerCase() || user.role === 'Admin';
   if (!isAdmin) {
     alert("Akses Terbatas: Halaman ini hanya untuk Administrator.");
-    window.location.href = "../dashboard pengguna/dashboard pengguna.html";
+    window.location.href = "../dashboard-pengguna/dashboard-pengguna.html";
     return;
   }
 }

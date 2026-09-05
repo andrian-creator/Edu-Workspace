@@ -22,7 +22,7 @@ async function initDaftarModulPage() {
   } catch (e) {}
 
   if (!user || !user.email) {
-    window.location.replace("../halaman login/halaman login.html");
+    window.location.replace("../halaman-login/halaman-login.html");
     return;
   }
 
@@ -49,7 +49,7 @@ async function initDaftarModulPage() {
   if (typeof renderEduNavbar === 'function') {
     renderEduNavbar({
       showBack: true,
-      backUrl: 'dashboard pengguna.html',
+      backUrl: 'dashboard-pengguna.html',
       showApiKey: false,
       showDaftarModul: false
     });
@@ -552,12 +552,12 @@ function renderModulTable() {
     // Tombol Edit: Jika fitur di dashboard admin dinonaktifkan, maka tombol edit disabled / tidak bisa digunakan
     const editButtonHtml = isModulAjarActive ? `
       <button type="button" class="btn-table-action btn-action-edit" onclick="editModulItem('${escapeHtml(String(item.id))}')" title="Edit Modul">
-        <img src="../Assets/icon/icon_modul ajar.png" alt="Edit" class="action-icon-img">
+        <img src="../Assets/icon/icon_modul_ajar.png" alt="Edit" class="action-icon-img">
       </button>
     ` : `
       <span class="btn-action-disabled-wrapper" onclick="notifyFeatureDisabled()" title="Akses edit modul ajar dinonaktifkan oleh Admin">
         <button type="button" class="btn-table-action btn-action-edit btn-action-disabled" disabled tabindex="-1">
-          <img src="../Assets/icon/icon_modul ajar.png" alt="Edit Dinonaktifkan" class="action-icon-img">
+          <img src="../Assets/icon/icon_modul_ajar.png" alt="Edit Dinonaktifkan" class="action-icon-img">
         </button>
       </span>
     `;
@@ -636,7 +636,7 @@ function previewModulItem(modulId) {
   localStorage.setItem('edu_current_generated_modul', JSON.stringify(payloadToPreview));
 
   // Buka dokumen preview modul ajar di tab baru
-  window.open('../Fitur/preview modul ajar.html', '_blank');
+  window.open('../fitur/preview modul-ajar.html', '_blank');
 }
 
 /**
@@ -675,7 +675,7 @@ function editModulItem(modulId) {
     localStorage.setItem('edu_last_modul_payload', JSON.stringify(payloadToEdit));
   }
 
-  window.location.href = `../Fitur/modul ajar.html?editId=${encodeURIComponent(modulId)}`;
+  window.location.href = `../fitur/modul-ajar.html?editId=${encodeURIComponent(modulId)}`;
 }
 
 /**

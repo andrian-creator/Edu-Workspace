@@ -109,7 +109,7 @@ function showApiToast(msg, isSuccess = true, customTitle = '') {
 function initApiKeyPage() {
   const user = getCurrentUser();
   if (!user) {
-    window.location.href = "../halaman login/halaman login.html";
+    window.location.href = "../halaman-login/halaman-login.html";
     return;
   }
 
@@ -131,7 +131,7 @@ function initApiKeyPage() {
   // Render Header Global Terpusat
   renderEduNavbar({
     showBack: true,
-    backUrl: 'dashboard pengguna.html',
+    backUrl: 'dashboard-pengguna.html',
     showApiKey: false
   });
 

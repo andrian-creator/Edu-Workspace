@@ -29,7 +29,7 @@ function isProfileComplete(user) {
 async function initUserDashboard() {
   const loggedUserStr = localStorage.getItem(CURRENT_USER_KEY);
   if (!loggedUserStr) {
-    window.location.href = "../halaman login/halaman login.html";
+    window.location.href = "../halaman-login/halaman-login.html";
     return;
   }
 
@@ -38,7 +38,7 @@ async function initUserDashboard() {
   // Jika akun yang login adalah Super Admin, langsung arahkan ke Dashboard Admin
   const isAdmin = (user.email || '').toLowerCase() === ADMIN_EMAIL.toLowerCase() || user.role === 'Admin';
   if (isAdmin) {
-    window.location.replace("../dashboard admin/dashboard admin.html");
+    window.location.replace("../dashboard-admin/dashboard-admin.html");
     return;
   }
 
@@ -104,9 +104,9 @@ async function initUserDashboard() {
     homeUrl: '../index.html',
     showBack: false,
     showDaftarModul: true,
-    daftarModulUrl: 'daftar modul ajar.html',
+    daftarModulUrl: 'daftar-modul-ajar.html',
     showApiKey: true,
-    apiKeyUrl: 'api key.html',
+    apiKeyUrl: 'api-key.html',
     showAccessTime: true
   });
 
@@ -183,7 +183,7 @@ function renderUserFeatures(user) {
 
 function handleFeatureClick(featureName) {
   if (featureName === 'Generate Modul Ajar') {
-    window.location.href = "../Fitur/modul%20ajar.html";
+    window.location.href = "../fitur/modul-ajar.html";
   } else {
     showUserToast(`Membuka ${featureName}... Modul siap digunakan.`);
   }

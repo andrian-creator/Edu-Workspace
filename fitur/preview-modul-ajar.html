@@ -445,7 +445,7 @@
   <!-- Header Global Edu Workspace Sesuai Desain Web Kita -->
   <header class="edu-navbar" id="eduGlobalNavbar">
     <div class="header-container">
-      <a href="../dashboard pengguna/dashboard pengguna.html" class="brand-logo" title="Edu Workspace">
+      <a href="../dashboard-pengguna/dashboard-pengguna.html" class="brand-logo" title="Edu Workspace">
         <span class="brand-bold">Edu</span> <span class="brand-thin">Workspace</span>
       </a>
 
@@ -715,7 +715,7 @@
       window.close();
       setTimeout(() => {
         if (!window.closed) {
-          window.location.href = 'modul ajar.html';
+          window.location.href = 'modul-ajar.html';
         }
       }, 250);
     }
@@ -1011,7 +1011,7 @@
           draftBanner.style.textAlign = 'center';
 
           const targetId = data.id ? encodeURIComponent(data.id) : '';
-          const editHref = targetId ? `../Fitur/modul ajar.html?editId=${targetId}` : `../Fitur/modul ajar.html`;
+          const editHref = targetId ? `../fitur/modul-ajar.html?editId=${targetId}` : `../fitur/modul-ajar.html`;
 
           draftBanner.innerHTML = `
             <div style="width: 52px; height: 52px; background: #fef3c7; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 14px;">

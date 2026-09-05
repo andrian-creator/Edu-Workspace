@@ -1,3 +1,55 @@
 {
-  "cleanUrls": true
+  "cleanUrls": true,
+  "redirects": [
+    {
+      "source": "/dashboard%20pengguna/dashboard%20pengguna",
+      "destination": "/dashboard-pengguna/dashboard-pengguna",
+      "permanent": true
+    },
+    {
+      "source": "/dashboard%20pengguna/daftar%20modul%20ajar",
+      "destination": "/dashboard-pengguna/daftar-modul-ajar",
+      "permanent": true
+    },
+    {
+      "source": "/dashboard%20pengguna/profil",
+      "destination": "/dashboard-pengguna/profil",
+      "permanent": true
+    },
+    {
+      "source": "/dashboard%20pengguna/api%20key",
+      "destination": "/dashboard-pengguna/api-key",
+      "permanent": true
+    },
+    {
+      "source": "/Fitur/modul%20ajar",
+      "destination": "/fitur/modul-ajar",
+      "permanent": true
+    },
+    {
+      "source": "/Fitur/preview%20modul%20ajar",
+      "destination": "/fitur/preview-modul-ajar",
+      "permanent": true
+    },
+    {
+      "source": "/halaman%20login/halaman%20login",
+      "destination": "/halaman-login/halaman-login",
+      "permanent": true
+    },
+    {
+      "source": "/dashboard%20admin/dashboard%20admin",
+      "destination": "/dashboard-admin/dashboard-admin",
+      "permanent": true
+    },
+    {
+      "source": "/dashboard%20admin/Dashboard%20Admin_Pengelola%20Fitur",
+      "destination": "/dashboard-admin/pengelola-fitur",
+      "permanent": true
+    },
+    {
+      "source": "/dashboard%20admin/Dashboard%20Admin_Daftar%20Pengguna",
+      "destination": "/dashboard-admin/daftar-pengguna",
+      "permanent": true
+    }
+  ]
 }

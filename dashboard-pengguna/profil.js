@@ -12,7 +12,7 @@ async function initPage() {
   const loggedUserStr = localStorage.getItem(CURRENT_USER_KEY);
   if (!loggedUserStr) {
     alert("Silakan login terlebih dahulu.");
-    window.location.href = "../halaman login/halaman login.html";
+    window.location.href = "../halaman-login/halaman-login.html";
     return;
   }
 
@@ -27,7 +27,7 @@ async function initPage() {
     user.isProfileCompleted = true;
     localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user));
     syncToDatabase(user);
-    window.location.replace("../dashboard admin/dashboard admin.html");
+    window.location.replace("../dashboard-admin/dashboard-admin.html");
     return;
   }
 
@@ -100,7 +100,7 @@ async function reRegisterUser() {
   stopLiveStatusPolling();
   const loggedUserStr = localStorage.getItem(CURRENT_USER_KEY);
   if (!loggedUserStr) {
-    window.location.href = "../halaman login/halaman login.html";
+    window.location.href = "../halaman-login/halaman-login.html";
     return;
   }
 
@@ -262,7 +262,7 @@ function renderPageState(user) {
     document.getElementById('profileDescText').textContent = user.email || '';
   } else if (isApproved) {
     stopLiveStatusPolling();
-    window.location.replace("dashboard pengguna.html");
+    window.location.replace("dashboard-pengguna.html");
     return;
   } else if (isRejected) {
     stopLiveStatusPolling();
@@ -498,7 +498,7 @@ async function checkLiveStatus(force = false) {
           if (idx >= 0) all[idx] = user; else all.push(user);
           localStorage.setItem(STORAGE_KEY, JSON.stringify(all));
         } catch (e) {}
-        window.location.replace("dashboard pengguna.html");
+        window.location.replace("dashboard-pengguna.html");
         return;
       }
 

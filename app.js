@@ -31,14 +31,14 @@ function initSmartDashboardRedirect() {
       const user = JSON.parse(loggedUserStr);
       if (user && user.email) {
         const isAdmin = user.email.toLowerCase() === ADMIN_EMAIL.toLowerCase() || user.role === 'Admin';
-        let targetHref = 'dashboard pengguna/dashboard pengguna.html';
+        let targetHref = 'dashboard-pengguna/dashboard-pengguna.html';
         if (isAdmin) {
-          targetHref = 'dashboard admin/dashboard admin.html';
+          targetHref = 'dashboard-admin/dashboard-admin.html';
         } else {
           if (user.isProfileCompleted === true && user.institution && user.institution !== 'Sekolah / Instansi Guru') {
-            targetHref = 'dashboard pengguna/dashboard pengguna.html';
+            targetHref = 'dashboard-pengguna/dashboard-pengguna.html';
           } else {
-            targetHref = 'dashboard pengguna/profil.html';
+            targetHref = 'dashboard-pengguna/profil.html';
           }
         }
         ctaButtons.forEach(btn => {
