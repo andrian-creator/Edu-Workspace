@@ -148,10 +148,16 @@ html, body {
 }
 
 .api-tab-pill.active {
-  background: #ffffff;
-  border-color: #0f172a;
-  color: #0f172a;
-  box-shadow: 0 2px 10px rgba(15, 23, 42, 0.08);
+  background: #0f172a;
+  border-color: transparent;
+  color: #ffffff;
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.16);
+}
+
+.api-tab-pill.active:hover {
+  background: #020617;
+  border-color: transparent;
+  color: #ffffff;
 }
 
 /* Container Panel Konten (Kolom 2, Baris 1) */
