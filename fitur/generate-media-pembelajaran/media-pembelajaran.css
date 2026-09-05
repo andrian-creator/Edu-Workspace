@@ -1,6 +1,10 @@
 /* ==========================================================================
    Edu Workspace - Generate Media Pembelajaran (PowerPoint Generator) Stylesheet
    Desain Bersih, Elegan, dan Responsif Khas Edu Workspace
+   Sistem 3 Sesi Terpadu:
+   1. Informasi Materi
+   2. Outline Slide (Canva AI Style - Reorder, Edit, Delete)
+   3. Hasil Media
    ========================================================================== */
 
 :root {
@@ -38,17 +42,17 @@ body {
 }
 
 /* ==========================================================================
-   1. MAIN WRAPPER & PAGE HEADER (Sama Persis dengan Halaman Lain)
+   1. MAIN WRAPPER & PAGE HEADER
    ========================================================================== */
 .media-main-wrapper {
   flex: 1;
-  padding: 32px 64px 60px;
+  padding: 32px 32px 60px;
   width: 100%;
   box-sizing: border-box;
 }
 
 .media-main-container {
-  max-width: 1360px;
+  max-width: 1140px;
   margin: 0 auto;
   width: 100%;
   display: flex;
@@ -56,7 +60,7 @@ body {
 }
 
 .media-page-header {
-  margin-bottom: 32px;
+  margin-bottom: 28px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -78,89 +82,226 @@ body {
 }
 
 /* ==========================================================================
-   2. TWO-COLUMN WORKSPACE GRID (Kiri: Form Input, Kanan: Hasil & Proses)
+   2. STEPPER WIZARD INDICATOR (3 Tahapan Terpadu Khas Edu Workspace)
    ========================================================================== */
-.media-workspace-grid {
-  display: grid;
-  grid-template-columns: minmax(400px, 480px) minmax(0, 1fr);
-  gap: 28px;
-  align-items: start;
+.stepper-wrapper {
+  margin-top: 24px;
   width: 100%;
+  max-width: 780px;
+  display: flex;
+}
+
+.stepper-track {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 10px 24px;
+  background: #ffffff;
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.02);
   box-sizing: border-box;
 }
 
+.step-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  background: transparent;
+  border: none;
+  padding: 6px 14px;
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+  user-select: none;
+  transition: var(--transition);
+  font-family: inherit;
+  flex-shrink: 0;
+}
+
+.step-circle {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.92rem;
+  font-weight: 800;
+  background: #f1f5f9;
+  color: #64748b;
+  border: 1.5px solid #cbd5e1;
+  transition: var(--transition);
+  flex-shrink: 0;
+}
+
+.step-approved-icon {
+  display: none;
+  width: 17px;
+  height: 17px;
+  object-fit: contain;
+}
+
+.step-name {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #64748b;
+  line-height: 1.2;
+  transition: color 0.2s ease;
+  white-space: nowrap;
+}
+
+/* Active Step */
+.step-item.active {
+  background: #f8fafc;
+}
+
+.step-item.active .step-circle {
+  background: #1e293b;
+  color: #ffffff;
+  border-color: #1e293b;
+  box-shadow: 0 4px 12px rgba(30, 41, 59, 0.2);
+}
+
+.step-item.active .step-name {
+  color: #0f172a;
+  font-weight: 800;
+}
+
+/* Completed Step */
+.step-item.completed .step-circle {
+  background: #ffd500;
+  border-color: #ffd500;
+  box-shadow: none;
+}
+
+.step-item.completed .step-num {
+  display: none;
+}
+
+.step-item.completed .step-approved-icon {
+  display: block;
+}
+
+.step-item.completed .step-name {
+  color: #0f172a;
+}
+
+/* Step Line */
+.step-line {
+  flex: 1;
+  height: 2px;
+  background: #e2e8f0;
+  margin: 0 8px;
+  transition: var(--transition);
+}
+
+.step-line.active,
+.step-line.completed {
+  background: #ffd500;
+}
+
+/* ==========================================================================
+   3. STEP PANE SYSTEM
+   ========================================================================== */
+.step-pane {
+  display: none;
+  width: 100%;
+}
+
+.step-pane.active {
+  display: block;
+  animation: fadeInPane 0.25s ease-out;
+}
+
+@keyframes fadeInPane {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 /* Base Card Style */
-.media-card {
+.media-single-card {
   background: #ffffff;
   border: 1.5px solid var(--color-border);
   border-radius: var(--radius-card);
   box-shadow: 0 4px 20px rgba(15, 23, 42, 0.04);
-  padding: 28px;
+  padding: 32px 36px;
   box-sizing: border-box;
-  display: flex;
-  flex-direction: column;
-  position: relative;
-  transition: var(--transition);
+  margin: 0 auto;
 }
 
-.media-card:hover {
-  border-color: #cbd5e1;
-  box-shadow: 0 8px 28px rgba(15, 23, 42, 0.06);
+.form-session-card {
+  max-width: 820px;
 }
 
-/* ==========================================================================
-   3. KARTU SEBELAH KIRI: FORM & SUMBER (Mata Pelajaran, Materi, Kelas, Slide)
-   ========================================================================== */
+.outline-session-card {
+  max-width: 900px;
+}
+
+.result-session-card {
+  max-width: 1040px;
+}
+
+/* Header Group */
 .card-left-header {
-  margin-bottom: 22px;
-  border-bottom: 1.5px solid #f1f5f9;
-  padding-bottom: 16px;
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1.5px solid #f1f5f9;
+  flex-wrap: wrap;
 }
 
 .card-title-group {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 14px;
 }
 
 .card-icon-box {
   width: 44px;
   height: 44px;
   border-radius: 12px;
-  background: #fff1ee;
-  border: 1.5px solid #fed7cc;
+  background: #fff7ed;
+  color: #ea580c;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--color-ppt-orange);
   flex-shrink: 0;
 }
 
 .card-title {
-  font-size: 1.18rem;
+  font-size: 1.25rem;
   font-weight: 800;
   color: var(--color-text-main);
   margin: 0;
-  line-height: 1.25;
+  letter-spacing: -0.02em;
 }
 
 .card-subtitle {
-  font-size: 0.8rem;
+  font-size: 0.85rem;
   color: var(--color-text-muted);
   margin: 2px 0 0;
 }
 
-/* Switcher Tab Pilihan Sumber: Ambil Modul Ajar vs Isi Sendiri */
+/* ==========================================================================
+   4. SESI 1: FORMULIR PARAMETER
+   ========================================================================== */
 .source-tab-nav {
   display: flex;
   background: #f1f5f9;
   padding: 4px;
   border-radius: var(--radius-pill);
   gap: 4px;
-  margin-bottom: 20px;
+  margin-bottom: 22px;
 }
 
 .source-tab-btn {
@@ -191,18 +332,16 @@ body {
   box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
 }
 
-/* Dropdown Modul Ajar */
 .modul-select-container {
-  margin-bottom: 20px;
+  margin-bottom: 22px;
   background: #f8fafc;
   border: 1.5px solid var(--color-border);
   border-radius: 14px;
   padding: 16px;
 }
 
-/* Form Styles */
 .form-group {
-  margin-bottom: 18px;
+  margin-bottom: 20px;
 }
 
 .form-label {
@@ -216,7 +355,7 @@ body {
 }
 
 .form-hint {
-  font-size: 0.76rem;
+  font-size: 0.78rem;
   font-weight: 500;
   color: var(--color-text-muted);
 }
@@ -238,7 +377,7 @@ body {
 
 .form-textarea {
   resize: vertical;
-  min-height: 100px;
+  min-height: 105px;
   line-height: 1.55;
 }
 
@@ -250,451 +389,53 @@ body {
   box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
 }
 
-/* Slide Count Grid (HANYA 2 TOMBOL: Rekomendasi AI & Isi Sendiri) */
 .slide-count-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 10px;
-}
-
-.slide-count-btn {
-  padding: 11px 16px;
-  font-size: 0.88rem;
-  font-weight: 700;
-  font-family: inherit;
-  background: #f8fafc;
-  color: var(--color-text-main);
-  border: 1.5px solid var(--color-border);
-  border-radius: 10px;
-  cursor: pointer;
-  transition: var(--transition);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-}
-
-.slide-count-btn:hover {
-  background: #ffffff;
-  border-color: #cbd5e1;
-}
-
-.slide-count-btn.active {
-  background: #ffffff;
-  border-color: #2563eb;
-  color: #2563eb;
-  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.12);
-}
-
-/* Tombol Generate Outline */
-.btn-generate-ppt {
-  width: 100%;
-  margin-top: 10px;
-  padding: 15px 24px;
-  font-size: 1.02rem;
-  font-weight: 800;
-  font-family: inherit;
-  background: #0f172a;
-  color: #ffffff;
-  border: none;
-  border-radius: var(--radius-pill);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  transition: var(--transition);
-  box-shadow: 0 4px 18px rgba(15, 23, 42, 0.2);
-  user-select: none;
-}
-
-.btn-generate-ppt:hover:not(:disabled) {
-  background: #1e293b;
-  transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.28);
-}
-
-.btn-generate-ppt:active:not(:disabled) {
-  transform: translateY(0);
-}
-
-.btn-generate-ppt:disabled {
-  opacity: 0.7;
-  cursor: not-allowed;
-  transform: none !important;
-}
-
-/* ==========================================================================
-   4. KARTU SEBELAH KANAN: PROSES, EDIT OUTLINE, & HASIL PPT BERGAMBAR
-   ========================================================================== */
-.card-right-header {
-  margin-bottom: 20px;
-  border-bottom: 1.5px solid #f1f5f9;
-  padding-bottom: 16px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
   gap: 12px;
 }
 
-.card-right-title-box {
+.slide-count-btn {
   display: flex;
   align-items: center;
-  gap: 10px;
-}
-
-.card-right-badge {
-  font-size: 0.76rem;
-  font-weight: 700;
-  padding: 4px 12px;
-  border-radius: 999px;
-  background: #e2e8f0;
-  color: #475569;
-}
-
-.card-right-badge.badge-outline {
-  background: #fef9c3;
-  color: #a16207;
-  border: 1px solid #fde047;
-}
-
-.card-right-badge.badge-ready {
-  background: #dcfce7;
-  color: #16a34a;
-  border: 1px solid #86efac;
-}
-
-.card-right-badge.badge-loading {
-  background: #fef3c7;
-  color: #d97706;
-}
-
-.header-action-btns {
-  display: none;
-  align-items: center;
+  justify-content: center;
   gap: 8px;
-}
-
-.btn-download-ppt-top {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 16px;
-  font-size: 0.85rem;
-  font-weight: 800;
+  padding: 11px 14px;
   font-family: inherit;
-  background: var(--color-ppt-orange);
-  color: #ffffff;
-  border: none;
-  border-radius: var(--radius-pill);
-  cursor: pointer;
-  transition: var(--transition);
-  box-shadow: 0 3px 10px rgba(210, 71, 38, 0.25);
-}
-
-.btn-download-ppt-top:hover {
-  background: var(--color-ppt-hover);
-  transform: translateY(-1px);
-}
-
-.btn-secondary-action {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 14px;
-  font-size: 0.85rem;
-  font-weight: 700;
-  font-family: inherit;
-  background: #ffffff;
-  color: var(--color-text-main);
-  border: 1.5px solid var(--color-border);
-  border-radius: var(--radius-pill);
-  cursor: pointer;
-  transition: var(--transition);
-}
-
-.btn-secondary-action:hover {
-  background: #f1f5f9;
-}
-
-/* State 1: Empty State (Sebelum Generate) */
-.ppt-empty-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  padding: 80px 24px;
-  color: var(--color-text-muted);
-}
-
-.empty-state-ppt-icon {
-  width: 76px;
-  height: 76px;
-  border-radius: 20px;
-  background: #fff1ee;
-  border: 1.5px solid #fed7cc;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--color-ppt-orange);
-  margin-bottom: 18px;
-}
-
-.empty-state-title {
-  font-size: 1.25rem;
-  font-weight: 800;
-  color: #0f172a;
-  margin: 0 0 8px;
-}
-
-.empty-state-desc {
-  font-size: 0.92rem;
-  color: #64748b;
-  max-width: 440px;
-  line-height: 1.55;
-  margin: 0;
-}
-
-/* State 2: Proses AI Generate (Loading) */
-.ppt-loading-state {
-  display: none;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  padding: 80px 24px;
-}
-
-.ppt-loading-state.active {
-  display: flex;
-}
-
-.spinner-box {
-  width: 60px;
-  height: 60px;
-  border: 4px solid #fed7cc;
-  border-top-color: var(--color-ppt-orange);
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-  margin-bottom: 22px;
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-
-.loading-title {
-  font-size: 1.3rem;
-  font-weight: 800;
-  color: #0f172a;
-  margin: 0 0 6px;
-}
-
-.loading-subtitle {
-  font-size: 0.92rem;
-  color: #64748b;
-  margin: 0 0 20px;
-}
-
-.progress-track {
-  width: 260px;
-  height: 6px;
-  background: #e2e8f0;
-  border-radius: 999px;
-  overflow: hidden;
-}
-
-.progress-bar-fill {
-  width: 40%;
-  height: 100%;
-  background: linear-gradient(90deg, var(--color-ppt-orange), #ea580c);
-  border-radius: 999px;
-  animation: progressMove 1.8s ease-in-out infinite;
-}
-
-@keyframes progressMove {
-  0% { transform: translateX(-100%); }
-  50% { transform: translateX(50%); }
-  100% { transform: translateX(250%); }
-}
-
-/* ==========================================================================
-   5. TAHAP 1: EDIT OUTLINE CONTAINER (Bisa Di-edit oleh Pengguna)
-   ========================================================================== */
-.ppt-outline-container {
-  display: none;
-  flex-direction: column;
-  gap: 18px;
-  width: 100%;
-}
-
-.ppt-outline-container.active {
-  display: flex;
-}
-
-.outline-notice-box {
-  background: #eff6ff;
-  border: 1.5px solid #bfdbfe;
-  border-radius: 12px;
-  padding: 13px 16px;
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
   font-size: 0.88rem;
-  color: #1e40af;
-  line-height: 1.5;
-}
-
-.outline-notice-box svg {
-  flex-shrink: 0;
-  margin-top: 2px;
-}
-
-.ppt-outline-list {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  max-height: 620px;
-  overflow-y: auto;
-  padding-right: 4px;
-}
-
-.outline-slide-card {
+  font-weight: 700;
   background: #ffffff;
   border: 1.5px solid var(--color-border);
-  border-radius: 16px;
-  padding: 18px 20px;
-  box-shadow: 0 2px 10px rgba(15, 23, 42, 0.03);
-  display: flex;
-  flex-direction: column;
-  gap: 13px;
-  transition: var(--transition);
-}
-
-.outline-slide-card:hover {
-  border-color: #cbd5e1;
-}
-
-.outline-slide-top {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  border-bottom: 1.5px solid #f1f5f9;
-  padding-bottom: 10px;
-}
-
-.outline-slide-badge {
-  font-size: 0.82rem;
-  font-weight: 800;
-  background: #0f172a;
-  color: #ffffff;
-  padding: 4px 12px;
-  border-radius: var(--radius-pill);
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.btn-delete-outline-slide {
-  background: transparent;
-  border: 1px solid #fca5a5;
-  color: #dc2626;
-  padding: 4px 10px;
-  border-radius: 8px;
-  font-size: 0.78rem;
-  font-weight: 700;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  transition: var(--transition);
-}
-
-.btn-delete-outline-slide:hover {
-  background: #fee2e2;
-}
-
-.outline-field-group {
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-}
-
-.outline-field-label {
-  font-size: 0.82rem;
-  font-weight: 700;
-  color: #475569;
-}
-
-.outline-input-title,
-.outline-textarea {
-  width: 100%;
-  font-family: inherit;
-  font-size: 0.92rem;
-  padding: 10px 14px;
-  border: 1.5px solid var(--color-border);
-  border-radius: 10px;
-  background: #f8fafc;
-  color: var(--color-text-main);
-  transition: var(--transition);
-  box-sizing: border-box;
-}
-
-.outline-input-title:focus,
-.outline-textarea:focus {
-  background: #ffffff;
-  border-color: #2563eb;
-  outline: none;
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
-}
-
-.outline-textarea-visual {
-  background: #fefce8 !important;
-  border-color: #fef08a !important;
-  color: #713f12 !important;
-}
-
-.outline-textarea-visual:focus {
-  background: #ffffff !important;
-  border-color: #eab308 !important;
-  box-shadow: 0 0 0 3px rgba(234, 179, 8, 0.15) !important;
-}
-
-.btn-add-outline-slide {
-  width: 100%;
-  padding: 12px;
-  background: #f8fafc;
-  border: 1.5px dashed #cbd5e1;
   border-radius: 12px;
-  font-family: inherit;
-  font-size: 0.9rem;
-  font-weight: 700;
-  color: #475569;
+  color: var(--color-text-muted);
   cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
   transition: var(--transition);
 }
 
-.btn-add-outline-slide:hover {
-  background: #ffffff;
-  border-color: #94a3b8;
-  color: #0f172a;
+.slide-count-btn:hover:not(.active) {
+  border-color: #cbd5e1;
+  color: var(--color-text-main);
 }
 
-/* Tombol Generate Media (Mencolok di Bawah Outline) */
-.btn-generate-media {
-  width: 100%;
-  padding: 16px 28px;
-  font-size: 1.05rem;
-  font-weight: 800;
-  font-family: inherit;
+.slide-count-btn.active {
   background: #0f172a;
+  border-color: #0f172a;
   color: #ffffff;
+  box-shadow: 0 3px 10px rgba(15, 23, 42, 0.15);
+}
+
+.form-action-row {
+  margin-top: 28px;
+}
+
+.btn-generate-ppt {
+  width: 100%;
+  padding: 14px 24px;
+  font-family: inherit;
+  font-size: 1rem;
+  font-weight: 800;
+  color: #ffffff;
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
   border: none;
   border-radius: var(--radius-pill);
   cursor: pointer;
@@ -703,29 +444,18 @@ body {
   justify-content: center;
   gap: 10px;
   transition: var(--transition);
-  box-shadow: 0 6px 22px rgba(15, 23, 42, 0.22);
+  box-shadow: 0 6px 20px rgba(15, 23, 42, 0.18);
 }
 
-.btn-generate-media:hover {
-  background: #1e293b;
+.btn-generate-ppt:hover {
+  background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
   transform: translateY(-2px);
-  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.3);
+  box-shadow: 0 10px 26px rgba(15, 23, 42, 0.25);
 }
 
 /* ==========================================================================
-   6. TAHAP 2: HASIL GENERATE MEDIA PPT BERGAMBAR (Media Bergambar Siap)
+   5. SESI 2: KARTU OUTLINE BERGAYA CANVA AI (GAMBAR 2)
    ========================================================================== */
-.ppt-result-container {
-  display: none;
-  flex-direction: column;
-  gap: 20px;
-  width: 100%;
-}
-
-.ppt-result-container.active {
-  display: flex;
-}
-
 .ppt-summary-box {
   background: #f8fafc;
   border: 1.5px solid var(--color-border);
@@ -736,34 +466,477 @@ body {
   justify-content: space-between;
   flex-wrap: wrap;
   gap: 10px;
+  margin-bottom: 16px;
 }
 
 .ppt-summary-title {
-  font-size: 0.95rem;
+  font-size: 1rem;
   font-weight: 800;
   color: #0f172a;
+  display: block;
 }
 
 .ppt-summary-meta {
-  font-size: 0.8rem;
+  font-size: 0.82rem;
+  color: #64748b;
+  margin-top: 2px;
+}
+
+.slide-badge-count {
+  font-size: 0.82rem;
+  font-weight: 800;
+  color: #a16207;
+  background: #fef9c3;
+  border: 1px solid #fde047;
+  padding: 5px 14px;
+  border-radius: var(--radius-pill);
+}
+
+.slide-badge-count.badge-ready {
+  color: #16a34a;
+  background: #dcfce7;
+  border-color: #86efac;
+}
+
+.outline-tip-box {
+  background: #eff6ff;
+  border: 1.5px solid #bfdbfe;
+  border-radius: 12px;
+  padding: 12px 16px;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 0.86rem;
+  color: #1e40af;
+  line-height: 1.5;
+  margin-bottom: 18px;
+}
+
+.outline-tip-box svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+/* List Kontainer Kartu Outline Canva */
+.canva-outline-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-bottom: 20px;
+}
+
+/* Kartu Slide Canva AI */
+.canva-outline-card {
+  background: #ffffff;
+  border: 1.5px solid var(--color-border);
+  border-radius: 16px;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.03);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  overflow: hidden;
+  position: relative;
+}
+
+.canva-outline-card:hover {
+  border-color: #cbd5e1;
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.05);
+}
+
+.canva-outline-card.expanded {
+  border-color: #94a3b8;
+  box-shadow: 0 6px 20px rgba(15, 23, 42, 0.06);
+}
+
+/* Dragging & Drop Indicators */
+.canva-outline-card.is-dragging {
+  opacity: 0.4;
+  border: 2px dashed #2563eb;
+  background: #eff6ff;
+  transform: scale(0.99);
+}
+
+.canva-outline-card.drop-above {
+  border-top: 3px solid #2563eb !important;
+}
+
+.canva-outline-card.drop-below {
+  border-bottom: 3px solid #2563eb !important;
+}
+
+/* Header Kartu Canva AI */
+.canva-card-header {
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.canva-card-title-box {
+  flex: 1;
+  min-width: 0;
+}
+
+.canva-card-title {
+  font-size: 1.06rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0;
+  line-height: 1.35;
+}
+
+.canva-card-subtitle-preview {
+  font-size: 0.85rem;
+  color: #64748b;
+  margin-top: 4px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: block;
+}
+
+/* Action Buttons di Kanan Kartu */
+.canva-card-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.canva-action-btn {
+  background: transparent;
+  border: none;
+  padding: 7px;
+  border-radius: 8px;
+  color: #64748b;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: var(--transition);
+}
+
+.canva-action-btn:hover {
+  background: #f1f5f9;
+  color: #0f172a;
+}
+
+.canva-action-btn.btn-delete:hover {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.canva-action-btn.canva-drag-handle {
+  cursor: grab;
   color: #64748b;
 }
 
-/* List Kartu Slide Bergambar */
+.canva-action-btn.canva-drag-handle:active {
+  cursor: grabbing;
+}
+
+/* Isi Kartu saat Expanded */
+.canva-card-body {
+  padding: 0 20px 20px;
+  border-top: 1px solid #f1f5f9;
+}
+
+.canva-ideas-label {
+  font-size: 0.84rem;
+  font-weight: 600;
+  color: #64748b;
+  margin-top: 14px;
+  margin-bottom: 8px;
+}
+
+.canva-ideas-box {
+  background: #f8fafc;
+  border: 1.5px solid var(--color-border);
+  border-radius: 12px;
+  padding: 16px 18px;
+}
+
+.canva-intro-text {
+  font-size: 0.92rem;
+  color: #334155;
+  font-weight: 600;
+  line-height: 1.5;
+  margin-bottom: 12px;
+}
+
+.canva-bullet-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.canva-bullet-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 0.88rem;
+  color: #334155;
+  line-height: 1.55;
+}
+
+.canva-bullet-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #64748b;
+  margin-top: 8px;
+  flex-shrink: 0;
+}
+
+.canva-photo-feature {
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px dashed #cbd5e1;
+  font-size: 0.86rem;
+  color: #0284c7;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-weight: 500;
+}
+
+/* Mode Edit Inline pada Kartu Canva */
+.canva-edit-form {
+  padding: 16px 20px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  background: #fafafa;
+  border-top: 1.5px solid #e2e8f0;
+}
+
+.canva-edit-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.canva-edit-label {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #334155;
+}
+
+.canva-edit-input,
+.canva-edit-textarea {
+  width: 100%;
+  font-family: inherit;
+  font-size: 0.92rem;
+  padding: 10px 14px;
+  border: 1.5px solid var(--color-border);
+  border-radius: 10px;
+  background: #ffffff;
+  color: #0f172a;
+  box-sizing: border-box;
+}
+
+.canva-edit-input:focus,
+.canva-edit-textarea:focus {
+  border-color: #2563eb;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+
+.canva-edit-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 6px;
+}
+
+.btn-save-inline {
+  background: #0f172a;
+  color: #ffffff;
+  border: none;
+  border-radius: var(--radius-pill);
+  padding: 8px 18px;
+  font-size: 0.86rem;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.btn-save-inline:hover {
+  background: #1e293b;
+}
+
+.btn-cancel-inline {
+  background: #f1f5f9;
+  color: #475569;
+  border: none;
+  border-radius: var(--radius-pill);
+  padding: 8px 18px;
+  font-size: 0.86rem;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.btn-cancel-inline:hover {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+
+/* Tombol Tambah Slide Baru */
+.btn-add-outline-card {
+  width: 100%;
+  border: 2px dashed #cbd5e1;
+  background: #f8fafc;
+  border-radius: 14px;
+  padding: 14px;
+  font-family: inherit;
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: #475569;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.btn-add-outline-card:hover {
+  background: #ffffff;
+  border-color: #94a3b8;
+  color: #0f172a;
+}
+
+/* Navigasi Bawah Sesi */
+.session-nav-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 28px;
+  padding-top: 22px;
+  border-top: 1.5px solid #f1f5f9;
+  flex-wrap: wrap;
+}
+
+.btn-back-step {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 11px 20px;
+  font-family: inherit;
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: #475569;
+  background: #f1f5f9;
+  border: none;
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.btn-back-step:hover {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+
+.btn-generate-media {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 13px 26px;
+  font-family: inherit;
+  font-size: 0.98rem;
+  font-weight: 800;
+  color: #ffffff;
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+  border: none;
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+  transition: var(--transition);
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.18);
+}
+
+.btn-generate-media:hover {
+  background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.25);
+}
+
+/* ==========================================================================
+   6. SESI 3: HASIL MEDIA PPT BERGAMBAR
+   ========================================================================== */
+.header-action-btns {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.btn-secondary-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  font-family: inherit;
+  font-size: 0.85rem;
+  font-weight: 700;
+  background: #f8fafc;
+  color: #334155;
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.btn-secondary-action:hover {
+  background: #ffffff;
+  border-color: #cbd5e1;
+  color: #0f172a;
+}
+
+.btn-download-ppt-top {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 18px;
+  font-family: inherit;
+  font-size: 0.85rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, var(--color-ppt-orange), #ea580c);
+  color: #ffffff;
+  border: none;
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+  transition: var(--transition);
+  box-shadow: 0 3px 10px rgba(210, 71, 38, 0.25);
+}
+
+.btn-download-ppt-top:hover {
+  background: linear-gradient(135deg, #b83b1e, #c2410c);
+  transform: translateY(-1px);
+  box-shadow: 0 5px 14px rgba(210, 71, 38, 0.35);
+}
+
 .ppt-slides-list {
   display: flex;
   flex-direction: column;
-  gap: 20px;
-  max-height: 640px;
-  overflow-y: auto;
-  padding-right: 4px;
+  gap: 22px;
+  margin-top: 18px;
+  margin-bottom: 24px;
 }
 
 .media-slide-card {
   background: #ffffff;
   border: 1.5px solid var(--color-border);
   border-radius: 18px;
-  padding: 22px;
+  padding: 24px;
   box-shadow: 0 2px 10px rgba(15, 23, 42, 0.03);
   display: flex;
   flex-direction: column;
@@ -781,7 +954,7 @@ body {
   align-items: center;
   justify-content: space-between;
   border-bottom: 1.5px solid #f1f5f9;
-  padding-bottom: 10px;
+  padding-bottom: 12px;
 }
 
 .media-slide-number {
@@ -800,7 +973,6 @@ body {
   margin: 0;
 }
 
-/* Frame Gambar Visual Slide (16:9) */
 .media-slide-image-frame {
   width: 100%;
   aspect-ratio: 16 / 9;
@@ -848,129 +1020,227 @@ body {
 }
 
 .ppt-slide-content {
-  font-size: 0.94rem;
-  color: #334155;
-  line-height: 1.6;
-}
-
-.ppt-slide-content ul {
-  margin: 6px 0;
-  padding-left: 20px;
-}
-
-.ppt-slide-content li {
-  margin-bottom: 6px;
-}
-
-.ppt-speaker-notes {
-  background: #eff6ff;
-  border-left: 4px solid #2563eb;
-  border-radius: 0 10px 10px 0;
-  padding: 10px 14px;
-  font-size: 0.86rem;
-  color: #1e40af;
-  line-height: 1.5;
-}
-
-.ppt-speaker-notes strong {
-  display: block;
-  margin-bottom: 2px;
-  color: #1e3a8a;
-}
-
-/* Tombol Unduh Utama di Bagian Bawah */
-.result-action-bar {
+  background: #f8fafc;
+  border-radius: 12px;
+  padding: 14px 16px;
   display: flex;
   flex-direction: column;
   gap: 10px;
 }
 
+.slide-bullet-list {
+  margin: 0;
+  padding-left: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  color: #334155;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.teacher-notes-box {
+  background: #fefce8;
+  border-left: 3px solid #facc15;
+  border-radius: 0 8px 8px 0;
+  padding: 10px 14px;
+  font-size: 0.84rem;
+  color: #854d0e;
+  line-height: 1.45;
+}
+
+.result-action-bar {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  align-items: center;
+  margin-top: 24px;
+  padding-top: 22px;
+  border-top: 1.5px solid #f1f5f9;
+}
+
 .btn-download-main {
   width: 100%;
-  padding: 16px 28px;
-  font-size: 1.05rem;
-  font-weight: 800;
+  max-width: 540px;
+  padding: 15px 28px;
   font-family: inherit;
-  background: var(--color-ppt-orange);
+  font-size: 1rem;
+  font-weight: 800;
   color: #ffffff;
+  background: linear-gradient(135deg, var(--color-ppt-orange) 0%, #c2410c 100%);
   border: none;
   border-radius: var(--radius-pill);
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 10px;
+  gap: 12px;
   transition: var(--transition);
   box-shadow: 0 6px 20px rgba(210, 71, 38, 0.28);
 }
 
 .btn-download-main:hover {
-  background: var(--color-ppt-hover);
+  background: linear-gradient(135deg, #b83b1e 0%, #9a3412 100%);
   transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(210, 71, 38, 0.35);
+  box-shadow: 0 10px 26px rgba(210, 71, 38, 0.38);
+}
+
+.result-secondary-nav {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  justify-content: center;
 }
 
 .btn-edit-outline-again {
-  width: 100%;
-  padding: 12px 20px;
-  font-size: 0.92rem;
-  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
   font-family: inherit;
-  background: #ffffff;
-  color: var(--color-text-main);
-  border: 1.5px solid var(--color-border);
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #475569;
+  background: #f1f5f9;
+  border: none;
   border-radius: var(--radius-pill);
   cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
   transition: var(--transition);
 }
 
 .btn-edit-outline-again:hover {
-  background: #f8fafc;
-  border-color: #cbd5e1;
+  background: #e2e8f0;
+  color: #0f172a;
+}
+
+.btn-new-presentation {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  font-family: inherit;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #0284c7;
+  background: #f0f9ff;
+  border: 1px solid #bae6fd;
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.btn-new-presentation:hover {
+  background: #e0f2fe;
 }
 
 /* ==========================================================================
-   7. RESPONSIVE DESIGN (Mobile & Tablet)
+   7. LOADING STATES
    ========================================================================== */
-@media (max-width: 1024px) {
-  .media-main-wrapper {
-    padding: 24px 32px 50px;
-  }
-
-  .media-workspace-grid {
-    grid-template-columns: 1fr;
-    gap: 24px;
-  }
+.session-loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 50px 20px;
+  text-align: center;
 }
 
+.spinner-box {
+  width: 48px;
+  height: 48px;
+  border: 3.5px solid #e2e8f0;
+  border-top-color: #2563eb;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin-bottom: 20px;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.loading-title {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0 0 8px;
+}
+
+.loading-subtitle {
+  font-size: 0.9rem;
+  color: #64748b;
+  margin: 0 0 24px;
+  max-width: 480px;
+  line-height: 1.5;
+}
+
+.progress-track {
+  width: 280px;
+  height: 6px;
+  background: #e2e8f0;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.progress-bar-fill {
+  width: 40%;
+  height: 100%;
+  background: linear-gradient(90deg, #2563eb, #3b82f6);
+  border-radius: 999px;
+  animation: progressMove 1.8s ease-in-out infinite;
+}
+
+@keyframes progressMove {
+  0% { transform: translateX(-100%); }
+  50% { transform: translateX(50%); }
+  100% { transform: translateX(250%); }
+}
+
+/* ==========================================================================
+   8. RESPONSIVE DESIGN
+   ========================================================================== */
 @media (max-width: 768px) {
   .media-main-wrapper {
-    padding: 20px 20px 40px;
+    padding: 20px 16px 40px;
   }
 
-  .media-page-header {
-    margin-bottom: 24px;
+  .media-single-card {
+    padding: 20px 18px;
+    border-radius: 16px;
   }
 
-  .media-card {
-    padding: 20px;
+  .stepper-track {
+    padding: 8px 12px;
   }
 
-  .card-right-header {
-    flex-direction: column;
-    align-items: flex-start;
+  .step-item {
+    padding: 4px 6px;
+    gap: 6px;
   }
 
-  .header-action-btns {
-    width: 100%;
-    justify-content: flex-start;
+  .step-name {
+    font-size: 0.82rem;
+  }
+
+  .step-circle {
+    width: 28px;
+    height: 28px;
+    font-size: 0.82rem;
   }
 
   .slide-count-grid {
     grid-template-columns: 1fr;
+  }
+
+  .session-nav-bar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .btn-back-step,
+  .btn-generate-media {
+    width: 100%;
+    justify-content: center;
   }
 }

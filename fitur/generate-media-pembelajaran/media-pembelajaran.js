@@ -1,14 +1,18 @@
 /**
  * Edu Workspace - Generate Media Pembelajaran (PowerPoint Generator) Logic
- * Alur 2-Tahap: 
- * 1. Generate & Edit Outline Slide
- * 2. Generate Media Presentasi PPT Bergambar (.pptx + PNG Slide Images)
+ * Sistem 3 Sesi Terpadu:
+ * 1. Informasi Materi (Parameter Form)
+ * 2. Outline Slide (Canva AI Style - Reorder, Edit, Delete)
+ * 3. Hasil Media (Media PPT Bergambar 16:9 + Download .pptx)
  */
 
 let currentUser = null;
 let userModulList = [];
 let currentSourceTab = 'modul';
 let selectedSlideCountMode = 'auto'; // 'auto' | 'custom'
+
+// State Sesi & Outline
+let currentSession = 1; // 1 | 2 | 3
 let currentOutlineSlides = [];
 let currentGeneratedMediaSlides = [];
 let currentPresentationMeta = {
@@ -17,6 +21,12 @@ let currentPresentationMeta = {
   grade: '',
   slideCount: 6
 };
+
+// State Interaksi Outline Canva AI (Gambar 2)
+let expandedSlideIndex = 0; // Default slide 1 terbuka
+let editingSlideIndex = -1;  // -1: tidak sedang edit
+let draggedIndex = null;     // Index yang sedang di-drag
+
 let isGeneratingOutline = false;
 let isGeneratingMedia = false;
 
@@ -81,6 +91,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // 4. Muat Modul Ajar Tersimpan untuk Dropdown Otomatis
   await loadUserModulDropdown();
+
+  // Inisialisasi Tampilan Sesi 1
+  goToSession(1, true);
 });
 
 /**
@@ -205,7 +218,7 @@ function setSourceTab(mode) {
 
 /**
  * Saat Pengguna Memilih Modul Ajar pada Dropdown:
- * Otomatis mengisi Mata Pelajaran, Materi, dan Kelas
+ * Mengambil materi/topik MURNI dari data modul ajar (BUKAN dari tujuan pembelajaran)
  */
 function onSelectModulChange(modulId) {
   if (!modulId) return;
@@ -237,7 +250,7 @@ function onSelectModulChange(modulId) {
 }
 
 /**
- * Pemilihan Jumlah Slide (HANYA 2 TOMBOL: Rekomendasi AI & Isi Sendiri)
+ * Pemilihan Jumlah Slide (Rekomendasi AI & Isi Sendiri)
  */
 function selectSlideCount(mode) {
   selectedSlideCountMode = mode;
@@ -258,7 +271,66 @@ function selectSlideCount(mode) {
 
 /**
  * ==========================================================================
- * TAHAP 1: PROSES GENERATE OUTLINE SLIDE DENGAN AI
+ * SISTEM NAVIGASI STEPPER 3 SESI
+ * ==========================================================================
+ */
+function goToSession(sessionNum, silent = false) {
+  if (sessionNum === 2 && currentOutlineSlides.length === 0 && !isGeneratingOutline) {
+    if (!silent) {
+      alert("Silakan lengkapi Informasi Materi dan klik 'Generate Outline Slide' terlebih dahulu.");
+    }
+    return;
+  }
+
+  if (sessionNum === 3 && currentGeneratedMediaSlides.length === 0 && !isGeneratingMedia) {
+    if (!silent) {
+      alert("Silakan klik 'Generate Media Pembelajaran' di Sesi 2 terlebih dahulu.");
+    }
+    return;
+  }
+
+  currentSession = sessionNum;
+
+  // 1. Update Indikator Stepper
+  const ind1 = document.getElementById('stepIndicator1');
+  const ind2 = document.getElementById('stepIndicator2');
+  const ind3 = document.getElementById('stepIndicator3');
+  const line1 = document.getElementById('stepLine1');
+  const line2 = document.getElementById('stepLine2');
+
+  [ind1, ind2, ind3].forEach(el => el && el.classList.remove('active', 'completed'));
+  [line1, line2].forEach(el => el && el.classList.remove('active', 'completed'));
+
+  if (sessionNum === 1) {
+    if (ind1) ind1.classList.add('active');
+  } else if (sessionNum === 2) {
+    if (ind1) ind1.classList.add('completed');
+    if (line1) line1.classList.add('completed');
+    if (ind2) ind2.classList.add('active');
+  } else if (sessionNum === 3) {
+    if (ind1) ind1.classList.add('completed');
+    if (line1) line1.classList.add('completed');
+    if (ind2) ind2.classList.add('completed');
+    if (line2) line2.classList.add('completed');
+    if (ind3) ind3.classList.add('active');
+  }
+
+  // 2. Update Step Pane Visibility
+  const pane1 = document.getElementById('stepPane1');
+  const pane2 = document.getElementById('stepPane2');
+  const pane3 = document.getElementById('stepPane3');
+
+  if (pane1) pane1.classList.toggle('active', sessionNum === 1);
+  if (pane2) pane2.classList.toggle('active', sessionNum === 2);
+  if (pane3) pane3.classList.toggle('active', sessionNum === 3);
+
+  // 3. Scroll Halus ke Atas
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+/**
+ * ==========================================================================
+ * SESI 1 -> SESI 2: PROSES GENERATE OUTLINE DENGAN AI
  * ==========================================================================
  */
 async function handleGenerateOutline() {
@@ -317,9 +389,14 @@ async function handleGenerateOutline() {
   };
 
   isGeneratingOutline = true;
-  setUIMode('loading', { title: "AI Sedang Menyusun Outline...", sub: "Menghubungkan ke Google Gemini AI..." });
 
-  // Prompt Khusus untuk menghasilkan Outline Slide
+  // Berpindah ke Sesi 2 dengan Status Loading
+  goToSession(2);
+  const loadingEl = document.getElementById('outlineLoadingState');
+  const contentEl = document.getElementById('outlineContentWrapper');
+  if (loadingEl) loadingEl.style.display = 'flex';
+  if (contentEl) contentEl.style.display = 'none';
+
   const promptText = `
 Anda adalah Pakar Desain Media Presentasi Pembelajaran Edukatif Kurikulum Merdeka.
 Tugas Anda adalah merancang OUTLINE ${targetSlideCount} slide presentasi pembelajaran yang terstruktur, menarik, dan siap diajarkan untuk:
@@ -334,20 +411,18 @@ Spesifikasi Struktur Outline:
 - Slide 2 s/d ${targetSlideCount - 1}: Pembahasan konsep esensial, contoh nyata, aktivitas interaktif, dan visualisasi pemahaman.
 - Slide ${targetSlideCount}: Kesimpulan & Refleksi / Kuis Ringkas Pemahaman.
 
-PENTING: Berikan "visualIdea" yang deskriptif dan jelas untuk setiap slide agar dapat diilustrasikan dengan visual grafis atau gambar konsep yang menarik!
-
 Format Keluaran WAJIB berupa JSON ARRAY murni tanpa teks pembuka atau penutup markdown (hanya format [ ... ]):
 [
   {
     "slideNumber": 1,
     "title": "Judul Slide Singkat & Menarik",
     "points": [
-      "Poin materi penting 1",
-      "Poin materi penting 2",
-      "Poin materi penting 3"
+      "Definisi multimedia interaktif: gabungan teks, gambar, audio, video, dan animasi",
+      "Contoh aplikasi: pembelajaran online, game edukasi, presentasi interaktif",
+      "Photo feature: ilustrasi interaksi pengguna dengan multimedia"
     ],
     "teacherNote": "Panduan narasi ucapan guru saat menampilkan slide ini di depan kelas",
-    "visualIdea": "Deskripsi visual gambar atau ilustrasi grafis konsep materi untuk slide ini"
+    "visualIdea": "Deskripsi visual gambar atau ilustrasi konsep materi untuk slide ini"
   }
 ]
 `.trim();
@@ -361,10 +436,17 @@ Format Keluaran WAJIB berupa JSON ARRAY murni tanpa teks pembuka atau penutup ma
     }
 
     currentOutlineSlides = slidesData;
-    renderOutlineEditor(slidesData, currentPresentationMeta);
-    setUIMode('outline');
+    expandedSlideIndex = 0;
+    editingSlideIndex = -1;
+
+    renderCanvaOutlineList();
+
+    if (loadingEl) loadingEl.style.display = 'none';
+    if (contentEl) contentEl.style.display = 'block';
   } catch (err) {
     console.error("[Outline Generator Error]", err);
+    if (loadingEl) loadingEl.style.display = 'none';
+    goToSession(1);
     showErrorState(err.message || "Gagal menyusun outline dengan Google Gemini AI.");
   } finally {
     isGeneratingOutline = false;
@@ -373,140 +455,320 @@ Format Keluaran WAJIB berupa JSON ARRAY murni tanpa teks pembuka atau penutup ma
 
 /**
  * ==========================================================================
- * RENDER TAHAP 1: FORM EDITOR OUTLINE SLIDE
+ * SESI 2: RENDER KARTU OUTLINE BERGAYA CANVA AI (GAMBAR 2)
+ * Fitur: Expand/Collapse, Edit Inline, Delete, & Drag and Drop Reorder
  * ==========================================================================
  */
-function renderOutlineEditor(slides, meta) {
-  const listContainer = document.getElementById('pptOutlineList');
+function renderCanvaOutlineList() {
+  const listContainer = document.getElementById('canvaOutlineList');
   const summaryTitle = document.getElementById('outlineSummaryTitle');
   const summaryMeta = document.getElementById('outlineSummaryMeta');
   const countBadge = document.getElementById('outlineSlideCountBadge');
 
-  if (summaryTitle) summaryTitle.textContent = meta.materi.split('\n')[0] || meta.subject;
-  if (summaryMeta) summaryMeta.textContent = `${meta.subject} • ${meta.grade}`;
-  if (countBadge) countBadge.textContent = `${slides.length} Slide Outline`;
+  if (summaryTitle) summaryTitle.textContent = currentPresentationMeta.materi.split('\n')[0] || currentPresentationMeta.subject;
+  if (summaryMeta) summaryMeta.textContent = `${currentPresentationMeta.subject} • ${currentPresentationMeta.grade}`;
+  if (countBadge) countBadge.textContent = `${currentOutlineSlides.length} Slide Outline`;
 
   if (!listContainer) return;
   listContainer.innerHTML = '';
 
-  slides.forEach((s, idx) => {
-    const card = document.createElement('div');
-    card.className = 'outline-slide-card';
-    card.setAttribute('data-slide-index', idx);
+  currentOutlineSlides.forEach((s, idx) => {
+    const isExpanded = (expandedSlideIndex === idx);
+    const isEditing = (editingSlideIndex === idx);
 
-    const pointsText = Array.isArray(s.points) ? s.points.join('\n') : (s.points || '');
+    const card = document.createElement('div');
+    card.className = `canva-outline-card ${isExpanded ? 'expanded' : ''}`;
+    card.setAttribute('data-index', idx);
+    card.setAttribute('draggable', isEditing ? 'false' : 'true');
+
+    // Snippet Preview teks saat kartu collapsed (seperti pada Gambar 2)
+    const previewPoints = (s.points && s.points.length > 0) ? s.points.join('. ') : (s.visualIdea || '');
+    const previewSnippet = previewPoints.length > 95 ? previewPoints.substring(0, 92) + '...' : previewPoints;
 
     card.innerHTML = `
-      <div class="outline-slide-top">
-        <div class="outline-slide-badge">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
-          <span>Slide ${idx + 1}</span>
+      <!-- Header Kartu -->
+      <div class="canva-card-header" onclick="toggleExpandSlide(${idx})">
+        <div class="canva-card-title-box">
+          <h3 class="canva-card-title">${escapeHtml(s.title || ('Slide ' + (idx + 1)))}</h3>
+          ${!isExpanded && !isEditing ? `
+            <span class="canva-card-subtitle-preview">${escapeHtml(previewSnippet)}</span>
+          ` : ''}
         </div>
-        ${slides.length > 1 ? `
-          <button type="button" class="btn-delete-outline-slide" onclick="deleteOutlineSlide(${idx})" title="Hapus Slide Ini">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-            <span>Hapus</span>
+
+        <div class="canva-card-actions">
+          <button type="button" class="canva-action-btn" title="Edit Slide Ini" onclick="event.stopPropagation(); startEditSlide(${idx})">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3">
+              <path d="M12 20h9"></path>
+              <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+            </svg>
           </button>
-        ` : ''}
+
+          <button type="button" class="canva-action-btn btn-delete" title="Hapus Slide Ini" onclick="event.stopPropagation(); deleteOutlineSlide(${idx})">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3">
+              <polyline points="3 6 5 6 21 6"></polyline>
+              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+            </svg>
+          </button>
+
+          <div class="canva-action-btn canva-drag-handle" title="Tahan dan geser (drag) untuk memindahkan urutan slide" onclick="event.stopPropagation()">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4">
+              <polyline points="5 9 2 12 5 15"></polyline>
+              <polyline points="9 5 12 2 15 5"></polyline>
+              <polyline points="15 19 12 22 9 19"></polyline>
+              <polyline points="19 9 22 12 19 15"></polyline>
+              <line x1="2" y1="12" x2="22" y2="12"></line>
+              <line x1="12" y1="2" x2="12" y2="22"></line>
+            </svg>
+          </div>
+        </div>
       </div>
 
-      <div class="outline-field-group">
-        <label class="outline-field-label">Judul Slide:</label>
-        <input type="text" class="outline-input-title" id="outlineTitle_${idx}" value="${escapeHtml(s.title || '')}" placeholder="Masukkan judul slide...">
-      </div>
+      <!-- Body Kartu: Tampilan Key Ideas (Gambar 2) -->
+      ${isExpanded && !isEditing ? `
+        <div class="canva-card-body">
+          <div class="canva-ideas-label">List key ideas (not final wording)</div>
+          <div class="canva-ideas-box">
+            ${s.visualIdea ? `<div class="canva-intro-text">${escapeHtml(s.visualIdea)}</div>` : ''}
+            <ul class="canva-bullet-list">
+              ${(s.points || []).map(p => `
+                <li class="canva-bullet-item">
+                  <span class="canva-bullet-dot"></span>
+                  <span>${escapeHtml(p)}</span>
+                </li>
+              `).join('')}
+            </ul>
+            ${s.teacherNote ? `
+              <div class="canva-photo-feature">
+                <strong>Catatan Guru:</strong> ${escapeHtml(s.teacherNote)}
+              </div>
+            ` : ''}
+          </div>
+        </div>
+      ` : ''}
 
-      <div class="outline-field-group">
-        <label class="outline-field-label">Poin-poin Materi (1 baris per poin):</label>
-        <textarea class="outline-textarea" id="outlinePoints_${idx}" rows="3" placeholder="Tuliskan poin-poin materi slide...">${escapeHtml(pointsText)}</textarea>
-      </div>
+      <!-- Form Edit Inline (Saat Tombol Pensil Diklik) -->
+      ${isEditing ? `
+        <div class="canva-edit-form" onclick="event.stopPropagation()">
+          <div class="canva-edit-field">
+            <label class="canva-edit-label">Judul Slide:</label>
+            <input type="text" class="canva-edit-input" id="editSlideTitle_${idx}" value="${escapeHtml(s.title || '')}" placeholder="Ketik judul slide...">
+          </div>
 
-      <div class="outline-field-group">
-        <label class="outline-field-label" style="color: #854d0e;">
-          <span>🎨 Ide Visual & Gambar Slide:</span>
-          <span style="font-size: 0.72rem; font-weight: 500; color: #a16207;">Digunakan untuk menghasilkan gambar slide</span>
-        </label>
-        <textarea class="outline-textarea outline-textarea-visual" id="outlineVisual_${idx}" rows="2" placeholder="Deskripsi gambar visual slide...">${escapeHtml(s.visualIdea || '')}</textarea>
-      </div>
+          <div class="canva-edit-field">
+            <label class="canva-edit-label">List Key Ideas (1 baris per poin):</label>
+            <textarea class="canva-edit-textarea" id="editSlidePoints_${idx}" rows="4" placeholder="Poin-poin ide slide...">${escapeHtml((s.points || []).join('\n'))}</textarea>
+          </div>
 
-      <div class="outline-field-group">
-        <label class="outline-field-label">Panduan Narasi Pendidik (Opsional):</label>
-        <textarea class="outline-textarea" id="outlineNotes_${idx}" rows="2" placeholder="Panduan narasi ucapan guru saat menampilkan slide ini...">${escapeHtml(s.teacherNote || '')}</textarea>
-      </div>
+          <div class="canva-edit-field">
+            <label class="canva-edit-label">Photo Feature / Ide Visual Gambar:</label>
+            <textarea class="canva-edit-textarea" id="editSlideVisual_${idx}" rows="2" placeholder="Deskripsi gambar atau ide grafis visual...">${escapeHtml(s.visualIdea || '')}</textarea>
+          </div>
+
+          <div class="canva-edit-field">
+            <label class="canva-edit-label">Catatan Guru (Opsional):</label>
+            <textarea class="canva-edit-textarea" id="editSlideNotes_${idx}" rows="2" placeholder="Catatan ucapan guru di kelas...">${escapeHtml(s.teacherNote || '')}</textarea>
+          </div>
+
+          <div class="canva-edit-actions">
+            <button type="button" class="btn-cancel-inline" onclick="cancelEditSlide()">Batal</button>
+            <button type="button" class="btn-save-inline" onclick="saveEditSlide(${idx})">Simpan Perubahan</button>
+          </div>
+        </div>
+      ` : ''}
     `;
+
+    // Event Listener untuk Drag and Drop Urutan Slide
+    attachDragAndDropEvents(card, idx);
 
     listContainer.appendChild(card);
   });
 }
 
 /**
- * Sinkronisasi Nilai Input Pengguna ke Variabel State Outline
+ * Handle Expand / Collapse Kartu
  */
-function collectCurrentOutlineFromInputs() {
-  const cards = document.querySelectorAll('.outline-slide-card');
-  const updated = [];
-
-  cards.forEach((card, idx) => {
-    const titleVal = document.getElementById(`outlineTitle_${idx}`)?.value.trim() || `Slide ${idx + 1}`;
-    const pointsRaw = document.getElementById(`outlinePoints_${idx}`)?.value || '';
-    const pointsArr = pointsRaw.split('\n').map(p => p.trim()).filter(p => p.length > 0);
-    const visualVal = document.getElementById(`outlineVisual_${idx}`)?.value.trim() || '';
-    const notesVal = document.getElementById(`outlineNotes_${idx}`)?.value.trim() || '';
-
-    updated.push({
-      slideNumber: idx + 1,
-      title: titleVal,
-      points: pointsArr.length > 0 ? pointsArr : ['Penjelasan materi pokok pembelajaran.'],
-      visualIdea: visualVal,
-      teacherNote: notesVal
-    });
-  });
-
-  if (updated.length > 0) {
-    currentOutlineSlides = updated;
+function toggleExpandSlide(idx) {
+  if (editingSlideIndex === idx) return; // Jangan toggle saat sedang edit
+  if (expandedSlideIndex === idx) {
+    expandedSlideIndex = null;
+  } else {
+    expandedSlideIndex = idx;
+    editingSlideIndex = -1;
   }
-  return currentOutlineSlides;
+  renderCanvaOutlineList();
+}
+
+/**
+ * Membuka Form Edit Inline Slide
+ */
+function startEditSlide(idx) {
+  expandedSlideIndex = idx;
+  editingSlideIndex = idx;
+  renderCanvaOutlineList();
+
+  setTimeout(() => {
+    const input = document.getElementById(`editSlideTitle_${idx}`);
+    if (input) input.focus();
+  }, 50);
+}
+
+/**
+ * Simpan Hasil Edit Inline Slide
+ */
+function saveEditSlide(idx) {
+  const titleVal = document.getElementById(`editSlideTitle_${idx}`)?.value.trim() || `Slide ${idx + 1}`;
+  const pointsRaw = document.getElementById(`editSlidePoints_${idx}`)?.value || '';
+  const pointsArr = pointsRaw.split('\n').map(p => p.trim()).filter(p => p.length > 0);
+  const visualVal = document.getElementById(`editSlideVisual_${idx}`)?.value.trim() || '';
+  const notesVal = document.getElementById(`editSlideNotes_${idx}`)?.value.trim() || '';
+
+  currentOutlineSlides[idx] = {
+    ...currentOutlineSlides[idx],
+    title: titleVal,
+    points: pointsArr.length > 0 ? pointsArr : ['Penjelasan materi pokok pembelajaran.'],
+    visualIdea: visualVal,
+    teacherNote: notesVal
+  };
+
+  editingSlideIndex = -1;
+  expandedSlideIndex = idx;
+  renderCanvaOutlineList();
+}
+
+/**
+ * Batalkan Edit Inline
+ */
+function cancelEditSlide() {
+  editingSlideIndex = -1;
+  renderCanvaOutlineList();
+}
+
+/**
+ * Hapus Slide dari Outline
+ */
+function deleteOutlineSlide(idx) {
+  if (currentOutlineSlides.length <= 1) {
+    alert("Minimal harus ada 1 slide dalam presentasi.");
+    return;
+  }
+
+  const confirmDelete = confirm(`Hapus slide ${idx + 1}: "${currentOutlineSlides[idx].title}" dari outline?`);
+  if (!confirmDelete) return;
+
+  currentOutlineSlides.splice(idx, 1);
+  currentOutlineSlides.forEach((s, i) => { s.slideNumber = i + 1; });
+
+  if (expandedSlideIndex === idx) {
+    expandedSlideIndex = Math.max(0, idx - 1);
+  } else if (expandedSlideIndex > idx) {
+    expandedSlideIndex--;
+  }
+
+  editingSlideIndex = -1;
+  renderCanvaOutlineList();
 }
 
 /**
  * Tambah Slide Baru ke Outline
  */
 function addNewOutlineSlide() {
-  collectCurrentOutlineFromInputs();
   const nextNum = currentOutlineSlides.length + 1;
   currentOutlineSlides.push({
     slideNumber: nextNum,
     title: `Materi Konsep Baru #${nextNum}`,
-    points: ['Poin materi penting 1', 'Poin materi penting 2'],
-    visualIdea: 'Ilustrasi grafik visual konsep materi terkait',
-    teacherNote: 'Ajak siswa mendiskusikan topik ini secara aktif'
+    points: [
+      'Poin materi penting 1',
+      'Poin materi penting 2',
+      'Photo feature: ilustrasi gambar materi terkait'
+    ],
+    visualIdea: 'Ilustrasi konsep visual materi terkait',
+    teacherNote: 'Ajak siswa mendiskusikan topik ini secara interaktif'
   });
-  renderOutlineEditor(currentOutlineSlides, currentPresentationMeta);
-}
 
-/**
- * Hapus Slide dari Outline
- */
-function deleteOutlineSlide(index) {
-  collectCurrentOutlineFromInputs();
-  if (currentOutlineSlides.length <= 1) {
-    alert("Minimal harus ada 1 slide dalam presentasi.");
-    return;
-  }
-  currentOutlineSlides.splice(index, 1);
-  currentOutlineSlides.forEach((s, idx) => { s.slideNumber = idx + 1; });
-  renderOutlineEditor(currentOutlineSlides, currentPresentationMeta);
+  expandedSlideIndex = currentOutlineSlides.length - 1;
+  editingSlideIndex = currentOutlineSlides.length - 1;
+  renderCanvaOutlineList();
 }
 
 /**
  * ==========================================================================
- * TAHAP 2: PROSES GENERATE MEDIA PPT BERGAMBAR (Gambar + .PPTX)
+ * SISTEM DRAG AND DROP UNTUK MENUKAR URUTAN SLIDE SECARA INTERAKTIF
+ * ==========================================================================
+ */
+function attachDragAndDropEvents(card, index) {
+  card.addEventListener('dragstart', (e) => {
+    draggedIndex = index;
+    card.classList.add('is-dragging');
+    e.dataTransfer.effectAllowed = 'move';
+    try {
+      e.dataTransfer.setData('text/plain', String(index));
+    } catch (err) {}
+  });
+
+  card.addEventListener('dragend', () => {
+    card.classList.remove('is-dragging');
+    document.querySelectorAll('.canva-outline-card').forEach(c => {
+      c.classList.remove('drop-above', 'drop-below', 'is-dragging');
+    });
+    draggedIndex = null;
+  });
+
+  card.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    if (draggedIndex === null || draggedIndex === index) return;
+
+    const rect = card.getBoundingClientRect();
+    const midY = rect.top + rect.height / 2;
+
+    if (e.clientY < midY) {
+      card.classList.add('drop-above');
+      card.classList.remove('drop-below');
+    } else {
+      card.classList.add('drop-below');
+      card.classList.remove('drop-above');
+    }
+  });
+
+  card.addEventListener('dragleave', () => {
+    card.classList.remove('drop-above', 'drop-below');
+  });
+
+  card.addEventListener('drop', (e) => {
+    e.preventDefault();
+    card.classList.remove('drop-above', 'drop-below');
+
+    if (draggedIndex === null || draggedIndex === index) return;
+
+    const rect = card.getBoundingClientRect();
+    const midY = rect.top + rect.height / 2;
+    let targetIndex = index;
+
+    if (e.clientY >= midY && draggedIndex < index) {
+      targetIndex = index;
+    } else if (e.clientY < midY && draggedIndex > index) {
+      targetIndex = index;
+    }
+
+    // Pindahkan elemen di dalam array currentOutlineSlides
+    const movedItem = currentOutlineSlides.splice(draggedIndex, 1)[0];
+    currentOutlineSlides.splice(targetIndex, 0, movedItem);
+
+    // Update nomor slide urut
+    currentOutlineSlides.forEach((s, idx) => { s.slideNumber = idx + 1; });
+
+    expandedSlideIndex = targetIndex;
+    editingSlideIndex = -1;
+    renderCanvaOutlineList();
+  });
+}
+
+/**
+ * ==========================================================================
+ * SESI 2 -> SESI 3: GENERATE MEDIA PPT BERGAMBAR (Gambar 16:9 + PPTX)
  * ==========================================================================
  */
 async function handleGenerateMedia() {
   if (isGeneratingMedia) return;
-
-  // 1. Ambil seluruh isian hasil editing pengguna dari form outline
-  collectCurrentOutlineFromInputs();
 
   if (!currentOutlineSlides || currentOutlineSlides.length === 0) {
     alert("Outline slide kosong. Silakan generate outline terlebih dahulu.");
@@ -514,19 +776,22 @@ async function handleGenerateMedia() {
   }
 
   isGeneratingMedia = true;
-  setUIMode('loading', {
-    title: "Sedang Membuat Media PPT Bergambar...",
-    sub: "Menghasilkan visual gambar edukatif beresolusi tinggi untuk setiap slide..."
-  });
+
+  // Berpindah ke Sesi 3 dengan Status Loading
+  goToSession(3);
+  const loadingEl = document.getElementById('mediaLoadingState');
+  const contentEl = document.getElementById('mediaResultContentWrapper');
+  if (loadingEl) loadingEl.style.display = 'flex';
+  if (contentEl) contentEl.style.display = 'none';
 
   try {
     const meta = currentPresentationMeta;
     const slidesWithImages = [];
 
-    // 2. Generate Gambar Visual Edukasi Beresolusi Tinggi (16:9) per Slide
+    // Generate Gambar Visual Edukasi 16:9 per Slide
     for (let i = 0; i < currentOutlineSlides.length; i++) {
       const s = currentOutlineSlides[i];
-      const updateSub = document.getElementById('loadingSubtitleText');
+      const updateSub = document.getElementById('mediaLoadingSub');
       if (updateSub) {
         updateSub.textContent = `Membuat ilustrasi gambar untuk Slide ${i + 1} dari ${currentOutlineSlides.length} (${s.title})...`;
       }
@@ -542,11 +807,15 @@ async function handleGenerateMedia() {
 
     currentGeneratedMediaSlides = slidesWithImages;
 
-    // 3. Render Hasil Preview Media Bergambar
+    // Render Hasil Preview Media Bergambar
     renderMediaResultView(slidesWithImages, meta);
-    setUIMode('media');
+
+    if (loadingEl) loadingEl.style.display = 'none';
+    if (contentEl) contentEl.style.display = 'block';
   } catch (err) {
     console.error("[Generate Media Error]", err);
+    if (loadingEl) loadingEl.style.display = 'none';
+    goToSession(2);
     showErrorState(err.message || "Gagal menghasilkan media presentasi bergambar.");
   } finally {
     isGeneratingMedia = false;
@@ -556,74 +825,44 @@ async function handleGenerateMedia() {
 /**
  * ==========================================================================
  * GENERATOR GAMBAR SLIDE EDUKASI BERESOLUSI TINGGI (16:9 CANVAS ENGINE)
- * Menghasilkan visual artistik, terstruktur, dan modern per slide
  * ==========================================================================
  */
 async function generateEducationalSlideImage(slide, index, meta) {
-  const width = 1280;
-  const height = 720; // Aspek Rasio 16:9
-
   const canvas = document.createElement('canvas');
+  const width = 1280;
+  const height = 720;
   canvas.width = width;
   canvas.height = height;
   const ctx = canvas.getContext('2d');
 
-  const subject = (meta.subject || '').toLowerCase();
+  const subject = meta.subject || 'Pendidikan';
+  const grade = meta.grade || 'Umum';
   const title = slide.title || `Slide ${index + 1}`;
   const visualIdea = slide.visualIdea || '';
 
-  // 1. Tentukan Palet Warna Berdasarkan Mata Pelajaran
-  let gradColor1 = '#0f172a';
-  let gradColor2 = '#1e293b';
-  let accentColor = '#ffd500';
-  let secondaryAccent = '#38bdf8';
+  // A. Palet Warna Modern Berdasarkan Mata Pelajaran
+  const palettes = [
+    { bg1: '#0f172a', bg2: '#1e293b', accent: '#38bdf8', secondary: '#0284c7' }, // Blue Dark
+    { bg1: '#064e3b', bg2: '#022c22', accent: '#34d399', secondary: '#10b981' }, // Green Emerald
+    { bg1: '#431407', bg2: '#270803', accent: '#fb923c', secondary: '#f97316' }, // Warm Orange
+    { bg1: '#312e81', bg2: '#1e1b4b', accent: '#818cf8', secondary: '#6366f1' }, // Indigo Tech
+    { bg1: '#581c87', bg2: '#3b0764', accent: '#c084fc', secondary: '#a855f7' }, // Purple Creative
+  ];
+  const pal = palettes[index % palettes.length];
+  const accentColor = pal.accent;
+  const secondaryAccent = pal.secondary;
 
-  if (subject.includes('desain') || subject.includes('seni') || subject.includes('kreatif')) {
-    gradColor1 = '#1e1b4b'; // Deep Indigo
-    gradColor2 = '#312e81';
-    accentColor = '#f59e0b';
-    secondaryAccent = '#a855f7';
-  } else if (subject.includes('matematika') || subject.includes('komputer') || subject.includes('tik') || subject.includes('fisika')) {
-    gradColor1 = '#091e3a'; // Tech Deep Blue
-    gradColor2 = '#1e3a8a';
-    accentColor = '#38bdf8';
-    secondaryAccent = '#60a5fa';
-  } else if (subject.includes('ipa') || subject.includes('biologi') || subject.includes('alam')) {
-    gradColor1 = '#064e3b'; // Emerald
-    gradColor2 = '#047857';
-    accentColor = '#4ade80';
-    secondaryAccent = '#2dd4bf';
-  } else if (subject.includes('bahasa') || subject.includes('indonesia') || subject.includes('inggris')) {
-    gradColor1 = '#4c0519'; // Crimson Maroon
-    gradColor2 = '#9f1239';
-    accentColor = '#fb7185';
-    secondaryAccent = '#fde047';
-  } else if (subject.includes('ips') || subject.includes('sejarah') || subject.includes('geografi') || subject.includes('sosial')) {
-    gradColor1 = '#451a03'; // Warm Earth
-    gradColor2 = '#92400e';
-    accentColor = '#fbbf24';
-    secondaryAccent = '#f97316';
-  }
-
-  // A. Latar Belakang Gradien Halus
+  // B. Background Gradient Halus
   const bgGrad = ctx.createLinearGradient(0, 0, width, height);
-  bgGrad.addColorStop(0, gradColor1);
-  bgGrad.addColorStop(1, gradColor2);
+  bgGrad.addColorStop(0, pal.bg1);
+  bgGrad.addColorStop(1, pal.bg2);
   ctx.fillStyle = bgGrad;
   ctx.fillRect(0, 0, width, height);
 
-  // B. Pola Ornamen Grafis Modern & Soft Radial Glow
-  const radialGlow = ctx.createRadialGradient(width * 0.7, height * 0.35, 20, width * 0.7, height * 0.35, 450);
-  radialGlow.addColorStop(0, 'rgba(255, 255, 255, 0.12)');
-  radialGlow.addColorStop(0.5, 'rgba(255, 255, 255, 0.04)');
-  radialGlow.addColorStop(1, 'rgba(0, 0, 0, 0)');
-  ctx.fillStyle = radialGlow;
-  ctx.fillRect(0, 0, width, height);
-
-  // Grid / Dot lines subtle
-  ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
+  // C. Pola Grid Modern Halus
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.04)';
   ctx.lineWidth = 1;
-  const gridSize = 48;
+  const gridSize = 40;
   for (let x = 0; x < width; x += gridSize) {
     ctx.beginPath();
     ctx.moveTo(x, 0);
@@ -637,33 +876,29 @@ async function generateEducationalSlideImage(slide, index, meta) {
     ctx.stroke();
   }
 
-  // C. Header Banner Kiri Atas
-  // Badge Edu Workspace & Slide Index
+  // D. Badge Slide Nomor di Kiri Atas
   ctx.fillStyle = accentColor;
   ctx.beginPath();
-  roundRect(ctx, 60, 50, 160, 36, 18);
+  roundRect(ctx, 60, 50, 110, 36, 18);
   ctx.fill();
 
   ctx.fillStyle = '#0f172a';
-  ctx.font = 'bold 15px "Plus Jakarta Sans", sans-serif';
+  ctx.font = '800 15px "Plus Jakarta Sans", sans-serif';
   ctx.textBaseline = 'middle';
-  ctx.textAlign = 'center';
-  ctx.fillText(`SLIDE 0${index + 1}`, 140, 68);
+  ctx.fillText(`SLIDE ${String(index + 1).padStart(2, '0')}`, 76, 68);
 
-  // Tag Kategori & Mapel
-  ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
+  // Meta Mapel & Kelas
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
   ctx.font = '600 16px "Plus Jakarta Sans", sans-serif';
-  ctx.textAlign = 'left';
-  ctx.fillText(`${(meta.subject || 'MEDIA PEMBELAJARAN').toUpperCase()} • ${meta.grade || ''}`, 240, 68);
+  ctx.fillText(`${subject.toUpperCase()} • ${grade.toUpperCase()}`, 190, 68);
 
-  // D. Kartu Ilustrasi Visual Utama di Sisi Kanan (Konsep Visual)
+  // E. Kartu Kanan: Artwork Diagram & Visual Grafis
   const cardX = 640;
   const cardY = 120;
   const cardW = 580;
   const cardH = 540;
 
   ctx.save();
-  // Glassmorphism Card Frame
   ctx.fillStyle = 'rgba(255, 255, 255, 0.07)';
   ctx.strokeStyle = 'rgba(255, 255, 255, 0.18)';
   ctx.lineWidth = 2;
@@ -673,37 +908,31 @@ async function generateEducationalSlideImage(slide, index, meta) {
   ctx.stroke();
   ctx.clip();
 
-  // Gambar Elemen Visual Konsep
   drawThematicArtwork(ctx, cardX, cardY, cardW, cardH, subject, visualIdea, accentColor, secondaryAccent, index);
   ctx.restore();
 
-  // E. Teks Judul & Ringkasan Konsep di Sisi Kiri
+  // F. Teks Judul & Ringkasan Konsep di Sisi Kiri
   const leftX = 60;
-  const leftY = 150;
+  const leftY = 145;
   const maxTextW = 540;
 
-  // Judul Slide
   ctx.fillStyle = '#ffffff';
   ctx.font = '800 36px "Plus Jakarta Sans", sans-serif';
   ctx.textBaseline = 'top';
   wrapText(ctx, title, leftX, leftY, maxTextW, 46, 2);
 
-  // Garis Aksen Bawah Judul
   ctx.fillStyle = accentColor;
   ctx.fillRect(leftX, leftY + 110, 80, 5);
 
-  // Poin-poin Konsep Utama
   const points = Array.isArray(slide.points) ? slide.points : [];
   let currentY = leftY + 140;
 
-  points.slice(0, 3).forEach((pt, pIdx) => {
-    // Bullet Icon
+  points.slice(0, 3).forEach((pt) => {
     ctx.fillStyle = secondaryAccent;
     ctx.beginPath();
     ctx.arc(leftX + 8, currentY + 12, 6, 0, Math.PI * 2);
     ctx.fill();
 
-    // Text Poin
     ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
     ctx.font = '500 19px "Plus Jakarta Sans", sans-serif';
     ctx.textBaseline = 'top';
@@ -711,7 +940,7 @@ async function generateEducationalSlideImage(slide, index, meta) {
     currentY += lines * 30 + 16;
   });
 
-  // Footer Tag Edu Workspace
+  // Footer Tag
   ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
   ctx.font = '600 14px "Plus Jakarta Sans", sans-serif';
   ctx.fillText('Edu Workspace Presentation • AI Generated Visual Media', leftX, height - 55);
@@ -720,13 +949,12 @@ async function generateEducationalSlideImage(slide, index, meta) {
 }
 
 /**
- * Gambar Artwork / Diagram Grafis Tematik Pada Kartu Kanan
+ * Gambar Artwork Grafis Tematik Pada Kartu Kanan Slide
  */
 function drawThematicArtwork(ctx, cx, cy, cw, ch, subject, visualIdea, color1, color2, slideIdx) {
   const centerX = cx + cw / 2;
   const centerY = cy + ch / 2 - 20;
 
-  // Glowing Backdrop Circle
   const artGlow = ctx.createRadialGradient(centerX, centerY, 20, centerX, centerY, 200);
   artGlow.addColorStop(0, color1);
   artGlow.addColorStop(0.6, color2);
@@ -738,14 +966,12 @@ function drawThematicArtwork(ctx, cx, cy, cw, ch, subject, visualIdea, color1, c
   ctx.fill();
   ctx.globalAlpha = 1.0;
 
-  // Diagram Box Frames
   ctx.strokeStyle = color1;
   ctx.lineWidth = 3;
   ctx.beginPath();
   roundRect(ctx, centerX - 140, centerY - 100, 280, 200, 16);
   ctx.stroke();
 
-  // Floating Elements & Nodes
   ctx.fillStyle = color2;
   ctx.beginPath();
   ctx.arc(centerX - 90, centerY - 50, 18, 0, Math.PI * 2);
@@ -753,7 +979,6 @@ function drawThematicArtwork(ctx, cx, cy, cw, ch, subject, visualIdea, color1, c
   ctx.arc(centerX, centerY + 40, 26, 0, Math.PI * 2);
   ctx.fill();
 
-  // Connection Lines
   ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
   ctx.lineWidth = 2;
   ctx.beginPath();
@@ -762,25 +987,22 @@ function drawThematicArtwork(ctx, cx, cy, cw, ch, subject, visualIdea, color1, c
   ctx.lineTo(centerX + 90, centerY - 50);
   ctx.stroke();
 
-  // Label Box Visual Idea di Bawah Frame
-  const labelBoxY = cy + ch - 90;
-  ctx.fillStyle = 'rgba(15, 23, 42, 0.75)';
+  // Label Deskripsi Visual di Bagian Bawah
+  ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
   ctx.beginPath();
-  roundRect(ctx, cx + 24, labelBoxY, cw - 48, 64, 12);
+  roundRect(ctx, cx + 24, cy + ch - 80, cw - 48, 56, 12);
   ctx.fill();
 
   ctx.fillStyle = '#ffffff';
   ctx.font = '600 13px "Plus Jakarta Sans", sans-serif';
-  ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  const cleanVisual = visualIdea.length > 70 ? visualIdea.substring(0, 67) + '...' : visualIdea;
-  ctx.fillText(`💡 ${cleanVisual || 'Visual Konsep Pembelajaran Interaktif'}`, centerX, labelBoxY + 32);
+  const ideaClean = visualIdea ? `✦ ${visualIdea}` : `✦ Ilustrasi konsep visual pembelajaran terstruktur`;
+  const ideaSnippet = ideaClean.length > 68 ? ideaClean.substring(0, 65) + '...' : ideaClean;
+  ctx.fillText(ideaSnippet, cx + 40, cy + ch - 52);
 }
 
-/**
- * Canvas Helper: Rounded Rectangle
- */
 function roundRect(ctx, x, y, width, height, radius) {
+  ctx.beginPath();
   ctx.moveTo(x + radius, y);
   ctx.lineTo(x + width - radius, y);
   ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
@@ -790,13 +1012,11 @@ function roundRect(ctx, x, y, width, height, radius) {
   ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
   ctx.lineTo(x, y + radius);
   ctx.quadraticCurveTo(x, y, x + radius, y);
+  ctx.closePath();
 }
 
-/**
- * Canvas Helper: Wrap Text
- */
 function wrapText(ctx, text, x, y, maxWidth, lineHeight, maxLines = 3) {
-  const words = text.split(' ');
+  const words = (text || '').split(' ');
   let line = '';
   let lineCount = 0;
 
@@ -823,7 +1043,7 @@ function wrapText(ctx, text, x, y, maxWidth, lineHeight, maxLines = 3) {
 
 /**
  * ==========================================================================
- * RENDER TAHAP 2: HASIL MEDIA PPT BERGAMBAR
+ * SESI 3: RENDER HASIL MEDIA PPT BERGAMBAR
  * ==========================================================================
  */
 function renderMediaResultView(slides, meta) {
@@ -859,21 +1079,24 @@ function renderMediaResultView(slides, meta) {
       <div class="media-slide-image-bar">
         <span style="font-size: 0.8rem; color: #64748b; font-weight: 600;">Format 16:9 HD Gambar Slide</span>
         <button type="button" class="btn-download-slide-img" onclick="downloadSingleSlideImage(${idx})" title="Unduh gambar slide ini">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="7 10 12 15 17 10"></polyline>
+            <line x1="12" y1="15" x2="12" y2="3"></line>
+          </svg>
           <span>Unduh Gambar (PNG)</span>
         </button>
       </div>
 
       <!-- Poin Materi -->
       <div class="ppt-slide-content">
-        <ul>${pointsList}</ul>
+        <ul class="slide-bullet-list">${pointsList}</ul>
       </div>
 
       <!-- Panduan Narasi Pendidik -->
       ${s.teacherNote ? `
-        <div class="ppt-speaker-notes">
-          <strong>🗣️ Panduan Narasi Pendidik:</strong>
-          ${escapeHtml(s.teacherNote)}
+        <div class="teacher-notes-box">
+          <strong>🗣️ Panduan Narasi Pendidik:</strong> ${escapeHtml(s.teacherNote)}
         </div>
       ` : ''}
     `;
@@ -901,10 +1124,15 @@ function downloadSingleSlideImage(index) {
 }
 
 /**
- * Kembali ke Tampilan Edit Outline (Bisa Menyesuaikan Lagi)
+ * Mulai Presentasi Baru (Reset ke Sesi 1)
  */
-function backToOutlineView() {
-  setUIMode('outline');
+function startNewPresentation() {
+  const confirmNew = confirm("Mulai buat presentasi baru? Materi yang belum diunduh dapat disimpan terlebih dahulu.");
+  if (!confirmNew) return;
+
+  currentOutlineSlides = [];
+  currentGeneratedMediaSlides = [];
+  goToSession(1);
 }
 
 /**
@@ -929,30 +1157,26 @@ function downloadPowerPointFile() {
       const coverSlide = pptx.addSlide();
       coverSlide.background = { color: '0F172A' };
 
-      // Tag Edu Workspace
       coverSlide.addText('EDU WORKSPACE PRESENTATION', {
         x: 1.0, y: 1.2, w: 11.3, h: 0.5,
         fontSize: 13, bold: true, color: 'EAB308', letterSpacing: 2, align: 'center'
       });
 
-      // Judul Utama
       coverSlide.addText(topicTitle, {
         x: 1.0, y: 2.2, w: 11.3, h: 1.8,
         fontSize: 34, bold: true, color: 'FFFFFF', align: 'center', breakLine: true
       });
 
-      // Sub-judul Mata Pelajaran & Kelas
       coverSlide.addText(`${meta.subject} • ${meta.grade}`, {
         x: 1.0, y: 4.2, w: 11.3, h: 0.8,
         fontSize: 18, color: '94A3B8', align: 'center'
       });
 
-      // 2. SLIDE KONTEN BERGAMBAR (Slide 2 s/d Selesai)
+      // 2. SLIDE KONTEN BERGAMBAR
       slides.forEach((s, idx) => {
         const slide = pptx.addSlide();
         slide.background = { color: 'F8FAFC' };
 
-        // Banner Header Atas
         slide.addShape(pptx.shapes.RECTANGLE, {
           x: 0, y: 0, w: '100%', h: 1.0,
           fill: { color: '0F172A' }, line: { color: '0F172A' }
@@ -963,7 +1187,6 @@ function downloadPowerPointFile() {
           fontSize: 20, bold: true, color: 'FFFFFF'
         });
 
-        // Konten Poin-poin Materi di Sisi Kiri
         const bulletObjects = (s.points || []).map(pt => ({
           text: pt,
           options: { bullet: true, fontSize: 14, color: '334155', breakLine: true }
@@ -976,7 +1199,6 @@ function downloadPowerPointFile() {
           });
         }
 
-        // Sematkan Gambar Visual Slide di Sisi Kanan
         if (s.imageUrl && s.imageUrl.startsWith('data:image')) {
           slide.addImage({
             data: s.imageUrl,
@@ -988,13 +1210,11 @@ function downloadPowerPointFile() {
           });
         }
 
-        // Tambahkan Panduan Guru ke Catatan Slide (Notes)
         if (s.teacherNote) {
           slide.addNotes(`PANDUAN GURU:\n${s.teacherNote}\n\nIDE VISUAL:\n${s.visualIdea || '-'}`);
         }
       });
 
-      // Unduh File
       pptx.writeFile({ fileName: safeFilename });
 
       if (typeof showEduAlert === 'function') {
@@ -1011,7 +1231,6 @@ function downloadPowerPointFile() {
     }
   }
 
-  // Fallback jika library gagal
   alert("Gagal mengekspor file PowerPoint. Silakan salin teks atau unduh gambar per slide.");
 }
 
@@ -1066,7 +1285,7 @@ async function callGeminiApi(apiKey, promptText) {
   ];
 
   const updateSub = (txt) => {
-    const el = document.getElementById('loadingSubtitleText');
+    const el = document.getElementById('outlineLoadingSub');
     if (el) el.textContent = txt;
   };
 
@@ -1107,7 +1326,7 @@ async function callGeminiApi(apiKey, promptText) {
         lastError = new Error(msg);
       }
     } catch (e) {
-      if (e.message.includes('tidak valid')) throw e;
+      if (e.message && e.message.includes('tidak valid')) throw e;
       lastError = e;
     }
   }
@@ -1130,7 +1349,6 @@ function parseSlideJsonResponse(rawText) {
     if (parsed && Array.isArray(parsed.slides)) return parsed.slides;
   } catch (e) {}
 
-  // Cari array substring jika ada teks pengantar
   const firstBracket = cleaned.indexOf('[');
   const lastBracket = cleaned.lastIndexOf(']');
   if (firstBracket !== -1 && lastBracket !== -1 && lastBracket > firstBracket) {
@@ -1159,7 +1377,7 @@ function createFallbackSlides(mapel, materi, kelas, count) {
     points: [
       `Mata Pelajaran: ${mapel}`,
       `Kelas: ${kelas}`,
-      `Fokus Pembelajaran: Pemahaman konsep dan penerapan praktis.`
+      `Fokus Pembelajaran: Pemahaman konsep dasar dan penerapan praktis.`
     ],
     teacherNote: "Sampaikan salam pembuka, tujuan pembelajaran, dan motivasi awal kepada siswa.",
     visualIdea: `Ilustrasi grafis tematik pengantar materi ${mapel} dengan tata letak visual modern`
@@ -1174,7 +1392,7 @@ function createFallbackSlides(mapel, materi, kelas, count) {
       points: [
         "Definisi dan pengertian esensial materi.",
         "Karakteristik, prinsip kerja, atau struktur penting.",
-        "Contoh penerapan nyata dalam kehidupan sehari-hari."
+        "Photo feature: contoh penerapan nyata dalam kehidupan sehari-hari."
       ],
       teacherNote: "Ajak siswa berpartisipasi dengan mengajukan pertanyaan pemantik mengenai konsep ini.",
       visualIdea: `Diagram konsep interaktif atau bagan skematis terkait ${chunkLine}`
@@ -1197,56 +1415,7 @@ function createFallbackSlides(mapel, materi, kelas, count) {
   return slides;
 }
 
-/**
- * Pengatur Tampilan Mode UI Kartu Kanan
- * mode: 'empty' | 'loading' | 'outline' | 'media'
- */
-function setUIMode(mode, options = {}) {
-  const emptyState = document.getElementById('pptEmptyState');
-  const loadingState = document.getElementById('pptLoadingState');
-  const outlineContainer = document.getElementById('pptOutlineContainer');
-  const mediaContainer = document.getElementById('pptMediaResultContainer');
-  const badge = document.getElementById('cardRightBadge');
-  const title = document.getElementById('cardRightTitle');
-  const headerActions = document.getElementById('headerActionBtns');
-  const btnGenerateOutline = document.getElementById('btnGenerate');
-
-  // Reset
-  if (emptyState) emptyState.style.display = 'none';
-  if (loadingState) loadingState.classList.remove('active');
-  if (outlineContainer) outlineContainer.classList.remove('active');
-  if (mediaContainer) mediaContainer.classList.remove('active');
-  if (headerActions) headerActions.style.display = 'none';
-
-  if (mode === 'empty') {
-    if (emptyState) emptyState.style.display = 'flex';
-    if (badge) { badge.className = 'card-right-badge'; badge.textContent = 'Belum Ada Hasil'; }
-    if (title) title.textContent = 'Hasil Media Presentasi';
-    if (btnGenerateOutline) btnGenerateOutline.disabled = false;
-  } else if (mode === 'loading') {
-    if (loadingState) loadingState.classList.add('active');
-    if (badge) { badge.className = 'card-right-badge badge-loading'; badge.textContent = 'Memproses...'; }
-    const titleText = document.getElementById('loadingTitleText');
-    const subText = document.getElementById('loadingSubtitleText');
-    if (titleText && options.title) titleText.textContent = options.title;
-    if (subText && options.sub) subText.textContent = options.sub;
-    if (btnGenerateOutline) btnGenerateOutline.disabled = true;
-  } else if (mode === 'outline') {
-    if (outlineContainer) outlineContainer.classList.add('active');
-    if (badge) { badge.className = 'card-right-badge badge-outline'; badge.textContent = 'Tahap 1: Edit Outline'; }
-    if (title) title.textContent = 'Outline Slide Presentasi';
-    if (btnGenerateOutline) btnGenerateOutline.disabled = false;
-  } else if (mode === 'media') {
-    if (mediaContainer) mediaContainer.classList.add('active');
-    if (badge) { badge.className = 'card-right-badge badge-ready'; badge.textContent = 'Media Bergambar Siap'; }
-    if (title) title.textContent = 'Media PPT Bergambar';
-    if (headerActions) headerActions.style.display = 'flex';
-    if (btnGenerateOutline) btnGenerateOutline.disabled = false;
-  }
-}
-
 function showErrorState(errMsg) {
-  setUIMode('empty');
   if (typeof showEduAlert === 'function') {
     showEduAlert({
       title: "Gagal Menghasilkan Slide",
