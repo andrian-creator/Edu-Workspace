@@ -202,18 +202,19 @@ const SupabaseDB = {
    */
   async getModuls(email = null) {
     let path = '/moduls?select=*&is_deleted=eq.false&order=created_at.desc';
-    if (email) path += `&email=eq.${encodeURIComponent(email)}`;
+    if (email) path += `&email=ilike.${encodeURIComponent(email.trim())}`;
     const rows = await supabaseRequest(path);
     return rows || [];
   },
 
   /**
-   * Simpan modul baru ke Supabase
+   * Simpan modul baru ke Supabase (didukung user_id valid & merge-duplicates)
    */
   async saveModul(modul) {
     const dbRow = {
       id: modul.id,
-      email: modul.email,
+      user_id: modul.userId || modul.user_id || 'b452d28a-4888-40a7-8a1e-930430df9f59',
+      email: (modul.email || '').trim().toLowerCase(),
       user_name: modul.userName || modul.user_name || '',
       subject: modul.subject || '',
       grade_level: modul.gradeLevel || modul.grade_level || '',

@@ -702,7 +702,7 @@
   <script src="../Assets/js/html2pdf.bundle.min.js"></script>
 
   <!-- Global JS Edu Workspace -->
-  <script src="../global.js?v=298"></script>
+  <script src="../global.js?v=300"></script>
 
   <!-- Logika Dokumen Modul Ajar Sesuai contoh modul.pdf -->
   <script>
@@ -1011,6 +1011,7 @@
         try {
           localStorage.setItem('edu_current_generated_modul', JSON.stringify(data));
           localStorage.setItem('edu_last_modul_payload', JSON.stringify(data));
+          syncUpdatedModulToList(data);
         } catch (e) { }
       } else if (hasFewerMeetings) {
         ensureCompleteMeetings(ai, expectedMeetings, data);
@@ -1018,6 +1019,7 @@
         try {
           localStorage.setItem('edu_current_generated_modul', JSON.stringify(data));
           localStorage.setItem('edu_last_modul_payload', JSON.stringify(data));
+          syncUpdatedModulToList(data);
         } catch (e) { }
       }
 
@@ -1253,6 +1255,46 @@
       const month = months[validDate.getMonth()];
       const year = validDate.getFullYear();
       return `${day} ${month} ${year}`;
+    }
+
+    /**
+     * Sinkronisasikan Modul Ajar Terupdate ke Daftar Riwayat Akun Pengguna
+     */
+    function syncUpdatedModulToList(modulData) {
+      if (!modulData || !modulData.id) return;
+      try {
+        let user = null;
+        try {
+          const rawUser = localStorage.getItem('edu_current_user');
+          if (rawUser) user = JSON.parse(rawUser);
+        } catch (e) {}
+        const userEmail = (user && user.email) ? user.email.trim().toLowerCase() : 'guest';
+        const listKey = `edu_modul_list_${userEmail}`;
+        const rawList = localStorage.getItem(listKey);
+        if (rawList) {
+          const list = JSON.parse(rawList);
+          if (Array.isArray(list)) {
+            const idx = list.findIndex(m => m.id === modulData.id);
+            if (idx !== -1) {
+              list[idx].payload = modulData;
+              localStorage.setItem(listKey, JSON.stringify(list));
+            }
+          }
+        }
+        if (typeof SupabaseDB !== 'undefined' && SupabaseDB.saveModul) {
+          SupabaseDB.saveModul({
+            id: modulData.id,
+            userId: 'b452d28a-4888-40a7-8a1e-930430df9f59',
+            email: userEmail,
+            userName: user?.name || modulData.namaPenyusun || '',
+            subject: modulData.mataPelajaran || '',
+            gradeLevel: modulData.faseKelas || '',
+            topic: modulData.topikMateri || '',
+            curriculum: modulData.kurikulum || 'Kurikulum Merdeka',
+            contentJson: modulData
+          }).catch(() => {});
+        }
+      } catch (e) {}
     }
 
     /**

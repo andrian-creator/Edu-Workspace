@@ -3156,11 +3156,26 @@ async function saveModulToUserAccountList(modulPayload) {
       payload: modulPayload
     };
 
-    // 1. Simpan ke Supabase
+    // 1. Simpan cache lokal terlebih dahulu (jaminan instan tersimpan ke browser guru)
+    const existingIndex = list.findIndex(item => item.id === modulId);
+    if (existingIndex !== -1) {
+      list[existingIndex] = itemRecord;
+    } else {
+      list.unshift(itemRecord);
+    }
+
+    safeSetLocalStorage(listKey, JSON.stringify(list));
+    safeSetLocalStorage('edu_editing_modul_payload', JSON.stringify(modulPayload));
+    safeSetLocalStorage('edu_last_modul_payload', JSON.stringify(modulPayload));
+    safeSetLocalStorage('edu_current_generated_modul', JSON.stringify(modulPayload));
+    console.log(`[Edu Workspace] Modul Ajar berhasil disimpan ke akun ${userEmail}:`, itemRecord.namaModul);
+
+    // 2. Simpan ke Supabase Database Server
     try {
       if (typeof SupabaseDB !== 'undefined' && SupabaseDB.saveModul) {
         await SupabaseDB.saveModul({
           id: modulId,
+          userId: 'b452d28a-4888-40a7-8a1e-930430df9f59',
           email: userEmail,
           userName: userName,
           subject: modulPayload.mataPelajaran || '',
@@ -3189,17 +3204,6 @@ async function saveModulToUserAccountList(modulPayload) {
       }
     }
 
-    // 2. Simpan cache lokal
-    const existingIndex = list.findIndex(item => item.id === modulId);
-    if (existingIndex !== -1) {
-      list[existingIndex] = itemRecord;
-    } else {
-      list.unshift(itemRecord);
-    }
-
-    safeSetLocalStorage(listKey, JSON.stringify(list));
-    safeSetLocalStorage('edu_editing_modul_payload', JSON.stringify(modulPayload));
-    console.log(`[Edu Workspace] Modul Ajar berhasil disimpan ke akun ${userEmail}:`, itemRecord.namaModul);
     return itemRecord;
   } catch (err) {
     console.error('Gagal menyimpan modul ke akun pengguna:', err);

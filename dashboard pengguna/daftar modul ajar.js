@@ -99,18 +99,49 @@ async function loadUserModulList(user) {
   const userEmail = (user && user.email) ? user.email.trim().toLowerCase() : 'guest';
   const listKey = `edu_modul_list_${userEmail}`;
 
-  let list = [];
+  // 1. Baca cache lokal terlebih dahulu agar modul yang baru saja di-generate langsung tampil instan
+  let localList = [];
+  try {
+    const raw = localStorage.getItem(listKey);
+    if (raw) localList = JSON.parse(raw);
+    if (!Array.isArray(localList)) localList = [];
+  } catch (e) {
+    localList = [];
+  }
 
-  // 1. Ambil data resmi langsung dari Supabase
+  // Cek apakah ada modul yang baru saja di-generate pada session aktif
+  try {
+    const rawCurrent = localStorage.getItem('edu_current_generated_modul') || localStorage.getItem('edu_last_modul_payload');
+    if (rawCurrent) {
+      const currentModul = JSON.parse(rawCurrent);
+      if (currentModul && currentModul.id) {
+        const alreadyInLocal = localList.some(item => item.id === currentModul.id);
+        if (!alreadyInLocal) {
+          const rec = createRecordFromPayload(currentModul);
+          rec.userEmail = userEmail;
+          localList.unshift(rec);
+          localStorage.setItem(listKey, JSON.stringify(localList));
+        }
+      }
+    }
+  } catch (e) {}
+
+  // Render seketika dari data lokal (zero delay untuk pengguna, daftar tidak pernah hilang)
+  allModulList = [...localList];
+  filteredModulList = [...allModulList];
+  updateSummaryStats();
+  renderModulTable();
+
+  // 2. Ambil data resmi dari Supabase & sinkronisasikan secara cerdas (merge)
   try {
     const supabaseModuls = await SupabaseDB.getModuls(userEmail);
     if (supabaseModuls && Array.isArray(supabaseModuls)) {
-      // Konversi format Supabase ke format lokal yang dipakai tabel
-      list = supabaseModuls.map(m => {
+      const remoteList = supabaseModuls.map(m => {
         const payload = m.content_json || m.contentJson || {};
         const now = m.created_at ? new Date(m.created_at) : new Date();
         return {
           id: m.id,
+          userEmail: userEmail,
           namaModul: m.topic ? `${m.topic} - ${payload.jurusanSekolah || 'Reguler'}` : (payload.namaModul || m.id),
           topikMateri: m.topic || payload.topikMateri || '',
           jurusanSekolah: payload.jurusanSekolah || 'Reguler',
@@ -119,66 +150,75 @@ async function loadUserModulList(user) {
           kelas: m.grade_level || payload.kelas || '',
           faseKelas: payload.faseKelas || m.grade_level || '',
           status: 'Lengkap',
+          createdAt: m.created_at || payload.createdAt || now.toISOString(),
           updatedAt: m.created_at || now.toISOString(),
           updatedAtFormatted: formatTanggal(m.created_at || now),
           payload: payload
         };
       });
-      localStorage.setItem(listKey, JSON.stringify(list));
+
+      // Gabungkan (merge) data lokal dan remote berdasarkan id
+      // Jangan pernah menghapus modul lokal jika Supabase masih kosong atau belum tersinkron
+      const mergedMap = new Map();
+
+      // Masukkan remote list
+      remoteList.forEach(item => {
+        if (item && item.id) mergedMap.set(item.id, item);
+      });
+
+      // Masukkan modul lokal yang belum ada di remote & auto-push ke Supabase
+      localList.forEach(localItem => {
+        if (localItem && localItem.id && !mergedMap.has(localItem.id)) {
+          mergedMap.set(localItem.id, localItem);
+          if (localItem.payload) {
+            SupabaseDB.saveModul({
+              id: localItem.id,
+              userId: 'b452d28a-4888-40a7-8a1e-930430df9f59',
+              email: userEmail,
+              userName: user.name || localItem.payload.namaPenyusun || '',
+              subject: localItem.mataPelajaran || '',
+              gradeLevel: localItem.faseKelas || '',
+              topic: localItem.topikMateri || '',
+              curriculum: localItem.payload.kurikulum || 'Kurikulum Merdeka',
+              contentJson: localItem.payload
+            }).catch(e => console.warn('[AutoSync] Supabase save warning:', e));
+          }
+        }
+      });
+
+      const finalList = Array.from(mergedMap.values());
+      finalList.sort((a, b) => {
+        const timeA = new Date(a.updatedAt || a.createdAt || 0).getTime();
+        const timeB = new Date(b.updatedAt || b.createdAt || 0).getTime();
+        return timeB - timeA;
+      });
+
+      localStorage.setItem(listKey, JSON.stringify(finalList));
+      allModulList = finalList;
+      filteredModulList = [...allModulList];
+      updateSummaryStats();
+      renderModulTable();
+      return;
     }
   } catch (err) {
     console.warn('Gagal memuat dari Supabase, mencoba server lokal:', err);
-    // Fallback ke server lokal
+    // Fallback ke server backend jika ada
     try {
       const res = await fetch(`/api/moduls?email=${encodeURIComponent(userEmail)}`);
       if (res.ok) {
         const data = await res.json();
         if (data && Array.isArray(data.moduls)) {
-          list = data.moduls;
-          localStorage.setItem(listKey, JSON.stringify(list));
+          allModulList = data.moduls;
+          filteredModulList = [...allModulList];
+          localStorage.setItem(listKey, JSON.stringify(allModulList));
+          updateSummaryStats();
+          renderModulTable();
         }
-      } else {
-        throw new Error(`HTTP ${res.status}`);
       }
     } catch (err2) {
-      console.warn('Gagal memuat dari server, membaca dari penyimpanan lokal:', err2);
-      try {
-        const raw = localStorage.getItem(listKey);
-        if (raw) list = JSON.parse(raw);
-      } catch (e) { list = []; }
+      console.warn('Gagal memuat dari server backend lokal:', err2);
     }
   }
-
-  // 2. Filter protektif: Bersihkan modul usang sebelum akun terdaftar
-  if (user && user.registeredAt && Array.isArray(list) && list.length > 0) {
-    const regTimestamp = parseIndoDate(user.registeredAt);
-    if (regTimestamp) {
-      const validModuls = [];
-      list.forEach(m => {
-        const modCreated = m.createdAt || m.updatedAt ? parseIndoDate(m.createdAt || m.updatedAt) : null;
-        if (!modCreated || modCreated >= (regTimestamp - 120000)) {
-          validModuls.push(m);
-        } else {
-          console.warn(`[Edu Workspace] Membersihkan modul peninggalan: ${m.id}`);
-          SupabaseDB.deleteModul(m.id).catch(() => {
-            fetch('/api/moduls/delete', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ id: m.id, email: userEmail })
-            }).catch(() => {});
-          });
-        }
-      });
-      list = validModuls;
-      localStorage.setItem(listKey, JSON.stringify(list));
-    }
-  }
-
-  allModulList = list;
-  filteredModulList = [...allModulList];
-
-  updateSummaryStats();
-  renderModulTable();
 }
 
 /**
