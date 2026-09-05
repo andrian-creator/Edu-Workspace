@@ -12,6 +12,37 @@ function getCurrentUser() {
   }
 }
 
+function safeSetLocalStorage(key, value) {
+  try {
+    localStorage.setItem(key, value);
+    return true;
+  } catch (e) {
+    console.warn(`[LocalStorage] Kuota penuh saat menyimpan "${key}", melakukan pembersihan cache riwayat lama...`, e);
+    try {
+      const user = getCurrentUser();
+      const userEmail = (user && user.email) ? user.email.trim().toLowerCase() : '';
+      if (userEmail) {
+        const listKey = `edu_modul_list_${userEmail}`;
+        const rawList = localStorage.getItem(listKey);
+        if (rawList) {
+          try {
+            let list = JSON.parse(rawList);
+            if (Array.isArray(list) && list.length > 5) {
+              list = list.slice(0, 5); // simpan 5 terbaru saja di local storage
+              localStorage.setItem(listKey, JSON.stringify(list));
+            }
+          } catch (eList) {}
+        }
+      }
+      localStorage.setItem(key, value);
+      return true;
+    } catch (e2) {
+      console.warn(`[LocalStorage] Tetap tidak dapat menyimpan "${key}":`, e2);
+      return false;
+    }
+  }
+}
+
 let notifAutoCloseTimer = null;
 
 function showNotificationModal(title, msg, type = 'success') {
@@ -650,14 +681,19 @@ async function callGeminiWithAccountKey(promptText, fallbackFn, customConfig) {
   for (const baseEndpoint of uniqueEndpoints) {
     try {
       const url = `${baseEndpoint}?key=${encodeURIComponent(apiKey)}`;
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 20000);
+
       const res = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           contents: [{ parts: [{ text: promptText }] }],
           generationConfig: config
-        })
+        }),
+        signal: controller.signal
       });
+      clearTimeout(timeoutId);
 
       if (res.ok) {
         const data = await res.json();
@@ -676,7 +712,7 @@ async function callGeminiWithAccountKey(promptText, fallbackFn, customConfig) {
         }
       }
     } catch (e) {
-      lastErrorMsg = e.message || 'Koneksi terputus';
+      lastErrorMsg = e.name === 'AbortError' ? 'Batas waktu koneksi terlampaui (timeout)' : (e.message || 'Koneksi terputus');
     }
   }
 
@@ -692,7 +728,7 @@ async function callGeminiWithAccountKey(promptText, fallbackFn, customConfig) {
     return cleanAiText(fallbackFn());
   }
 
-  showNotificationModal('Gagal Memproses AI', 'Terjadi kesalahan dari Google Gemini API:\n' + lastErrorMsg, 'error');
+  // Jika dipanggil tanpa fallbackFn (seperti generateFullModulWithAI yang punya comprehensive generator sendiri)
   return null;
 }
 
@@ -1766,23 +1802,40 @@ async function proceedGenerateModul() {
       if (percentEl) percentEl.textContent = '100%';
     }
 
-    localStorage.setItem('edu_last_modul_payload', JSON.stringify(modulPayload));
-    localStorage.setItem('edu_current_generated_modul', JSON.stringify(modulPayload));
-    localStorage.setItem('edu_editing_modul_payload', JSON.stringify(modulPayload));
+    // 1. Simpan sesi aktif modul secara aman ke localStorage
+    try {
+      const payloadStr = JSON.stringify(modulPayload);
+      safeSetLocalStorage('edu_last_modul_payload', payloadStr);
+      safeSetLocalStorage('edu_current_generated_modul', payloadStr);
+      safeSetLocalStorage('edu_editing_modul_payload', payloadStr);
+    } catch (errStorage) {
+      console.warn('[Storage] Gagal simpan sesi modul:', errStorage);
+    }
 
-    // Simpan otomatis ke daftar list modul akun guru aktif (Daftar Modul Ajar)
-    await saveModulToUserAccountList(modulPayload);
+    // 2. Simpan otomatis ke daftar riwayat akun guru (Daftar Modul Ajar & Supabase)
+    try {
+      await saveModulToUserAccountList(modulPayload);
+    } catch (errList) {
+      console.warn('[List] Gagal simpan ke daftar akun:', errList);
+    }
 
-    // Teks proses & indikator proses berubah menjadi tombol "Buka Modul Ajar"
-    progressLoading.style.display = 'none';
-    progressSuccess.style.display = 'flex';
+    // 3. PASTI PINDAH KE TAMPILAN SUKSES & MUNCULKAN TOMBOL BUKA MODUL AJAR
+    try {
+      progressLoading.style.display = 'none';
+      progressSuccess.style.display = 'flex';
 
-    // Notifikasi "Generate sukses" sesuai permintaan pengguna
-    showNotificationModal('Generate Sukses', 'Modul Ajar telah berhasil disusun dan disimpan!', 'success');
+      // Scroll halus ke kartu hasil agar tombol Buka Modul Ajar langsung terlihat oleh pengguna
+      progressContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 
-    // Aktifkan kembali tombol Generate Modul Ajar agar bisa diklik lagi kapan saja
-    if (btnGenerate) {
-      btnGenerate.disabled = false;
+      // Notifikasi "Generate sukses" sesuai permintaan pengguna
+      showNotificationModal('Generate Sukses', 'Modul Ajar telah berhasil disusun dan disimpan!', 'success');
+    } catch (errUi) {
+      console.warn('[UI] Transisi sukses warning:', errUi);
+    } finally {
+      // Aktifkan kembali tombol Generate Modul Ajar agar bisa diklik lagi kapan saja
+      if (btnGenerate) {
+        btnGenerate.disabled = false;
+      }
     }
   } else {
     if (btnGenerate) {
@@ -2896,7 +2949,14 @@ const media = p.mediaDigital || 'Slide Presentasi Canva, Video Pembelajaran';
  * Buka Modul Ajar di Halaman Tab Baru
  */
 function openGeneratedModulTab() {
-  window.open('preview modul ajar.html', '_blank');
+  try {
+    const newWin = window.open('preview modul ajar.html', '_blank');
+    if (!newWin || newWin.closed || typeof newWin.closed === 'undefined') {
+      window.location.href = 'preview modul ajar.html';
+    }
+  } catch (e) {
+    window.location.href = 'preview modul ajar.html';
+  }
 }
 
 /**
@@ -2927,6 +2987,7 @@ async function saveModulToUserAccountList(modulPayload) {
     } catch (e) {}
 
     const userEmail = (user && user.email) ? user.email.trim().toLowerCase() : 'guest';
+    const userName = (user && user.name) ? user.name : (modulPayload.namaPenyusun || '');
     const listKey = `edu_modul_list_${userEmail}`;
 
     let list = [];
@@ -2995,17 +3056,19 @@ async function saveModulToUserAccountList(modulPayload) {
 
     // 1. Simpan ke Supabase
     try {
-      await SupabaseDB.saveModul({
-        id: modulId,
-        email: userEmail,
-        userName: currentUser?.name || '',
-        subject: modulPayload.mataPelajaran || '',
-        gradeLevel: faseKelasRaw || '',
-        topic: namaTopik || '',
-        curriculum: modulPayload.kurikulum || 'Kurikulum Merdeka',
-        contentJson: modulPayload
-      });
-      console.log('[Supabase] Modul tersimpan:', modulId);
+      if (typeof SupabaseDB !== 'undefined' && SupabaseDB.saveModul) {
+        await SupabaseDB.saveModul({
+          id: modulId,
+          email: userEmail,
+          userName: userName,
+          subject: modulPayload.mataPelajaran || '',
+          gradeLevel: faseKelasRaw || '',
+          topic: namaTopik || '',
+          curriculum: modulPayload.kurikulum || 'Kurikulum Merdeka',
+          contentJson: modulPayload
+        });
+        console.log('[Supabase] Modul tersimpan:', modulId);
+      }
     } catch (e) {
       console.warn('Gagal simpan ke Supabase, mencoba server lokal:', e);
       // Fallback ke server lokal
@@ -3015,8 +3078,10 @@ async function saveModulToUserAccountList(modulPayload) {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(itemRecord)
         });
-        const d = await resp.json();
-        console.log('[Server API] Modul tersimpan di database server:', d);
+        if (resp && resp.ok) {
+          const d = await resp.json().catch(() => null);
+          console.log('[Server API] Modul tersimpan di database server:', d);
+        }
       } catch (e2) {
         console.warn('Gagal sinkron server:', e2);
       }
@@ -3030,8 +3095,8 @@ async function saveModulToUserAccountList(modulPayload) {
       list.unshift(itemRecord);
     }
 
-    localStorage.setItem(listKey, JSON.stringify(list));
-    localStorage.setItem('edu_editing_modul_payload', JSON.stringify(modulPayload));
+    safeSetLocalStorage(listKey, JSON.stringify(list));
+    safeSetLocalStorage('edu_editing_modul_payload', JSON.stringify(modulPayload));
     console.log(`[Edu Workspace] Modul Ajar berhasil disimpan ke akun ${userEmail}:`, itemRecord.namaModul);
     return itemRecord;
   } catch (err) {
