@@ -596,8 +596,8 @@ function renderModulTable() {
       <td class="cell-center">
         <div class="action-buttons-group">
           <!-- Tombol Preview (Review) -->
-          <button type="button" class="btn-table-action btn-action-preview" onclick="previewModulItem('${escapeHtml(String(item.id))}')" title="Pratinjau Modul">
-            <img src="../Assets/icon/icon_eye.png" alt="Review" class="action-icon-img">
+          <button type="button" class="btn-table-action btn-action-preview ${!isLengkap ? 'btn-action-draft-preview' : ''}" onclick="previewModulItem('${escapeHtml(String(item.id))}')" title="${isLengkap ? 'Pratinjau Modul' : 'Modul masih Draft (belum digenerate)'}">
+            <img src="../Assets/icon/icon_eye.png" alt="Review" class="action-icon-img" ${!isLengkap ? 'style="opacity: 0.45;"' : ''}>
           </button>
 
           <!-- Tombol Edit (Otomatis Dinonaktifkan Jika Admin Mematikan Akses Fitur) -->
@@ -620,6 +620,16 @@ function renderModulTable() {
 function previewModulItem(modulId) {
   const item = allModulList.find(m => String(m.id) === String(modulId));
   if (!item) return;
+
+  const isDraft = (item.status || (item.payload && item.payload.status) || '').toLowerCase() === 'draft';
+  if (isDraft) {
+    showNotificationModal(
+      'Modul Belum Digenerate',
+      'Modul ajar ini masih berstatus <strong>Draft</strong> dan belum digenerate dengan AI.<br><br>Silakan klik tombol <strong>Edit</strong> (ikon modul di kolom Aksi) untuk meninjau formulir dan menekan tombol <strong>Generate Modul Ajar</strong>.',
+      'warning'
+    );
+    return;
+  }
 
   // Set payload yang dipilih sebagai modul aktif untuk pratinjau
   const payloadToPreview = item.payload || item;
@@ -758,7 +768,7 @@ function showNotificationModal(title, message, type = 'info') {
   const iconBox = document.getElementById('notificationIconBox');
 
   if (titleEl) titleEl.textContent = title;
-  if (descEl) descEl.textContent = message;
+  if (descEl) descEl.innerHTML = message;
 
   if (iconBox) {
     if (type === 'success') {
