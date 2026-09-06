@@ -614,156 +614,8 @@ function parseIdentifikasiAwal(rawText) {
   };
 }
 
-// Helper: Dapatkan API Key ChatGPT (OpenAI) milik akun
-function getEffectiveChatgptApiKey() {
-  try {
-    const cur = getCurrentUser();
-    if (cur) {
-      if (cur.openaiApiKey && cur.openaiApiKey.trim()) return cur.openaiApiKey.trim();
-      if (cur.chatgptApiKey && cur.chatgptApiKey.trim()) return cur.chatgptApiKey.trim();
-      if (cur.neosantaraApiKey && cur.neosantaraApiKey.trim()) return cur.neosantaraApiKey.trim();
-      if (cur.email) {
-        const emailLow = cur.email.trim().toLowerCase();
-        const keyLow = localStorage.getItem(`edu_openai_api_key_${emailLow}`) ||
-                       localStorage.getItem(`edu_chatgpt_api_key_${emailLow}`) ||
-                       localStorage.getItem(`edu_neosantara_api_key_${emailLow}`);
-        if (keyLow && keyLow.trim()) return keyLow.trim();
-        const keyRaw = localStorage.getItem(`edu_openai_api_key_${cur.email.trim()}`) ||
-                       localStorage.getItem(`edu_chatgpt_api_key_${cur.email.trim()}`);
-        if (keyRaw && keyRaw.trim()) return keyRaw.trim();
-      }
-    }
-    for (let i = 0; i < localStorage.length; i++) {
-      const k = localStorage.key(i);
-      if (k && (k.startsWith('edu_openai_api_key') || k.startsWith('edu_chatgpt_api_key') || k.startsWith('edu_neosantara_api_key'))) {
-        const val = localStorage.getItem(k);
-        if (val && val.trim()) return val.trim();
-      }
-    }
-    return localStorage.getItem('edu_openai_api_key') || localStorage.getItem('edu_chatgpt_api_key') || '';
-  } catch (e) {
-    return '';
-  }
-}
-
-/**
- * Eksekusi Panggilan ChatGPT (OpenAI) API sebagai Mesin Cadangan
- */
-async function callChatgptForModulAjar(promptText, customConfig) {
-  let chatgptKey = getEffectiveChatgptApiKey();
-
-  if (!chatgptKey) {
-    try {
-      const cur = getCurrentUser();
-      const curEmail = (cur?.email || '').toLowerCase().trim();
-      if (curEmail) {
-        const ctrl = new AbortController();
-        const tid = setTimeout(() => ctrl.abort(), 1500);
-        const res = await fetch('/api/users', { signal: ctrl.signal });
-        clearTimeout(tid);
-        if (res.ok) {
-          const rawUsers = await res.json();
-          const users = Array.isArray(rawUsers) ? rawUsers : (rawUsers?.users || []);
-          const found = users.find(u => (u.email || '').toLowerCase() === curEmail);
-          if (found && (found.openaiApiKey || found.chatgptApiKey || found.neosantaraApiKey)) {
-            chatgptKey = (found.openaiApiKey || found.chatgptApiKey || found.neosantaraApiKey).trim();
-            if (cur) {
-              cur.openaiApiKey = chatgptKey;
-              cur.chatgptApiKey = chatgptKey;
-              localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(cur));
-            }
-            localStorage.setItem(`edu_openai_api_key_${curEmail}`, chatgptKey);
-          }
-        }
-      }
-    } catch (e) {}
-  }
-
-  if (!chatgptKey) {
-    console.warn('[Auto-Fallback] Kunci API ChatGPT (OpenAI) belum dikonfigurasi di akun.');
-    return null;
-  }
-
-  console.log('[Auto-Fallback] Menghubungi server API ChatGPT (OpenAI)...');
-
-  const maxTokens = (customConfig && customConfig.maxOutputTokens) ? customConfig.maxOutputTokens : 4096;
-  const temperature = (customConfig && customConfig.temperature !== undefined) ? customConfig.temperature : 0.7;
-
-  // 1. Coba koneksi langsung ke OpenAI REST API (gpt-4o-mini cepat, batas 5 detik)
-  try {
-    const ctrl = new AbortController();
-    const tid = setTimeout(() => ctrl.abort(), 5000);
-    const res = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${chatgptKey}`
-      },
-      body: JSON.stringify({
-        model: 'gpt-4o-mini',
-        messages: [
-          {
-            role: 'system',
-            content: 'Anda adalah asisten pakar kurikulum dan pengembang Modul Ajar Kurikulum Merdeka Indonesia. Hasilkan keluaran berkualitas tinggi, terstruktur rapi, dan sesuai instruksi secara presisi.'
-          },
-          {
-            role: 'user',
-            content: promptText
-          }
-        ],
-        temperature: temperature,
-        max_tokens: maxTokens
-      }),
-      signal: ctrl.signal
-    });
-    clearTimeout(tid);
-
-    if (res.ok) {
-      const json = await res.json();
-      const text = json?.choices?.[0]?.message?.content;
-      if (text && text.trim()) {
-        console.log('[Auto-Fallback] Sukses! Berhasil generate modul ajar via ChatGPT OpenAI (gpt-4o-mini)');
-        return cleanAiText(text);
-      }
-    } else {
-      const errJson = await res.json().catch(() => ({}));
-      console.warn('[Auto-Fallback] ChatGPT mengembalikan respon:', errJson?.error?.message || res.status);
-    }
-  } catch (err) {
-    console.warn('[Auto-Fallback] Gagal menghubungi ChatGPT direct API:', err.message);
-  }
-
-  // 2. Fallback melalui proxy backend server lokal jika koneksi direct terkendala (batas 4 detik)
-  try {
-    const proxyCtrl = new AbortController();
-    const proxyTid = setTimeout(() => proxyCtrl.abort(), 4000);
-    const proxyRes = await fetch('/api/openai/chat', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        apiKey: chatgptKey,
-        prompt: promptText,
-        systemPrompt: 'Anda adalah asisten pakar kurikulum dan pengembang Modul Ajar Kurikulum Merdeka Indonesia.',
-        temperature: temperature,
-        maxTokens: maxTokens
-      }),
-      signal: proxyCtrl.signal
-    });
-    clearTimeout(proxyTid);
-    if (proxyRes.ok) {
-      const pData = await proxyRes.json();
-      if (pData.status === 'success' && pData.content) {
-        console.log('[Auto-Fallback] Sukses generate modul ajar via proxy ChatGPT backend.');
-        return cleanAiText(pData.content);
-      }
-    }
-  } catch (pe) {}
-
-  return null;
-}
-
 // Eksekusi Panggilan AI untuk Halaman Modul Ajar:
-// UTAMA: Google Gemini API -> JIKA TIDAK MERESPON: Otomatis ganti menggunakan ChatGPT (OpenAI) API!
+// HANYA MENGGUNAKAN GOOGLE GEMINI API (TIDAK MENGGUNAKAN MODEL LAIN)
 async function callGeminiWithAccountKey(promptText, fallbackFn, customConfig) {
   let apiKey = getEffectiveApiKey();
   if (!apiKey) {
@@ -791,24 +643,15 @@ async function callGeminiWithAccountKey(promptText, fallbackFn, customConfig) {
     } catch (e) { }
   }
 
-  // JIKA KUNCI GEMINI BELUM DISET: Langsung coba ChatGPT API jika tersedia
+  // JIKA KUNCI GEMINI BELUM DISET:
   if (!apiKey) {
-    const chatgptKey = getEffectiveChatgptApiKey();
-    if (chatgptKey) {
-      console.log('[AI Generator] Kunci Gemini belum ada, langsung mencoba via ChatGPT API (OpenAI)...');
-      const chatgptResult = await callChatgptForModulAjar(promptText, customConfig);
-      if (chatgptResult) {
-        return chatgptResult;
-      }
-    }
-
     if (fallbackFn) {
       return cleanAiText(fallbackFn());
     }
 
     showNotificationModal(
       'API Key Belum Disimpan',
-      'Fitur "Generate With AI" memerlukan API Key Google Gemini atau ChatGPT pada akun Anda. Silakan masukkan dan simpan API Key di menu API Key.',
+      'Fitur "Generate With AI" memerlukan API Key Google Gemini pada akun Anda. Silakan masukkan dan simpan API Key Google Gemini Anda di menu API Key.',
       'warning'
     );
     return null;
@@ -861,12 +704,12 @@ async function callGeminiWithAccountKey(promptText, fallbackFn, customConfig) {
     ...(customConfig || {})
   };
 
-  // Uji coba eksekusi ke Google Gemini API (maksimal 3.5 detik per endpoint)
+  // Uji coba eksekusi hanya ke Google Gemini API
   for (const baseEndpoint of uniqueEndpoints) {
     try {
       const url = `${baseEndpoint}?key=${encodeURIComponent(apiKey)}`;
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 3500);
+      const timeoutId = setTimeout(() => controller.abort(), 7000); // 7 detik per endpoint
 
       const res = await fetch(url, {
         method: 'POST',
@@ -892,7 +735,6 @@ async function callGeminiWithAccountKey(promptText, fallbackFn, customConfig) {
       } else {
         const errData = await res.json().catch(() => ({}));
         lastErrorMsg = errData?.error?.message || `HTTP ${res.status}`;
-        // Jika token tidak valid / ditolak autentikasi (401/403), stop segera dan alihkan ke fallback
         if (res.status === 401 || res.status === 403 || lastErrorMsg.includes('UNAUTHENTICATED') || lastErrorMsg.includes('API key not valid')) {
           console.warn('[Gemini API] Google menolak kunci API (' + res.status + '):', lastErrorMsg);
           break;
@@ -903,39 +745,9 @@ async function callGeminiWithAccountKey(promptText, fallbackFn, customConfig) {
     }
   }
 
-  // =========================================================================
-  // SISTEM AUTO-FALLBACK: HANYA 2 MODEL (GEMINI -> CHATGPT)
-  // JIKA GEMINI LIMIT HABIS ATAU TIDAK MERESPON -> LANGSUNG GANTI KE CHATGPT!
-  // =========================================================================
-  const isLimitHabis = (lastErrorMsg || '').toLowerCase().includes('quota') ||
-                       (lastErrorMsg || '').toLowerCase().includes('exhaust') ||
-                       (lastErrorMsg || '').includes('429');
-  const reasonText = isLimitHabis ? 'Gemini limit kuota habis' : 'Gemini tidak merespon';
+  console.warn('[Gemini API] Google Gemini tidak merespon:', lastErrorMsg);
 
-  console.warn(`[Auto-Fallback] ${reasonText}:`, lastErrorMsg, '-> Beralih ke ChatGPT (OpenAI) di latar belakang...');
-
-  // Keterangan ganti ChatGPT TIDAK ditampilkan di UI (hanya ditampilkan jika proses benar-benar lebih dari 5 menit)
-  const elapsedMs = window._modulGenerateStartTime ? (Date.now() - window._modulGenerateStartTime) : 0;
-  if (elapsedMs > 300000) {
-    const progressStepText = document.getElementById('generateProgressStepText');
-    if (progressStepText) {
-      progressStepText.innerHTML = `<span style="color:#2563eb; font-weight:600;">${reasonText}, otomatis dialihkan ke ChatGPT (OpenAI)...</span>`;
-    }
-    const indicatorCaption = document.getElementById('generateIndicatorCaption');
-    if (indicatorCaption) {
-      indicatorCaption.textContent = 'Proses dialihkan ke ChatGPT (OpenAI)';
-    }
-  }
-
-  const chatgptResult = await callChatgptForModulAjar(promptText, customConfig);
-  if (chatgptResult && chatgptResult.trim()) {
-    console.log('[Auto-Fallback] Sukses! Modul ajar berhasil diselesaikan menggunakan API ChatGPT (OpenAI).');
-    return chatgptResult;
-  }
-
-  // Jika ChatGPT juga tidak merespons atau kunci tidak ada, panggil kurikulum cerdas internal
   if (fallbackFn) {
-    console.log('[Auto-Fallback] Menggunakan engine kurikulum cerdas terpadu Edu Workspace...');
     return cleanAiText(fallbackFn());
   }
 
