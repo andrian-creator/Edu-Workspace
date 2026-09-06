@@ -1239,7 +1239,25 @@
       // ======================================================================
       // D. MATERI AJAR DAN ASESMEN (Hasil Generate AI)
       // ======================================================================
-      const materiDeskriptif = ai.materiAjarDeskriptif || `
+      let materiDeskriptif = '';
+      if (typeof ai.materiAjarDeskriptif === 'string' && ai.materiAjarDeskriptif.trim()) {
+        if (ai.materiAjarDeskriptif.includes('<p')) {
+          materiDeskriptif = ai.materiAjarDeskriptif;
+        } else {
+          materiDeskriptif = ai.materiAjarDeskriptif
+            .split(/\n\s*\n/)
+            .filter(p => p.trim())
+            .map(p => `<p class="doc-paragraph">${p.trim()}</p>`)
+            .join('');
+        }
+      } else if (Array.isArray(ai.materiAjarDeskriptif)) {
+        materiDeskriptif = ai.materiAjarDeskriptif
+          .map(p => `<p class="doc-paragraph">${p}</p>`)
+          .join('');
+      }
+
+      if (!materiDeskriptif) {
+        materiDeskriptif = `
         <p class="doc-paragraph">
           Materi pokok <strong>${topik}</strong> pada mata pelajaran <strong>${mapel}</strong> mengkaji konsep fundamental, struktur sistematis, dan kerangka operasional yang berlaku dalam bidang keilmuan terkait. Pembahasan diawali dengan pemahaman teoretis mengenai hakikat, karakteristik dasar, dan prinsip kerja yang mendasari fenomena <em>${topik}</em>. Peserta didik dibimbing untuk mengidentifikasi komponen-komponen inti, memahami hubungan sebab-akibat antarelemen, serta mengenali terminologi teknis yang menjadi standar kompetensi kejuruan/akademik.
         </p>
@@ -1249,7 +1267,8 @@
         <p class="doc-paragraph">
           Sebagai wujud aplikasi praktis, naskah materi ini menjabarkan prosedur kerja bertahap (SOP), teknik pengujian, serta metodologi pemecahan masalah (<em>troubleshooting & problem solving</em>). Dengan memahami alur operasional materi <em>${topik}</em> secara terstruktur, peserta didik diharapkan mampu mengeksekusi tugas analitis secara mandiri, berkolaborasi secara efektif dalam tim, serta menghasilkan karya solutif yang inovatif, berdaya guna, dan menjunjung tinggi kode etik profesional.
         </p>
-      `;
+        `;
+      }
       document.getElementById('docMateriAjarDeskriptif').innerHTML = materiDeskriptif;
 
       // 2. Materi Tambahan (jika diisikan)

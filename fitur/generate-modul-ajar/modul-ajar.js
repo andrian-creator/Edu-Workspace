@@ -2017,6 +2017,98 @@ async function proceedGenerateModul() {
 }
 
 /**
+ * Parser JSON AI Berketahanan Tinggi (Robust JSON Parser)
+ * Mampu membersihkan markdown wrapper, komentar C-style, trailing comma, unescaped control chars,
+ * serta secara cerdas memperbaiki penutupan kurung jika terpotong batas token.
+ */
+function robustParseAiJson(rawText) {
+  if (!rawText || typeof rawText !== 'string') return null;
+
+  let text = rawText.trim();
+
+  // 1. Bersihkan markdown code fence jika ada
+  text = text.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').trim();
+
+  // 2. Coba parse langsung
+  try {
+    return JSON.parse(text);
+  } catch (e) {}
+
+  // 3. Ekstrak substring dari kurung kurawal pertama hingga terakhir
+  const firstBrace = text.indexOf('{');
+  const lastBrace = text.lastIndexOf('}');
+  if (firstBrace === -1) return null;
+
+  let sub = lastBrace > firstBrace ? text.slice(firstBrace, lastBrace + 1) : text.slice(firstBrace);
+
+  // 4. Bersihkan komentar (/* ... */ dan // ...)
+  sub = sub.replace(/\/\*[\s\S]*?\*\//g, '');
+  sub = sub.replace(/(^|[^\\])\/\/.*$/gm, '$1');
+
+  // 5. Bersihkan trailing comma sebelum } atau ]
+  sub = sub.replace(/,\s*([}\]])/g, '$1');
+
+  // 6. Coba parse kembali
+  try {
+    return JSON.parse(sub);
+  } catch (e) {}
+
+  // 7. Bersihkan unescaped control characters
+  sub = sub.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, ' ');
+
+  try {
+    return JSON.parse(sub);
+  } catch (e) {}
+
+  // 8. Perbaiki unclosed string dan kurung jika terpotong di akhir
+  let openBraces = 0;
+  let openBrackets = 0;
+  let inString = false;
+  let isEscaped = false;
+
+  for (let i = 0; i < sub.length; i++) {
+    const ch = sub[i];
+    if (isEscaped) {
+      isEscaped = false;
+      continue;
+    }
+    if (ch === '\\') {
+      isEscaped = true;
+      continue;
+    }
+    if (ch === '"') {
+      inString = !inString;
+      continue;
+    }
+    if (!inString) {
+      if (ch === '{') openBraces++;
+      else if (ch === '}') openBraces--;
+      else if (ch === '[') openBrackets++;
+      else if (ch === ']') openBrackets--;
+    }
+  }
+
+  let patched = sub;
+  if (inString) patched += '"';
+  patched = patched.replace(/,\s*$/, '');
+  while (openBrackets > 0) {
+    patched += ']';
+    openBrackets--;
+  }
+  while (openBraces > 0) {
+    patched += '}';
+    openBraces--;
+  }
+
+  try {
+    return JSON.parse(patched);
+  } catch (errLast) {
+    console.warn('[Robust JSON Parse] Gagal parse teks AI:', errLast.message);
+    return null;
+  }
+}
+
+/**
  * Panggil Google Gemini AI: SINGLE MASTER PROMPT — seluruh data form dikonsolidasikan
  * menjadi SATU objek inputData, lalu diproses dalam SATU prompt utama.
  *
@@ -2322,13 +2414,12 @@ FORMAT RESPONS — OUTPUT WAJIB JSON MURNI (VALID JSON TANPA TEKS PEMBUKA/PENUTU
         "deepLearningSintaks": "Sintaks ${model}: '[Nama Tahap Sintaks di Penutup]'. Metode: ${metode}. Penerapan ${pendekatan}: [Deskripsi penerapan konkret ${pendekatan} pada tahap penutup]."
       }
     }
-    /* WAJIB lanjutkan hingga Pertemuan ${targetPertemuanCount} lengkap */
   ],
-  "materiAjarDeskriptif": "<p class=\\"doc-paragraph\\">Paragraf 1 tentang dasar konseptual ${topik} (min. 5 kalimat ilmiah dan teknis)</p><p class=\\"doc-paragraph\\">Paragraf 2 tentang penerapan model ${model} untuk ${topik} menggunakan fasilitas dan media yang tersedia</p><p class=\\"doc-paragraph\\">Paragraf 3 keterkaitan ${topik} dengan materi tambahan dan proyeksi ke dunia nyata</p>",
+  "materiAjarDeskriptif": "Paragraf 1 tentang dasar konseptual ${topik} (min. 5 kalimat ilmiah dan teknis).\n\nParagraf 2 tentang penerapan model ${model} untuk ${topik} menggunakan fasilitas dan media yang tersedia.\n\nParagraf 3 keterkaitan ${topik} dengan materi tambahan dan proyeksi ke dunia nyata.",
   "asesmen": [
-    {"jenis": "Diagnostik", "bentuk": "...", "keterangan": "..."},
-    {"jenis": "Formatif", "bentuk": "...", "keterangan": "..."},
-    {"jenis": "Sumatif", "bentuk": "...", "keterangan": "..."}
+    {"jenis": "Diagnostik", "bentuk": "Kuis Diagnostik Awal", "keterangan": "Mengidentifikasi kesiapan awal murid terhadap materi ${topik}"},
+    {"jenis": "Formatif", "bentuk": "Observasi Diskusi / Lembar Pengamatan", "keterangan": "Memantau keterlibatan dan kolaborasi murid selama proses belajar"},
+    {"jenis": "Sumatif", "bentuk": "Uji Kompetensi / Produk Proyek", "keterangan": "Menilai penguasaan utuh terhadap Tujuan Pembelajaran"}
   ],
   "refleksi": {
     "guru": ["butir refleksi guru 1 spesifik topik", "butir 2", "butir 3", "butir 4", "butir 5"],
@@ -2340,18 +2431,17 @@ FORMAT RESPONS — OUTPUT WAJIB JSON MURNI (VALID JSON TANPA TEKS PEMBUKA/PENUTU
     "tugas": ["Langkah 1: ...", "Langkah 2: ...", "Langkah 3: ...", "Langkah 4: ...", "Langkah 5: ..."]
   },
   "rubrikPenilaian": [
-    {"aspek": "Aspek 1 relevan dengan TP dan model", "skor1": "...", "skor2": "...", "skor3": "...", "skor4": "..."},
-    {"aspek": "Aspek 2 relevan dengan TP dan model", "skor1": "...", "skor2": "...", "skor3": "...", "skor4": "..."},
-    {"aspek": "Aspek 3 relevan dengan TP dan model", "skor1": "...", "skor2": "...", "skor3": "...", "skor4": "..."}
+    {"aspek": "Aspek 1 relevan dengan TP dan model", "skor1": "Deskripsi Skor 1", "skor2": "Deskripsi Skor 2", "skor3": "Deskripsi Skor 3", "skor4": "Deskripsi Skor 4"},
+    {"aspek": "Aspek 2 relevan dengan TP dan model", "skor1": "Deskripsi Skor 1", "skor2": "Deskripsi Skor 2", "skor3": "Deskripsi Skor 3", "skor4": "Deskripsi Skor 4"},
+    {"aspek": "Aspek 3 relevan dengan TP dan model", "skor1": "Deskripsi Skor 1", "skor2": "Deskripsi Skor 2", "skor3": "Deskripsi Skor 3", "skor4": "Deskripsi Skor 4"}
   ],
-  "pengayaan": "...",
-  "remedial": "...",
+  "pengayaan": "Kegiatan pengayaan kontekstual untuk murid yang telah tuntas melampaui tujuan pembelajaran.",
+  "remedial": "Kegiatan bimbingan remedial bertahap bagi murid yang membutuhkan penguatan kompetensi esensial.",
   "glosarium": [
     {"istilah": "Istilah teknis khusus ${topik}", "definisi": "Definisi teknis yang tepat dan spesifik"}
   ],
   "daftarPustaka": [
-    "Nama, A. (2024). Judul Relevan ${topik}. Penerbit/Jurnal.",
-    "..."
+    "Nama Penulis, A. (2024). Referensi Akademik Relevan ${topik}. Penerbit/Jurnal Terakreditasi."
   ]
 }`;
 
@@ -2364,9 +2454,9 @@ FORMAT RESPONS — OUTPUT WAJIB JSON MURNI (VALID JSON TANPA TEKS PEMBUKA/PENUTU
   try {
     aiRawText = await callGeminiWithAccountKey(masterPrompt, {
       maxOutputTokens: 8192,
-      temperature: 0.85,
+      temperature: 0.7,
       topP: 0.95,
-      topK: 40,
+      responseMimeType: "application/json",
       timeoutMs: 60000,
       silentError: true
     });
@@ -2380,30 +2470,16 @@ FORMAT RESPONS — OUTPUT WAJIB JSON MURNI (VALID JSON TANPA TEKS PEMBUKA/PENUTU
   }
 
   // ========================================================================
-  // STEP 4: PARSING RESPONSE JSON DARI AI
+  // STEP 4: PARSING RESPONSE JSON DARI AI SECARA ROBUST
   // ========================================================================
-  // Hapus markdown wrapping jika ada
-  let cleanJsonStr = aiRawText
-    .replace(/```json\s*/gi, '')
-    .replace(/```\s*/g, '')
-    .trim();
-
-  // Ekstrak JSON object dari response
-  const matchJson = cleanJsonStr.match(/\{[\s\S]*\}/);
-  if (!matchJson) {
-    throw new Error('Respon dari Google Gemini belum berupa format JSON yang terstruktur. Silakan coba klik tombol Generate sekali lagi.');
-  }
-
-  let parsed = null;
-  try {
-    parsed = JSON.parse(matchJson[0]);
-  } catch (parseErr) {
-    console.warn('[Generate] Gagal parse JSON dari AI response:', parseErr.message);
+  const parsed = robustParseAiJson(aiRawText);
+  if (!parsed) {
+    console.warn('[Generate] Raw text gagal diparse (150 chars):', aiRawText.slice(0, 150));
     throw new Error('Google Gemini mengembalikan format JSON yang belum lengkap. Silakan coba klik tombol Generate sekali lagi.');
   }
 
   // Validasi: minimal memiliki pengalamanBelajar dan desainPembelajaran
-  if (!parsed || !parsed.desainPembelajaran || !parsed.pengalamanBelajar || !Array.isArray(parsed.pengalamanBelajar)) {
+  if (!parsed.desainPembelajaran || !parsed.pengalamanBelajar || !Array.isArray(parsed.pengalamanBelajar)) {
     throw new Error('Struktur modul yang dihasilkan Google Gemini belum lengkap. Silakan klik tombol Generate sekali lagi.');
   }
 
