@@ -623,7 +623,7 @@
 
         <!-- 1. Materi Ajar (Deskriptif Panjang Hasil AI) -->
         <div class="doc-sub-heading">1. Materi Ajar</div>
-        <div class="doc-paragraph" id="docMateriAjarDeskriptif">-</div>
+        <div id="docMateriAjarDeskriptif">-</div>
 
         <!-- 2. Materi Tambahan (jika diisikan) -->
         <div id="wrapperMateriTambahan" style="display: none; margin-top: 16px;">
@@ -2506,30 +2506,21 @@
         }
 
         function splitListBeforeItem(listEl, splitItem, pushNeeded, currentTop, pageBottom) {
-          // Jika splitItem adalah item pertama, push seluruh listEl atau heading di atasnya
           if (splitItem === listEl.firstElementChild) {
             let targetToPush = listEl;
-            const containerWrapper = listEl.closest('#wrapperMateriTambahan') || listEl.parentElement;
-            if (containerWrapper && containerWrapper !== targetClone && !containerWrapper.classList.contains('doc-section')) {
-              const wRect = containerWrapper.getBoundingClientRect();
-              const wTop = wRect.top - currentTop;
-              if (wTop < pageBottom && (pageBottom - wTop) < 140) {
-                targetToPush = containerWrapper;
-              }
-            } else {
-              const prevEl = listEl.previousElementSibling;
-              if (prevEl && (prevEl.classList.contains('doc-sub-heading') || prevEl.classList.contains('doc-section-title') || prevEl.classList.contains('meeting-header-title'))) {
-                const pRect = prevEl.getBoundingClientRect();
-                const pTop = pRect.top - currentTop;
-                if (pTop < pageBottom && (pageBottom - pTop) < 140) {
-                  targetToPush = prevEl;
-                }
+            // Hanya jika ada heading persis di atas list yang ruangnya sudah sangat sempit (< 45px)
+            const prevEl = listEl.previousElementSibling;
+            if (prevEl && (prevEl.classList.contains('doc-sub-heading') || prevEl.classList.contains('doc-section-title') || prevEl.classList.contains('meeting-header-title'))) {
+              const pRect = prevEl.getBoundingClientRect();
+              const pTop = pRect.top - currentTop;
+              if (pTop < pageBottom && (pageBottom - pTop) < 45) {
+                targetToPush = prevEl;
               }
             }
 
             const tRect = targetToPush.getBoundingClientRect();
             const tTop = tRect.top - currentTop;
-            const fullPush = Math.ceil(pageBottom - tTop) + 6;
+            const fullPush = Math.ceil(pageBottom - tTop) + 4;
             const spacer = document.createElement('div');
             spacer.className = 'pdf-pagebreak-spacer-div';
             spacer.style.display = 'block';
@@ -2596,8 +2587,9 @@
             continue;
           }
 
+          // Target HANYA elemen leaf (bukan container pembungkus)
           const candidateElements = Array.from(targetClone.querySelectorAll(
-            'tr, .meeting-header-title, .doc-section-title, .doc-sub-heading, #wrapperMateriTambahan, .signature-grid, .deep-learning-box, table.doc-table, .doc-paragraph, p, li, .lkpd-container'
+            'tr, .meeting-header-title, .doc-section-title, .doc-sub-heading, .signature-grid, table.doc-table, p, li'
           ));
 
           let splitHappened = false;
@@ -2606,8 +2598,10 @@
             const el = candidateElements[i];
             if (el.classList.contains('pdf-pagebreak-spacer-div')) continue;
 
-            // Jika elemen berada di dalam tabel tetapi bukan TR atau TABLE, biarkan TR yang menangani
+            // Jangan periksa li/p di dalam tabel (biarkan baris tabel TR yang menangani)
             if (el.closest('table') && el.tagName !== 'TR' && el.tagName !== 'TABLE') continue;
+            // Jangan periksa p di dalam li (biarkan li yang menangani)
+            if (el.tagName === 'P' && el.closest('li')) continue;
 
             const rect = el.getBoundingClientRect();
             const elTop = rect.top - currentTop;
@@ -2618,19 +2612,18 @@
 
             const isHeading = el.classList.contains('meeting-header-title') ||
                               el.classList.contains('doc-section-title') ||
-                              el.classList.contains('doc-sub-heading') ||
-                              el.id === 'wrapperMateriTambahan';
+                              el.classList.contains('doc-sub-heading');
             const isTable = el.tagName === 'TABLE';
             const isTr = el.tagName === 'TR';
             const isLi = el.tagName === 'LI';
-            const isParagraph = el.tagName === 'P' || el.classList.contains('doc-paragraph');
+            const isParagraph = el.tagName === 'P';
             const isSig = el.classList.contains('signature-grid');
-            const isLkpd = el.classList.contains('lkpd-container');
 
-            // 1. Heading atau wrapper sub-bagian
+            // 1. Heading
             if (isHeading) {
-              if (elTop < pageBottom && elBottom > (pageBottom - 110)) {
-                const pushNeeded = Math.ceil(pageBottom - elTop) + 6;
+              // Hanya push jika heading memotong batas halaman atau tersisa kurang dari 42px
+              if (elTop < pageBottom && (elBottom > pageBottom - 6 || (pageBottom - elTop) < 42)) {
+                const pushNeeded = Math.ceil(pageBottom - elTop) + 4;
                 const spacer = document.createElement('div');
                 spacer.className = 'pdf-pagebreak-spacer-div';
                 spacer.style.display = 'block';
@@ -2648,8 +2641,8 @@
 
             // 2. Lembar tanda tangan (Signature Grid)
             if (isSig) {
-              if (elTop < pageBottom && elBottom > (pageBottom - 15)) {
-                const pushNeeded = Math.ceil(pageBottom - elTop) + 6;
+              if (elTop < pageBottom && elBottom > (pageBottom - 6)) {
+                const pushNeeded = Math.ceil(pageBottom - elTop) + 4;
                 const spacer = document.createElement('div');
                 spacer.className = 'pdf-pagebreak-spacer-div';
                 spacer.style.display = 'block';
@@ -2665,29 +2658,10 @@
               continue;
             }
 
-            // 3. LKPD container
-            if (isLkpd) {
-              if (elTop < pageBottom && (pageBottom - elTop) < 100 && elHeight > 100) {
-                const pushNeeded = Math.ceil(pageBottom - elTop) + 6;
-                const spacer = document.createElement('div');
-                spacer.className = 'pdf-pagebreak-spacer-div';
-                spacer.style.display = 'block';
-                spacer.style.height = `${pushNeeded}px`;
-                spacer.style.margin = '0';
-                spacer.style.padding = '0';
-                spacer.style.border = 'none';
-                spacer.style.background = 'transparent';
-                el.parentNode.insertBefore(spacer, el);
-                splitHappened = true;
-                break;
-              }
-              continue;
-            }
-
-            // 4. Tabel Utuh
+            // 3. Tabel Utuh
             if (isTable) {
-              if (elTop < pageBottom && (pageBottom - elTop) < 80 && elHeight > 85) {
-                const pushNeeded = Math.ceil(pageBottom - elTop) + 6;
+              if (elTop < pageBottom && (pageBottom - elTop) < 50 && elHeight > 60) {
+                const pushNeeded = Math.ceil(pageBottom - elTop) + 4;
                 const spacer = document.createElement('div');
                 spacer.className = 'pdf-pagebreak-spacer-div';
                 spacer.style.display = 'block';
@@ -2703,15 +2677,15 @@
               continue;
             }
 
-            // 5. Baris Tabel (TR)
+            // 4. Baris Tabel (TR)
             if (isTr) {
               if (el.closest('thead')) {
-                if (elTop < pageBottom && elBottom > (pageBottom - 15)) {
+                if (elTop < pageBottom && elBottom > (pageBottom - 6)) {
                   const parentTable = el.closest('table');
                   if (parentTable) {
                     const tRect = parentTable.getBoundingClientRect();
                     const tTop = tRect.top - currentTop;
-                    const pushNeeded = Math.ceil(pageBottom - tTop) + 6;
+                    const pushNeeded = Math.ceil(pageBottom - tTop) + 4;
                     const spacer = document.createElement('div');
                     spacer.className = 'pdf-pagebreak-spacer-div';
                     spacer.style.display = 'block';
@@ -2728,8 +2702,8 @@
                 continue;
               }
 
-              // Baris tabel di tbody
-              if (elTop < pageBottom && elBottom > (pageBottom - 8)) {
+              // Baris tabel di tbody yang memotong batas halaman
+              if (elTop < pageBottom && elBottom > (pageBottom - 6)) {
                 const parentTable = el.closest('table');
                 if (parentTable && parentTable.querySelectorAll('tbody tr').length > 1) {
                   let targetRow = el;
@@ -2738,14 +2712,14 @@
                     const prevRow = el.previousElementSibling;
                     const prevRect = prevRow.getBoundingClientRect();
                     const prevTop = prevRect.top - currentTop;
-                    if (prevTop < pageBottom && (pageBottom - prevTop) < 180) {
+                    if (prevTop < pageBottom && (pageBottom - prevTop) < 140) {
                       targetRow = prevRow;
                     }
                   }
 
                   const targetRect = targetRow.getBoundingClientRect();
                   const targetTop = targetRect.top - currentTop;
-                  const pushNeeded = Math.ceil(pageBottom - targetTop) + 6;
+                  const pushNeeded = Math.ceil(pageBottom - targetTop) + 4;
                   splitTableBeforeRow(parentTable, targetRow, pushNeeded);
                   splitHappened = true;
                   break;
@@ -2754,12 +2728,12 @@
               continue;
             }
 
-            // 6. Butir Daftar (LI di dalam OL atau UL non-tabel, contoh: Materi Tambahan, Glosarium, Daftar Pustaka, Refleksi)
+            // 5. Butir Daftar (LI di dalam OL atau UL non-tabel)
             if (isLi) {
-              if (elTop < pageBottom && elBottom > (pageBottom - 10)) {
+              if (elTop < pageBottom && elBottom > (pageBottom - 6)) {
                 const parentList = el.closest('ol, ul');
                 if (parentList) {
-                  const pushNeeded = Math.ceil(pageBottom - elTop) + 6;
+                  const pushNeeded = Math.ceil(pageBottom - elTop) + 4;
                   splitListBeforeItem(parentList, el, pushNeeded, currentTop, pageBottom);
                   splitHappened = true;
                   break;
@@ -2768,22 +2742,23 @@
               continue;
             }
 
-            // 7. Paragraf Deskripsi / Teks Bebas
+            // 6. Paragraf Deskripsi / Teks Bebas (P)
             if (isParagraph) {
-              if (elTop < pageBottom && elBottom > (pageBottom - 10)) {
+              if (elTop < pageBottom && elBottom > (pageBottom - 6)) {
                 let targetToPush = el;
+                // Hanya jika ada heading persis sebelum paragraf ini yang tersisa kurang dari 45px
                 const prevEl = el.previousElementSibling;
                 if (prevEl && (prevEl.classList.contains('doc-sub-heading') || prevEl.classList.contains('doc-section-title') || prevEl.classList.contains('meeting-header-title'))) {
                   const pRect = prevEl.getBoundingClientRect();
                   const pTop = pRect.top - currentTop;
-                  if (pTop < pageBottom && (pageBottom - pTop) < 140) {
+                  if (pTop < pageBottom && (pageBottom - pTop) < 45) {
                     targetToPush = prevEl;
                   }
                 }
 
                 const tRect = targetToPush.getBoundingClientRect();
                 const tTop = tRect.top - currentTop;
-                const pushNeeded = Math.ceil(pageBottom - tTop) + 6;
+                const pushNeeded = Math.ceil(pageBottom - tTop) + 4;
                 const spacer = document.createElement('div');
                 spacer.className = 'pdf-pagebreak-spacer-div';
                 spacer.style.display = 'block';
@@ -2797,22 +2772,6 @@
                 break;
               }
               continue;
-            }
-
-            // 8. Elemen blok umum lainnya
-            if (elTop < pageBottom && elBottom > (pageBottom - 8) && elHeight < (pageHeightPx * 0.8)) {
-              const pushNeeded = Math.ceil(pageBottom - elTop) + 6;
-              const spacer = document.createElement('div');
-              spacer.className = 'pdf-pagebreak-spacer-div';
-              spacer.style.display = 'block';
-              spacer.style.height = `${pushNeeded}px`;
-              spacer.style.margin = '0';
-              spacer.style.padding = '0';
-              spacer.style.border = 'none';
-              spacer.style.background = 'transparent';
-              el.parentNode.insertBefore(spacer, el);
-              splitHappened = true;
-              break;
             }
           }
 
