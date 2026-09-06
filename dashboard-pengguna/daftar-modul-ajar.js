@@ -669,7 +669,26 @@ function editModulItem(modulId) {
   }
 
   if (item) {
-    const payloadToEdit = item.payload || item;
+    let payloadToEdit = item.payload || item;
+    if (typeof payloadToEdit === 'string') {
+      try { payloadToEdit = JSON.parse(payloadToEdit); } catch (e) {}
+    }
+    // Pastikan seluruh metadata esensial dari item induk terikat ke payload
+    payloadToEdit = {
+      ...payloadToEdit,
+      id: item.id || modulId,
+      namaPenyusun: payloadToEdit.namaPenyusun || '',
+      institusi: payloadToEdit.institusi || payloadToEdit.institusiPendidik || '',
+      tahunPenyusunan: payloadToEdit.tahunPenyusunan || '',
+      mataPelajaran: payloadToEdit.mataPelajaran || item.mataPelajaran || '',
+      topikMateri: payloadToEdit.topikMateri || item.topikMateri || '',
+      jenjangSekolah: payloadToEdit.jenjangSekolah || item.jenjangSekolah || item.jenjang || 'SMA / MA',
+      jurusanSekolah: payloadToEdit.jurusanSekolah || item.jurusanSekolah || 'Reguler',
+      faseKelas: payloadToEdit.faseKelas || item.faseKelas || item.kelas || '',
+      status: payloadToEdit.status || item.status || 'Draft',
+      createdAt: payloadToEdit.createdAt || item.createdAt || ''
+    };
+
     localStorage.setItem('edu_editing_modul_payload', JSON.stringify(payloadToEdit));
     localStorage.setItem('edu_current_generated_modul', JSON.stringify(payloadToEdit));
     localStorage.setItem('edu_last_modul_payload', JSON.stringify(payloadToEdit));

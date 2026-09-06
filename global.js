@@ -1350,7 +1350,10 @@ function renderEduNavbar(options = {}) {
 
   let defaultShowBack = false;
   let defaultBackUrl = defaultPortalHome;
-  if (isAdminArea && !isMainAdmin) {
+  if (isInFitur) {
+    defaultShowBack = true;
+    defaultBackUrl = defaultPortalHome;
+  } else if (isAdminArea && !isMainAdmin) {
     defaultShowBack = true;
     defaultBackUrl = 'dashboard-admin.html';
   }

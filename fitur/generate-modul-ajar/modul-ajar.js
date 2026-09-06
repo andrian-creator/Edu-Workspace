@@ -1194,10 +1194,17 @@ async function initModulAjarPage() {
     }
   }
 
+  const urlParams = new URLSearchParams(window.location.search);
+  const editId = urlParams.get('editId');
+  const isEditing = !!editId;
+  const backDestination = isEditing ? '../../dashboard-pengguna/daftar-modul-ajar.html' : '../../dashboard-pengguna/dashboard-pengguna.html';
+  const backTitle = isEditing ? 'Daftar Modul' : 'Kembali';
+
   // Render Header Global Terpusat
   renderEduNavbar({
     showBack: true,
-    backUrl: '../../dashboard-pengguna/dashboard-pengguna.html',
+    backUrl: backDestination,
+    backText: backTitle,
     showApiKey: false
   });
 
@@ -1246,7 +1253,7 @@ async function initModulAjarPage() {
   }
 
   // F. Periksa apakah dalam mode edit dari halaman Daftar Modul Ajar
-  checkAndLoadEditModul();
+  await checkAndLoadEditModul();
 }
 
 /**
@@ -2478,8 +2485,8 @@ ATURAN WAJIB DAN MENGIKAT — PELANGGARAN TIDAK DIIZINKAN:
 7. MATERI AJAR DESKRIPTIF (FOKUS MATERI TEKNIS & TABEL):
    - WAJIB FOKUS PENUH PADA SUBSTANSI MATERI DAN KONTEN ILMIAH/TEKNIS dari "${topik}".
    - DILARANG KERAS MENULIS NARASI META SEPERTI: "Dalam konteks pembelajaran di SMK...", "Penerapan model Project Based Learning berbasis pendekatan TPACK terbukti...", "Melalui sintaks PjBL peserta didik dilatih...". Naskah materi ajar adalah bahan ajar teknis/keilmuan murni untuk penguasaan materi "${topik}"!
-   - Uraikan 3-4 bagian komprehensif: (a) Definisi ilmiah, konsep esensial, dan teori dasar materi ${topik}, (b) Anatomi, prinsip kerja, atau prosedur operasional standar (SOP) teknis, (c) Penerapan profesional di industri dan analisis pemecahan masalah teknis.
-   - WAJIB SERTAKAN MINIMAL 1 TABEL RINGKASAN MATERI (format Markdown Table `| Header 1 | Header 2 | Header 3 |\n|---|---|---|...`) yang membandingkan parameter teknis, klasifikasi konsep, teknik, atau fungsi komponen terkait materi "${topik}".
+   - Uraikan 3-4 bagian komprehensif: (a) Definisi ilmiah, konsep esensial, dan teori dasar materi ${topik}, (b) Anatomi, prinsip kerja, atau prosedur operasional standar (SOP) teknis, (c) Penerapan profesional di industri.
+   - WAJIB SERTAKAN MINIMAL 1 TABEL RINGKASAN MATERI (format Markdown Table: | Header 1 | Header 2 | Header 3 |\\n|---|---|---|...) yang membandingkan parameter teknis, klasifikasi konsep, teknik, atau fungsi komponen terkait materi "${topik}".
 
 8. MATERI TAMBAHAN (PENGAYAAN MENDALAM):
    - Jika materi tambahan diisi ("${materiTambahan}"), jabarkan secara rinci, mendalam, dan teknis konsep pendukung atau pengayaannya, disertai tabel komparasi/panduan teknis markdown jika relevan.
@@ -3151,169 +3158,6 @@ function buildComprehensiveAiModulContent(p) {
     ];
   }
 
-  // Sintesis Pengalaman Belajar Per Pertemuan (Array of string per poin tindakan)
-  const pengalamanBelajar = [];
-  for (let i = 1; i <= countPertemuan; i++) {
-    const theme = subThemes[i - 1] || subThemes[(i - 1) % subThemes.length];
-
-    let awalGuru = [];
-    let awalMurid = [];
-    let sintaksAwal = '';
-
-    let intiGuru = [];
-    let intiMurid = [];
-    let sintaksInti = '';
-
-    let penutupGuru = [];
-    let penutupMurid = [];
-    let sintaksPenutup = '';
-
-    if (isPjBL) {
-      awalGuru = [
-        `Membuka sesi kelas dengan salam hangat, berdoa bersama, dan presensi kedisiplinan murid.`,
-        `Mengajukan pertanyaan pemantik mendasar (essential question) terkait urgensi pembuatan karya/produk proyek ${topik}.`,
-        `Menyampaikan tujuan pembelajaran, standar kriteria mutu proyek, dan alur sintaks Project Based Learning.`
-      ];
-      awalMurid = [
-        `Menjawab salam, berdoa bersama guru, dan merespons pertanyaan pemantik secara antusias.`,
-        `Menyimak penjelasan tujuan pembelajaran serta memahami spesifikasi produk proyek ${topik} yang akan dihasilkan.`
-      ];
-      sintaksAwal = `Sintaks PjBL: 'Menentukan Pertanyaan Mendasar & Perencanaan Proyek'. Metode: ${metode}. ${getPendekatanPrinsipText(pendekatan, 'awal', topik, media)}`;
-
-      intiGuru = [
-        `Membagi murid ke dalam tim kerja proyek heterogen (4-5 orang per tim).`,
-        `Memfasilitasi perancangan desain dan penyusunan spesifikasi teknis produk karya ${topik} dengan memanfaatkan sarana ${fasilitas}.`,
-        `Membimbing penyusunan jadwal kerja (timeline) dan alur produksi bertahap dengan memanfaatkan panduan media digital ${media}.`,
-        `Memonitor keaktifan murid, mengamati progres pembuatan karya proyek, dan memberikan pendampingan teknis troubleshooting.`
-      ];
-      intiMurid = [
-        `Berkolaborasi dalam tim merumuskan konsep kreatif dan spesifikasi rancangan produk karya ${topik}.`,
-        `Menyusun jadwal pelaksanaan, pembagian peran anggota tim, dan tahapan produksi proyek.`,
-        `Mengeksekusi proses pembuatan produk karya ${topik} secara bertahap memanfaatkan sarana ${fasilitas} dan arahan media ${media}.`,
-        `Melakukan uji coba awal, quality control (QC), serta mengonsultasikan kendala teknis pembuatan karya kepada guru.`
-      ];
-      sintaksInti = `Sintaks PjBL: 'Mendesain Perencanaan Proyek', 'Menyusun Jadwal', dan 'Memonitor Kemajuan Proyek'. Metode: ${metode}. ${getPendekatanPrinsipText(pendekatan, 'inti', topik, media)}`;
-
-      penutupGuru = [
-        `Memfasilitasi murid mereviu pencapaian target milestone pembuatan produk proyek hari ini.`,
-        `Memberikan umpan balik konstruktif dan penguatan terhadap aspek mutu karya yang sedang diproduksi.`,
-        `Mengingatkan agenda tindak lanjut penyelesaian proyek pada pertemuan berikutnya, berdoa bersama, dan menutup sesi pelajaran.`
-      ];
-      penutupMurid = [
-        `Menyampaikan progres capaian pembuatan karya proyek dan mencatat poin-poin perbaikan produk.`,
-        `Merapikan kembali sarana kerja dan fasilitas ${fasilitas}, lalu berdoa bersama guru sebelum mengakhiri kelas.`
-      ];
-      sintaksPenutup = `Sintaks PjBL: 'Menguji Hasil (QC)' dan 'Mengevaluasi Pengalaman Belajar'. Metode: ${metode}. ${getPendekatanPrinsipText(pendekatan, 'penutup', topik, media)}`;
-
-    } else if (isInquiry) {
-      awalGuru = [
-        `Membuka sesi kelas dengan salam hangat, doa bersama, dan memeriksa kesiapan belajar murid.`,
-        `Menyajikan stimulus fenomena kontekstual materi ${topik} melalui media ${media} untuk membangkitkan rasa ingin tahu.`,
-        `Membimbing murid merumuskan pertanyaan penyelidikan (inquiry questions) dan menyampaikan tujuan pembelajaran.`
-      ];
-      awalMurid = [
-        `Menjawab salam, berdoa bersama, dan mencermati tayangan stimulus fenomena materi ${topik}.`,
-        `Merespons pertanyaan awal guru dan merumuskan fokus penyelidikan ilmiah yang akan dijalankan.`
-      ];
-      sintaksAwal = `Sintaks Inquiry: 'Orientasi Masalah & Merumuskan Pertanyaan Penyelidikan'. Metode: ${metode}. ${getPendekatanPrinsipText(pendekatan, 'awal', topik, media)}`;
-
-      intiGuru = [
-        `Membimbing murid merumuskan hipotesis awal terkait topik permasalahan ${topik}.`,
-        `Memfasilitasi kegiatan eksplorasi data dan eksperimen/praktik terstruktur menggunakan fasilitas ${fasilitas}.`,
-        `Mendampingi analisis pembuktian hipotesis dan pengolahan data temuan kelompok.`,
-        `Mengarahkan pengujian hasil dan perumusan argumentasi ilmiah berdasarkan bukti.`
-      ];
-      intiMurid = [
-        `Menyusun hipotesis kerja dan merancang langkah investigasi bersama kelompok.`,
-        `Melakukan eksplorasi data dan praktik nyata memanfaatkan sarana ${fasilitas} serta panduan media ${media}.`,
-        `Mengolah data temuan, menguji kesesuaian hipotesis, dan mendiskusikan hasil penyelidikan.`,
-        `Mendokumentasikan seluruh tahapan kerja dan bukti temuan pada lembar kerja penyelidikan.`
-      ];
-      sintaksInti = `Sintaks Inquiry: 'Merumuskan Hipotesis', 'Pengumpulan Data Eksploratif', dan 'Pengujian Hipotesis'. Metode: ${metode}. ${getPendekatanPrinsipText(pendekatan, 'inti', topik, media)}`;
-
-      penutupGuru = [
-        `Memfasilitasi perwakilan kelompok mempresentasikan simpulan generalisasi atas penyelidikan materi ${topik}.`,
-        `Memberikan umpan balik penguatan konseptual dan apresiasi proses berpikir kritis murid.`,
-        `Menutup sesi pembelajaran dengan doa bersama dan salam penutup.`
-      ];
-      penutupMurid = [
-        `Menyampaikan simpulan akhir hasil pembuktian dan generalisasi pemahaman materi ${topik}.`,
-        `Menyampaikan refleksi pengalaman penyelidikan mandiri dan mencatat poin penguatan dari guru.`,
-        `Merapikan sarana belajar dan fasilitas ${fasilitas}, lalu berdoa bersama sebelum mengakhiri kelas.`
-      ];
-      sintaksPenutup = `Sintaks Inquiry: 'Penarikan Kesimpulan (Generalisasi)' dan 'Evaluasi Penyelidikan'. Metode: ${metode}. ${getPendekatanPrinsipText(pendekatan, 'penutup', topik, media)}`;
-
-    } else if (isDiscovery) {
-      awalGuru = [
-        `Membuka sesi kelas dengan salam, doa bersama, dan memeriksa kesiapan belajar murid.`,
-        `Memberikan stimulus fenomena awal materi ${topik} melalui media ${media} untuk membangkitkan rasa ingin tahu.`,
-        `Menyampaikan tujuan pembelajaran dan alur kerja penemuan konsep.`
-      ];
-      awalMurid = [
-        `Menjawab salam, berdoa, dan mencermati tayangan stimulus fenomena ${topik}.`,
-        `Merespons pertanyaan awal guru dan memahami target capaian penemuan belajar.`
-      ];
-      sintaksAwal = `Sintaks Discovery: 'Stimulasi (Pemberian Rangsangan)' dan 'Identifikasi Masalah'. Metode: ${metode}. ${getPendekatanPrinsipText(pendekatan, 'awal', topik, media)}`;
-
-      intiGuru = [
-        `Membimbing murid mengidentifikasi masalah dan merumuskan fokus penemuan terkait materi ${topik}.`,
-        `Memfasilitasi pengumpulan data dan eksplorasi terbimbing menggunakan fasilitas ${fasilitas}.`,
-        `Mengarahkan pengolahan data dan pembuktian (verifikasi) konsep secara kolaboratif.`
-      ];
-      intiMurid = [
-        `Mengidentifikasi masalah dan mencatat parameter kunci terkait materi ${topik}.`,
-        `Mengumpulkan data dan fakta pendukung melalui pengamatan langsung memanfaatkan sarana ${fasilitas}.`,
-        `Mengolah data temuan dan memverifikasi kebenaran konsep bersama kelompok kerja.`
-      ];
-      sintaksInti = `Sintaks Discovery: 'Pengumpulan Data' dan 'Pengolahan Data / Pembuktian'. Metode: ${metode}. ${getPendekatanPrinsipText(pendekatan, 'inti', topik, media)}`;
-
-      penutupGuru = [
-        `Memandu murid merumuskan generalisasi simpulan konsep materi ${topik}.`,
-        `Memberikan umpan balik dan penguatan konseptual atas temuan penemuan konsep.`,
-        `Menutup pembelajaran dengan doa bersama dan salam.`
-      ];
-      penutupMurid = [
-        `Menarik kesimpulan umum atas pembuktian konsep materi ${topik}.`,
-        `Menyampaikan refleksi pengalaman belajar secara singkat.`,
-        `Berdoa bersama guru untuk menutup sesi pelajaran.`
-      ];
-      sintaksPenutup = `Sintaks Discovery: 'Generalisasi (Menarik Kesimpulan)'. Metode: ${metode}. ${getPendekatanPrinsipText(pendekatan, 'penutup', topik, media)}`;
-
-    } else if (isTeFa) {
-      awalGuru = [
-        `Membuka sesi dengan salam dan briefing SOP kerja industri materi ${topik}.`,
-        `Membagikan Job Sheet order industri dan menjelaskan standar spesifikasi teknis ${topik}.`,
-        `Memeriksa kelengkapan APD dan kesiapan peralatan di sarana ${fasilitas}.`
-      ];
-      awalMurid = [
-        `Menjawab salam, mengikuti briefing, dan mempelajari Job Sheet order industri.`,
-        `Memeriksa kelengkapan perlengkapan kerja dan mematuhi SOP keselamatan.`
-      ];
-      sintaksAwal = `Sintaks TeFa: 'Penerimaan Order / Analisis Job Sheet Industri'. Metode: ${metode}. ${getPendekatanPrinsipText(pendekatan, 'awal', topik, media)}`;
-
-      intiGuru = [
-        `Membimbing alur perencanaan produksi dan pembagian stasiun kerja kelompok.`,
-        `Memonitor proses pengerjaan produk ${topik} sesuai standar toleransi industri.`,
-        `Mendampingi pelaksanaan quality control (QC) dan pengujian kelayakan hasil pengerjaan.`
-      ];
-      intiMurid = [
-        `Mengeksekusi tahapan produksi materi ${topik} menggunakan fasilitas ${fasilitas} dan panduan ${media}.`,
-        `Melakukan pengukuran presisi dan pengecekan parameter mutu sesuai instruksi Job Sheet.`,
-        `Melakukan pengujian fungsi dan mencatat data uji kelayakan produk.`
-      ];
-      sintaksInti = `Sintaks TeFa: 'Perencanaan Produksi', 'Pengerjaan Standar Industri', dan 'Quality Control (QC)'. Metode: ${metode}. ${getPendekatanPrinsipText(pendekatan, 'inti', topik, media)}`;
-
-      penutupGuru = [
-        `Memvalidasi hasil serah terima pekerjaan produk dan mengevaluasi efisiensi proses kerja.`,
-        `Memberikan feedback standar mutu industri dan menutup sesi kerja dengan doa.`
-      ];
-      penutupMurid = [
-        `Menyerahkan produk hasil kerja dan menyusun laporan pertanggungjawaban produksi.`,
-        `Membersihkan area kerja (5R/5S) dan berdoa bersama guru.`
-      ];
-      sintaksPenutup = `Sintaks TeFa: 'Serah Terima Hasil Pekerjaan' dan 'Evaluasi Efisiensi Produksi'. Metode: ${metode}. ${getPendekatanPrinsipText(pendekatan, 'penutup', topik, media)}`;
-
-    } else {
   // Sintesis Pengalaman Belajar Per Pertemuan (Struktur Baru: Sintaks Terpisah di Kegiatan Inti Saja)
   function generateMeetingSintaksList(modelName, pNum, totalP, topicVal, mediaVal, facilityVal, methodVal, approachVal) {
     const mL = (modelName || '').toLowerCase();
@@ -4248,17 +4092,25 @@ async function checkAndLoadEditModul() {
     let editPayload = null;
 
     // 1. Coba dari cache sesi editing sementara
-    const raw = localStorage.getItem('edu_editing_modul_payload');
-    if (raw) {
-      try {
-        const parsed = JSON.parse(raw);
-        if (parsed) {
-          if (parsed.id === editId || parsed.payload?.id === editId || !parsed.id) {
-            editPayload = parsed.payload ? parsed.payload : parsed;
-            if (parsed.createdAt) editPayload.createdAt = parsed.createdAt;
+    const rawKeys = ['edu_editing_modul_payload', 'edu_current_generated_modul', 'edu_last_modul_payload'];
+    for (const k of rawKeys) {
+      const raw = localStorage.getItem(k);
+      if (raw) {
+        try {
+          let parsed = JSON.parse(raw);
+          if (typeof parsed === 'string') {
+            try { parsed = JSON.parse(parsed); } catch (e) {}
           }
-        }
-      } catch (e) {}
+          if (parsed) {
+            const pId = String(parsed.id || parsed.payload?.id || '');
+            if (pId === String(editId) || !pId) {
+              editPayload = parsed.payload ? parsed.payload : parsed;
+              if (parsed.createdAt && !editPayload.createdAt) editPayload.createdAt = parsed.createdAt;
+              break;
+            }
+          }
+        } catch (e) {}
+      }
     }
 
     // 2. Jika belum dapat, cari di daftar modul pengguna aktif di localStorage
@@ -4274,23 +4126,53 @@ async function checkAndLoadEditModul() {
         const rawList = localStorage.getItem(listKey);
         if (rawList) {
           const list = JSON.parse(rawList);
-          const found = list.find(item => item.id === editId);
+          const found = list.find(item => String(item.id) === String(editId));
           if (found) {
             editPayload = found.payload ? found.payload : found;
-            if (found.createdAt) editPayload.createdAt = found.createdAt;
+            if (found.createdAt && !editPayload.createdAt) editPayload.createdAt = found.createdAt;
           }
         }
       } catch (e) {}
     }
 
-    // 3. Jika masih belum ditemukan, muat langsung dari server API (/api/moduls)
+    // 3. Jika belum ditemukan di cache lokal, muat langsung dari database Supabase
+    if (!editPayload) {
+      try {
+        if (typeof SupabaseDB !== 'undefined' && SupabaseDB.getModuls) {
+          const remoteList = await SupabaseDB.getModuls();
+          if (Array.isArray(remoteList)) {
+            const foundRemote = remoteList.find(m => String(m.id) === String(editId));
+            if (foundRemote) {
+              let pJson = foundRemote.content_json || foundRemote.contentJson || {};
+              if (typeof pJson === 'string') {
+                try { pJson = JSON.parse(pJson); } catch (e) {}
+              }
+              editPayload = {
+                ...pJson,
+                id: foundRemote.id,
+                namaPenyusun: pJson.namaPenyusun || foundRemote.user_name || foundRemote.userName || '',
+                mataPelajaran: pJson.mataPelajaran || foundRemote.subject || '',
+                topikMateri: pJson.topikMateri || foundRemote.topic || '',
+                faseKelas: pJson.faseKelas || foundRemote.grade_level || '',
+                kurikulum: pJson.kurikulum || foundRemote.curriculum || 'Kurikulum Merdeka',
+                createdAt: foundRemote.created_at || pJson.createdAt || ''
+              };
+            }
+          }
+        }
+      } catch (e) {
+        console.warn('Gagal memuat modul dari Supabase:', e);
+      }
+    }
+
+    // 4. Fallback ke server API lokal (/api/moduls) jika ada
     if (!editPayload) {
       try {
         const resp = await fetch('/api/moduls');
         if (resp.ok) {
           const moduls = await resp.json();
           if (Array.isArray(moduls)) {
-            const found = moduls.find(m => m.id === editId);
+            const found = moduls.find(m => String(m.id) === String(editId));
             if (found) {
               editPayload = found.payload ? found.payload : found;
               if (found.createdAt) editPayload.createdAt = found.createdAt;
@@ -4298,13 +4180,18 @@ async function checkAndLoadEditModul() {
           }
         }
       } catch (e) {
-        console.warn('Gagal fetch modul dari server:', e);
+        console.warn('Gagal fetch modul dari server lokal:', e);
       }
     }
 
     if (!editPayload) {
       console.warn('Data modul untuk edit tidak ditemukan:', editId);
       return;
+    }
+
+    // Normalisasi struktur jika dibungkus dalam payload
+    if (editPayload.payload) {
+      editPayload = { ...editPayload.payload, id: editPayload.id || editPayload.payload.id };
     }
 
     applyEditPayloadToForm(editPayload);
@@ -4338,16 +4225,37 @@ function applyEditPayloadToForm(p) {
   }
 
   // Jenjang Sekolah (Picu handleJenjangChange agar opsi jurusan & fase siap)
-  if (p.jenjangSekolah && document.getElementById('jenjangSekolah')) {
-    document.getElementById('jenjangSekolah').value = p.jenjangSekolah;
+  const jenjangVal = p.jenjangSekolah || p.jenjang || 'SMA / MA';
+  const jenjangEl = document.getElementById('jenjangSekolah');
+  if (jenjangEl) {
+    jenjangEl.value = jenjangVal;
     if (typeof handleJenjangChange === 'function') handleJenjangChange();
   }
   if (p.jurusanSekolah && document.getElementById('jurusanSekolah')) {
     document.getElementById('jurusanSekolah').value = p.jurusanSekolah;
   }
+
+  // Fase & Kelas
   if (p.faseKelas && document.getElementById('faseKelas')) {
-    document.getElementById('faseKelas').value = p.faseKelas;
+    const faseEl = document.getElementById('faseKelas');
+    const matched = Array.from(faseEl.options).some(o => o.value === p.faseKelas);
+    if (!matched) {
+      const foundOpt = Array.from(faseEl.options).find(o => o.value.includes(p.faseKelas) || p.faseKelas.includes(o.value));
+      if (foundOpt) {
+        faseEl.value = foundOpt.value;
+      } else {
+        const customOpt = document.createElement('option');
+        customOpt.value = p.faseKelas;
+        customOpt.textContent = p.faseKelas;
+        customOpt.selected = true;
+        faseEl.appendChild(customOpt);
+        faseEl.value = p.faseKelas;
+      }
+    } else {
+      faseEl.value = p.faseKelas;
+    }
   }
+
   if (p.mataPelajaran && document.getElementById('mataPelajaran')) {
     document.getElementById('mataPelajaran').value = p.mataPelajaran;
   }
