@@ -42,8 +42,8 @@
           <button type="button" class="api-tab-pill active" id="tabBtnGemini" onclick="switchApiTab('gemini')">
             <span>Gemini</span>
           </button>
-          <button type="button" class="api-tab-pill" id="tabBtnNeosantara" onclick="switchApiTab('neosantara')">
-            <span>Neosantara</span>
+          <button type="button" class="api-tab-pill" id="tabBtnChatgpt" onclick="switchApiTab('chatgpt')">
+            <span>ChatGPT</span>
           </button>
         </aside>
 
@@ -186,12 +186,12 @@
           </div>
 
           <!-- ==============================================================
-               2. PANEL NEOSANTARA
+               2. PANEL CHATGPT (OPENAI)
                ============================================================== -->
-          <div class="api-tab-pane" id="paneNeosantara">
+          <div class="api-tab-pane" id="paneChatgpt">
             <div class="api-content-grid">
 
-              <!-- Kolom Kiri Panel: Panduan Cara Mendapatkan Kunci API Neosantara -->
+              <!-- Kolom Kiri Panel: Panduan Cara Mendapatkan Kunci API ChatGPT (OpenAI) -->
               <div class="guide-card">
                 <div class="card-header-group">
                   <div class="card-title-box">
@@ -200,7 +200,7 @@
                     </div>
                     <div>
                       <h2 class="card-title">Cara Mendapatkan Kunci API</h2>
-                      <p class="card-desc">Ikuti 4 langkah mudah untuk mendapatkan Neosantara API</p>
+                      <p class="card-desc">Ikuti 4 langkah mudah untuk mendapatkan ChatGPT (OpenAI) API</p>
                     </div>
                   </div>
                 </div>
@@ -209,35 +209,35 @@
                   <li class="guide-step-item">
                     <div class="guide-step-number">1</div>
                     <div class="guide-step-content">
-                      <div class="guide-step-title">Kunjungi Platform Neosantara</div>
-                      <p class="guide-step-desc">Buka situs resmi platform Neosantara pada browser Anda.</p>
+                      <div class="guide-step-title">Kunjungi Platform OpenAI</div>
+                      <p class="guide-step-desc">Buka platform resmi OpenAI (platform.openai.com) pada browser Anda.</p>
                     </div>
                   </li>
                   <li class="guide-step-item">
                     <div class="guide-step-number">2</div>
                     <div class="guide-step-content">
                       <div class="guide-step-title">Masuk ke Akun Anda</div>
-                      <p class="guide-step-desc">Masuk dengan akun Neosantara Anda yang telah terdaftar.</p>
+                      <p class="guide-step-desc">Masuk atau daftar dengan akun OpenAI Anda yang telah terdaftar.</p>
                     </div>
                   </li>
                   <li class="guide-step-item">
                     <div class="guide-step-number">3</div>
                     <div class="guide-step-content">
                       <div class="guide-step-title">Buka Menu "API Keys"</div>
-                      <p class="guide-step-desc">Masuk ke halaman <em>API Keys</em> lalu buat atau salin kunci API Anda.</p>
+                      <p class="guide-step-desc">Masuk ke halaman <em>API Keys</em> lalu klik tombol <strong>Create new secret key</strong>.</p>
                     </div>
                   </li>
                   <li class="guide-step-item">
                     <div class="guide-step-number">4</div>
                     <div class="guide-step-content">
                       <div class="guide-step-title">Tempelkan & Simpan</div>
-                      <p class="guide-step-desc">Tempelkan kunci ke form di sebelah kanan lalu klik <strong>Simpan Kunci API</strong>.</p>
+                      <p class="guide-step-desc">Tempelkan kunci berawalan <strong>sk-...</strong> ke form di sebelah kanan lalu klik <strong>Simpan Kunci API</strong>.</p>
                     </div>
                   </li>
                 </ul>
 
-                <a href="https://app.neosantara.xyz/signin" target="_blank" rel="noopener noreferrer" class="btn-external-guide">
-                  <span>Buka Platform Neosantara</span>
+                <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener noreferrer" class="btn-external-guide">
+                  <span>Buka Platform OpenAI</span>
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
                     <polyline points="15 3 21 3 21 9"></polyline>
@@ -246,7 +246,7 @@
                 </a>
               </div>
 
-              <!-- Kolom Kanan Panel: Form Menempelkan Kunci API Neosantara -->
+              <!-- Kolom Kanan Panel: Form Menempelkan Kunci API ChatGPT (OpenAI) -->
               <div class="api-card">
                 <div class="card-header-group">
                   <div class="card-title-box">
@@ -254,32 +254,32 @@
                       <img data-icon="key" src="../Assets/icon/icon_key.png" alt="API Key Icon">
                     </div>
                     <div>
-                      <h2 class="card-title">Neosantara API Key</h2>
-                      <p class="card-desc">Kunci API resmi dari Neosantara untuk layanan integrasi AI pembelajaran</p>
+                      <h2 class="card-title">ChatGPT (OpenAI) API Key</h2>
+                      <p class="card-desc">Kunci API resmi dari OpenAI untuk layanan integrasi AI dan generator media pembelajaran</p>
                     </div>
                   </div>
-                  <div id="neosantaraStatusBadge" class="status-pill-badge status-pill-empty">
+                  <div id="chatgptStatusBadge" class="status-pill-badge status-pill-empty">
                     <span class="status-dot"></span> Belum Dikonfigurasi
                   </div>
                 </div>
 
                 <!-- Input API Key -->
                 <div class="form-group">
-                  <label class="form-label" for="neosantaraApiKeyInput">
-                    <span>Kunci Rahasia API (*Neosantara API Key*)</span>
+                  <label class="form-label" for="chatgptApiKeyInput">
+                    <span>Kunci Rahasia API (*ChatGPT / OpenAI API Key*)</span>
                     <span class="form-label-hint">Tersimpan di akun Anda</span>
                   </label>
                   <div class="input-with-actions">
-                    <input type="password" id="neosantaraApiKeyInput" class="api-key-input"
-                      placeholder="neo_... (Tempelkan Neosantara API Key di sini)" autocomplete="off" spellcheck="false">
+                    <input type="password" id="chatgptApiKeyInput" class="api-key-input"
+                      placeholder="sk-proj-... atau sk-... (Tempelkan ChatGPT / OpenAI API Key di sini)" autocomplete="off" spellcheck="false">
                     <div class="input-suffix-actions">
-                      <button type="button" class="btn-icon-action" onclick="toggleNeosantaraKeyVisibility()" title="Lihat/Sembunyikan Kunci">
-                        <svg id="neosantaraEyeIcon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <button type="button" class="btn-icon-action" onclick="toggleChatgptKeyVisibility()" title="Lihat/Sembunyikan Kunci">
+                        <svg id="chatgptEyeIcon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                           <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
                           <circle cx="12" cy="12" r="3"></circle>
                         </svg>
                       </button>
-                      <button type="button" class="btn-icon-action" onclick="copyNeosantaraApiKey()" title="Salin Kunci">
+                      <button type="button" class="btn-icon-action" onclick="copyChatgptApiKey()" title="Salin Kunci">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                           <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
                           <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
@@ -290,8 +290,8 @@
                 </div>
 
                 <!-- Keterangan Status Koneksi Otomatis -->
-                <div id="neosantaraConnectionStatusBox" class="connection-status-box">
-                  <div class="connection-status-icon" id="neosantaraConnectionStatusIcon">
+                <div id="chatgptConnectionStatusBox" class="connection-status-box">
+                  <div class="connection-status-icon" id="chatgptConnectionStatusIcon">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                       <circle cx="12" cy="12" r="10"></circle>
                       <line x1="12" y1="8" x2="12" y2="12"></line>
@@ -299,18 +299,18 @@
                     </svg>
                   </div>
                   <div class="connection-status-content">
-                    <div class="connection-status-title" id="neosantaraConnectionStatusTitle">Belum Dikonfigurasi</div>
-                    <p class="connection-status-desc" id="neosantaraConnectionStatusDesc">Silakan masukkan Neosantara API Key Anda lalu klik tombol Simpan.</p>
+                    <div class="connection-status-title" id="chatgptConnectionStatusTitle">Belum Dikonfigurasi</div>
+                    <p class="connection-status-desc" id="chatgptConnectionStatusDesc">Silakan masukkan ChatGPT / OpenAI API Key Anda lalu klik tombol Simpan. Sistem akan otomatis memverifikasi kunci.</p>
                   </div>
                 </div>
 
                 <!-- Tombol Aksi (Sejajar Horizontal) -->
                 <div class="api-btn-group">
-                  <button type="button" class="btn-primary-api" id="btnSaveNeosantaraApiKey" onclick="saveAndTestNeosantaraApiKey()">
+                  <button type="button" class="btn-primary-api" id="btnSaveChatgptApiKey" onclick="saveAndTestChatgptApiKey()">
                     <img src="../Assets/icon/icon_save.png" class="btn-icon-img" width="18" height="18" style="width: 18px !important; height: 18px !important; max-width: 18px !important; max-height: 18px !important; object-fit: contain; filter: brightness(0) invert(1);" alt="">
                     <span>Simpan Kunci API</span>
                   </button>
-                  <button type="button" class="btn-danger-api" id="btnDeleteNeosantaraApiKey" onclick="deleteApiKey('neosantara')" title="Hapus kunci API dari akun">
+                  <button type="button" class="btn-danger-api" id="btnDeleteChatgptApiKey" onclick="deleteApiKey('chatgpt')" title="Hapus kunci API dari akun">
                     <img src="../Assets/icon/icon_trash.png" class="btn-icon-img" width="18" height="18" style="width: 18px !important; height: 18px !important; max-width: 18px !important; max-height: 18px !important; object-fit: contain;" alt="">
                     <span>Hapus Kunci</span>
                   </button>

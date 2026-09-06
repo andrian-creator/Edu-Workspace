@@ -116,32 +116,37 @@ function getEffectiveApiKey() {
 }
 
 /**
- * Mendapatkan Kunci Neosantara API Pengguna Aktif
+ * Mendapatkan Kunci ChatGPT / OpenAI API Pengguna Aktif
  */
-function getEffectiveNeosantaraApiKey() {
+function getEffectiveOpenaiApiKey() {
   try {
     if (currentUser) {
+      if (currentUser.openaiApiKey && currentUser.openaiApiKey.trim()) return currentUser.openaiApiKey.trim();
+      if (currentUser.chatgptApiKey && currentUser.chatgptApiKey.trim()) return currentUser.chatgptApiKey.trim();
       if (currentUser.neosantaraApiKey && currentUser.neosantaraApiKey.trim()) return currentUser.neosantaraApiKey.trim();
       if (currentUser.email) {
-        const keyLow = localStorage.getItem(`edu_neosantara_api_key_${currentUser.email.trim().toLowerCase()}`);
+        const emailLow = currentUser.email.trim().toLowerCase();
+        const keyLow = localStorage.getItem(`edu_openai_api_key_${emailLow}`) || localStorage.getItem(`edu_chatgpt_api_key_${emailLow}`) || localStorage.getItem(`edu_neosantara_api_key_${emailLow}`);
         if (keyLow && keyLow.trim()) return keyLow.trim();
-        const keyRaw = localStorage.getItem(`edu_neosantara_api_key_${currentUser.email.trim()}`);
+        const keyRaw = localStorage.getItem(`edu_openai_api_key_${currentUser.email.trim()}`) || localStorage.getItem(`edu_chatgpt_api_key_${currentUser.email.trim()}`);
         if (keyRaw && keyRaw.trim()) return keyRaw.trim();
       }
     }
     // Periksa apakah tersimpan dengan key prefix di localStorage
     for (let i = 0; i < localStorage.length; i++) {
       const k = localStorage.key(i);
-      if (k && k.startsWith('edu_neosantara_api_key')) {
+      if (k && (k.startsWith('edu_openai_api_key') || k.startsWith('edu_chatgpt_api_key') || k.startsWith('edu_neosantara_api_key'))) {
         const val = localStorage.getItem(k);
         if (val && val.trim()) return val.trim();
       }
     }
-    return localStorage.getItem('edu_neosantara_api_key') || '';
+    return localStorage.getItem('edu_openai_api_key') || localStorage.getItem('edu_chatgpt_api_key') || localStorage.getItem('edu_neosantara_api_key') || '';
   } catch (e) {
     return '';
   }
 }
+
+const getEffectiveNeosantaraApiKey = getEffectiveOpenaiApiKey;
 
 /**
  * Muat Seluruh Modul Ajar Milik Akun Pengguna
@@ -786,24 +791,27 @@ function attachDragAndDropEvents(card, index) {
 
 /**
  * ==========================================================================
- * SESI 2 -> SESI 3: GENERATE MEDIA PPT BERGAMBAR DENGAN NEOSANTARA AI
+ * SESI 2 -> SESI 3: GENERATE MEDIA PPT BERGAMBAR DENGAN CHATGPT (OPENAI)
  * ==========================================================================
  */
 async function handleGenerateMedia() {
   if (isGeneratingMedia) return;
-
+  if (!currentPresentationMeta) {
+    alert("Data presentasi belum lengkap. Silakan generate modul ajar terlebih dahulu.");
+    return;
+  }
   if (!currentOutlineSlides || currentOutlineSlides.length === 0) {
     alert("Outline slide kosong. Silakan susun outline terlebih dahulu.");
     return;
   }
 
-  // 1. Validasi Kunci API Neosantara Pengguna
-  const neoApiKey = getEffectiveNeosantaraApiKey();
-  if (!neoApiKey) {
+  // 1. Validasi Kunci API ChatGPT (OpenAI) Pengguna
+  const aiApiKey = getEffectiveOpenaiApiKey();
+  if (!aiApiKey) {
     const confirmGo = confirm(
-      "Kunci API Neosantara belum terpasang di akun Anda.\n\n" +
-      "Fitur Generate Media Pembelajaran menggunakan Neosantara AI untuk memproses dan menghasilkan visual presentasi.\n\n" +
-      "Klik OK untuk membuka Manajemen API Key dan menyimpan kunci Neosantara Anda."
+      "Kunci API ChatGPT (OpenAI) belum terpasang di akun Anda.\n\n" +
+      "Fitur Generate Media Pembelajaran menggunakan ChatGPT / OpenAI untuk memproses dan menghasilkan visual presentasi.\n\n" +
+      "Klik OK untuk membuka Manajemen API Key dan menyimpan kunci ChatGPT Anda."
     );
     if (confirmGo) {
       window.location.href = "../dashboard-pengguna/api-key.html";
@@ -824,37 +832,37 @@ async function handleGenerateMedia() {
     const meta = currentPresentationMeta;
     const slidesWithImages = [];
 
-    // Generate Gambar Visual Edukasi 16:9 per Slide Menggunakan Neosantara AI
+    // Generate Gambar Visual Edukasi 16:9 per Slide Menggunakan ChatGPT / OpenAI
     for (let i = 0; i < currentOutlineSlides.length; i++) {
       const s = currentOutlineSlides[i];
       const updateSub = document.getElementById('mediaLoadingSub');
       if (updateSub) {
-        updateSub.textContent = `Menghubungi Neosantara AI untuk Slide ${i + 1} dari ${currentOutlineSlides.length} ("${s.title}")...`;
+        updateSub.textContent = `Menghubungi ChatGPT (OpenAI) untuk Slide ${i + 1} dari ${currentOutlineSlides.length} ("${s.title}")...`;
       }
 
-      // Panggil Neosantara AI API untuk generate ilustrasi visual materi
-      let neosantaraRes = null;
+      // Panggil OpenAI API untuk generate ilustrasi visual materi
+      let aiRes = null;
       try {
-        neosantaraRes = await callNeosantaraImageGeneration(s, i, meta, neoApiKey);
+        aiRes = await callOpenaiImageGeneration(s, i, meta, aiApiKey);
       } catch (err) {
-        console.warn(`[Neosantara AI Slide ${i + 1} Error]`, err);
+        console.warn(`[ChatGPT / OpenAI Slide ${i + 1} Error]`, err);
         // Jika slide pertama gagal karena otentikasi / kuota / token, hentikan dan beri tahu pengguna secara transparan
-        if (i === 0 && (err.message.includes('token') || err.message.includes('401') || err.message.includes('Unauthorized') || err.message.includes('credit') || err.message.includes('balance') || err.message.includes('expired'))) {
-          throw new Error(`Koneksi Neosantara API ditolak: "${err.message}". Pastikan API Key Neosantara Anda aktif dan memiliki kuota di menu Pengaturan API Key.`);
+        if (i === 0 && (err.message.includes('token') || err.message.includes('401') || err.message.includes('Unauthorized') || err.message.includes('credit') || err.message.includes('balance') || err.message.includes('expired') || err.message.includes('quota'))) {
+          throw new Error(`Koneksi OpenAI API ditolak: "${err.message}". Pastikan API Key ChatGPT (OpenAI) Anda aktif dan memiliki kuota di menu Manajemen API Key.`);
         }
       }
 
-      const imgUrl = neosantaraRes ? neosantaraRes.imageUrl : null;
-      const modelUsed = neosantaraRes ? neosantaraRes.model : 'Visual Edukasi';
+      const imgUrl = aiRes ? aiRes.imageUrl : null;
+      const modelUsed = aiRes ? aiRes.model : 'Visual Edukasi';
 
-      // Render Visual Image Canvas 16:9 (menggabungkan materi teks & ilustrasi Neosantara AI)
+      // Render Visual Image Canvas 16:9 (menggabungkan materi teks & ilustrasi ChatGPT AI)
       const imgDataUrl = await generateEducationalSlideImage(s, i, meta, imgUrl);
       slidesWithImages.push({
         ...s,
         slideNumber: i + 1,
         imageUrl: imgDataUrl,
         rawAiImage: imgUrl,
-        aiEngine: modelUsed.includes('neosantara') ? 'Neosantara Gen 2045' : (modelUsed || 'Neosantara AI')
+        aiEngine: modelUsed || 'OpenAI DALL-E'
       });
     }
 
@@ -866,25 +874,25 @@ async function handleGenerateMedia() {
     if (loadingEl) loadingEl.style.display = 'none';
     if (contentEl) contentEl.style.display = 'block';
   } catch (err) {
-    console.error("[Generate Media Neosantara Error]", err);
+    console.error("[Generate Media ChatGPT / OpenAI Error]", err);
     if (loadingEl) loadingEl.style.display = 'none';
     goToSession(2);
-    showErrorState(err.message || "Gagal menghasilkan media presentasi bergambar dengan Neosantara AI.");
+    showErrorState(err.message || "Gagal menghasilkan media presentasi bergambar dengan ChatGPT / OpenAI.");
   } finally {
     isGeneratingMedia = false;
   }
 }
 
 /**
- * Panggilan ke API Neosantara untuk Menghasilkan Visual Presentasi Edukasi
+ * Panggilan ke API OpenAI / ChatGPT untuk Menghasilkan Visual Presentasi Edukasi
  */
-async function callNeosantaraImageGeneration(slide, index, meta, apiKey) {
+async function callOpenaiImageGeneration(slide, index, meta, apiKey) {
   const visualPrompt = slide.visualIdea ? `${slide.visualIdea}. ` : '';
   const pointsPrompt = (slide.points || []).slice(0, 3).join(', ');
-  const prompt = `Educational illustration for: "${slide.title}". Subject: ${meta.subject || 'Pendidikan'}. Topic concepts: ${visualPrompt}${pointsPrompt}. Flat vector modern educational presentation style, vibrant clean colors, clear lighting, 16:9 aspect ratio, high detail artwork.`;
+  const prompt = `Educational presentation illustration for: "${slide.title}". Subject: ${meta.subject || 'Pendidikan'}. Visual concept: ${visualPrompt}${pointsPrompt}. Clean flat vector modern educational presentation style, vibrant colors, clear lighting, 16:9 aspect ratio, high detail artwork.`;
 
   try {
-    const proxyRes = await fetch('/api/neosantara/generate', {
+    let proxyRes = await fetch('/api/openai/generate', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -893,22 +901,35 @@ async function callNeosantaraImageGeneration(slide, index, meta, apiKey) {
       })
     });
 
+    if (proxyRes.status === 404) {
+      proxyRes = await fetch('/api/neosantara/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          apiKey: apiKey,
+          prompt: prompt
+        })
+      });
+    }
+
     const resData = await proxyRes.json();
     if (resData.status === 'success' && resData.imageUrl) {
       return {
         imageUrl: resData.imageUrl,
-        model: resData.model || 'Neosantara Gen 2045'
+        model: resData.model || 'OpenAI DALL-E'
       };
     } else if (resData.status === 'error') {
-      throw new Error(resData.message || 'Gagal memproses gambar melalui Neosantara API');
+      throw new Error(resData.message || 'Gagal memproses gambar melalui OpenAI API');
     }
   } catch (err) {
-    console.warn(`[Neosantara API Error Slide ${index + 1}]`, err);
+    console.warn(`[OpenAI API Error Slide ${index + 1}]`, err);
     throw err;
   }
 
   return null;
 }
+
+const callNeosantaraImageGeneration = callOpenaiImageGeneration;
 
 /**
  * Memuat gambar secara asinkronus untuk digambar ke kanvas
@@ -943,10 +964,10 @@ function drawImageCover(ctx, img, x, y, w, h) {
 /**
  * ==========================================================================
  * GENERATOR GAMBAR SLIDE EDUKASI BERESOLUSI TINGGI (16:9 CANVAS ENGINE)
- * Mendukung integrasi visual hasil generate Neosantara AI
+ * Mendukung integrasi visual hasil generate ChatGPT / OpenAI AI
  * ==========================================================================
  */
-async function generateEducationalSlideImage(slide, index, meta, neosantaraImageUrl = null) {
+async function generateEducationalSlideImage(slide, index, meta, aiImageUrl = null) {
   const canvas = document.createElement('canvas');
   const width = 1280;
   const height = 720;
@@ -1011,7 +1032,7 @@ async function generateEducationalSlideImage(slide, index, meta, neosantaraImage
   ctx.font = '600 16px "Plus Jakarta Sans", sans-serif';
   ctx.fillText(`${subject.toUpperCase()} • ${grade.toUpperCase()}`, 190, 68);
 
-  // E. Kartu Kanan: Artwork Diagram & Visual Grafis (Neosantara AI / Thematic Art)
+  // E. Kartu Kanan: Artwork Diagram & Visual Grafis (ChatGPT AI / Thematic Art)
   const cardX = 640;
   const cardY = 120;
   const cardW = 580;
@@ -1027,14 +1048,14 @@ async function generateEducationalSlideImage(slide, index, meta, neosantaraImage
   ctx.stroke();
   ctx.clip();
 
-  let renderedNeosantara = false;
-  if (neosantaraImageUrl) {
+  let renderedAi = false;
+  if (aiImageUrl) {
     try {
-      const img = await loadImageAsync(neosantaraImageUrl);
+      const img = await loadImageAsync(aiImageUrl);
       drawImageCover(ctx, img, cardX, cardY, cardW, cardH);
-      renderedNeosantara = true;
+      renderedAi = true;
 
-      // Badge Neosantara AI di pojok bawah kartu visual
+      // Badge ChatGPT AI di pojok bawah kartu visual
       ctx.fillStyle = 'rgba(15, 23, 42, 0.75)';
       ctx.beginPath();
       roundRect(ctx, cardX + cardW - 175, cardY + cardH - 42, 160, 30, 15);
@@ -1042,13 +1063,13 @@ async function generateEducationalSlideImage(slide, index, meta, neosantaraImage
       ctx.fillStyle = '#38bdf8';
       ctx.font = '700 12px "Plus Jakarta Sans", sans-serif';
       ctx.textBaseline = 'middle';
-      ctx.fillText('✨ Neosantara AI Visual', cardX + cardW - 163, cardY + cardH - 27);
+      ctx.fillText('✨ ChatGPT AI Visual', cardX + cardW - 163, cardY + cardH - 27);
     } catch (err) {
-      console.warn('[Neosantara Image Load Fallback]', err);
+      console.warn('[ChatGPT / OpenAI Image Load Fallback]', err);
     }
   }
 
-  if (!renderedNeosantara) {
+  if (!renderedAi) {
     drawThematicArtwork(ctx, cardX, cardY, cardW, cardH, subject, visualIdea, accentColor, secondaryAccent, index);
   }
   ctx.restore();

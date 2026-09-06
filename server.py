@@ -348,13 +348,55 @@ class EduWorkspaceHandler(http.server.SimpleHTTPRequestHandler):
             })
             return
 
-        # 5. API: Proxy Neosantara API (Generasi Visual & Multimodal Edukasi)
-        if parsed.path == '/api/neosantara/generate':
+        # 5. API: Test OpenAI / ChatGPT API Key
+        if parsed.path == '/api/openai/test':
+            api_key = (body.get('apiKey') or '').strip()
+            if not api_key:
+                self._send_json_response({"status": "error", "message": "Kunci API OpenAI / ChatGPT belum diisi."}, 400)
+                return
+
+            try:
+                test_req = urllib.request.Request(
+                    'https://api.openai.com/v1/models',
+                    headers={
+                        'Authorization': f'Bearer {api_key}',
+                        'User-Agent': 'EduWorkspace/1.0'
+                    },
+                    method='GET'
+                )
+                with urllib.request.urlopen(test_req, timeout=15) as test_resp:
+                    if test_resp.status == 200:
+                        self._send_json_response({
+                            "status": "success",
+                            "message": "Kunci API OpenAI / ChatGPT berhasil diverifikasi."
+                        })
+                        return
+                    else:
+                        self._send_json_response({
+                            "status": "error",
+                            "message": f"Server OpenAI mengembalikan status {test_resp.status}"
+                        }, 400)
+                        return
+            except urllib.error.HTTPError as he:
+                err_msg = f"HTTP {he.code}"
+                try:
+                    err_json = json.loads(he.read().decode('utf-8'))
+                    err_msg = err_json.get('error', {}).get('message') or err_json.get('message') or err_msg
+                except Exception:
+                    pass
+                self._send_json_response({"status": "error", "message": err_msg}, he.code)
+                return
+            except Exception as e:
+                self._send_json_response({"status": "error", "message": str(e)}, 500)
+                return
+
+        # 6. API: Proxy OpenAI / ChatGPT API (Generasi Visual Ilustrasi Slide DALL-E)
+        if parsed.path in ['/api/openai/generate', '/api/neosantara/generate']:
             api_key = (body.get('apiKey') or '').strip()
             prompt = (body.get('prompt') or '').strip()
 
             if not api_key:
-                self._send_json_response({"status": "error", "message": "Kunci API Neosantara belum diisi."}, 400)
+                self._send_json_response({"status": "error", "message": "Kunci API OpenAI / ChatGPT belum diisi."}, 400)
                 return
 
             def fetch_url_as_b64(url):
@@ -370,18 +412,20 @@ class EduWorkspaceHandler(http.server.SimpleHTTPRequestHandler):
 
             last_error = None
 
-            # METODE 1: Endpoint Gambar Resmi Neosantara (/v1/images/generations)
-            for img_model in ['neosantara-gen-2045', 'imagen-4.0-fast']:
+            # METODE 1: OpenAI DALL-E 3 & DALL-E 2 Image Generation
+            for img_model in ['dall-e-3', 'dall-e-2']:
                 try:
-                    img_req_data = json.dumps({
+                    payload = {
                         "model": img_model,
-                        "prompt": prompt,
+                        "prompt": prompt[:1000],
                         "n": 1,
-                        "size": "1024x1024"
-                    }).encode('utf-8')
+                        "size": "1024x1024",
+                        "response_format": "b64_json"
+                    }
+                    img_req_data = json.dumps(payload).encode('utf-8')
 
                     img_req = urllib.request.Request(
-                        'https://api.neosantara.xyz/v1/images/generations',
+                        'https://api.openai.com/v1/images/generations',
                         data=img_req_data,
                         headers={
                             'Content-Type': 'application/json',
@@ -390,7 +434,7 @@ class EduWorkspaceHandler(http.server.SimpleHTTPRequestHandler):
                         },
                         method='POST'
                     )
-                    with urllib.request.urlopen(img_req, timeout=40) as img_resp:
+                    with urllib.request.urlopen(img_req, timeout=45) as img_resp:
                         img_res_body = json.loads(img_resp.read().decode('utf-8'))
                         if img_res_body.get('data') and len(img_res_body['data']) > 0:
                             first_item = img_res_body['data'][0]
@@ -403,73 +447,24 @@ class EduWorkspaceHandler(http.server.SimpleHTTPRequestHandler):
                                 self._send_json_response({
                                     "status": "success",
                                     "imageUrl": final_url,
-                                    "model": img_model
+                                    "model": f"OpenAI {img_model.upper()}"
                                 })
                                 return
                 except urllib.error.HTTPError as he:
                     try:
                         err_json = json.loads(he.read().decode('utf-8'))
-                        last_error = err_json.get('message') or err_json.get('error', {}).get('message') or str(he)
+                        last_error = err_json.get('error', {}).get('message') or err_json.get('message') or str(he)
                     except Exception:
                         last_error = str(he)
-                    print(f"⚠️ [/v1/images/generations {img_model} error] {last_error}")
+                    print(f"⚠️ [OpenAI {img_model} error] {last_error}")
                 except Exception as e:
                     last_error = str(e)
-                    print(f"⚠️ [/v1/images/generations {img_model} error] {e}")
+                    print(f"⚠️ [OpenAI {img_model} error] {e}")
 
-            # METODE 2: Chat Completions dengan Multimodal Modalities (gemini-3-flash / gemini-2.5-flash)
-            for chat_model in ['gemini-3-flash', 'gemini-2.5-flash']:
-                try:
-                    req_data = json.dumps({
-                        "model": chat_model,
-                        "messages": [{"role": "user", "content": f"Generate educational presentation visual illustration for: {prompt}"}],
-                        "modalities": ["text", "image"],
-                        "stream": False
-                    }).encode('utf-8')
-
-                    req = urllib.request.Request(
-                        'https://api.neosantara.xyz/v1/chat/completions',
-                        data=req_data,
-                        headers={
-                            'Content-Type': 'application/json',
-                            'Authorization': f'Bearer {api_key}',
-                            'User-Agent': 'EduWorkspace/1.0'
-                        },
-                        method='POST'
-                    )
-                    with urllib.request.urlopen(req, timeout=40) as response:
-                        res_body = json.loads(response.read().decode('utf-8'))
-                        choices = res_body.get('choices', [])
-                        if choices and choices[0].get('message'):
-                            msg = choices[0]['message']
-                            images = msg.get('images', [])
-                            if images and len(images) > 0:
-                                raw_img = images[0]
-                                img_url = raw_img.get('image_url', {}).get('url') if isinstance(raw_img.get('image_url'), dict) else (raw_img.get('url') or '')
-                                if img_url:
-                                    if img_url.startswith('http'):
-                                        img_url = fetch_url_as_b64(img_url)
-                                    self._send_json_response({
-                                        "status": "success",
-                                        "imageUrl": img_url,
-                                        "model": chat_model
-                                    })
-                                    return
-                except urllib.error.HTTPError as he:
-                    try:
-                        err_json = json.loads(he.read().decode('utf-8'))
-                        last_error = err_json.get('message') or err_json.get('error', {}).get('message') or str(he)
-                    except Exception:
-                        last_error = str(he)
-                    print(f"⚠️ [/v1/chat/completions {chat_model} error] {last_error}")
-                except Exception as e:
-                    last_error = str(e)
-                    print(f"⚠️ [/v1/chat/completions {chat_model} error] {e}")
-
-            # Jika semua metode gagal
+            # Jika kedua metode gagal
             self._send_json_response({
                 "status": "error",
-                "message": last_error or "Gagal menghubungi Neosantara API untuk pembuatan gambar."
+                "message": last_error or "Gagal menghubungi OpenAI API untuk pembuatan gambar."
             }, 500)
             return
 

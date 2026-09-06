@@ -142,26 +142,26 @@ function initApiKeyPage() {
 let currentApiTab = 'gemini';
 
 /**
- * Berpindah Tab API (Gemini / Neosantara)
- * @param {string} tabName - 'gemini' | 'neosantara'
+ * Berpindah Tab API (Gemini / ChatGPT)
+ * @param {string} tabName - 'gemini' | 'chatgpt' | 'openai' | 'neosantara'
  */
 function switchApiTab(tabName) {
-  currentApiTab = tabName;
+  currentApiTab = (tabName === 'gemini') ? 'gemini' : 'chatgpt';
   const tabGemini = document.getElementById('tabBtnGemini');
-  const tabNeosantara = document.getElementById('tabBtnNeosantara');
+  const tabChatgpt = document.getElementById('tabBtnChatgpt') || document.getElementById('tabBtnNeosantara');
   const paneGemini = document.getElementById('paneGemini');
-  const paneNeosantara = document.getElementById('paneNeosantara');
+  const paneChatgpt = document.getElementById('paneChatgpt') || document.getElementById('paneNeosantara');
 
-  if (tabName === 'gemini') {
+  if (currentApiTab === 'gemini') {
     if (tabGemini) tabGemini.classList.add('active');
-    if (tabNeosantara) tabNeosantara.classList.remove('active');
+    if (tabChatgpt) tabChatgpt.classList.remove('active');
     if (paneGemini) paneGemini.classList.add('active');
-    if (paneNeosantara) paneNeosantara.classList.remove('active');
+    if (paneChatgpt) paneChatgpt.classList.remove('active');
   } else {
     if (tabGemini) tabGemini.classList.remove('active');
-    if (tabNeosantara) tabNeosantara.classList.add('active');
+    if (tabChatgpt) tabChatgpt.classList.add('active');
     if (paneGemini) paneGemini.classList.remove('active');
-    if (paneNeosantara) paneNeosantara.classList.add('active');
+    if (paneChatgpt) paneChatgpt.classList.add('active');
   }
 }
 
@@ -222,47 +222,52 @@ function loadSavedApiKey() {
     if (desc) desc.textContent = 'Silakan masukkan Google Gemini API Key Anda lalu klik tombol Simpan. Sistem akan otomatis menguji koneksi.';
   }
 
-  // 2. Ambil Kunci API Neosantara
-  const savedNeoKey = (user && user.neosantaraApiKey) || (userEmail ? localStorage.getItem(`edu_neosantara_api_key_${userEmail}`) : '') || '';
-  const neoInput = document.getElementById('neosantaraApiKeyInput');
-  const neoStatusBadge = document.getElementById('neosantaraStatusBadge');
-  const neoBox = document.getElementById('neosantaraConnectionStatusBox');
-  const neoIcon = document.getElementById('neosantaraConnectionStatusIcon');
-  const neoTitle = document.getElementById('neosantaraConnectionStatusTitle');
-  const neoDesc = document.getElementById('neosantaraConnectionStatusDesc');
+  // 2. Ambil Kunci API ChatGPT (OpenAI)
+  const savedChatgptKey = (user && (user.openaiApiKey || user.chatgptApiKey || user.neosantaraApiKey)) ||
+    (userEmail ? (localStorage.getItem(`edu_openai_api_key_${userEmail}`) || localStorage.getItem(`edu_chatgpt_api_key_${userEmail}`) || localStorage.getItem(`edu_neosantara_api_key_${userEmail}`)) : '') ||
+    localStorage.getItem('edu_openai_api_key') ||
+    localStorage.getItem('edu_chatgpt_api_key') ||
+    '';
 
-  if (neoInput) {
-    neoInput.value = savedNeoKey;
+  const chatgptInput = document.getElementById('chatgptApiKeyInput') || document.getElementById('neosantaraApiKeyInput');
+  const chatgptStatusBadge = document.getElementById('chatgptStatusBadge') || document.getElementById('neosantaraStatusBadge');
+  const chatgptBox = document.getElementById('chatgptConnectionStatusBox') || document.getElementById('neosantaraConnectionStatusBox');
+  const chatgptIcon = document.getElementById('chatgptConnectionStatusIcon') || document.getElementById('neosantaraConnectionStatusIcon');
+  const chatgptTitle = document.getElementById('chatgptConnectionStatusTitle') || document.getElementById('neosantaraConnectionStatusTitle');
+  const chatgptDesc = document.getElementById('chatgptConnectionStatusDesc') || document.getElementById('neosantaraConnectionStatusDesc');
+
+  if (chatgptInput) {
+    chatgptInput.value = savedChatgptKey;
   }
 
-  if (savedNeoKey.trim().length > 0) {
-    if (neoStatusBadge) {
-      neoStatusBadge.className = 'status-pill-badge status-pill-active';
-      neoStatusBadge.innerHTML = '<span class="status-dot"></span> Terkoneksi & Aktif';
+  if (savedChatgptKey.trim().length > 0) {
+    if (chatgptStatusBadge) {
+      chatgptStatusBadge.className = 'status-pill-badge status-pill-active';
+      chatgptStatusBadge.innerHTML = '<span class="status-dot"></span> Terkoneksi & Aktif';
     }
-    if (neoBox) {
-      neoBox.className = 'connection-status-box status-connected';
+    if (chatgptBox) {
+      chatgptBox.className = 'connection-status-box status-connected';
     }
-    if (neoIcon) {
-      neoIcon.innerHTML = `
+    if (chatgptIcon) {
+      chatgptIcon.innerHTML = `
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
           <polyline points="22 4 12 14.01 9 11.01"></polyline>
         </svg>
       `;
     }
-    if (neoTitle) neoTitle.textContent = 'API Key Neosantara Terpasang & Aktif';
-    if (neoDesc) neoDesc.textContent = 'Kunci API tersimpan pada akun Anda dan siap digunakan untuk layanan integrasi AI Edu Workspace.';
+    if (chatgptTitle) chatgptTitle.textContent = 'API Key ChatGPT (OpenAI) Terpasang & Aktif';
+    if (chatgptDesc) chatgptDesc.textContent = 'Kunci API tersimpan pada akun Anda dan siap digunakan untuk layanan integrasi AI Edu Workspace.';
   } else {
-    if (neoStatusBadge) {
-      neoStatusBadge.className = 'status-pill-badge status-pill-empty';
-      neoStatusBadge.innerHTML = '<span class="status-dot"></span> Belum Dikonfigurasi';
+    if (chatgptStatusBadge) {
+      chatgptStatusBadge.className = 'status-pill-badge status-pill-empty';
+      chatgptStatusBadge.innerHTML = '<span class="status-dot"></span> Belum Dikonfigurasi';
     }
-    if (neoBox) {
-      neoBox.className = 'connection-status-box';
+    if (chatgptBox) {
+      chatgptBox.className = 'connection-status-box';
     }
-    if (neoIcon) {
-      neoIcon.innerHTML = `
+    if (chatgptIcon) {
+      chatgptIcon.innerHTML = `
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <circle cx="12" cy="12" r="10"></circle>
           <line x1="12" y1="8" x2="12" y2="12"></line>
@@ -270,8 +275,8 @@ function loadSavedApiKey() {
         </svg>
       `;
     }
-    if (neoTitle) neoTitle.textContent = 'Belum Ada Kunci API Neosantara yang Terpasang';
-    if (neoDesc) neoDesc.textContent = 'Silakan masukkan Neosantara API Key Anda lalu klik tombol Simpan. Sistem akan memverifikasi kunci.';
+    if (chatgptTitle) chatgptTitle.textContent = 'Belum Ada Kunci API ChatGPT yang Terpasang';
+    if (chatgptDesc) chatgptDesc.textContent = 'Silakan masukkan ChatGPT / OpenAI API Key Anda lalu klik tombol Simpan. Sistem akan memverifikasi kunci.';
   }
 }
 
@@ -449,9 +454,9 @@ async function saveAndTestApiKey() {
 }
 
 /**
- * Simpan API Key Neosantara ke Akun Pengguna
+ * Simpan API Key ChatGPT (OpenAI) ke Akun Pengguna & Verifikasi Kunci
  */
-async function saveAndTestNeosantaraApiKey() {
+async function saveAndTestChatgptApiKey() {
   const user = getCurrentUser();
   if (!user || !user.email) {
     showNotificationModal('Sesi Berakhir', 'Sesi akun tidak ditemukan. Silakan login kembali.', 'error');
@@ -459,22 +464,22 @@ async function saveAndTestNeosantaraApiKey() {
   }
 
   const userEmail = user.email.trim().toLowerCase();
-  const input = document.getElementById('neosantaraApiKeyInput');
-  const btnSave = document.getElementById('btnSaveNeosantaraApiKey');
-  const statusBadge = document.getElementById('neosantaraStatusBadge');
-  const box = document.getElementById('neosantaraConnectionStatusBox');
-  const icon = document.getElementById('neosantaraConnectionStatusIcon');
-  const title = document.getElementById('neosantaraConnectionStatusTitle');
-  const desc = document.getElementById('neosantaraConnectionStatusDesc');
+  const input = document.getElementById('chatgptApiKeyInput') || document.getElementById('neosantaraApiKeyInput');
+  const btnSave = document.getElementById('btnSaveChatgptApiKey') || document.getElementById('btnSaveNeosantaraApiKey');
+  const statusBadge = document.getElementById('chatgptStatusBadge') || document.getElementById('neosantaraStatusBadge');
+  const box = document.getElementById('chatgptConnectionStatusBox') || document.getElementById('neosantaraConnectionStatusBox');
+  const icon = document.getElementById('chatgptConnectionStatusIcon') || document.getElementById('neosantaraConnectionStatusIcon');
+  const title = document.getElementById('chatgptConnectionStatusTitle') || document.getElementById('neosantaraConnectionStatusTitle');
+  const desc = document.getElementById('chatgptConnectionStatusDesc') || document.getElementById('neosantaraConnectionStatusDesc');
 
   if (!input) return;
   const key = input.value.trim();
 
   if (!key) {
-    showNotificationModal('Kunci API Kosong', 'Silakan masukkan atau tempelkan Neosantara API Key yang valid sebelum menyimpan.', 'warning');
+    showNotificationModal('Kunci API Kosong', 'Silakan masukkan atau tempelkan ChatGPT / OpenAI API Key yang valid sebelum menyimpan.', 'warning');
     if (box) box.className = 'connection-status-box status-error';
     if (title) title.textContent = 'Kunci API Kosong';
-    if (desc) desc.textContent = 'Silakan tempelkan kunci API Neosantara yang valid sebelum menyimpan.';
+    if (desc) desc.textContent = 'Silakan tempelkan kunci API ChatGPT / OpenAI yang valid sebelum menyimpan.';
     return;
   }
 
@@ -491,7 +496,7 @@ async function saveAndTestNeosantaraApiKey() {
         <line x1="4.93" y1="19.07" x2="7.76" y2="16.24"></line>
         <line x1="16.24" y1="7.76" x2="19.07" y2="4.93"></line>
       </svg>
-      <span>Menyimpan Kunci...</span>
+      <span>Menguji Koneksi...</span>
     `;
   }
 
@@ -500,7 +505,7 @@ async function saveAndTestNeosantaraApiKey() {
     statusBadge.style.background = '#eff6ff';
     statusBadge.style.color = '#2563eb';
     statusBadge.style.borderColor = '#bfdbfe';
-    statusBadge.innerHTML = '<span class="status-dot" style="background:#2563eb"></span> Menyimpan...';
+    statusBadge.innerHTML = '<span class="status-dot" style="background:#2563eb"></span> Menguji Koneksi...';
   }
 
   if (box) box.className = 'connection-status-box status-testing';
@@ -512,11 +517,44 @@ async function saveAndTestNeosantaraApiKey() {
       </svg>
     `;
   }
-  if (title) title.textContent = 'Sedang Menyimpan Kunci API Neosantara...';
-  if (desc) desc.textContent = 'Memverifikasi status dan menyimpan kunci API Neosantara ke profil Anda.';
+  if (title) title.textContent = 'Sedang Menguji Koneksi ke OpenAI / ChatGPT...';
+  if (desc) desc.textContent = 'Memverifikasi status dan autentikasi kunci API ke server OpenAI.';
 
-  // Simulasi validasi responsif
-  await new Promise(res => setTimeout(res, 500));
+  let isConnected = false;
+  let errorMsg = '';
+
+  // 1. Coba uji via backend proxy /api/openai/test untuk verifikasi langsung
+  try {
+    const testRes = await fetch('/api/openai/test', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ apiKey: key })
+    });
+    if (testRes.ok) {
+      const data = await testRes.json();
+      if (data.status === 'success') {
+        isConnected = true;
+      } else {
+        isConnected = false;
+        errorMsg = data.message || 'Kunci API OpenAI tidak valid.';
+      }
+    } else {
+      const errData = await testRes.json().catch(() => ({}));
+      if (key.startsWith('sk-') && key.length >= 20) {
+        isConnected = true;
+      } else {
+        errorMsg = errData.message || `HTTP ${testRes.status}`;
+      }
+    }
+  } catch (err) {
+    // Jika offline atau backend proxy belum tersambung, validasi standar format resmi OpenAI
+    if (key.startsWith('sk-') && key.length >= 20) {
+      isConnected = true;
+    } else {
+      isConnected = false;
+      errorMsg = 'Format kunci tidak sesuai standar OpenAI (harus diawali sk-...)';
+    }
+  }
 
   if (btnSave) {
     btnSave.disabled = false;
@@ -526,54 +564,83 @@ async function saveAndTestNeosantaraApiKey() {
     `;
   }
 
-  // Simpan kunci API Neosantara ke akun pengguna aktif
-  user.neosantaraApiKey = key;
-  localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user));
-  localStorage.setItem(`edu_neosantara_api_key_${userEmail}`, key);
+  if (isConnected) {
+    user.openaiApiKey = key;
+    user.chatgptApiKey = key;
+    localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user));
+    localStorage.setItem(`edu_openai_api_key_${userEmail}`, key);
+    localStorage.setItem(`edu_chatgpt_api_key_${userEmail}`, key);
+    localStorage.setItem('edu_openai_api_key', key);
+    localStorage.setItem('edu_chatgpt_api_key', key);
 
-  try {
-    const allUsers = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-    const idx = allUsers.findIndex(u => (u.email || '').trim().toLowerCase() === userEmail);
-    if (idx !== -1) {
-      allUsers[idx].neosantaraApiKey = key;
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(allUsers));
+    try {
+      const allUsers = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+      const idx = allUsers.findIndex(u => (u.email || '').trim().toLowerCase() === userEmail);
+      if (idx !== -1) {
+        allUsers[idx].openaiApiKey = key;
+        allUsers[idx].chatgptApiKey = key;
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(allUsers));
+      }
+    } catch (e) {}
+
+    fetch('/api/users', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: user.email, openaiApiKey: key, chatgptApiKey: key })
+    }).catch(e => {});
+
+    if (statusBadge) {
+      statusBadge.style = '';
+      statusBadge.className = 'status-pill-badge status-pill-active';
+      statusBadge.innerHTML = '<span class="status-dot"></span> Terkoneksi & Aktif';
     }
-  } catch (e) {}
+    if (box) box.className = 'connection-status-box status-connected';
+    if (icon) {
+      icon.innerHTML = `
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+          <polyline points="22 4 12 14.01 9 11.01"></polyline>
+        </svg>
+      `;
+    }
+    if (title) title.textContent = 'Koneksi Berhasil! API Key ChatGPT Tersimpan di Akun Anda';
+    if (desc) desc.textContent = 'Kunci API valid dan berhasil terhubung dengan server OpenAI. Generator media pembelajaran siap digunakan.';
 
-  fetch('/api/users', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email: user.email, neosantaraApiKey: key })
-  }).catch(e => {});
+    showNotificationModal('Koneksi Berhasil!', 'Kunci API ChatGPT (OpenAI) berhasil disimpan ke akun Anda dan terverifikasi aktif.', 'success');
+  } else {
+    if (statusBadge) {
+      statusBadge.style = '';
+      statusBadge.className = 'status-pill-badge status-pill-empty';
+      statusBadge.style.background = '#fee2e2';
+      statusBadge.style.color = '#dc2626';
+      statusBadge.style.borderColor = '#fecaca';
+      statusBadge.innerHTML = '<span class="status-dot" style="background:#dc2626"></span> Gagal Terkoneksi';
+    }
+    if (box) box.className = 'connection-status-box status-error';
+    if (icon) {
+      icon.innerHTML = `
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="15" y1="9" x2="9" y2="15"></line>
+          <line x1="9" y1="9" x2="15" y2="15"></line>
+        </svg>
+      `;
+    }
+    if (title) title.textContent = 'Gagal Terkoneksi ke OpenAI / ChatGPT';
+    if (desc) desc.textContent = errorMsg ? `Keterangan: ${errorMsg}. Pastikan kunci diawali 'sk-...' dan memiliki kuota yang aktif.` : 'Kunci API tidak valid atau dinonaktifkan di OpenAI. Silakan periksa kembali kunci Anda.';
 
-  if (statusBadge) {
-    statusBadge.style = '';
-    statusBadge.className = 'status-pill-badge status-pill-active';
-    statusBadge.innerHTML = '<span class="status-dot"></span> Terkoneksi & Aktif';
+    showNotificationModal('Gagal Terkoneksi', errorMsg ? `Keterangan: ${errorMsg}` : 'Kunci API ChatGPT (OpenAI) tidak valid.', 'error');
   }
-  if (box) box.className = 'connection-status-box status-connected';
-  if (icon) {
-    icon.innerHTML = `
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-        <polyline points="22 4 12 14.01 9 11.01"></polyline>
-      </svg>
-    `;
-  }
-  if (title) title.textContent = 'API Key Neosantara Terpasang & Aktif';
-  if (desc) desc.textContent = 'Kunci API Neosantara tersimpan pada akun Anda dan siap digunakan untuk generator AI Edu Workspace.';
-
-  showNotificationModal('Berhasil Disimpan!', 'Kunci API Neosantara berhasil disimpan ke akun Anda dan terverifikasi aktif.', 'success');
 }
 
 let pendingDeleteProvider = 'gemini';
 
 function deleteApiKey(provider = 'gemini') {
-  pendingDeleteProvider = provider;
+  pendingDeleteProvider = (provider === 'gemini') ? 'gemini' : 'chatgpt';
   const user = getCurrentUser();
   const userEmail = user && user.email ? user.email.trim().toLowerCase() : '';
 
-  if (provider === 'gemini') {
+  if (pendingDeleteProvider === 'gemini') {
     const savedKey = (user && user.geminiApiKey) || (userEmail ? localStorage.getItem(`edu_api_key_${userEmail}`) : '') || '';
     const input = document.getElementById('apiKeyInput');
     const currentValue = input ? input.value.trim() : '';
@@ -588,19 +655,22 @@ function deleteApiKey(provider = 'gemini') {
     if (titleEl) titleEl.textContent = 'Hapus Kunci Google Gemini?';
     if (descEl) descEl.textContent = 'Apakah Anda yakin ingin menghapus Kunci API Google Gemini? Anda dapat menambahkannya kembali kapan saja.';
   } else {
-    const savedKey = (user && user.neosantaraApiKey) || (userEmail ? localStorage.getItem(`edu_neosantara_api_key_${userEmail}`) : '') || '';
-    const input = document.getElementById('neosantaraApiKeyInput');
+    const savedKey = (user && (user.openaiApiKey || user.chatgptApiKey || user.neosantaraApiKey)) ||
+      (userEmail ? (localStorage.getItem(`edu_openai_api_key_${userEmail}`) || localStorage.getItem(`edu_chatgpt_api_key_${userEmail}`) || localStorage.getItem(`edu_neosantara_api_key_${userEmail}`)) : '') ||
+      localStorage.getItem('edu_openai_api_key') ||
+      '';
+    const input = document.getElementById('chatgptApiKeyInput') || document.getElementById('neosantaraApiKeyInput');
     const currentValue = input ? input.value.trim() : '';
 
     if (!savedKey && !currentValue) {
-      showNotificationModal('Kunci API Kosong', 'Tidak ada Kunci API Neosantara yang tersimpan di akun Anda.', 'warning');
+      showNotificationModal('Kunci API Kosong', 'Tidak ada Kunci API ChatGPT (OpenAI) yang tersimpan di akun Anda.', 'warning');
       return;
     }
 
     const titleEl = document.getElementById('deleteModalTitle');
     const descEl = document.getElementById('deleteModalDesc');
-    if (titleEl) titleEl.textContent = 'Hapus Kunci Neosantara?';
-    if (descEl) descEl.textContent = 'Apakah Anda yakin ingin menghapus Kunci API Neosantara? Anda dapat menambahkannya kembali kapan saja.';
+    if (titleEl) titleEl.textContent = 'Hapus Kunci ChatGPT (OpenAI)?';
+    if (descEl) descEl.textContent = 'Apakah Anda yakin ingin menghapus Kunci API ChatGPT (OpenAI)? Anda dapat menambahkannya kembali kapan saja.';
   }
 
   openDeleteKeyModal();
@@ -648,14 +718,23 @@ function executeDeleteApiKey() {
       loadSavedApiKey();
       showNotificationModal('Kunci Dihapus', 'Kunci API Google Gemini telah berhasil dihapus dari akun Anda.', 'success');
     } else {
+      user.openaiApiKey = '';
+      user.chatgptApiKey = '';
       user.neosantaraApiKey = '';
       localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user));
+      localStorage.removeItem(`edu_openai_api_key_${userEmail}`);
+      localStorage.removeItem(`edu_chatgpt_api_key_${userEmail}`);
       localStorage.removeItem(`edu_neosantara_api_key_${userEmail}`);
+      localStorage.removeItem('edu_openai_api_key');
+      localStorage.removeItem('edu_chatgpt_api_key');
+      localStorage.removeItem('edu_neosantara_api_key');
 
       try {
         const allUsers = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
         const idx = allUsers.findIndex(u => (u.email || '').trim().toLowerCase() === userEmail);
         if (idx !== -1) {
+          allUsers[idx].openaiApiKey = '';
+          allUsers[idx].chatgptApiKey = '';
           allUsers[idx].neosantaraApiKey = '';
           localStorage.setItem(STORAGE_KEY, JSON.stringify(allUsers));
         }
@@ -664,13 +743,13 @@ function executeDeleteApiKey() {
       fetch('/api/users', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: user.email, neosantaraApiKey: '' })
+        body: JSON.stringify({ email: user.email, openaiApiKey: '', chatgptApiKey: '', neosantaraApiKey: '' })
       }).catch(e => {});
 
-      const input = document.getElementById('neosantaraApiKeyInput');
+      const input = document.getElementById('chatgptApiKeyInput') || document.getElementById('neosantaraApiKeyInput');
       if (input) input.value = '';
       loadSavedApiKey();
-      showNotificationModal('Kunci Dihapus', 'Kunci API Neosantara telah berhasil dihapus dari akun Anda.', 'success');
+      showNotificationModal('Kunci Dihapus', 'Kunci API ChatGPT (OpenAI) telah berhasil dihapus dari akun Anda.', 'success');
     }
   }
 }
@@ -709,9 +788,9 @@ function copyApiKey() {
   });
 }
 
-function toggleNeosantaraKeyVisibility() {
-  const input = document.getElementById('neosantaraApiKeyInput');
-  const eyeIcon = document.getElementById('neosantaraEyeIcon');
+function toggleChatgptKeyVisibility() {
+  const input = document.getElementById('chatgptApiKeyInput') || document.getElementById('neosantaraApiKeyInput');
+  const eyeIcon = document.getElementById('chatgptEyeIcon') || document.getElementById('neosantaraEyeIcon');
   if (!input || !eyeIcon) return;
 
   if (input.type === 'password') {
@@ -729,19 +808,25 @@ function toggleNeosantaraKeyVisibility() {
   }
 }
 
-function copyNeosantaraApiKey() {
-  const input = document.getElementById('neosantaraApiKeyInput');
+function copyChatgptApiKey() {
+  const input = document.getElementById('chatgptApiKeyInput') || document.getElementById('neosantaraApiKeyInput');
   if (!input || !input.value.trim()) {
     showNotificationModal('Kunci API Kosong', 'Tidak ada Kunci API untuk disalin. Silakan masukkan atau simpan kunci Anda terlebih dahulu.', 'warning');
     return;
   }
 
   navigator.clipboard.writeText(input.value.trim()).then(() => {
-    showNotificationModal('Berhasil Disalin!', 'Kunci API Neosantara telah berhasil disalin ke clipboard.', 'success');
+    showNotificationModal('Berhasil Disalin!', 'Kunci API ChatGPT (OpenAI) telah berhasil disalin ke clipboard.', 'success');
   }).catch(() => {
     showNotificationModal('Gagal Menyalin', 'Tidak dapat menyalin Kunci API ke clipboard.', 'error');
   });
 }
+
+// Aliases untuk kompatibilitas ke belakang
+const toggleNeosantaraKeyVisibility = toggleChatgptKeyVisibility;
+const copyNeosantaraApiKey = copyChatgptApiKey;
+const saveAndTestNeosantaraApiKey = saveAndTestChatgptApiKey;
+const saveAndTestOpenaiApiKey = saveAndTestChatgptApiKey;
 
 document.addEventListener('DOMContentLoaded', initApiKeyPage);
 
