@@ -32,9 +32,10 @@
       "generate_modul_ajar"
     ],
     "subscriptionStart": "2026-09-04",
-    "subscriptionEnd": "2026-09-05",
+    "subscriptionEnd": "2026-10-06",
     "geminiApiKey": "",
-    "isDeleted": false
+    "isDeleted": false,
+    "rejectReason": ""
   },
   {
     "id": "USR-748444",

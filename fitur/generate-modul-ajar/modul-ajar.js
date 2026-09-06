@@ -612,9 +612,13 @@ async function callGeminiWithAccountKey(promptText, fallbackFn, customConfig) {
   let apiKey = getEffectiveApiKey();
   if (!apiKey) {
     try {
-      const res = await fetch('/api/users');
+      const ctrl = new AbortController();
+      const tid = setTimeout(() => ctrl.abort(), 2000);
+      const res = await fetch('/api/users', { signal: ctrl.signal });
+      clearTimeout(tid);
       if (res.ok) {
-        const users = await res.json();
+        const rawUsers = await res.json();
+        const users = Array.isArray(rawUsers) ? rawUsers : (rawUsers?.users || []);
         const cur = getCurrentUser();
         const curEmail = (cur?.email || localStorage.getItem('edu_current_user_email') || '').toLowerCase().trim();
         const found = users.find(u => (u.email || '').toLowerCase() === curEmail);
@@ -679,7 +683,7 @@ async function callGeminiWithAccountKey(promptText, fallbackFn, customConfig) {
     `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent`
   );
 
-  const uniqueEndpoints = Array.from(new Set(candidateEndpoints)).slice(0, 3);
+  const uniqueEndpoints = Array.from(new Set(candidateEndpoints)).slice(0, 2);
   let lastErrorMsg = '';
 
   const config = {
@@ -692,7 +696,7 @@ async function callGeminiWithAccountKey(promptText, fallbackFn, customConfig) {
     try {
       const url = `${baseEndpoint}?key=${encodeURIComponent(apiKey)}`;
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 12000);
+      const timeoutId = setTimeout(() => controller.abort(), 8000);
 
       const res = await fetch(url, {
         method: 'POST',
@@ -1859,11 +1863,18 @@ async function proceedGenerateModul() {
     }, 1500);
 
     try {
-      // Panggil AI secara nyata untuk men-generate seluruh konten Modul Ajar
-      const aiContent = await generateFullModulWithAI(modulPayload);
+      // Panggil AI dengan batas waktu ketat maksimal 15 detik (Promise.race)
+      // Menjamin 100% proses tidak akan pernah macet atau tertahan berlama-lama
+      const AI_MAX_TIMEOUT_MS = 15000;
+      const aiContent = await Promise.race([
+        generateFullModulWithAI(modulPayload),
+        new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('Batas waktu AI 15 detik terlampaui')), AI_MAX_TIMEOUT_MS)
+        )
+      ]);
       modulPayload.aiGeneratedContent = aiContent;
     } catch (e) {
-      console.warn('AI generation error, applying comprehensive fallback:', e);
+      console.warn('AI generation timeout/error, applying comprehensive fallback immediately:', e);
       modulPayload.aiGeneratedContent = buildComprehensiveAiModulContent(modulPayload);
     } finally {
       clearInterval(progressTimer);
