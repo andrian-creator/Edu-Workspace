@@ -2482,28 +2482,31 @@ ATURAN WAJIB DAN MENGIKAT — PELANGGARAN TIDAK DIIZINKAN:
    - Seluruh aktivitas pembelajaran WAJIB menyebutkan dan memanfaatkan fasilitas yang tersedia: ${fasilitas}.
    - Media digital "${media}" HARUS disebutkan secara spesifik di dalam aktivitas, bukan hanya disebutkan di heading.
 
-7. MATERI AJAR DESKRIPTIF (FOKUS MATERI TEKNIS & TABEL):
+7. MATERI AJAR DESKRIPTIF (FOKUS MATERI TEKNIS, SUB-JUDUL RAPI & TABEL):
    - WAJIB FOKUS PENUH PADA SUBSTANSI MATERI DAN KONTEN ILMIAH/TEKNIS dari "${topik}".
    - DILARANG KERAS MENULIS NARASI META SEPERTI: "Dalam konteks pembelajaran di SMK...", "Penerapan model Project Based Learning berbasis pendekatan TPACK terbukti...", "Melalui sintaks PjBL peserta didik dilatih...". Naskah materi ajar adalah bahan ajar teknis/keilmuan murni untuk penguasaan materi "${topik}"!
-   - Uraikan 3-4 bagian komprehensif: (a) Definisi ilmiah, konsep esensial, dan teori dasar materi ${topik}, (b) Anatomi, prinsip kerja, atau prosedur operasional standar (SOP) teknis, (c) Penerapan profesional di industri.
-   - WAJIB SERTAKAN MINIMAL 1 TABEL RINGKASAN MATERI (format Markdown Table: | Header 1 | Header 2 | Header 3 |\\n|---|---|---|...) yang membandingkan parameter teknis, klasifikasi konsep, teknik, atau fungsi komponen terkait materi "${topik}".
+   - Tuliskan dengan format teks terstruktur yang rapi: gunakan sub-judul bernomor (contoh: "1. Konsep Dasar ...", "2. Sudut Pandang ...", "3. Standar Operasional ..."), paragraf penjelasan ilmiah yang mendalam dan tuntas, serta WAJIB SERTAKAN MINIMAL 1 TABEL PARAMETER TEKNIS RINGKASAN MATERI (format Markdown Table: | Parameter Teknis | Deskripsi & Prinsip Kerja | Standar SOP / Kriteria Industri |\n|---|---|---|\n...).
+   - DILARANG menggunakan unescaped control character atau literal '\\n' yang tidak valid di dalam JSON string.
 
-8. MATERI TAMBAHAN (PENGAYAAN MENDALAM):
-   - Jika materi tambahan diisi ("${materiTambahan}"), jabarkan secara rinci, mendalam, dan teknis konsep pendukung atau pengayaannya, disertai tabel komparasi/panduan teknis markdown jika relevan.
+8. MATERI TAMBAHAN (PENGAYAAN DESKRIPTIF LENGKAP & TABEL KOMPARATIF):
+   - Jika materi tambahan diisi ("${materiTambahan}"), JANGAN HANYA menuliskan 1-3 butir kalimat pendek! Uraikan secara komprehensif, mendalam, dan deskriptif dalam bentuk paragraf penjelasan terperinci (minimal 2-3 paragraf mendalam), sertakan studi kasus atau aplikasi teknologi terkini industri, serta WAJIB SERTAKAN 1 TABEL RINGKASAN PENGAYAAN / KOMPARASI MATERI TINGKAT LANJUT (format Markdown Table: | Dimensi Eksplorasi / Inovasi | Penerapan Terapan Lanjut | Relevansi Industri & Portofolio |).
 
 9. GLOSARIUM:
-   - Minimal 5 istilah teknis yang KHUSUS dan RELEVAN dengan topik "${topik}" dan elemen CP "${elemenCP}".
-   - DILARANG menggunakan istilah generik non-teknis.
+   - Minimal 5 istilah teknis yang KHUSUS, SPESIFIK, dan MURNI DARI MATERI "${topik}" (misal terminologi teknis keilmuan/kejuruan).
+   - DILARANG KERAS menggunakan istilah generik non-teknis atau istilah proses pedagogis seperti: "Sintesis Solutif", "Verifikasi Empiris", "Konseptualisasi", "Analisis Variabel", "Discovery Learning", "TPACK". Glosarium HARUS murni istilah materi ajar!
 
 10. DAFTAR PUSTAKA:
-    - Minimal 5 referensi ilmiah terpercaya dari tahun 2020-2026.
-    - Nama pengarang, judul, jurnal/penerbit, tahun HARUS relevan dan masuk akal untuk topik "${topik}".
+    - Tuliskan semua referensi otentik yang digunakan sebagai sumber bahan ajar dan acuan sistem AI:
+      (a) Dokumen Resmi Kurikulum: Badan Standar, Kurikulum, dan Asesmen Pendidikan (BSKAP). (2024). Panduan Pembelajaran dan Asesmen Kurikulum Merdeka. Jakarta: Kemendikbudristek.
+      (b) Buku Teks / Referensi Standar Industri Otentik yang relevan dengan mata pelajaran ${mapel} dan materi ${topik}.
+      (c) Sumber AI Engine yang digunakan: Google DeepMind. (2024). Gemini: A Family of Highly Capable Multimodal Models.
+    - DILARANG merekayasa atau membuat-buat nama jurnal palsu yang mencantumkan nama model pembelajaran (misal dilarang menulis "Penerapan Model PJBL dalam..." atau "Berbasis Pendekatan TPACK").
 
 11. ASESMEN & RUBRIK:
     - Asesmen Diagnostik: "Pretest (Tes Diagnostik Kognitif Awal)" untuk mengukur kesiapan awal murid pada "${topik}".
     - Asesmen Formatif: "Asesmen Formatif (Lembar Observasi Proses & Kinerja Praktik)" relevan dengan metode "${metode}".
     - Asesmen Sumatif: "Post-test / Asesmen Sumatif (Uji Kinerja Praktik & Portofolio)" mengukur pencapaian TP.
-    - Rubrik: 3 aspek yang relevan dengan model "${model}" dan TP yang ditetapkan.
+    - Rubrik Penilaian: WAJIB memuat 3 aspek penilaian lengkap dengan deskriptor kriteria Skor 1 (Kurang), Skor 2 (Cukup), Skor 3 (Baik), dan Skor 4 (Sangat Baik) yang spesifik untuk materi ${topik} dan model ${model}.
 
 =============================================================================
 FORMAT RESPONS — OUTPUT WAJIB JSON MURNI (VALID JSON TANPA TEKS PEMBUKA/PENUTUP):
@@ -2720,7 +2723,7 @@ function ensureCompleteMeetings(aiData, targetCount, p) {
 }
 
 /**
- * Pastikan Seluruh Bagian Akhir Modul (Glosarium, Daftar Pustaka, Pengayaan, Remedial, LKPD)
+ * Pastikan Seluruh Bagian Akhir Modul (Rubrik, Glosarium, Daftar Pustaka, Pengayaan, Remedial, LKPD)
  * Selalu Terisi Utuh, Kontekstual, dan Tidak Pernah Kosong
  */
 function ensureCompleteSections(aiData, p) {
@@ -2729,13 +2732,16 @@ function ensureCompleteSections(aiData, p) {
   const model = p.modelPembelajaran || 'Problem Based Learning (PBL)';
   const isPjBL = (model || '').toLowerCase().includes('project') || (model || '').toLowerCase().includes('pjbl');
 
-  // 1. Glosarium Berdaya Tahan Tinggi
+  // 1. Rubrik Penilaian Berdaya Tahan Tinggi (Pastikan tidak pernah kosong)
+  aiData.rubrikPenilaian = resolveContextualRubrik(aiData.rubrikPenilaian, p);
+
+  // 2. Glosarium Berdaya Tahan Tinggi (Materi teknis murni, tanpa istilah generik)
   aiData.glosarium = resolveContextualGlosarium(aiData.glosarium, p);
 
-  // 2. Daftar Pustaka Berdaya Tahan Tinggi
+  // 3. Daftar Pustaka Berdaya Tahan Tinggi (Bahan acuan resmi BSKAP, buku standar, dan AI)
   aiData.daftarPustaka = resolveContextualDaftarPustaka(aiData.daftarPustaka, p);
 
-  // 3. Pengayaan & Remedial
+  // 4. Pengayaan & Remedial
   if (!aiData.pengayaan || typeof aiData.pengayaan !== 'string' || !aiData.pengayaan.trim()) {
     aiData.pengayaan = isPjBL
       ? `Murid yang telah menyelesaikan produk proyek dengan capaian sangat baik direkomendasikan mengerjakan Advanced Project Enhancement seputar materi ${topik} dan mempublikasikan karya ke portofolio digital.`
@@ -2745,7 +2751,7 @@ function ensureCompleteSections(aiData, p) {
     aiData.remedial = `Murid yang memerlukan penguatan kompetensi mengikuti bimbingan intensif terbimbing (scaffolding) dengan panduan langkah bertahap, telaah ulang konsep esensial ${topik}, dan sesi pendampingan tutor sebaya.`;
   }
 
-  // 4. LKPD
+  // 5. LKPD
   if (!aiData.lkpd || typeof aiData.lkpd !== 'object') {
     aiData.lkpd = {
       judul: `Lembar Kerja Peserta Didik (LKPD): Penguasaan Terapan ${topik}`,
@@ -2760,16 +2766,19 @@ function ensureCompleteSections(aiData, p) {
     };
   }
 
-  // 5. Sanitasi Materi Ajar Deskriptif: Hapus meta-narasi pedagogis yang tidak perlu
+  // 6. Sanitasi Materi Ajar Deskriptif: Unescape literal newline & hapus meta-narasi pedagogis
   if (typeof aiData.materiAjarDeskriptif === 'string') {
     aiData.materiAjarDeskriptif = aiData.materiAjarDeskriptif
+      .replace(/\\r\\n/g, '\n')
+      .replace(/\\n/g, '\n')
+      .replace(/\r\n/g, '\n')
       .replace(/Dalam konteks pembelajaran di[^.]*\.\s*/gi, '')
       .replace(/Penerapan model (Project Based Learning|PBL|PjBL|Discovery|Inquiry)[^.]*terbukti sangat efektif[^.]*\.\s*/gi, '')
       .replace(/Melalui sintaks (PjBL|PBL|Discovery|Inquiry)[^.]*peserta didik dilatih[^.]*\.\s*/gi, '')
       .trim();
   }
 
-  // 6. Normalisasi Terminologi Asesmen ke Bahasa Teknologi Pendidikan Baku
+  // 7. Normalisasi Terminologi Asesmen ke Bahasa Teknologi Pendidikan Baku
   if (Array.isArray(aiData.asesmen)) {
     aiData.asesmen.forEach(item => {
       if (!item) return;
@@ -2783,7 +2792,7 @@ function ensureCompleteSections(aiData, p) {
     });
   }
 
-  // 7. Bersihkan sintaks dari Tahap Awal dan Penutup di seluruh pertemuan
+  // 8. Bersihkan sintaks dari Tahap Awal dan Penutup di seluruh pertemuan
   if (Array.isArray(aiData.pengalamanBelajar)) {
     aiData.pengalamanBelajar.forEach(m => {
       if (m.awal && m.awal.deepLearningSintaks) {
@@ -2797,7 +2806,86 @@ function ensureCompleteSections(aiData, p) {
 }
 
 /**
+ * Normalisasi dan Resolusi Rubrik Penilaian (Multi-Format & Contextual Fallback)
+ */
+function resolveContextualRubrik(raw, data) {
+  let list = [];
+  if (Array.isArray(raw) && raw.length > 0) {
+    raw.forEach(item => {
+      if (!item) return;
+      const aspek = item.aspek || item.kriteria || item.dimensi || '';
+      const s1 = item.skor1 || item.kurang || item.skor_1 || '';
+      const s2 = item.skor2 || item.cukup || item.skor_2 || '';
+      const s3 = item.skor3 || item.baik || item.skor_3 || '';
+      const s4 = item.skor4 || item.sangatBaik || item.sangat_baik || item.skor_4 || '';
+      if (aspek && (s1 || s2 || s3 || s4)) {
+        list.push({ aspek, skor1: s1 || '-', skor2: s2 || '-', skor3: s3 || '-', skor4: s4 || '-' });
+      }
+    });
+  }
+
+  if (list.length < 3) {
+    const d = data || {};
+    const topik = d.topikMateri || 'Materi Pokok';
+    const isPjBL = String(d.modelPembelajaran || '').toLowerCase().includes('project') || String(d.modelPembelajaran || '').toLowerCase().includes('pjbl');
+
+    if (isPjBL) {
+      list = [
+        {
+          aspek: `Penguasaan Konsep & Keterampilan Teknis (${topik})`,
+          skor1: `Hasil karya proyek belum menerapkan parameter teknis ${topik}; luaran kerja belum tuntas dan terdapat banyak kekeliruan mendasar.`,
+          skor2: `Hasil karya proyek menerapkan konsep dasar ${topik}, namun parameter teknis belum presisi dan masih memerlukan bimbingan intensif.`,
+          skor3: `Karya proyek menerapkan konsep dan parameter teknis ${topik} dengan tepat, terstruktur, rapi, dan berfungsi optimal sesuai kriteria.`,
+          skor4: `Karya proyek menunjukkan penguasaan materi ${topik} tingkat tinggi, estetika luar biasa, orisinal, serta memiliki nilai inovasi yang siap dipublikasikan.`
+        },
+        {
+          aspek: "Prosedur Kerja, Kepatuhan SOP & Keselamatan Fasilitas",
+          skor1: "Alur kerja tidak sistematis, mengabaikan SOP keselamatan fasilitas, dan manajemen waktu melampaui batas toleransi.",
+          skor2: "Mengikuti alur kerja dasar namun kepatuhan SOP masih inkonsisten dan penyelesaian tahapan kerja mengalami keterlambatan.",
+          skor3: "Menjalankan seluruh tahapan proyek secara sistematis sesuai SOP, tertib keselamatan kerja, dan tuntas tepat waktu.",
+          skor4: "Menunjukkan kedisiplinan kerja mandiri yang sempurna, kepatuhan SOP tanpa cela, efisiensi waktu tinggi, dan manajemen risiko matang."
+        },
+        {
+          aspek: "Kolaborasi Tim, Komunikasi & Gelar Karya",
+          skor1: "Pasif dalam kelompok; presentasi gelar karya belum terstruktur dan tidak mampu menanggapi pertanyaan audiens.",
+          skor2: "Partisipasi dalam tim masih terbatas; presentasi cukup jelas namun argumentasi teknis pendukung karya masih lemah.",
+          skor3: "Berkolaborasi aktif dan komunikatif dalam tim; presentasi karya runtut, komunikatif, dan argumentasi didasari data valid.",
+          skor4: "Menjadi motor penggerak kolaborasi tim; presentasi sangat persuasif, interaktif, memukau audiens, dan menyajikan refleksi evaluasi karya secara komprehensif."
+        }
+      ];
+    } else {
+      list = [
+        {
+          aspek: `Penguasaan Konseptual & Analisis Masalah (${topik})`,
+          skor1: `Belum mampu mengidentifikasi esensi materi ${topik}; analisis masih sangat dangkal dan belum menunjukkan keterkaitan konsep.`,
+          skor2: `Mampu mengidentifikasi konsep materi ${topik}, namun penalaran analitis masih terbatas dan belum mendalam.`,
+          skor3: `Mampu menganalisis konsep materi ${topik} secara tepat, logis, sistematis, dan menunjukkan hubungan sebab-akibat yang jelas.`,
+          skor4: `Mampu menganalisis materi ${topik} secara kritis mendalam, orisinal, serta mengintegrasikan solusi kontekstual yang solutif.`
+        },
+        {
+          aspek: "Keterampilan Penugasan Prosedural & Akurasi Hasil",
+          skor1: "Langkah penyelesaian tugas belum runtut, data/praktik banyak mengalami kesalahan, dan dokumen laporan tidak lengkap.",
+          skor2: "Menyelesaikan penugasan prosedural dengan cukup baik, namun terdapat beberapa kekeliruan minor dalam akurasi parameter kerja.",
+          skor3: "Menyelesaikan seluruh tahapan penugasan secara terstruktur, tertib SOP, dan data hasil kerja akurat serta terverifikasi.",
+          skor4: "Mengeksekusi penugasan dengan akurasi dan presisi sangat tinggi, rapi, metodologis, dan menyertakan telaah kritis mandiri."
+        },
+        {
+          aspek: "Komunikasi Ilmiah, Penalaran Kritis & Kolaborasi",
+          skor1: "Pasif dalam diskusi; penyampaian ide tidak terstruktur dan belum didukung data atau bukti yang valid.",
+          skor2: "Mulai menyampaikan pendapat dalam tim, namun penalaran kritis masih bias dan respon terhadap tanggapan belum optimal.",
+          skor3: "Aktif berkolaborasi dalam tim; menyampaikan argumen secara objektif, komunikatif, runtut, dan berbasis rujukan terpercaya.",
+          skor4: "Menunjukkan kepemimpinan diskusi yang hebat, penalaran kritis tingkat tinggi, beretika luhur, dan mampu merumuskan sintesis bersama secara elegan."
+        }
+      ];
+    }
+  }
+
+  return list;
+}
+
+/**
  * Normalisasi dan Resolusi Glosarium Materi (Multi-Format & Contextual Fallback)
+ * Hanya berisi materi/istilah teknis murni yang diambil, tidak memuat istilah pedagogis generik
  */
 function resolveContextualGlosarium(raw, data) {
   let list = [];
@@ -2812,7 +2900,7 @@ function resolveContextualGlosarium(raw, data) {
           if (term && term !== 'undefined') list.push({ istilah: term, definisi: def });
         } else {
           const term = item.replace(/^[-*•\d.\s]+/, '').trim();
-          if (term && term !== 'undefined') list.push({ istilah: term, definisi: 'Konsep kunci dan operasional dalam materi ajar.' });
+          if (term && term !== 'undefined') list.push({ istilah: term, definisi: 'Konsep kunci dan parameter teknis dalam materi ajar.' });
         }
       } else if (typeof item === 'object') {
         const istilah = item.istilah || item.term || item.kata || item.judul || item.key || Object.keys(item)[0] || '';
@@ -2830,19 +2918,40 @@ function resolveContextualGlosarium(raw, data) {
     });
   }
 
+  // Filter ketat: Hapus istilah non-teknis / istilah pedagogis generik
+  const forbiddenTerms = [
+    'sintesis solutif',
+    'verifikasi empiris',
+    'konseptualisasi',
+    'analisis variabel',
+    'tpack',
+    'model pjbl',
+    'model pbl',
+    'discovery learning',
+    'inquiry learning'
+  ];
+  list = list.filter(item => {
+    if (!item || !item.istilah) return false;
+    const termLower = item.istilah.toLowerCase();
+    return !forbiddenTerms.some(fb => termLower.includes(fb));
+  });
+
+  // Jika list kosong atau kurang dari 3 item, sintesiskan glosarium teknis murni berdasarkan topik & mapel
   if (list.length < 3) {
-    const topik = data.topikMateri || 'Materi Pokok';
-    const mapel = data.mataPelajaran || 'Mata Pelajaran';
+    const d = data || {};
+    const topik = d.topikMateri || 'Materi Pokok';
+    const mapel = d.mataPelajaran || 'Mata Pelajaran';
     const tLower = (topik + ' ' + mapel).toLowerCase();
 
-    if (tLower.includes('foto') || tLower.includes('kamera') || tLower.includes('lens') || tLower.includes('shutter') || tLower.includes('aperture') || tLower.includes('iso') || tLower.includes('eksposur') || tLower.includes('exposure')) {
+    if (tLower.includes('foto') || tLower.includes('kamera') || tLower.includes('lens') || tLower.includes('shutter') || tLower.includes('aperture') || tLower.includes('iso') || tLower.includes('eksposur') || tLower.includes('exposure') || tLower.includes('gambar') || tLower.includes('video') || tLower.includes('sinematik') || tLower.includes('sinematografi') || tLower.includes('videografi') || tLower.includes('film') || tLower.includes('shot') || tLower.includes('framing') || tLower.includes('broadcasting')) {
       list = [
-        { istilah: "Aperture (Bukaan Diafragma)", definisi: "Mekanisme bukaan bilah diafragma pada lensa kamera yang mengatur intensitas cahaya yang masuk ke sensor serta menentukan kedalaman ruang tajam (Depth of Field)." },
-        { istilah: "Shutter Speed (Kecepatan Rana)", definisi: "Lamanya durasi tirai rana sensor kamera terbuka untuk menerima paparan cahaya; menentukan pembekuan (freezing) gerakan dinamis atau efek pengaburan gerak (motion blur)." },
-        { istilah: "ISO (Sensitivitas Sensor)", definisi: "Tingkat kepekaan sensor kamera terhadap cahaya yang tersedia; angka ISO tinggi membantu pemotretan pada kondisi minim cahaya namun berpotensi menimbulkan noise/grain." },
-        { istilah: "Segitiga Eksposur (Exposure Triangle)", definisi: "Prinsip harmonisasi tiga parameter utama kamera (Aperture, Shutter Speed, dan ISO) yang saling berkompensasi guna mendapatkan pencahayaan gambar yang proporsional dan seimbang." },
-        { istilah: "Depth of Field (DoF)", definisi: "Rentang jarak ketajaman fokus di depan dan di belakang objek utama foto, diklasifikasikan menjadi DoF sempit (shallow/bokeh) dan DoF lebar (deep/tajam menyeluruh)." },
-        { istilah: "Exposure Metering & Histogram", definisi: "Sistem pengukur intensitas cahaya pantul pada kamera serta representasi visual grafik distribusi tonalitas gelap (shadow), tengah (midtone), dan terang (highlight)." }
+        { istilah: "Shot Size (Ukuran Bidik Gambar)", definisi: "Klasifikasi skala luas area subjek dalam bingkai kamera, mulai dari Extreme Long Shot (ELS), Medium Shot (MS), hingga Extreme Close Up (ECU) untuk membangun konteks dramatik dan kedekatan emosional penonton." },
+        { istilah: "Camera Angle (Sudut Pandang Kamera)", definisi: "Sudut elevasi penempatan kamera terhadap objek (Eye Level, High Angle, Low Angle, Frog Eye, Bird Eye) yang menentukan hierarki kekuatan visual dan impresi psikologis adegan." },
+        { istilah: "Camera Movement (Pergerakan Kamera)", definisi: "Dinamika gerak kamera baik pada poros statis (Pan, Tilt) maupun pergerakan fisik seluruh badan kamera (Dolly/Track, Pedestal, Crane, Tracking Shot) guna mengarahkan perhatian penonton." },
+        { istilah: "Aturan 180 Derajat (180-Degree Rule)", definisi: "Kaidah kontinuitas spasial dalam perekaman adegan sinematik yang menetapkan garis imajiner antar-karakter agar orientasi arah pandang (eyeline) dan posisi layar tetap konsisten saat perpindahan shot." },
+        { istilah: "Depth of Field (DoF)", definisi: "Rentang jarak ketajaman fokus di depan dan di belakang objek utama, ditentukan oleh kombinasi bukaan diafragma (aperture), panjang fokus lensa (focal length), dan jarak fisik kamera ke subjek." },
+        { istilah: "Rule of Thirds & Framing", definisi: "Prinsip komposisi visual dengan membagi bidang bidik menjadi sembilan bagian simetris untuk memposisikan titik minat (point of interest), headroom, dan lookspace/noseroom secara proporsional." },
+        { istilah: "White Balance (WB)", definisi: "Kalibrasi sensitivitas warna sensor kamera untuk memastikan objek berwarna putih tampak putih netral di bawah berbagai suhu warna pencahayaan (skala Kelvin)." }
       ];
     } else if (tLower.includes('animasi') || tLower.includes('karakter') || tLower.includes('storyboard') || tLower.includes('motion')) {
       list = [
@@ -2852,7 +2961,7 @@ function resolveContextualGlosarium(raw, data) {
         { istilah: "Timeline Animasi & Keyframing", definisi: "Garis waktu operasional perangkat lunak tempat animator mengatur kemunculan adegan, perpindahan frame kunci (keyframes), dan tempo pergerakan karakter." },
         { istilah: "Motion Graphic", definisi: "Teknik penggabungan grafis visual, tipografi kinetik, dan ilustrasi digital yang digerakkan untuk menyampaikan pesan komunikasi visual secara ringkas dan dinamis." }
       ];
-    } else if (tLower.includes('jaringan') || tLower.includes('komputer') || tLower.includes('it') || tLower.includes('ip') || tLower.includes('server') || tLower.includes('cisco') || tLower.includes('mikrotik')) {
+    } else if (tLower.includes('jaringan') || tLower.includes('komputer') || tLower.includes('it') || tLower.includes('ip') || tLower.includes('server') || tLower.includes('cisco') || tLower.includes('mikrotik') || tLower.includes('rpl') || tLower.includes('software')) {
       list = [
         { istilah: "Topologi Jaringan", definisi: "Struktur geometris dan tata letak fisik maupun logis yang menghubungkan node-node komputer dalam satu kesatuan sistem komunikasi data." },
         { istilah: "IP Addressing & Subnetting", definisi: "Metode pengalamatan numerik unik pada setiap perangkat jaringan serta teknik segmentasi jaringan untuk efisiensi rute dan isolasi keamanan." },
@@ -2886,11 +2995,11 @@ function resolveContextualGlosarium(raw, data) {
       ];
     } else {
       list = [
-        { istilah: `Konseptualisasi ${topik}`, definisi: `Kerangka teori mendasar, terminologi operasional, dan prinsip kerja utama materi ${topik} dalam mata pelajaran ${mapel}.` },
-        { istilah: `Analisis Variabel ${topik}`, definisi: `Proses identifikasi dan pengujian faktor-faktor penentu yang memengaruhi keberhasilan penerapan ${topik}.` },
-        { istilah: `Standardisasi Operasional (SOP)`, definisi: `Rangkaian prosedur baku yang menjamin kualitas, akurasi, dan keselamatan kerja dalam praktik materi ${topik}.` },
-        { istilah: `Sintesis Solutif`, definisi: `Kemampuan mengintegrasikan ragam data temuan untuk menghasilkan pemecahan masalah kontekstual yang berdaya guna.` },
-        { istilah: `Verifikasi Empiris`, definisi: `Metode pembuktian kebenaran konsep teori melalui pengujian data faktual, pengamatan terstruktur, atau eksperimen langsung.` }
+        { istilah: `Prinsip Operasional ${topik}`, definisi: `Kaidah dasar, struktur kerja, dan mekanisme fundamental yang mendasari pelaksanaan teknis materi ${topik} dalam mata pelajaran ${mapel}.` },
+        { istilah: `Parameter Teknis ${topik}`, definisi: `Spesifikasi, variabel terukur, dan tolok ukur presisi yang menjadi standar baku keberhasilan implementasi ${topik}.` },
+        { istilah: `Standar Operasional Prosedur (SOP)`, definisi: `Instruksi kerja baku yang sistematis untuk menjamin akurasi, efisiensi kerja, dan keselamatan kerja dalam materi ${topik}.` },
+        { istilah: `Instrumen & Media Kerja ${topik}`, definisi: `Perangkat keras, peranti lunak, atau instrumen khusus yang dikalibrasi guna mengeksekusi penugasan teknis materi ${topik}.` },
+        { istilah: `Kendali Mutu (Quality Control)`, definisi: `Rangkaian verifikasi dan pemeriksaan hasil kerja guna memastikan luaran ${topik} memenuhi standar spesifikasi tanpa kecacatan.` }
       ];
     }
   }
@@ -2899,7 +3008,8 @@ function resolveContextualGlosarium(raw, data) {
 }
 
 /**
- * Normalisasi dan Resolusi Daftar Pustaka Ilmiah (Multi-Format & Contextual Fallback)
+ * Normalisasi dan Resolusi Daftar Pustaka Ilmiah & Bahan Acuan AI (Multi-Format & Contextual Fallback)
+ * Menuliskan seluruh referensi resmi kurikulum, buku teks standar, dan bahan AI yang digunakan
  */
 function resolveContextualDaftarPustaka(raw, data) {
   let list = [];
@@ -2926,31 +3036,73 @@ function resolveContextualDaftarPustaka(raw, data) {
     });
   }
 
-  if (list.length < 2) {
-    const topik = data.topikMateri || 'Materi Pokok';
-    const mapel = data.mataPelajaran || 'Mata Pelajaran';
-    const model = data.modelPembelajaran || 'Model Pembelajaran Interaktif';
-    const pendekatan = data.pendekatanPembelajaran || 'Kurikulum Merdeka';
-    const currentYear = new Date().getFullYear();
+  // Filter ketat: Hapus referensi jurnal palsu yang merekayasa nama model pembelajaran ke judul artikel
+  list = list.filter(item => {
+    if (!item || typeof item !== 'string') return false;
+    const iLower = item.toLowerCase();
+    if (iLower.includes('penerapan model pjbl') || iLower.includes('penerapan model pbl') || iLower.includes('berbasis pendekatan tpack') || iLower.includes('media interaktif berbasis studi kasus otentik')) {
+      return false;
+    }
+    return true;
+  });
+
+  // Jika list kosong atau kurang dari 3 item, sediakan daftar pustaka resmi dokumen acuan dan bahan AI
+  if (list.length < 3) {
+    const d = data || {};
+    const topik = d.topikMateri || 'Materi Pokok';
+    const mapel = d.mataPelajaran || 'Mata Pelajaran';
     const tLower = (topik + ' ' + mapel).toLowerCase();
 
-    if (tLower.includes('foto') || tLower.includes('kamera') || tLower.includes('lens') || tLower.includes('shutter') || tLower.includes('aperture') || tLower.includes('iso') || tLower.includes('eksposur') || tLower.includes('exposure')) {
-      list = [
-        `Pratama, A., & Wibowo, S. (${currentYear - 2}). "Penerapan Tata Kamera dan Penguasaan Segitiga Eksposur dalam Produksi Fotografi Digital Siswa Menengah Kejuruan." Jurnal Pendidikan Multimedia dan Komunikasi Visual Terapan, 6(1), 45-58.`,
-        `Rahmawati, D., & Hidayat, T. (${currentYear - 1}). "Efektivitas Metode Praktikum Berbasis Studio dan Kamera Virtual dalam Peningkatan Keterampilan Fotografi Dasar." Jurnal Inovasi Kurikulum dan Teknologi Pendidikan, 11(2), 112-125.`,
-        `Anggraini, L. (${currentYear - 2}). Komposisi dan Pencahayaan Fotografi Profesional: Teori dan Praktik. Yogyakarta: Penerbit Andi.`,
-        `Santoso, E., & Nugroho, F. (${currentYear}). "Analisis Kritis Pembelajaran Berbasis Proyek (Project-Based Learning) pada Kompetensi Desain Komunikasi Visual dan Tata Kamera." Jurnal Riset Pendidikan Kejuruan Indonesia, 9(3), 201-216.`,
-        `Badan Standar, Kurikulum, dan Asesmen Pendidikan (BSKAP). (2024). Panduan Pembelajaran dan Asesmen Kurikulum Merdeka. Jakarta: Kementerian Pendidikan, Kebudayaan, Riset, dan Teknologi.`
+    // 1. Dokumen Resmi Standar Kurikulum Merdeka (Kemendikbudristek)
+    const refBSKAP = 'Badan Standar, Kurikulum, dan Asesmen Pendidikan (BSKAP). (2024). Panduan Pembelajaran dan Asesmen Pendidikan Anak Usia Dini, Pendidikan Dasar, dan Pendidikan Menengah. Jakarta: Kementerian Pendidikan, Kebudayaan, Riset, dan Teknologi.';
+    const refCP = 'Badan Standar, Kurikulum, dan Asesmen Pendidikan (BSKAP). (2024). Keputusan Kepala BSKAP No. 032/H/KR/2024 tentang Capaian Pembelajaran pada Pendidikan Anak Usia Dini, Jenjang Pendidikan Dasar, dan Jenjang Pendidikan Menengah pada Kurikulum Merdeka. Jakarta: Kemendikbudristek.';
+
+    // 2. Bahan AI Engine & Foundation Model yang Digunakan
+    const refAI1 = 'Google DeepMind. (2024). Gemini: A Family of Highly Capable Multimodal Foundation Models. Google Research Technical Report. https://arxiv.org/abs/2312.11805';
+    const refAI2 = 'EduWorkspace AI Research. (2025). Knowledge Base & Pedagogical Architecture for Indonesian Kurikulum Merdeka. Jakarta: EduWorkspace Academic Foundation.';
+
+    // 3. Buku Teks & Rujukan Keilmuan / Industri Spesifik
+    let refKeilmuan = [];
+    if (tLower.includes('foto') || tLower.includes('kamera') || tLower.includes('lens') || tLower.includes('shutter') || tLower.includes('aperture') || tLower.includes('iso') || tLower.includes('gambar') || tLower.includes('video') || tLower.includes('sinematik') || tLower.includes('sinematografi') || tLower.includes('videografi') || tLower.includes('film') || tLower.includes('shot') || tLower.includes('broadcasting')) {
+      refKeilmuan = [
+        'Bowen, C. J., & Thompson, R. (2020). Grammar of the Shot (4th ed.). New York: Routledge / Focal Press.',
+        'Brown, B. (2021). Cinematography: Theory and Practice: Image Making for Cinematographers and Directors (4th ed.). London: Routledge.',
+        'Direktorat Sekolah Menengah Kejuruan. (2022). Dasar-Dasar Broadcasting dan Perfilman untuk SMK/MAK Kelas X. Jakarta: Pusat Perbukuan Kemendikbudristek.'
+      ];
+    } else if (tLower.includes('animasi') || tLower.includes('karakter') || tLower.includes('storyboard')) {
+      refKeilmuan = [
+        'Williams, R. (2020). The Animator\'s Survival Kit: A Manual of Methods, Principles and Formulas for Classical, Computer, Games, Stop Motion and Internet Animators. London: Faber & Faber.',
+        'Direktorat Sekolah Menengah Kejuruan. (2022). Dasar-Dasar Animasi untuk SMK/MAK. Jakarta: Pusat Perbukuan Kemendikbudristek.'
+      ];
+    } else if (tLower.includes('desain') || tLower.includes('dkv') || tLower.includes('grafis')) {
+      refKeilmuan = [
+        'Lupton, E., & Phillips, J. C. (2021). Graphic Design: The New Basics (2nd ed.). New York: Princeton Architectural Press.',
+        'Direktorat Sekolah Menengah Kejuruan. (2022). Dasar-Dasar Desain Komunikasi Visual. Jakarta: Pusat Perbukuan Kemendikbudristek.'
+      ];
+    } else if (tLower.includes('jaringan') || tLower.includes('komputer') || tLower.includes('it') || tLower.includes('server') || tLower.includes('rpl') || tLower.includes('software')) {
+      refKeilmuan = [
+        'Kurose, J. F., & Ross, K. W. (2021). Computer Networking: A Top-Down Approach (8th ed.). London: Pearson Education.',
+        'Direktorat Sekolah Menengah Kejuruan. (2022). Dasar-Dasar Teknik Jaringan Komputer dan Telekomunikasi. Jakarta: Pusat Perbukuan Kemendikbudristek.'
+      ];
+    } else if (tLower.includes('mesin') || tLower.includes('otomotif') || tLower.includes('motor') || tLower.includes('mobil')) {
+      refKeilmuan = [
+        'Denton, T. (2020). Automobile Electrical and Electronic Systems (5th ed.). London: Routledge.',
+        'Direktorat Sekolah Menengah Kejuruan. (2022). Dasar-Dasar Teknik Otomotif. Jakarta: Pusat Perbukuan Kemendikbudristek.'
       ];
     } else {
-      list = [
-        `Pratama, A., & Wibowo, S. (${currentYear - 2}). "Analisis dan Implementasi Konseptual Materi ${topik} dalam Penguatan Kompetensi Abad ke-21." Jurnal Ilmiah Pendidikan dan Kejuruan Terapan, 8(2), 142-155.`,
-        `Rahmawati, D., Suryadi, K., & Hidayat, T. (${currentYear - 1}). "Pengembangan Media Interaktif Berbasis Studi Kasus Otentik pada Materi ${topik}." Jurnal Inovasi Kurikulum dan Teknologi Pendidikan, 11(1), 78-92.`,
-        `Nugroho, F., & Lestari, M. (${currentYear - 3}). "Penerapan Model ${model} dalam Meningkatkan Keterampilan Berpikir Kritis Siswa pada Topik ${topik}." Jurnal Riset Pembelajaran Indonesia, 6(3), 215-228.`,
-        `Santoso, E., dkk. (${currentYear}). "Kajian Efektivitas Pembelajaran ${mapel} Berbasis Pendekatan ${pendekatan} di Tingkat Pendidikan Menengah." Jurnal Pendidikan dan Kebudayaan, 15(1), 34-49.`,
-        `Badan Standar, Kurikulum, dan Asesmen Pendidikan (BSKAP). (2024). Panduan Pembelajaran dan Asesmen Kurikulum Merdeka. Jakarta: Kementerian Pendidikan, Kebudayaan, Riset, dan Teknologi.`
+      refKeilmuan = [
+        `Kementerian Pendidikan, Kebudayaan, Riset, dan Teknologi. (2023). Buku Panduan Pendidik dan Modul Ajar Mata Pelajaran ${mapel}. Jakarta: Pusat Kurikulum dan Pembelajaran Kemendikbudristek.`,
+        `Kementerian Ketenagakerjaan Republik Indonesia. (2023). Standar Kompetensi Kerja Nasional Indonesia (SKKNI) Bidang Keahlian ${mapel}. Jakarta: Kemnaker RI.`
       ];
     }
+
+    list = [
+      refBSKAP,
+      refCP,
+      ...refKeilmuan,
+      refAI1,
+      refAI2
+    ];
   }
 
   return list;
@@ -3736,61 +3888,11 @@ function buildComprehensiveAiModulContent(p) {
     remedialText = `Murid yang belum mencapai kriteria ketuntasan direkomendasikan mengerjakan <strong>Tugas Lembar Kerja Terbimbing (Scaffolding Worksheet)</strong>: Mengisi bagan alur konsep esensial materi <em>${topik}</em> dengan panduan bertahap, menyelesaikan soal analisis terarah bersama tutor sebaya (peer tutoring), serta mengulang simulasi terapan dasar hingga tuntas.`;
   }
 
-  // Sintesis Glosarium Khusus Materi Pokok (topicLower sudah dideklarasikan di atas)
-  let glosariumList = [];
-  if (topicLower.includes('foto') || topicLower.includes('kamera') || topicLower.includes('lens') || topicLower.includes('shutter') || topicLower.includes('aperture') || topicLower.includes('iso') || topicLower.includes('eksposur') || topicLower.includes('exposure')) {
-    glosariumList = [
-      { istilah: "Aperture (Bukaan Diafragma)", definisi: "Mekanisme bukaan bilah diafragma pada lensa kamera yang mengatur intensitas cahaya yang masuk ke sensor serta menentukan kedalaman ruang tajam (Depth of Field)." },
-      { istilah: "Shutter Speed (Kecepatan Rana)", definisi: "Lamanya durasi tirai rana sensor kamera terbuka untuk menerima paparan cahaya; menentukan pembekuan (freezing) gerakan dinamis atau efek pengaburan gerak (motion blur)." },
-      { istilah: "ISO (Sensitivitas Sensor)", definisi: "Tingkat kepekaan sensor kamera terhadap cahaya yang tersedia; angka ISO tinggi membantu pemotretan pada kondisi minim cahaya namun berpotensi menimbulkan noise/grain." },
-      { istilah: "Segitiga Eksposur (Exposure Triangle)", definisi: "Prinsip harmonisasi tiga parameter utama kamera (Aperture, Shutter Speed, dan ISO) yang saling berkompensasi guna mendapatkan pencahayaan gambar yang proporsional dan seimbang." },
-      { istilah: "Depth of Field (DoF)", definisi: "Rentang jarak ketajaman fokus di depan dan di belakang objek utama foto, diklasifikasikan menjadi DoF sempit (shallow/bokeh) dan DoF lebar (deep/tajam menyeluruh)." },
-      { istilah: "Exposure Metering & Histogram", definisi: "Sistem pengukur intensitas cahaya pantul pada kamera serta representasi visual grafik distribusi tonalitas gelap (shadow), tengah (midtone), dan terang (highlight)." }
-    ];
-  } else if (topicLower.includes('animasi') || topicLower.includes('karakter') || topicLower.includes('storyboard')) {
-    glosariumList = [
-      { istilah: "Model Sheet / Turnaround", definisi: "Dokumen panduan visual standar yang menampilkan karakter dari berbagai sudut pandang (depan, samping, belakang, 3/4) beserta ekspresi dan proporsi baku untuk acuan animator." },
-      { istilah: "Storyboard Non-Linear", definisi: "Rangkaian visualisasi panel cerita yang memuat percabangan alur interaktif atau multi-skenario adegan sebelum diproduksi ke dalam format animasi utuh." },
-      { istilah: "Animatic", definisi: "Versi kasar gerak dari susunan storyboard yang diselaraskan dengan trek suara dan timing durasi untuk mengevaluasi ritme serta sinematografi adegan." },
-      { istilah: "Timeline Animasi & Keyframing", definisi: "Garis waktu operasional perangkat lunak tempat animator mengatur kemunculan adegan, perpindahan frame kunci (keyframes), dan tempo pergerakan karakter." },
-      { istilah: "Motion Graphic", definisi: "Teknik penggabungan grafis visual, tipografi kinetik, dan ilustrasi digital yang digerakkan untuk menyampaikan pesan komunikasi visual secara ringkas dan dinamis." }
-    ];
-  } else if (topicLower.includes('jaringan') || topicLower.includes('komputer') || topicLower.includes('it') || topicLower.includes('ip')) {
-    glosariumList = [
-      { istilah: "Topologi Jaringan", definisi: "Struktur geometris dan tata letak fisik maupun logis yang menghubungkan node-node komputer dalam satu kesatuan sistem komunikasi." },
-      { istilah: "IP Addressing & Subnetting", definisi: "Metode pengalamatan numerik unik yang diberikan ke setiap perangkat terhubung serta teknik segmentasi jaringan untuk efisiensi rute dan keamanan." },
-      { istilah: "Routing Protocol", definisi: "Standar aturan dan algoritma yang digunakan router untuk menentukan jalur terbaik dalam meneruskan paket data antarnetwork." },
-      { istilah: "Bandwidth & Throughput", definisi: "Kapasitas maksimum transfer data pada kanal komunikasi (bandwidth) dan kecepatan transfer data riil yang terukur pada waktu tertentu (throughput)." },
-      { istilah: "Firewall & Packet Filtering", definisi: "Sistem keamanan yang memantau dan mengontrol lalu lintas jaringan masuk dan keluar berdasarkan aturan keamanan yang telah ditetapkan." }
-    ];
-  } else {
-    glosariumList = [
-      { istilah: `Konseptualisasi ${topik}`, definisi: `Kerangka teori mendasar, struktur operasional, dan prinsip kerja utama materi ${topik} dalam mata pelajaran ${mapel}.` },
-      { istilah: `Analisis Variabel ${topik}`, definisi: `Proses identifikasi dan pengujian faktor-faktor penentu yang memengaruhi keberhasilan penerapan ${topik}.` },
-      { istilah: `Standardisasi Operasional (SOP)`, definisi: `Rangkaian prosedur baku yang menjamin kualitas, akurasi, dan keselamatan kerja dalam praktik materi ${topik}.` },
-      { istilah: `Sintesis Solutif`, definisi: `Kemampuan mengintegrasikan ragam data temuan untuk menghasilkan pemecahan masalah kontekstual yang berdaya guna.` },
-      { istilah: `Verifikasi Empiris`, definisi: `Metode pembuktian kebenaran teori melalui pengujian data, pengamatan langsung, atau eksperimen terukur.` }
-    ];
-  }
+  // Sintesis Glosarium Khusus Materi Pokok (Hanya berisi istilah teknis murni topik)
+  const glosariumList = resolveContextualGlosarium([], p);
 
-  // Daftar Pustaka Ilmiah 5 Tahun Terakhir
-  const currentYear = new Date().getFullYear();
-  const refPendekatan = (() => {
-    const pL = (pendekatan || '').toLowerCase();
-    if (pL.includes('deep learning')) return `"Kajian Efektivitas Pembelajaran Mendalam (Deep Learning) pada Bidang ${mapel} di Tingkat Menengah."`;
-    if (pL.includes('tpack')) return `"Integrasi Kerangka TPACK dalam Pembelajaran ${mapel} di Era Digital."`;
-    if (pL.includes('saintifik') || pL.includes('scientific')) return `"Penerapan Pendekatan Saintifik dalam Meningkatkan Nalar Kritis Siswa pada Bidang ${mapel}."`;
-    if (pL.includes('kontekstual') || pL.includes('ctl')) return `"Efektivitas Pendekatan Kontekstual (CTL) dalam Pembelajaran Terapan ${mapel}."`;
-    return `"Inovasi Pembelajaran ${mapel} Berbasis Model ${modelRaw} dan Pendekatan ${pendekatan}."`;
-  })();
-
-  const daftarPustakaList = [
-    `Pratama, A., & Wibowo, S. (${currentYear - 2}). "Analisis dan Implementasi Konseptual Materi ${topik} dalam Penguatan Kompetensi Abad ke-21." Jurnal Ilmiah Pendidikan dan Pembelajaran Terapan, 8(2), 142-155.`,
-    `Rahmawati, D., Suryadi, K., & Hidayat, T. (${currentYear - 1}). "Pengembangan Media Interaktif Berbasis Kasus Otentik pada Materi ${topik}." Jurnal Inovasi Kurikulum dan Teknologi Pendidikan, 11(1), 78-92.`,
-    `Nugroho, F., & Lestari, M. (${currentYear - 3}). "Peningkatan Keterampilan Berpikir Kritis Siswa Melalui Pendekatan Berbasis Penyelidikan pada Topik ${topik}." Jurnal Riset Pembelajaran Indonesia, 6(3), 215-228.`,
-    `Santoso, E., dkk. (${currentYear}). ${refPendekatan} Jurnal Pendidikan dan Kebudayaan, 15(1), 34-49.`,
-    `Badan Standar, Kurikulum, dan Asesmen Pendidikan (BSKAP). (2024). Panduan Pembelajaran dan Asesmen Kurikulum Merdeka. Jakarta: Kementerian Pendidikan, Kebudayaan, Riset, dan Teknologi.`
-  ];
+  // Daftar Pustaka Resmi BSKAP, Standar Industri, dan Bahan Acuan AI
+  const daftarPustakaList = resolveContextualDaftarPustaka([], p);
 
   return {
     identifikasiPesertaDidik: [
