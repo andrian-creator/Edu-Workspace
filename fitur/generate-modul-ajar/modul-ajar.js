@@ -323,7 +323,15 @@ async function getAvailableGeminiModels(apiKey) {
         const data = await res.json();
         if (data && Array.isArray(data.models) && data.models.length > 0) {
           const supported = data.models
-            .filter(m => Array.isArray(m.supportedGenerationMethods) && m.supportedGenerationMethods.includes('generateContent'))
+            .filter(m => {
+              if (!Array.isArray(m.supportedGenerationMethods) || !m.supportedGenerationMethods.includes('generateContent')) return false;
+              const name = (m.name || '').toLowerCase();
+              // FILTER KETAT: DILARANG model audio/TTS, embedding, image, atau preview TTS!
+              if (name.includes('tts') || name.includes('audio') || name.includes('embed') || name.includes('imagen') || name.includes('realtime')) {
+                return false;
+              }
+              return true;
+            })
             .map(m => ({
               version: ver,
               rawName: m.name.replace(/^models\//, '')
@@ -666,40 +674,29 @@ async function callGeminiWithAccountKey(promptText, customConfig) {
     return null;
   }
 
-  // 1. Ambil daftar model aktual yang diizinkan untuk kunci API ini dari Google
+  // 1. Prioritaskan endpoint resmi teks stabil Google Gemini terlebih dahulu (bebas dari audio/TTS)
+  let candidateEndpoints = [
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent`,
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent`,
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent`,
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-8b:generateContent`,
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent`
+  ];
+
+  // 2. Tambahkan model yang terdaftar pada akun HANYA jika berupa model teks murni
   const availableModels = await getAvailableGeminiModels(apiKey);
-  let candidateEndpoints = [];
-
   if (availableModels.length > 0) {
-    const priorityChecks = [
-      m => m.rawName === 'gemini-2.5-flash',
-      m => m.rawName === 'gemini-2.0-flash',
-      m => m.rawName === 'gemini-flash-latest',
-      m => m.rawName.includes('2.5-flash') && !m.rawName.includes('preview'),
-      m => m.rawName.includes('2.0-flash'),
-      m => m.rawName.includes('flash'),
-      m => m.rawName.includes('1.5-flash'),
-      () => true
-    ];
-
-    for (const checkFn of priorityChecks) {
-      for (const m of availableModels) {
-        if (checkFn(m)) {
-          candidateEndpoints.push(`https://generativelanguage.googleapis.com/${m.version}/models/${m.rawName}:generateContent`);
-        }
+    for (const m of availableModels) {
+      const name = (m.rawName || '').toLowerCase();
+      // Jangan masukkan model audio/TTS/embedding
+      if (name.includes('tts') || name.includes('audio') || name.includes('embed') || name.includes('imagen') || name.includes('realtime')) continue;
+      if (name.includes('flash') || name.includes('pro')) {
+        candidateEndpoints.push(`https://generativelanguage.googleapis.com/${m.version}/models/${m.rawName}:generateContent`);
       }
     }
   }
 
-  // Tambahkan endpoint resmi Google terkini
-  candidateEndpoints.push(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent`,
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent`,
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent`,
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent`
-  );
-
-  const uniqueEndpoints = Array.from(new Set(candidateEndpoints)).slice(0, 5);
+  const uniqueEndpoints = Array.from(new Set(candidateEndpoints)).slice(0, 6);
   let lastErrorMsg = '';
 
   const reqTimeoutMs = (customConfig && customConfig.timeoutMs) ? customConfig.timeoutMs : 35000;
@@ -714,7 +711,7 @@ async function callGeminiWithAccountKey(promptText, customConfig) {
   if (typeof customConfig?.topK === 'number') genConfig.topK = customConfig.topK;
   if (customConfig?.responseMimeType) genConfig.responseMimeType = customConfig.responseMimeType;
 
-  // Uji coba eksekusi nyata ke Google Gemini API (dengan auto-fallback model pada 429)
+  // Uji coba eksekusi nyata ke Google Gemini API (dengan auto-fallback model pada 429 atau 400)
   for (const baseEndpoint of uniqueEndpoints) {
     try {
       const controller = new AbortController();
@@ -753,6 +750,10 @@ async function callGeminiWithAccountKey(promptText, customConfig) {
           lastErrorMsg = 'Batas kuota Google Gemini API akun Anda tercapai (HTTP 429 - Rate Limit). Silakan tunggu beberapa menit.';
           // JANGAN batalkan seluruh proses; beri jeda singkat lalu coba model alternatif berikutnya
           await new Promise(r => setTimeout(r, 1200));
+          continue;
+        } else {
+          // Status 400 (seperti modalitas tidak didukung / parameter invalid) atau 404: coba model berikutnya!
+          console.warn(`[Gemini API] Endpoint ${baseEndpoint} gagal (${res.status}): ${lastErrorMsg}. Mencoba model alternatif...`);
           continue;
         }
       }
