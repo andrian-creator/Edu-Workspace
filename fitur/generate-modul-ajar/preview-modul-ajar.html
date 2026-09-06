@@ -1004,12 +1004,21 @@
     }
 
     /**
-     * Format Materi Tambahan:
-     * Poin penomoran (1, 2, 3) HANYA untuk nama materi.
-     * Isi deskripsi materi tampil di bawah nama materi tanpa penomoran tersendiri.
+     * Memproses teks: Mengubah **bold** menjadi <strong>bold</strong>,
+     * dan menghapus seluruh tanda bintang '*' yang bukan bold sesuai permintaan pengguna.
+     */
+    function sanitizeAsterisksKeepBold(text) {
+      if (!text || typeof text !== 'string') return text || '';
+      return text
+        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+        .replace(/\*/g, '');
+    }
+
     /**
+     * Format Materi Tambahan:
+     * Poin penomoran (a, b, c) HANYA untuk nama materi.
+     * Isi deskripsi materi tampil di bawah nama materi tanpa penomoran tersendiri.
      * Render Materi Tambahan dalam Bentuk Deskriptif Lengkap & Tabel Komparasi / Pengayaan
-     * Jika materi tambahan diisi, dijelaskan secara komprehensif, mendalam, dan dilengkapi tabel
      */
     function renderMateriTambahanDeskriptif(raw, data, ai) {
       if (!raw || (typeof raw === 'string' && !raw.trim()) || raw.trim() === '-') return '-';
@@ -1083,7 +1092,7 @@
           .replace(/kajian ini membekali peserta didik[^.]*\.?/gi, '')
           .trim();
 
-        parsedPoints.push({ title, desc });
+        parsedPoints.push({ title: sanitizeAsterisksKeepBold(title), desc: sanitizeAsterisksKeepBold(desc) });
       });
 
       if (parsedPoints.length === 0) {
@@ -1103,25 +1112,26 @@
         ];
       }
 
-      // Elaborasi teknis substantif untuk setiap butir materi tambahan (bukan kalimat pedagogis generik)
+      // Elaborasi teknis substantif untuk setiap butir materi tambahan (bukan kalimat pedagogis generik, tanpa tanda bintang asteris yang bukan bold)
       parsedPoints.forEach((pt) => {
         const tLower = pt.title.toLowerCase();
         let techElab = '';
 
         if (/variabel|variable|responsif|responsive/i.test(tLower)) {
-          techElab = `Pembahasan difokuskan pada implementasi teknologi font variabel (*variable fonts*) dengan pengendalian sumbu variasi (*variation axes*) seperti bobot (*weight*), lebar (*width*), dan kemiringan (*slant*) dalam satu berkas terpadu. Pengaturan dinamis ini memungkinkan penyesuaian skala hierarki visual secara adaptif terhadap berbagai resolusi layar antarmuka digital (UI/UX) guna menjaga efisiensi berkas dan kenyamanan keterbacaan (*readability*).`;
+          techElab = `Pembahasan difokuskan pada implementasi teknologi font variabel (variable fonts) dengan pengendalian sumbu variasi (variation axes) seperti bobot (weight), lebar (width), dan kemiringan (slant) dalam satu berkas terpadu. Pengaturan dinamis ini memungkinkan penyesuaian skala hierarki visual secara adaptif terhadap berbagai resolusi layar antarmuka digital (UI/UX) guna menjaga efisiensi berkas dan kenyamanan keterbacaan (readability).`;
         } else if (/lisensi|hukum|hak\s*cipta|etika|komersial|brief/i.test(tLower)) {
-          techElab = `Pembahasan mencakup pemahaman komprehensif atas klasifikasi lisensi jenis huruf komersial (*End User License Agreement / EULA*), lisensi terbuka (*Open Font License / OFL*), lisensi desktop komersial, webfont embedding, hingga lisensi aplikasi digital. Siswa mendalami kepatuhan hak kekayaan intelektual (HKI), batasan distribusi, dan etika atribusi desainer guna menjamin setiap luaran karya desain komersial bebas dari risiko pelanggaran hukum industri.`;
+          techElab = `Pembahasan mencakup pemahaman komprehensif atas klasifikasi lisensi jenis huruf komersial (End User License Agreement / EULA), lisensi terbuka (Open Font License / OFL), lisensi desktop komersial, webfont embedding, hingga lisensi aplikasi digital. Siswa mendalami kepatuhan hak kekayaan intelektual (HKI), batasan distribusi, dan etika atribusi desainer guna menjamin setiap luaran karya desain komersial bebas dari risiko pelanggaran hukum industri.`;
         } else if (/perancangan|typeface|huruf|branding|kustom|custom|glif|glyph/i.test(tLower)) {
-          techElab = `Pembahasan mencakup alur kerja perancangan anatomi karakter huruf khusus (*custom typeface/lettering*) dari sketsa manual proporsi optik (garis dasar, *x-height*, *ascender*, *descender*), digitalisasi kurva vektor berbasis kurva Bézier yang presisi, hingga pengujian keterbacaan (*legibility*) dan harmoni visual guna memperkuat diferensiasi identitas visual jenama (*branding*).`;
+          techElab = `Pembahasan mencakup alur kerja perancangan anatomi karakter huruf khusus (custom typeface/lettering) dari sketsa manual proporsi optik (garis dasar, x-height, ascender, descender), digitalisasi kurva vektor berbasis kurva Bézier yang presisi, hingga pengujian keterbacaan (legibility) dan harmoni visual guna memperkuat diferensiasi identitas visual jenama (branding).`;
         } else if (/tata\s*kamera|camera|shot|sudut|angle|gerak|pergerakan/i.test(tLower)) {
-          techElab = `Pembahasan difokuskan pada penguasaan parameter operasional instrumen kamera, pemilihan ukuran bidik (*shot size*), penentuan elevasi sudut (*camera angle*), serta eksekusi pergerakan dinamis (*camera movement*) terkalibrasi guna memperkuat bahasa visual sinematik adegan.`;
+          techElab = `Pembahasan difokuskan pada penguasaan parameter operasional instrumen kamera, pemilihan ukuran bidik (shot size), penentuan elevasi sudut (camera angle), serta eksekusi pergerakan dinamis (camera movement) terkalibrasi guna memperkuat bahasa visual sinematik adegan.`;
         } else {
-          techElab = `Pembahasan difokuskan pada penguasaan konsep fundamental, mekanisme kerja teknis, serta parameter operasional baku dari **${pt.title}**. Penekanan diarahkan pada ketepatan prosedur eksekusi, kontrol kualitas hasil kerja, dan pemecahan kendala teknis dalam alur kerja profesional.`;
+          techElab = `Pembahasan difokuskan pada penguasaan konsep fundamental, mekanisme kerja teknis, serta parameter operasional baku dari <strong>${pt.title}</strong>. Penekanan diarahkan pada ketepatan prosedur eksekusi, kontrol kualitas hasil kerja, dan pemecahan kendala teknis dalam alur kerja profesional.`;
         }
 
         let combined = pt.desc ? `${pt.desc} ${techElab}` : techElab;
-        pt.fullExplanation = combined.trim();
+        pt.fullExplanation = sanitizeAsterisksKeepBold(combined).trim();
+        pt.title = sanitizeAsterisksKeepBold(pt.title).trim();
       });
 
       let html = `
@@ -1132,10 +1142,10 @@
           ${parsedPoints.map((pt, i) => `
             <div class="materi-tambahan-item" style="margin-bottom: 14px; text-align: justify; line-height: 1.65;">
               <div class="materi-tambahan-item-title" style="font-weight: 700; color: #0f172a; margin-bottom: 4px; font-size: 0.95rem;">
-                ${String.fromCharCode(97 + i)}. ${pt.title}
+                ${String.fromCharCode(97 + i)}. ${sanitizeAsterisksKeepBold(pt.title)}
               </div>
               <div class="materi-tambahan-item-desc" style="margin-left: 12px; color: #334155; line-height: 1.65;">
-                ${pt.fullExplanation}
+                ${sanitizeAsterisksKeepBold(pt.fullExplanation)}
               </div>
             </div>
           `).join('')}
@@ -1262,9 +1272,7 @@
             if (/^<(p|div|table|ol|ul|h[1-6])/i.test(pText)) {
               blocks.push(pText);
             } else {
-              const formatted = pText
-                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                .replace(/\*(.*?)\*/g, '<em>$1</em>');
+              const formatted = sanitizeAsterisksKeepBold(pText);
               blocks.push(`<p class="doc-paragraph" style="margin-bottom: 12px; line-height: 1.65; text-align: justify; color: #334155;">${formatted}</p>`);
             }
           }
@@ -1287,11 +1295,7 @@
             const rawCols = rowLine.split('|').map(c => c.trim());
             const cols = rawCols.filter((c, idx) => {
               return (idx > 0 && idx < rawCols.length - 1) || (idx === 0 && c !== '') || (idx === rawCols.length - 1 && c !== '');
-            }).map(c => {
-              return c
-                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                .replace(/\*(.*?)\*/g, '<em>$1</em>');
-            });
+            }).map(c => sanitizeAsterisksKeepBold(c));
             if (cols.length > 0) dataRows.push(cols);
           }
 
@@ -1299,7 +1303,7 @@
           if (headers.length > 0) {
             tableHtml += '<thead><tr>';
             headers.forEach(h => {
-              tableHtml += `<th>${h.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')}</th>`;
+              tableHtml += `<th>${sanitizeAsterisksKeepBold(h)}</th>`;
             });
             tableHtml += '</tr></thead>';
           }
@@ -1307,7 +1311,7 @@
           dataRows.forEach(row => {
             tableHtml += '<tr>';
             row.forEach(cell => {
-              tableHtml += `<td>${cell}</td>`;
+              tableHtml += `<td>${sanitizeAsterisksKeepBold(cell)}</td>`;
             });
             tableHtml += '</tr>';
           });
@@ -1343,25 +1347,21 @@
           // Cek apakah baris berupa judul sub-materi bernomor (misal: "1. Konsep Dasar Shot Size...", "2. Sudut Pandang...")
           if (/^[0-9]+[.)]\s+[A-Z]/.test(trimmed) && trimmed.length < 160) {
             flushParagraph();
-            const formatted = trimmed
-              .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-              .replace(/\*(.*?)\*/g, '<em>$1</em>');
+            const formatted = sanitizeAsterisksKeepBold(trimmed);
             blocks.push(`<h4 class="doc-sub-heading" style="margin: 16px 0 6px 0; font-size: 0.98rem; font-weight: 700; color: #0f172a; line-height: 1.4;">${formatted}</h4>`);
           }
           // Cek apakah baris berupa Markdown Heading "### ..." atau "## ..."
           else if (/^#{2,4}\s+/.test(trimmed)) {
             flushParagraph();
             const cleanHeading = trimmed.replace(/^#{2,4}\s+/, '').trim();
-            const formatted = cleanHeading
-              .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-              .replace(/\*(.*?)\*/g, '<em>$1</em>');
+            const formatted = sanitizeAsterisksKeepBold(cleanHeading);
             blocks.push(`<h4 class="doc-sub-heading" style="margin: 16px 0 6px 0; font-size: 0.98rem; font-weight: 700; color: #0f172a; line-height: 1.4;">${formatted}</h4>`);
           }
           // Cek apakah baris berupa JUDUL UPPERCASE KESELURUHAN (misal: "PRINSIP TEKNIS DAN EKSEKUSI...", "TABEL PARAMETER TEKNIS...")
           else if (/^[A-Z0-9\s/()\-:]{8,}:?$/.test(trimmed) && !trimmed.startsWith('-') && !trimmed.includes('|')) {
             flushParagraph();
             const isTableLabel = /TABEL\b/i.test(trimmed);
-            blocks.push(`<div style="margin: 14px 0 6px 0; font-weight: 700; color: ${isTableLabel ? '#1e40af' : '#0f172a'}; font-size: 0.88rem; letter-spacing: 0.4px; text-transform: uppercase;">${trimmed}</div>`);
+            blocks.push(`<div style="margin: 14px 0 6px 0; font-weight: 700; color: ${isTableLabel ? '#1e40af' : '#0f172a'}; font-size: 0.88rem; letter-spacing: 0.4px; text-transform: uppercase;">${sanitizeAsterisksKeepBold(trimmed)}</div>`);
           }
           else {
             currentParagraph.push(trimmed);
@@ -1677,27 +1677,27 @@
 
         if (isVideoKamera) {
           materiDeskriptif = renderFormattedContentWithTables(`
-Materi pokok **${topik}** pada mata pelajaran **${mapel}** mengkaji kerangka kerja komprehensif penataan kamera, tata visual, dan bahasa sinematografi profesional. Pembahasan diawali dengan penguasaan konsep dasar pembingkaian visual (*visual framing*), pemilihan skala bidik gambar (*shot size*), serta variasi sudut elevasi kamera (*camera angle*) yang berfungsi sebagai instrumen bercerita (*visual storytelling*) dan pembangun dampak psikologis penonton.
+Materi pokok **${topik}** pada mata pelajaran **${mapel}** mengkaji kerangka kerja komprehensif penataan kamera, tata visual, dan bahasa sinematografi profesional. Pembahasan diawali dengan penguasaan konsep dasar pembingkaian visual (visual framing), pemilihan skala bidik gambar (shot size), serta variasi sudut elevasi kamera (camera angle) yang berfungsi sebagai instrumen bercerita (visual storytelling) dan pembangun dampak psikologis penonton.
 
-Dalam praktik perekaman adegan, peserta didik mengoperasikan instrumen kamera dengan memperhatikan kaidah kontinuitas sinematik seperti **Aturan 180 Derajat (180-Degree Rule)** guna menjamin konsistensi arah pandang (*eyeline match*) antarkarakter. Selain itu, parameter ketajaman fokus dan kedalaman ruang (**Depth of Field / DoF**) dikendalikan secara presisi melalui kombinasi bukaan diafragma (*aperture*), panjang fokus lensa (*focal length*), dan jarak fisik ke subjek, serta disempurnakan dengan kalibrasi warna **White Balance (WB)** di bawah suhu pencahayaan Kelvin yang tepat.
+Dalam praktik perekaman adegan, peserta didik mengoperasikan instrumen kamera dengan memperhatikan kaidah kontinuitas sinematik seperti **Aturan 180 Derajat (180-Degree Rule)** guna menjamin konsistensi arah pandang (eyeline match) antarkarakter. Selain itu, parameter ketajaman fokus dan kedalaman ruang (**Depth of Field / DoF**) dikendalikan secara presisi melalui kombinasi bukaan diafragma (aperture), panjang fokus lensa (focal length), dan jarak fisik ke subjek, serta disempurnakan dengan kalibrasi warna **White Balance (WB)** di bawah suhu pencahayaan Kelvin yang tepat.
 
 Penguasaan parameter teknis tersebut menuntut koordinasi tim produksi yang solid antara Penata Kamera (Camera Operator), Asisten Kamera (Focus Puller), dan Pengarah Sinematografi (Director of Photography) guna menghasilkan rekaman visual berkualitas broadcast bebas dari distorsi teknis dan cacat eksposur.
           `);
         } else if (isTipografi) {
           materiDeskriptif = renderFormattedContentWithTables(`
-Materi pokok **${topik}** pada mata pelajaran **${mapel}** mengkaji seni, sains, dan metodologi perancangan komunikasi visual melalui penataan huruf secara profesional. Pembahasan diawali dengan pemahaman mendalam mengenai anatomi huruf (*type anatomy*), struktur garis dasar (*baseline, x-height, cap height, ascender, descender*), serta klasifikasi rumpun huruf utama seperti Serif, Sans Serif, Script, dan Display yang memiliki karakteristik visual dan fungsi komunikasi yang berbeda.
+Materi pokok **${topik}** pada mata pelajaran **${mapel}** mengkaji seni, sains, dan metodologi perancangan komunikasi visual melalui penataan huruf secara profesional. Pembahasan diawali dengan pemahaman mendalam mengenai anatomi huruf (type anatomy), struktur garis dasar (baseline, x-height, cap height, ascender, descender), serta klasifikasi rumpun huruf utama seperti Serif, Sans Serif, Script, dan Display yang memiliki karakteristik visual dan fungsi komunikasi yang berbeda.
 
-Dalam tataran penerapan grafis terapan, peserta didik menguasai parameter mikro-tipografi dan makro-tipografi meliputi pengaturan jarak spasial (*kerning, tracking, leading*), penetapan hierarki visual (*headline, subheadline, body copy*), serta pertimbangan rasio kontras visual guna menjamin keterbacaan (*readability*) dan kejelasan karakter (*legibility*). Penguasaan tata letak tipografi diintegrasikan dengan sistem kisi (*grid system*) dan pemanfaatan ruang negatif (*negative space*) agar komposisi karya memiliki keseimbangan ritmis yang prima.
+Dalam tataran penerapan grafis terapan, peserta didik menguasai parameter mikro-tipografi dan makro-tipografi meliputi pengaturan jarak spasial (kerning, tracking, leading), penetapan hierarki visual (headline, subheadline, body copy), serta pertimbangan rasio kontras visual guna menjamin keterbacaan (readability) dan kejelasan karakter (legibility). Penguasaan tata letak tipografi diintegrasikan dengan sistem kisi (grid system) dan pemanfaatan ruang negatif (negative space) agar komposisi karya memiliki keseimbangan ritmis yang prima.
 
-Seiring perkembangan ekosistem desain digital modern, peserta didik juga mengeksplorasi penggunaan teknologi *variable font* responsif dan kepatuhan terhadap lisensi font komersial. Keterampilan ini membekali peserta didik dengan kecakapan profesional untuk merancang tata letak publikasi, identitas visual jenama (*branding*), dan antarmuka digital (UI/UX) berstandar industri grafis kontemporer.
+Seiring perkembangan ekosistem desain digital modern, peserta didik juga mengeksplorasi penggunaan teknologi variable font responsif dan kepatuhan terhadap lisensi font komersial. Keterampilan ini membekali peserta didik dengan kecakapan profesional untuk merancang tata letak publikasi, identitas visual jenama (branding), dan antarmuka digital (UI/UX) berstandar industri grafis kontemporer.
           `);
         } else {
           materiDeskriptif = renderFormattedContentWithTables(`
-Materi pokok **${topik}** pada mata pelajaran **${mapel}** mengkaji konsep fundamental, struktur sistematis, dan kerangka operasional yang berlaku dalam bidang keilmuan terkait. Pembahasan diawali dengan pemahaman teoretis mengenai hakikat, karakteristik dasar, dan prinsip kerja yang mendasari fenomena *${topik}*. Peserta didik mengidentifikasi komponen-komponen inti, memahami hubungan kausalitas antarelemen, serta menguasai terminologi teknis yang menjadi standar kompetensi kejuruan/akademik.
+Materi pokok **${topik}** pada mata pelajaran **${mapel}** mengkaji konsep fundamental, struktur sistematis, dan kerangka operasional yang berlaku dalam bidang keilmuan terkait. Pembahasan diawali dengan pemahaman teoretis mengenai hakikat, karakteristik dasar, dan prinsip kerja yang mendasari fenomena **${topik}**. Peserta didik mengidentifikasi komponen-komponen inti, memahami hubungan kausalitas antarelemen, serta menguasai terminologi teknis yang menjadi standar kompetensi kejuruan/akademik.
 
 Secara fungsional dan prosedural, implementasi materi ini melibatkan parameter kerja presisi dan standar operasional prosedur (SOP) baku guna menjamin efisiensi dan kualitas luaran kerja. Penguasaan instrumen, kalibrasi peralatan kerja, serta kepatuhan terhadap regulasi keselamatan kerja menjadi pilar utama dalam mengeksekusi setiap tahapan pekerjaan.
 
-Pada tataran analisis lanjutan, penguasaan materi *${topik}* menuntut kemampuan bernalar kritis dalam memecahkan masalah teknis (*troubleshooting*) saat menghadapi kendala operasional nyata di lapangan. Evaluasi berkelanjutan dan verifikasi empiris memastikan setiap karya atau solusi yang dihasilkan memiliki akurasi tinggi, daya guna optimal, dan nilai inovasi yang relevan dengan perkembangan industri modern.
+Pada tataran analisis lanjutan, penguasaan materi **${topik}** menuntut kemampuan bernalar kritis dalam memecahkan masalah teknis (troubleshooting) saat menghadapi kendala operasional nyata di lapangan. Evaluasi berkelanjutan dan verifikasi empiris memastikan setiap karya atau solusi yang dihasilkan memiliki akurasi tinggi, daya guna optimal, dan nilai inovasi yang relevan dengan perkembangan industri modern.
           `);
         }
       }
@@ -3209,7 +3209,7 @@ Secara fungsional dan prosedural, penguasaan materi ini melibatkan penerapan par
 | Prosedur Kerja & SOP Praktik | Alur penyiapan alat, eksekusi teknis sistematis, dan kepatuhan K3 | Ketepatan langkah kerja operasional dan akurasi hasil 100% |
 | Kontrol Kualitas & Analisis | Evaluasi parameter kerja, kalibrasi instrumen, dan troubleshooting | Hasil karya/analisis bebas cacat teknis dan terverifikasi handal |
 
-Pada tataran analisis lanjutan, penguasaan materi *${topik}* menuntut kemampuan bernalar kritis dalam mendiagnosis anomali teknis dan memecahkan permasalahan (*troubleshooting*) saat menghadapi dinamika kondisi riil di lapangan. Evaluasi berkelanjutan dan pengujian terukur memastikan setiap karya atau solusi yang dihasilkan memiliki presisi tinggi, daya guna optimal, dan nilai inovasi yang relevan dengan perkembangan industri modern.
+Pada tataran analisis lanjutan, penguasaan materi **${topik}** menuntut kemampuan bernalar kritis dalam mendiagnosis anomali teknis dan memecahkan permasalahan (troubleshooting) saat menghadapi dinamika kondisi riil di lapangan. Evaluasi berkelanjutan dan pengujian terukur memastikan setiap karya atau solusi yang dihasilkan memiliki presisi tinggi, daya guna optimal, dan nilai inovasi yang relevan dengan perkembangan industri modern.
         `.trim(),
         materiTambahan: materiTambahanVal,
         asesmen: asesmenData,

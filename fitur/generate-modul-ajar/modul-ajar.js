@@ -4222,7 +4222,7 @@ Secara fungsional dan prosedural, penguasaan materi ini melibatkan penerapan par
 | Prosedur Kerja & SOP Praktik | Alur penyiapan alat, eksekusi teknis sistematis, dan kepatuhan K3 | Ketepatan langkah kerja operasional dan akurasi hasil 100% |
 | Kontrol Kualitas & Analisis | Evaluasi parameter kerja, kalibrasi instrumen, dan troubleshooting | Hasil karya/analisis bebas cacat teknis dan terverifikasi handal |
 
-Pada tataran analisis lanjutan, penguasaan materi *${topik}* menuntut kemampuan bernalar kritis dalam mendiagnosis anomali teknis dan memecahkan permasalahan (*troubleshooting*) saat menghadapi dinamika kondisi riil di lapangan. Evaluasi berkelanjutan dan pengujian terukur memastikan setiap karya atau solusi yang dihasilkan memiliki presisi tinggi, daya guna optimal, dan nilai inovasi yang relevan dengan perkembangan industri modern.
+Pada tataran analisis lanjutan, penguasaan materi **${topik}** menuntut kemampuan bernalar kritis dalam mendiagnosis anomali teknis dan memecahkan permasalahan (troubleshooting) saat menghadapi dinamika kondisi riil di lapangan. Evaluasi berkelanjutan dan pengujian terukur memastikan setiap karya atau solusi yang dihasilkan memiliki presisi tinggi, daya guna optimal, dan nilai inovasi yang relevan dengan perkembangan industri modern.
     `.trim(),
     materiTambahan: materiTambahanVal,
     asesmen: asesmenData,
