@@ -209,12 +209,39 @@
     .doc-table td,
     .deep-learning-box,
     .lkpd-container p,
-    .lkpd-container li {
+    .lkpd-container li,
+    .materi-tambahan-item,
+    .materi-tambahan-item-desc {
       text-align: justify;
       text-justify: inter-word;
       line-height: 1.68;
       color: #1e293b;
       font-size: 0.92rem;
+    }
+
+    .materi-tambahan-subpoints {
+      margin-left: 24px;
+      margin-top: 10px;
+      margin-bottom: 16px;
+    }
+
+    .materi-tambahan-item {
+      margin-bottom: 14px;
+      text-align: justify;
+      line-height: 1.65;
+    }
+
+    .materi-tambahan-item-title {
+      font-weight: 700;
+      color: #0f172a;
+      margin-bottom: 4px;
+      font-size: 0.95rem;
+    }
+
+    .materi-tambahan-item-desc {
+      margin-left: 12px;
+      color: #334155;
+      line-height: 1.65;
     }
 
     .doc-paragraph {
@@ -441,9 +468,25 @@
       }
 
       .signature-grid,
-      .deep-learning-box {
+      .deep-learning-box,
+      .materi-tambahan-item {
         page-break-inside: avoid !important;
         break-inside: avoid !important;
+      }
+
+      .materi-tambahan-subpoints {
+        margin-left: 18pt !important;
+        margin-top: 6pt !important;
+        margin-bottom: 10pt !important;
+      }
+
+      .materi-tambahan-item {
+        margin-bottom: 8pt !important;
+        text-align: justify !important;
+      }
+
+      .materi-tambahan-item-desc {
+        margin-left: 10pt !important;
       }
     }
 
@@ -874,12 +917,15 @@
       // Unescape literal \n
       text = text.replace(/\\r\\n/g, '\n').replace(/\\n/g, '\n').replace(/\r\n/g, '\n');
 
-      // Jika teks sudah berupa format lengkap yang memuat paragraf deskriptif dan tabel markdown
-      if (text.includes('|') && text.includes('\n') && text.length > 250) {
-        return renderFormattedContentWithTables(text);
+      // Cek apakah ada tabel markdown di dalam raw input
+      let tableMarkdown = '';
+      const tableMatch = text.match(/(?:^|\n)(\|[^\n]+\|\n\|[-:| ]+\|\n(?:\|[^\n]+\|\n?)+)/);
+      if (tableMatch) {
+        tableMarkdown = tableMatch[1].trim();
+        text = text.replace(tableMatch[0], '\n\n').trim();
       }
 
-      // Pecah teks berdasarkan penomoran atau baris
+      // Pecah teks berdasarkan penomoran (1., 2., 3.) atau baris
       const hasNumbered = /(?:^|\n+)\s*[0-9]+[.\-)]\s+/.test(text);
       let chunks = [];
       if (hasNumbered) {
@@ -891,54 +937,105 @@
       let parsedPoints = [];
       chunks.forEach((c) => {
         const clean = c.replace(/^[0-9]+[.\-)]\s*|^[-*•]\s*/, '').trim();
-        if (clean) parsedPoints.push(clean);
+        if (!clean) return;
+
+        let title = clean;
+        let desc = '';
+
+        if (clean.includes(':')) {
+          const parts = clean.split(':');
+          title = parts[0].trim();
+          desc = parts.slice(1).join(':').trim();
+        } else if (clean.includes(' - ')) {
+          const parts = clean.split(' - ');
+          title = parts[0].trim();
+          desc = parts.slice(1).join(' - ').trim();
+        } else {
+          // Pisahkan jika formatnya: "Judul Materi. Deskripsi materi kalimat panjang..."
+          const dotMatch = clean.match(/^([^\n.]+?\b)\.\s+([A-Z0-9].*)$/s);
+          if (dotMatch) {
+            title = dotMatch[1].trim();
+            desc = dotMatch[2].trim();
+          }
+        }
+
+        // Hapus kalimat meta pedagogis jika ada yang terbawa
+        desc = desc
+          .replace(/jika peserta didik mendalami materi ini akan[^.]*\.?/gi, '')
+          .replace(/peserta didik mendalami adopsi teknologi[^.]*\.?/gi, '')
+          .replace(/melalui penugasan proyek tingkat lanjut[^.]*\.?/gi, '')
+          .replace(/kajian ini membekali peserta didik[^.]*\.?/gi, '')
+          .trim();
+
+        parsedPoints.push({ title, desc });
       });
 
       if (parsedPoints.length === 0) {
         parsedPoints = [
-          `Eksplorasi teknologi mutakhir dan inovasi digital pada materi ${topik}`,
-          `Proyek inovasi kolaboratif tingkat lanjut guna memperluas wawasan terapan peserta didik`,
-          `Analisis komparatif tantangan nyata dan peluang karir profesional pada bidang keahlian ${mapel}`
+          {
+            title: `Eksplorasi Teknologi Terkini & Standar Industri pada ${topik}`,
+            desc: `Penerapan perangkat digital modern, otomatisasi parameter kerja, dan standar mutu profesional terkini.`
+          },
+          {
+            title: `Proyek Terapan Tingkat Lanjut`,
+            desc: `Pengembangan karya kompleks yang menguji pemecahan masalah teknis dan presisi eksekusi sesuai standar operasional prosedur.`
+          },
+          {
+            title: `Analisis Tantangan & Kebutuhan Profesi Bidang ${mapel}`,
+            desc: `Pemetaan regulasi mutu kerja, evaluasi portofolio profesional, dan kesiapan integrasi alur kerja industri modern.`
+          }
         ];
       }
 
-      let expanded = `Materi tambahan ini dirancang sebagai pengayaan terstruktur guna memperdalam pemahaman konseptual dan kemahiran terapan peserta didik melampaui capaian pembelajaran dasar. Pembahasan difokuskan pada penguasaan teknologi mutakhir, alur kerja profesional berstandar industri, serta penyelesaian tantangan riil pada mata pelajaran **${mapel}** dengan materi pokok **${topik}**.\n\n`;
+      // Elaborasi teknis substantif untuk setiap butir materi tambahan (bukan kalimat pedagogis generik)
+      parsedPoints.forEach((pt) => {
+        const tLower = pt.title.toLowerCase();
+        let techElab = '';
 
-      parsedPoints.forEach((point, i) => {
-        let title = point;
-        let desc = '';
-        if (point.includes(':')) {
-          const parts = point.split(':');
-          title = parts[0].trim();
-          desc = parts.slice(1).join(':').trim();
-        } else if (point.includes(' - ')) {
-          const parts = point.split(' - ');
-          title = parts[0].trim();
-          desc = parts.slice(1).join(' - ').trim();
-        }
-
-        expanded += `### ${i + 1}. ${title}\n`;
-        if (desc) {
-          expanded += `${desc} `;
-        }
-        if (i === 0) {
-          expanded += `Peserta didik mendalami adopsi teknologi generasi terkini dan integrasi sistem digital mutakhir yang relevan dengan ${topik}. Analisis diarahkan pada peningkatan efisiensi kerja, otomatisasi parameter teknis, serta perbandingan empiris antara metodologi konvensional dan ekosistem industri modern.\n\n`;
-        } else if (i === 1) {
-          expanded += `Melalui penugasan proyek tingkat lanjut, peserta didik diarahkan untuk mengembangkan karya inovatif yang menuntut kemampuan pemecahan masalah (problem-solving) kontekstual. Prosedur perancangan, kepatuhan terhadap standar operasional prosedur (SOP), dan ketelitian eksekusi menjadi tolok ukur utama keberhasilan luaran pengayaan ini.\n\n`;
+        if (/variabel|variable|responsif|responsive/i.test(tLower)) {
+          techElab = `Pembahasan difokuskan pada implementasi teknologi font variabel (*variable fonts*) dengan pengendalian sumbu variasi (*variation axes*) seperti bobot (*weight*), lebar (*width*), dan kemiringan (*slant*) dalam satu berkas terpadu. Pengaturan dinamis ini memungkinkan penyesuaian skala hierarki visual secara adaptif terhadap berbagai resolusi layar antarmuka digital (UI/UX) guna menjaga efisiensi berkas dan kenyamanan keterbacaan (*readability*).`;
+        } else if (/lisensi|hukum|hak\s*cipta|etika|komersial|brief/i.test(tLower)) {
+          techElab = `Pembahasan mencakup pemahaman komprehensif atas klasifikasi lisensi jenis huruf komersial (*End User License Agreement / EULA*), lisensi terbuka (*Open Font License / OFL*), lisensi desktop komersial, webfont embedding, hingga lisensi aplikasi digital. Siswa mendalami kepatuhan hak kekayaan intelektual (HKI), batasan distribusi, dan etika atribusi desainer guna menjamin setiap luaran karya desain komersial bebas dari risiko pelanggaran hukum industri.`;
+        } else if (/perancangan|typeface|huruf|branding|kustom|custom|glif|glyph/i.test(tLower)) {
+          techElab = `Pembahasan mencakup alur kerja perancangan anatomi karakter huruf khusus (*custom typeface/lettering*) dari sketsa manual proporsi optik (garis dasar, *x-height*, *ascender*, *descender*), digitalisasi kurva vektor berbasis kurva Bézier yang presisi, hingga pengujian keterbacaan (*legibility*) dan harmoni visual guna memperkuat diferensiasi identitas visual jenama (*branding*).`;
+        } else if (/tata\s*kamera|camera|shot|sudut|angle|gerak|pergerakan/i.test(tLower)) {
+          techElab = `Pembahasan difokuskan pada penguasaan parameter operasional instrumen kamera, pemilihan ukuran bidik (*shot size*), penentuan elevasi sudut (*camera angle*), serta eksekusi pergerakan dinamis (*camera movement*) terkalibrasi guna memperkuat bahasa visual sinematik adegan.`;
         } else {
-          expanded += `Kajian ini membekali peserta didik dengan perspektif komprehensif mengenai dinamika dunia usaha dan dunia kerja (DUDI). Peserta didik mengevaluasi portofolio standar profesional, regulasi mutu kerja, serta memetakan peta jalan karir dan sertifikasi kompetensi pada bidang keahlian ${mapel}.\n\n`;
+          techElab = `Pembahasan difokuskan pada penguasaan konsep fundamental, mekanisme kerja teknis, serta parameter operasional baku dari **${pt.title}**. Penekanan diarahkan pada ketepatan prosedur eksekusi, kontrol kualitas hasil kerja, dan pemecahan kendala teknis dalam alur kerja profesional.`;
         }
+
+        let combined = pt.desc ? `${pt.desc} ${techElab}` : techElab;
+        pt.fullExplanation = combined.trim();
       });
 
-      expanded += `TABEL PARAMETER PENGAYAAN DAN ANALISIS TINGKAT LANJUT:\n\n`;
-      expanded += `| Dimensi Eksplorasi / Inovasi | Penerapan Terapan Tingkat Lanjut | Relevansi Industri & Standar Portofolio |\n`;
-      expanded += `|---|---|---|\n`;
-      expanded += `| Integrasi Teknologi Terkini | Implementasi alat digital modern & alur kerja terotomasi pada ${topik} | Efisiensi kerja meningkat, waktu produksi lebih singkat, dan mutu terstandarisasi |\n`;
-      expanded += `| Proyek Inovasi Kolaboratif | Eksekusi karya kompleks berbasis studi kasus riil pemecahan masalah lapangan | Portofolio siap uji kompetensi kejuruan dan layak gelar karya publik |\n`;
-      expanded += `| Standar Mutu & Karir Industri | Analisis komparatif regulasi, kontrol kualitas, dan sertifikasi profesi | Kesiapan lulusan bersaing di dunia usaha dan dunia kerja (DUDI) modern |\n\n`;
-      expanded += `Melalui elaborasi deskriptif dan pengujian parameter lanjutan di atas, peserta didik memiliki bekal kompetensi yang matang, nalar kritis yang tangguh, serta kesiapan profesional untuk menghadapi kebutuhan industri terkini.`;
+      let html = `
+        <p style="margin-bottom: 12px; text-align: justify; line-height: 1.68; color: #1e293b;">
+          Materi tambahan ini dirancang sebagai pengayaan terstruktur guna memperdalam pemahaman konseptual dan kemahiran terapan peserta didik melampaui capaian pembelajaran dasar. Pembahasan difokuskan pada penguasaan materi lanjutan, prinsip kerja mendalam, serta standar penerapan profesional pada mata pelajaran <strong>${mapel}</strong> dengan materi pokok <strong>${topik}</strong>:
+        </p>
+        <div class="materi-tambahan-subpoints" style="margin-left: 24px; margin-top: 10px; margin-bottom: 16px;">
+          ${parsedPoints.map((pt, i) => `
+            <div class="materi-tambahan-item" style="margin-bottom: 14px; text-align: justify; line-height: 1.65;">
+              <div class="materi-tambahan-item-title" style="font-weight: 700; color: #0f172a; margin-bottom: 4px; font-size: 0.95rem;">
+                ${i + 1}. ${pt.title}
+              </div>
+              <div class="materi-tambahan-item-desc" style="margin-left: 12px; color: #334155; line-height: 1.65;">
+                ${pt.fullExplanation}
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      `;
 
-      return renderFormattedContentWithTables(expanded);
+      // Jika ada tabel markdown yang disertakan dari input/AI, render tabelnya; jika tidak ada, tabel TIDAK wajib
+      if (tableMarkdown) {
+        html += `
+          <div style="margin-top: 14px; margin-bottom: 14px;">
+            ${renderFormattedContentWithTables(tableMarkdown)}
+          </div>
+        `;
+      }
+
+      return html;
     }
 
     function formatMateriTambahanList(raw, data, ai) {
@@ -1454,8 +1551,13 @@
       }
 
       if (!materiDeskriptif) {
-        const ctxDesk = extractContextTahap1Dan2(data, ai);
-        const isVideoKamera = /video|sinemat|kamera|camera|shot|angle|framing|broadcasting|perfilman|film|foto|lensa|shutter|aperture|iso|eksposur|exposure|white\s*balance|depth\s*of\s*field|rule\s*of\s*thirds/i.test(ctxDesk);
+        const primaryCtx = extractPrimarySubjectContext(data, ai);
+        const isTipografi = /\b(tipografi|typography|typeface|font|huruf|kerning|tracking|leading|glif|glyph)\b/i.test(primaryCtx);
+        const isDKV = isTipografi || /\b(dkv|desain\s*grafis|desain\s*komunikasi\s*visual|nirmana|vektor|vector|coreldraw|illustrator|photoshop|layout|branding|logo|poster|identitas\s*visual)\b/i.test(primaryCtx);
+        const isVideoKamera = !isTipografi && (
+          /\b(videografi|sinematografi|tata\s*kamera|kamera\s*video|camera\s*movement|camera\s*angle|shot\s*size|ukuran\s*bidik|sudut\s*pandang\s*kamera|aturan\s*180|180-degree|depth\s*of\s*field|\bdof\b|white\s*balance|broadcasting|penyiaran|perfilman|tata\s*artistik\s*film)\b/i.test(primaryCtx) ||
+          (/\b(fotografi|kamera)\b/i.test(primaryCtx) && !isDKV)
+        );
 
         if (isVideoKamera) {
           materiDeskriptif = renderFormattedContentWithTables(`
@@ -1463,29 +1565,21 @@ Materi pokok **${topik}** pada mata pelajaran **${mapel}** mengkaji kerangka ker
 
 Dalam praktik perekaman adegan, peserta didik mengoperasikan instrumen kamera dengan memperhatikan kaidah kontinuitas sinematik seperti **Aturan 180 Derajat (180-Degree Rule)** guna menjamin konsistensi arah pandang (*eyeline match*) antarkarakter. Selain itu, parameter ketajaman fokus dan kedalaman ruang (**Depth of Field / DoF**) dikendalikan secara presisi melalui kombinasi bukaan diafragma (*aperture*), panjang fokus lensa (*focal length*), dan jarak fisik ke subjek, serta disempurnakan dengan kalibrasi warna **White Balance (WB)** di bawah suhu pencahayaan Kelvin yang tepat.
 
-| Parameter Teknis Tata Kamera | Konsep & Prinsip Kerja Sinematik | Standar SOP & Penerapan Profesional |
-|---|---|---|
-| **Shot Size (Ukuran Bidik)** | Klasifikasi luas area bidik (ELS, LS, MS, MCU, CU, ECU) untuk menetapkan kedekatan emosional dan konteks adegan | Pemilihan jenis shot disesuaikan dengan naskah adegan (script breakdown) dan storyboard |
-| **Camera Angle (Sudut Pandang)** | Penempatan posisi vertikal kamera (Bird Eye, High, Eye Level, Low, Frog, Dutch Angle) untuk hierarki dramatik | Posisi sumbu kamera terkunci stabil pada tripod atau rig sesuai instruksi sutradara / DOP |
-| **Camera Movement (Gerakan Kamera)** | Manuver poros statis (Pan, Tilt) maupun gerak fisik kamera (Dolly, Pedestal, Truck, Crane, Arc, Zoom) | Gerakan kamera wajib halus (fluid), memiliki titik awal (head) dan henti (tail) yang stabil |
-| **Aturan 180 Derajat (180° Rule)** | Garis imajiner (line of action) antar-karakter untuk menjaga kontinuitas orientasi ruang dan arah pandang | Kamera tidak boleh melintasi garis imajiner tanpa shot netral / cutaway transisi |
-| **Depth of Field (DoF)** | Rentang area ketajaman fokus (Shallow DoF untuk isolasi subjek, Deep DoF untuk ketajaman latar penuh) | Kalibrasi bukaan aperture (f-stop) dan fokus manual presisi menggunakan focus peaking |
-| **Rule of Thirds & Framing** | Pembagian bingkai kisi 3x3 simetris, penataan Headroom, Look Space / Nose Room, dan Lead Room proporsional | Titik minat (point of interest) ditempatkan pada persimpangan garis sepertiga bidang |
-| **White Balance (WB)** | Kalibrasi sensor terhadap suhu warna sumber cahaya (skala Kelvin: Tungsten 3200K s.d. Daylight 5600K) | Pengukuran menggunakan grey card / kertas putih sebelum sesi syuting dimulai |
-
 Penguasaan parameter teknis tersebut menuntut koordinasi tim produksi yang solid antara Penata Kamera (Camera Operator), Asisten Kamera (Focus Puller), dan Pengarah Sinematografi (Director of Photography) guna menghasilkan rekaman visual berkualitas broadcast bebas dari distorsi teknis dan cacat eksposur.
+          `);
+        } else if (isTipografi) {
+          materiDeskriptif = renderFormattedContentWithTables(`
+Materi pokok **${topik}** pada mata pelajaran **${mapel}** mengkaji seni, sains, dan metodologi perancangan komunikasi visual melalui penataan huruf secara profesional. Pembahasan diawali dengan pemahaman mendalam mengenai anatomi huruf (*type anatomy*), struktur garis dasar (*baseline, x-height, cap height, ascender, descender*), serta klasifikasi rumpun huruf utama seperti Serif, Sans Serif, Script, dan Display yang memiliki karakteristik visual dan fungsi komunikasi yang berbeda.
+
+Dalam tataran penerapan grafis terapan, peserta didik menguasai parameter mikro-tipografi dan makro-tipografi meliputi pengaturan jarak spasial (*kerning, tracking, leading*), penetapan hierarki visual (*headline, subheadline, body copy*), serta pertimbangan rasio kontras visual guna menjamin keterbacaan (*readability*) dan kejelasan karakter (*legibility*). Penguasaan tata letak tipografi diintegrasikan dengan sistem kisi (*grid system*) dan pemanfaatan ruang negatif (*negative space*) agar komposisi karya memiliki keseimbangan ritmis yang prima.
+
+Seiring perkembangan ekosistem desain digital modern, peserta didik juga mengeksplorasi penggunaan teknologi *variable font* responsif dan kepatuhan terhadap lisensi font komersial. Keterampilan ini membekali peserta didik dengan kecakapan profesional untuk merancang tata letak publikasi, identitas visual jenama (*branding*), dan antarmuka digital (UI/UX) berstandar industri grafis kontemporer.
           `);
         } else {
           materiDeskriptif = renderFormattedContentWithTables(`
 Materi pokok **${topik}** pada mata pelajaran **${mapel}** mengkaji konsep fundamental, struktur sistematis, dan kerangka operasional yang berlaku dalam bidang keilmuan terkait. Pembahasan diawali dengan pemahaman teoretis mengenai hakikat, karakteristik dasar, dan prinsip kerja yang mendasari fenomena *${topik}*. Peserta didik mengidentifikasi komponen-komponen inti, memahami hubungan kausalitas antarelemen, serta menguasai terminologi teknis yang menjadi standar kompetensi kejuruan/akademik.
 
 Secara fungsional dan prosedural, implementasi materi ini melibatkan parameter kerja presisi dan standar operasional prosedur (SOP) baku guna menjamin efisiensi dan kualitas luaran kerja. Penguasaan instrumen, kalibrasi peralatan kerja, serta kepatuhan terhadap regulasi keselamatan kerja menjadi pilar utama dalam mengeksekusi setiap tahapan pekerjaan.
-
-| Parameter / Dimensi Teknis | Deskripsi & Prinsip Operasional | Standar Penerapan & Pengujian Mutu |
-|---|---|---|
-| Landasan Konseptual & Teori | Penguasaan definisi, fungsi inti, dan klasifikasi elemen ${topik} | Memenuhi standar acuan kurikulum dan standar kompetensi kerja |
-| Prosedur Kerja & SOP Praktik | Alur penyiapan alat, eksekusi teknis sistematis, dan kepatuhan K3 | Ketepatan langkah kerja sistematis dan kepatuhan SOP 100% |
-| Kontrol Kualitas & Analisis | Evaluasi parameter kerja, kalibrasi hasil, dan troubleshooting | Produk/analisis bebas dari cacat teknis dan terverifikasi akurat |
 
 Pada tataran analisis lanjutan, penguasaan materi *${topik}* menuntut kemampuan bernalar kritis dalam memecahkan masalah teknis (*troubleshooting*) saat menghadapi kendala operasional nyata di lapangan. Evaluasi berkelanjutan dan verifikasi empiris memastikan setiap karya atau solusi yang dihasilkan memiliki akurasi tinggi, daya guna optimal, dan nilai inovasi yang relevan dengan perkembangan industri modern.
           `);
@@ -1673,6 +1767,33 @@ Pada tataran analisis lanjutan, penguasaan materi *${topik}* menuntut kemampuan 
     }
 
     /**
+     * Ekstraksi Konteks Subjek Keilmuan Murni (Topik, Mapel, Elemen CP, Jurusan)
+     * Mengabaikan media digital/fasilitas umum agar tidak memicu deteksi palsu domain
+     */
+    function extractPrimarySubjectContext(data, ai) {
+      const d = data || {};
+      const a = ai || {};
+      const fields = [
+        d.topikMateri,
+        d.isiTopikMateri,
+        d.mataPelajaran,
+        d.elemenCP,
+        d.jurusanSekolah,
+        d.capaianPembelajaran,
+        d.tujuanPembelajaran,
+        d.materiTambahan,
+        d.identifikasiMateri,
+        a.topikMateri,
+        a.mataPelajaran
+      ];
+      return fields
+        .filter(Boolean)
+        .map(v => (typeof v === 'object' ? JSON.stringify(v) : String(v)))
+        .join(' ')
+        .toLowerCase();
+    }
+
+    /**
      * Ekstraksi Konteks Holistik dari Seluruh Isian Formulir Tahap 1 & Tahap 2
      */
     function extractContextTahap1Dan2(data, ai) {
@@ -1711,7 +1832,7 @@ Pada tataran analisis lanjutan, penguasaan materi *${topik}* menuntut kemampuan 
     /**
      * Resolusi Glosarium Materi Berdaya Tahan Tinggi (Multi-Format & Contextual Fallback)
      * Hanya berisi materi/istilah teknis murni yang diambil, tidak memuat istilah pedagogis generik
-     * Konteks diekstraksi holistik dari seluruh informasi Tahap 1 & 2
+     * Konteks diekstraksi tepat dari subjek keilmuan Tahap 1 & 2 (Poin A-F)
      */
     function resolveGlosariumList(ai, data) {
       let list = [];
@@ -1764,16 +1885,57 @@ Pada tataran analisis lanjutan, penguasaan materi *${topik}* menuntut kemampuan 
         return !forbiddenTerms.some(fb => termLower.includes(fb));
       });
 
-      // Deteksi konteks holistik dari seluruh informasi Tahap 1 & 2
-      const ctx = extractContextTahap1Dan2(data, ai);
-      const isVideoKamera = /video|sinemat|kamera|camera|shot|angle|framing|broadcasting|perfilman|film|foto|lensa|shutter|aperture|iso|eksposur|exposure|white\s*balance|depth\s*of\s*field|rule\s*of\s*thirds/i.test(ctx);
-      const isAnimasi = /animasi|karakter|storyboard|motion|keyframe|rigging|tweening|render/i.test(ctx);
-      const isIT = /jaringan|komputer|it|server|cisco|mikrotik|rpl|software|cyber|cloud|lan|wan|routing|switch|firewall/i.test(ctx);
-      const isDKV = /desain|dkv|grafis|ilustrasi|layout|tipografi|vektor|vector|branding|logo|poster/i.test(ctx);
-      const isOtomotif = /otomotif|motor|mobil|mesin|injeksi|ecu|transmisi|rem|suspensi/i.test(ctx);
-      const isListrik = /listrik|elektronika|arus|tegangan|daya|plc|mikrokontroler|arduino|sensor/i.test(ctx);
-      const isBisnis = /akuntansi|keuangan|bisnis|manajemen|pasar|uang|jurnal|neraca|laba|faktur|pajak/i.test(ctx);
-      const isKuliner = /kuliner|boga|masak|makanan|minuman|food|resep|pastry|bakery/i.test(ctx);
+      // Deteksi konteks subjek keilmuan dari Tahap 1 & 2 (Poin A-F)
+      const primaryCtx = extractPrimarySubjectContext(data, ai);
+
+      const isTipografi = /\b(tipografi|typography|typeface|font|huruf|kerning|tracking|leading|glif|glyph)\b/i.test(primaryCtx);
+      const isDKV = isTipografi || /\b(dkv|desain\s*grafis|desain\s*komunikasi\s*visual|nirmana|vektor|vector|coreldraw|illustrator|photoshop|layout|branding|logo|poster|identitas\s*visual)\b/i.test(primaryCtx);
+      const isVideoKamera = !isTipografi && (
+        /\b(videografi|sinematografi|tata\s*kamera|kamera\s*video|camera\s*movement|camera\s*angle|shot\s*size|ukuran\s*bidik|sudut\s*pandang\s*kamera|aturan\s*180|180-degree|depth\s*of\s*field|\bdof\b|white\s*balance|broadcasting|penyiaran|perfilman|tata\s*artistik\s*film)\b/i.test(primaryCtx) ||
+        (/\b(fotografi|kamera)\b/i.test(primaryCtx) && !isDKV)
+      );
+      const isAnimasi = !isTipografi && /\b(animasi|animation|2d|3d|stopmotion|storyboard|motion\s*graphic|keyframe|rigging|tweening|blender|maya|render)\b/i.test(primaryCtx);
+      const isIT = !isTipografi && !isDKV && /\b(jaringan|komputer|rpl|tkj|server|cisco|mikrotik|software|cyber|cloud|lan|wan|routing|switch|firewall|database|sql|pemrograman|coding|web)\b/i.test(primaryCtx);
+      const isOtomotif = /\b(otomotif|motor|mobil|mesin|injeksi|ecu|transmisi|rem|suspensi|chassis|engine|tune\s*up)\b/i.test(primaryCtx);
+      const isListrik = /\b(listrik|elektronika|arus|tegangan|daya|plc|mikrokontroler|arduino|sensor|instalasi\s*motor|rangkaian)\b/i.test(primaryCtx);
+      const isBisnis = /\b(akuntansi|keuangan|bisnis|manajemen|pasar|uang|jurnal|neraca|laba|faktur|pajak|pemasaran|marketing)\b/i.test(primaryCtx);
+      const isKuliner = /\b(kuliner|boga|tata\s*boga|masak|makanan|minuman|food|resep|pastry|bakery|restoran)\b/i.test(primaryCtx);
+
+      // Kamus Istilah Teknis Komprehensif Tipografi & Desain Grafis
+      const kamusTipografiDKV = [
+        {
+          istilah: "Tipografi (Typography)",
+          definisi: "Seni dan teknik memilih, merancang, serta menyusun huruf (typeface/font) dengan pengaturan ruang bidang guna menciptakan keterbacaan (readability), kejelasan (legibility), dan estetika komunikasi visual yang optimal."
+        },
+        {
+          istilah: "Typeface vs Font",
+          definisi: "Perbedaan mendasar antara rumpun keluarga rancangan bentuk huruf (Typeface, contoh: Helvetica, Garamond, Futura) dengan berkas fisik/digital spesifik dalam ukuran, gaya, dan format bobot tertentu (Font, contoh: Helvetica Bold 14pt)."
+        },
+        {
+          istilah: "Kerning & Tracking",
+          definisi: "Kerning adalah pengaturan jarak spasial horizontal antar-dua karakter huruf spesifik agar seimbang dan proporsional, sedangkan Tracking adalah pengaturan jarak horizontal seragam di antara seluruh huruf dalam satu kata, baris, atau paragraf teks."
+        },
+        {
+          istilah: "Leading (Line Spacing)",
+          definisi: "Jarak vertikal antara baseline (garis dasar tempat huruf berpijak) satu baris teks ke baseline baris teks berikutnya untuk menjamin kenyamanan ritme mata saat membaca paragraf teks panjang."
+        },
+        {
+          istilah: "Hierarki Tipografi (Typographic Hierarchy)",
+          definisi: "Sistem penataan ukuran, bobot (weight), kontras gaya, dan posisi teks guna memandu alur pandang audiens mencerna informasi berdasarkan urutan prioritas kepentingan (Headline, Subheadline, Body Copy)."
+        },
+        {
+          istilah: "Legibility & Readability",
+          definisi: "Legibility merujuk pada tingkat kemudahan mata dalam mengenali dan membedakan bentuk fisik setiap karakter huruf secara individual, sedangkan Readability merujuk pada tingkat kenyamanan dan kelancaran membaca susunan teks dalam satu kesatuan desain."
+        },
+        {
+          istilah: "Variable Font & Responsif",
+          definisi: "Format font digital mutakhir yang mengintegrasikan berbagai variasi bobot (weight), lebar (width), dan kemiringan (slant) dalam satu berkas dinamis yang fleksibel dan adaptif untuk berbagai resolusi layar UI/UX media digital."
+        },
+        {
+          istilah: "Grid System & Baseline Grid",
+          definisi: "Struktur kisi garis panduan geometris kolom dan margin vertikal-horizontal yang menjadi landasan konsistensi penataan layout huruf dan elemen grafis dalam karya desain grafis profesional."
+        }
+      ];
 
       // Kamus Istilah Teknis Komprehensif Videografi, Sinematografi, dan Tata Kamera
       const kamusVideoSinematografi = [
@@ -1807,23 +1969,8 @@ Pada tataran analisis lanjutan, penguasaan materi *${topik}* menuntut kemampuan 
         }
       ];
 
-      // JIKA KONTEKS VIDEOGRAFI/SINEMATOGRAFI/TATA KAMERA TERDETEKSI:
+      // 1. JIKA KONTEKS VIDEOGRAFI/SINEMATOGRAFI/TATA KAMERA TERDETEKSI:
       if (isVideoKamera) {
-        const existingLower = list.map(item => (item.istilah || '').toLowerCase());
-        const missingCore = kamusVideoSinematografi.filter(coreItem => {
-          const cName = coreItem.istilah.toLowerCase();
-          return !existingLower.some(ext => {
-            if (cName.includes('shot size') && ext.includes('shot')) return true;
-            if (cName.includes('camera angle') && ext.includes('angle')) return true;
-            if (cName.includes('camera movement') && ext.includes('move')) return true;
-            if (cName.includes('180') && ext.includes('180')) return true;
-            if (cName.includes('depth of field') && (ext.includes('depth') || ext.includes('dof'))) return true;
-            if (cName.includes('rule of thirds') && (ext.includes('thirds') || ext.includes('framing'))) return true;
-            if (cName.includes('white balance') && (ext.includes('white') || ext.includes('balance'))) return true;
-            return false;
-          });
-        });
-
         if (list.length < 5) {
           const merged = [...kamusVideoSinematografi];
           list.forEach(item => {
@@ -1833,11 +1980,31 @@ Pada tataran analisis lanjutan, penguasaan materi *${topik}* menuntut kemampuan 
           });
           return merged;
         } else {
+          const existingLower = list.map(item => (item.istilah || '').toLowerCase());
+          const missingCore = kamusVideoSinematografi.filter(coreItem => {
+            const cName = coreItem.istilah.toLowerCase();
+            return !existingLower.some(ext => ext.includes(cName.split(' ')[0]));
+          });
           return [...missingCore, ...list];
         }
       }
 
-      // UNTUK KONTEKS BIDANG KEILMUAN LAINNYA:
+      // 2. JIKA KONTEKS TIPOGRAFI TERDETEKSI:
+      if (isTipografi) {
+        if (list.length < 5) {
+          const merged = [...kamusTipografiDKV];
+          list.forEach(item => {
+            if (!merged.some(m => m.istilah.toLowerCase() === item.istilah.toLowerCase())) {
+              merged.push(item);
+            }
+          });
+          return merged;
+        } else {
+          return list;
+        }
+      }
+
+      // 3. UNTUK KONTEKS BIDANG KEILMUAN LAINNYA:
       if (list.length < 5) {
         const d = data || {};
         const topik = d.topikMateri || 'Materi Pokok';
@@ -1971,7 +2138,14 @@ Pada tataran analisis lanjutan, penguasaan materi *${topik}* menuntut kemampuan 
         const d = data || {};
         const topik = d.topikMateri || 'Materi Pokok';
         const mapel = d.mataPelajaran || 'Mata Pelajaran';
-        const ctxRef = extractContextTahap1Dan2(data, ai);
+        const primaryCtx = extractPrimarySubjectContext(data, ai);
+
+        const isTipografi = /\b(tipografi|typography|typeface|font|huruf|kerning|tracking|leading|glif|glyph)\b/i.test(primaryCtx);
+        const isDKV = isTipografi || /\b(dkv|desain\s*grafis|desain\s*komunikasi\s*visual|nirmana|vektor|vector|coreldraw|illustrator|photoshop|layout|branding|logo|poster|identitas\s*visual)\b/i.test(primaryCtx);
+        const isVideoKamera = !isTipografi && (
+          /\b(videografi|sinematografi|tata\s*kamera|kamera\s*video|camera\s*movement|camera\s*angle|shot\s*size|ukuran\s*bidik|sudut\s*pandang\s*kamera|aturan\s*180|180-degree|depth\s*of\s*field|\bdof\b|white\s*balance|broadcasting|penyiaran|perfilman|tata\s*artistik\s*film)\b/i.test(primaryCtx) ||
+          (/\b(fotografi|kamera)\b/i.test(primaryCtx) && !isDKV)
+        );
 
         // 1. Dokumen Resmi Standar Kurikulum Merdeka (Kemendikbudristek)
         const refBSKAP = 'Badan Standar, Kurikulum, dan Asesmen Pendidikan (BSKAP). (2024). Panduan Pembelajaran dan Asesmen Pendidikan Anak Usia Dini, Pendidikan Dasar, dan Pendidikan Menengah. Jakarta: Kementerian Pendidikan, Kebudayaan, Riset, dan Teknologi.';
@@ -1983,28 +2157,34 @@ Pada tataran analisis lanjutan, penguasaan materi *${topik}* menuntut kemampuan 
 
         // 3. Buku Teks & Rujukan Keilmuan / Industri Spesifik
         let refKeilmuan = [];
-        if (/video|sinemat|kamera|camera|shot|angle|framing|broadcasting|perfilman|film|foto|lensa|shutter|aperture|iso/i.test(ctxRef)) {
+        if (isVideoKamera) {
           refKeilmuan = [
             'Bowen, C. J., & Thompson, R. (2020). Grammar of the Shot (4th ed.). New York: Routledge / Focal Press.',
             'Brown, B. (2021). Cinematography: Theory and Practice: Image Making for Cinematographers and Directors (4th ed.). London: Routledge.',
             'Direktorat Sekolah Menengah Kejuruan. (2022). Dasar-Dasar Broadcasting dan Perfilman untuk SMK/MAK Kelas X. Jakarta: Pusat Perbukuan Kemendikbudristek.'
           ];
-        } else if (/animasi|karakter|storyboard/i.test(ctxRef)) {
+        } else if (isTipografi) {
+          refKeilmuan = [
+            'Lupton, E. (2014). Thinking with Type: A Critical Guide for Designers, Writers, Editors, & Students (2nd ed.). New York: Princeton Architectural Press.',
+            'Bringhurst, R. (2012). The Elements of Typographic Style (4th ed.). Seattle: Hartley & Marks Publishers.',
+            'Direktorat Sekolah Menengah Kejuruan. (2022). Dasar-Dasar Desain Komunikasi Visual untuk SMK/MAK Kelas X. Jakarta: Pusat Perbukuan Kemendikbudristek.'
+          ];
+        } else if (/animasi|karakter|storyboard/i.test(primaryCtx)) {
           refKeilmuan = [
             'Williams, R. (2020). The Animator\'s Survival Kit: A Manual of Methods, Principles and Formulas for Classical, Computer, Games, Stop Motion and Internet Animators. London: Faber & Faber.',
             'Direktorat Sekolah Menengah Kejuruan. (2022). Dasar-Dasar Animasi untuk SMK/MAK. Jakarta: Pusat Perbukuan Kemendikbudristek.'
           ];
-        } else if (/desain|dkv|grafis/i.test(ctxRef)) {
+        } else if (isDKV) {
           refKeilmuan = [
             'Lupton, E., & Phillips, J. C. (2021). Graphic Design: The New Basics (2nd ed.). New York: Princeton Architectural Press.',
             'Direktorat Sekolah Menengah Kejuruan. (2022). Dasar-Dasar Desain Komunikasi Visual. Jakarta: Pusat Perbukuan Kemendikbudristek.'
           ];
-        } else if (/jaringan|komputer|it|server|rpl|software/i.test(ctxRef)) {
+        } else if (/jaringan|komputer|it|server|rpl|software/i.test(primaryCtx)) {
           refKeilmuan = [
             'Kurose, J. F., & Ross, K. W. (2021). Computer Networking: A Top-Down Approach (8th ed.). London: Pearson Education.',
             'Direktorat Sekolah Menengah Kejuruan. (2022). Dasar-Dasar Teknik Jaringan Komputer dan Telekomunikasi. Jakarta: Pusat Perbukuan Kemendikbudristek.'
           ];
-        } else if (/mesin|otomotif|motor|mobil/i.test(ctxRef)) {
+        } else if (/mesin|otomotif|motor|mobil/i.test(primaryCtx)) {
           refKeilmuan = [
             'Denton, T. (2020). Automobile Electrical and Electronic Systems (5th ed.). London: Routledge.',
             'Direktorat Sekolah Menengah Kejuruan. (2022). Dasar-Dasar Teknik Otomotif. Jakarta: Pusat Perbukuan Kemendikbudristek.'

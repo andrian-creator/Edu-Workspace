@@ -2479,20 +2479,26 @@ ATURAN WAJIB DAN MENGIKAT — PELANGGARAN TIDAK DIIZINKAN:
    - Seluruh aktivitas pembelajaran WAJIB menyebutkan dan memanfaatkan fasilitas yang tersedia: ${fasilitas}.
    - Media digital "${media}" HARUS disebutkan secara spesifik di dalam aktivitas, bukan hanya disebutkan di heading.
 
-7. MATERI AJAR DESKRIPTIF (FOKUS MATERI TEKNIS, SUB-JUDUL RAPI & TABEL):
-   - WAJIB FOKUS PENUH PADA SUBSTANSI MATERI DAN KONTEN ILMIAH/TEKNIS dari "${topik}".
+7. MATERI AJAR DESKRIPTIF (FOKUS MATERI TEKNIS, SUB-JUDUL RAPI):
+   - WAJIB FOKUS PENUH PADA SUBSTANSI MATERI DAN KONTEN ILMIAH/TEKNIS dari "${topik}" pada mata pelajaran "${mapel}".
    - Khusus jika konteks input dari Tahap 1 & 2 berkaitan dengan Videografi, Sinematografi, Tata Kamera, Fotografi, atau Broadcasting Perfilman:
-     Pembahasan materi dan tabel parameter teknis WAJIB mencakup pemahaman operasional komprehensif tentang Shot Size, Camera Angle, Camera Movement, Aturan 180 Derajat, Depth of Field (DoF), Rule of Thirds & Framing, serta White Balance (WB).
+     Pembahasan materi teknis WAJIB mencakup pemahaman operasional komprehensif tentang Shot Size, Camera Angle, Camera Movement, Aturan 180 Derajat, Depth of Field (DoF), Rule of Thirds & Framing, serta White Balance (WB).
+   - Khusus jika konteks input berkaitan dengan Tipografi, Desain Grafis, atau Desain Komunikasi Visual (DKV):
+     Pembahasan materi teknis WAJIB mencakup pemahaman mendalam tentang Anatomi Huruf, Klasifikasi Typeface, Kerning, Tracking, Leading, Hierarki Tipografi, Legibility & Readability, Variable Font & Responsif, serta Grid System tata letak.
+     DILARANG KERAS MEMASUKKAN ISTILAH KAMERA/TATA KAMERA KE DALAM MATERI TIPOGRAFI ATAU DESAIN GRAFIS!
    - DILARANG KERAS MENULIS NARASI META SEPERTI: "Dalam konteks pembelajaran di SMK...", "Penerapan model Project Based Learning berbasis pendekatan TPACK terbukti...", "Melalui sintaks PjBL peserta didik dilatih...". Naskah materi ajar adalah bahan ajar teknis/keilmuan murni untuk penguasaan materi "${topik}"!
-   - Tuliskan dengan format teks terstruktur yang rapi: gunakan sub-judul bernomor (contoh: "1. Konsep Dasar ...", "2. Sudut Pandang ...", "3. Standar Operasional ..."), paragraf penjelasan ilmiah yang mendalam dan tuntas, serta WAJIB SERTAKAN MINIMAL 1 TABEL PARAMETER TEKNIS RINGKASAN MATERI (format Markdown Table: | Parameter Teknis | Deskripsi & Prinsip Kerja | Standar SOP / Kriteria Industri |\n|---|---|---|\n...).
+   - Tuliskan dengan format teks terstruktur yang rapi: gunakan sub-judul bernomor (contoh: "1. Konsep Dasar ...", "2. Karakteristik & Prinsip Kerja ...", "3. Standar Operasional ..."), serta paragraf penjelasan ilmiah yang mendalam dan tuntas. Tabel ringkasan/parameter teknis TIDAK WAJIB ADA; namun jika dibutuhkan data komparasi atau spesifikasi teknis terstruktur, tabel Markdown dapat disertakan.
    - DILARANG menggunakan unescaped control character atau literal '\\n' yang tidak valid di dalam JSON string.
 
-8. MATERI TAMBAHAN (PENGAYAAN DESKRIPTIF LENGKAP & TABEL KOMPARATIF):
-   - Jika materi tambahan diisi ("${materiTambahan}"), JANGAN HANYA menuliskan 1-3 butir kalimat pendek! Uraikan secara komprehensif, mendalam, dan deskriptif dalam bentuk paragraf penjelasan terperinci (minimal 2-3 paragraf mendalam), sertakan studi kasus atau aplikasi teknologi terkini industri, serta WAJIB SERTAKAN 1 TABEL RINGKASAN PENGAYAAN / KOMPARASI MATERI TINGKAT LANJUT (format Markdown Table: | Dimensi Eksplorasi / Inovasi | Penerapan Terapan Lanjut | Relevansi Industri & Portofolio |).
+8. MATERI TAMBAHAN (PENGAYAAN MATERI DESKRIPTIF SUBSTANTIF):
+   - Jika materi tambahan diisi ("${materiTambahan}"), jabarkan setiap butir poin materi tambahan secara komprehensif, terperinci, dan mendalam dengan FOKUS PENUH PADA PENJABARAN SUBSTANSI MATERI TEKNIS YANG DISEBUTKAN.
+   - DILARANG KERAS menggunakan kalimat pembuka, pengantar, atau penutup meta-pedagogis generik seperti: "Jika peserta didik mendalami materi ini akan...", "Peserta didik mendalami adopsi teknologi generasi terkini...", "Melalui penugasan proyek tingkat lanjut, peserta didik diarahkan...", "Kajian ini membekali peserta didik dengan perspektif...". Penjabaran HARUS langsung menguraikan konsep ilmiah, prinsip kerja, aturan teknis, atau prosedur operasional dari butir materi yang bersangkutan!
+   - Format penulisan poin materi tambahan: tuliskan nomor dan nama materi, diikuti paragraf penjabaran substansi materinya. Tabel pengayaan/komparasi TIDAK WAJIB ADA; namun jika ada informasi komparatif yang lebih jelas disajikan dalam tabel, tabel Markdown dapat disertakan.
 
 9. GLOSARIUM (KAMUS ISTILAH TEKNIS KOMPREHENSIF SESUAI KONTEKS TAHAP 1-2):
-   - Minimal 5-8 istilah teknis yang KHUSUS, SPESIFIK, dan MURNI DARI MATERI "${topik}" serta relevan dengan konteks input Tahap 1 & 2.
-   - Khusus jika konteks input berkaitan dengan Videografi, Sinematografi, Tata Kamera, Fotografi, atau Broadcasting Perfilman:
+   - Minimal 5-8 istilah teknis yang KHUSUS, SPESIFIK, dan MURNI DARI MATERI "${topik}" serta relevan dengan konteks input Tahap 1 & 2 (Poin A-F).
+   - Konteks Glosarium HARUS SESUAI DENGAN SUBJEK KEILMUAN DARI POIN A-F (Mata Pelajaran: "${mapel}", Topik: "${topik}")!
+   - Khusus jika konteks input dari Tahap 1 & 2 MURNI berkaitan dengan Videografi, Sinematografi, Tata Kamera, Fotografi, atau Broadcasting Perfilman:
      WAJIB sertakan kamus istilah teknis komprehensif mencakup:
      1) Shot Size (Extreme Long Shot s.d. Extreme Close Up)
      2) Camera Angle (Bird Eye, High Angle, Eye Level, Low Angle, Frog Eye, Dutch Angle)
@@ -2501,7 +2507,18 @@ ATURAN WAJIB DAN MENGIKAT — PELANGGARAN TIDAK DIIZINKAN:
      5) Depth of Field (DoF: Aperture, Focal Length, Jarak Fokus)
      6) Rule of Thirds & Framing (Komposisi Sepertiga Bidang, Headroom, Lookspace)
      7) White Balance (Kalibrasi Suhu Warna Kelvin)
-   - Begitu juga untuk bidang kejuruan lainnya (Animasi, DKV, IT/Jaringan, Otomotif, Listrik, Bisnis, Kuliner): wajib memuat istilah teknis operasional murni sesuai konteks input Tahap 1-2.
+   - Khusus jika konteks input berkaitan dengan Tipografi, Desain Grafis, atau DKV:
+     WAJIB sertakan kamus istilah teknis tipografi dan desain grafis seperti:
+     1) Tipografi (Typography)
+     2) Typeface vs Font
+     3) Kerning & Tracking
+     4) Leading (Line Spacing)
+     5) Hierarki Tipografi (Typographic Hierarchy)
+     6) Legibility & Readability
+     7) Variable Font & Responsif
+     8) Grid System & Baseline Grid
+     DILARANG KERAS MEMASUKKAN ISTILAH KAMERA/VIDEOGRAFI KE DALAM MATERI TIPOGRAFI ATAU DESAIN GRAFIS!
+   - Begitu juga untuk bidang kejuruan lainnya (Animasi, IT/Jaringan, Otomotif, Listrik, Bisnis, Kuliner): wajib memuat istilah teknis operasional murni sesuai konteks input Tahap 1-2.
    - DILARANG KERAS menggunakan istilah generik non-teknis atau istilah proses pedagogis seperti: "Sintesis Solutif", "Verifikasi Empiris", "Konseptualisasi", "Analisis Variabel", "Discovery Learning", "TPACK". Glosarium HARUS murni istilah materi ajar!
 
 10. DAFTAR PUSTAKA:
@@ -2893,6 +2910,33 @@ function resolveContextualRubrik(raw, data) {
 }
 
 /**
+ * Ekstraksi Konteks Subjek Keilmuan Murni (Topik, Mapel, Elemen CP, Jurusan)
+ * Mengabaikan media digital/fasilitas umum agar tidak memicu deteksi palsu domain
+ */
+function extractPrimarySubjectContext(data, rawOrAi) {
+  const d = data || {};
+  const a = rawOrAi || {};
+  const fields = [
+    d.topikMateri,
+    d.isiTopikMateri,
+    d.mataPelajaran,
+    d.elemenCP,
+    d.jurusanSekolah,
+    d.capaianPembelajaran,
+    d.tujuanPembelajaran,
+    d.materiTambahan,
+    d.identifikasiMateri,
+    a.topikMateri,
+    a.mataPelajaran
+  ];
+  return fields
+    .filter(Boolean)
+    .map(v => (typeof v === 'object' ? JSON.stringify(v) : String(v)))
+    .join(' ')
+    .toLowerCase();
+}
+
+/**
  * Ekstraksi Konteks Holistik dari Seluruh Isian Formulir Tahap 1 & Tahap 2
  */
 function extractContextTahap1Dan2(data, rawOrAi) {
@@ -2931,7 +2975,7 @@ function extractContextTahap1Dan2(data, rawOrAi) {
 /**
  * Normalisasi dan Resolusi Glosarium Materi (Multi-Format & Contextual Fallback)
  * Hanya berisi materi/istilah teknis murni yang diambil, tidak memuat istilah pedagogis generik
- * Konteks diekstraksi holistik dari seluruh informasi Tahap 1 & 2
+ * Konteks diekstraksi tepat dari subjek keilmuan Tahap 1 & 2 (Poin A-F)
  */
 function resolveContextualGlosarium(raw, data) {
   let list = [];
@@ -2982,16 +3026,57 @@ function resolveContextualGlosarium(raw, data) {
     return !forbiddenTerms.some(fb => termLower.includes(fb));
   });
 
-  // Deteksi konteks holistik dari seluruh informasi Tahap 1 & 2
-  const ctx = extractContextTahap1Dan2(data, raw);
-  const isVideoKamera = /video|sinemat|kamera|camera|shot|angle|framing|broadcasting|perfilman|film|foto|lensa|shutter|aperture|iso|eksposur|exposure|white\s*balance|depth\s*of\s*field|rule\s*of\s*thirds/i.test(ctx);
-  const isAnimasi = /animasi|karakter|storyboard|motion|keyframe|rigging|tweening|render/i.test(ctx);
-  const isIT = /jaringan|komputer|it|server|cisco|mikrotik|rpl|software|cyber|cloud|lan|wan|routing|switch|firewall/i.test(ctx);
-  const isDKV = /desain|dkv|grafis|ilustrasi|layout|tipografi|vektor|vector|branding|logo|poster/i.test(ctx);
-  const isOtomotif = /otomotif|motor|mobil|mesin|injeksi|ecu|transmisi|rem|suspensi/i.test(ctx);
-  const isListrik = /listrik|elektronika|arus|tegangan|daya|plc|mikrokontroler|arduino|sensor/i.test(ctx);
-  const isBisnis = /akuntansi|keuangan|bisnis|manajemen|pasar|uang|jurnal|neraca|laba|faktur|pajak/i.test(ctx);
-  const isKuliner = /kuliner|boga|masak|makanan|minuman|food|resep|pastry|bakery/i.test(ctx);
+  // Deteksi konteks subjek keilmuan dari Tahap 1 & 2 (Poin A-F)
+  const primaryCtx = extractPrimarySubjectContext(data, raw);
+
+  const isTipografi = /\b(tipografi|typography|typeface|font|huruf|kerning|tracking|leading|glif|glyph)\b/i.test(primaryCtx);
+  const isDKV = isTipografi || /\b(dkv|desain\s*grafis|desain\s*komunikasi\s*visual|nirmana|vektor|vector|coreldraw|illustrator|photoshop|layout|branding|logo|poster|identitas\s*visual)\b/i.test(primaryCtx);
+  const isVideoKamera = !isTipografi && (
+    /\b(videografi|sinematografi|tata\s*kamera|kamera\s*video|camera\s*movement|camera\s*angle|shot\s*size|ukuran\s*bidik|sudut\s*pandang\s*kamera|aturan\s*180|180-degree|depth\s*of\s*field|\bdof\b|white\s*balance|broadcasting|penyiaran|perfilman|tata\s*artistik\s*film)\b/i.test(primaryCtx) ||
+    (/\b(fotografi|kamera)\b/i.test(primaryCtx) && !isDKV)
+  );
+  const isAnimasi = !isTipografi && /\b(animasi|animation|2d|3d|stopmotion|storyboard|motion\s*graphic|keyframe|rigging|tweening|blender|maya|render)\b/i.test(primaryCtx);
+  const isIT = !isTipografi && !isDKV && /\b(jaringan|komputer|rpl|tkj|server|cisco|mikrotik|software|cyber|cloud|lan|wan|routing|switch|firewall|database|sql|pemrograman|coding|web)\b/i.test(primaryCtx);
+  const isOtomotif = /\b(otomotif|motor|mobil|mesin|injeksi|ecu|transmisi|rem|suspensi|chassis|engine|tune\s*up)\b/i.test(primaryCtx);
+  const isListrik = /\b(listrik|elektronika|arus|tegangan|daya|plc|mikrokontroler|arduino|sensor|instalasi\s*motor|rangkaian)\b/i.test(primaryCtx);
+  const isBisnis = /\b(akuntansi|keuangan|bisnis|manajemen|pasar|uang|jurnal|neraca|laba|faktur|pajak|pemasaran|marketing)\b/i.test(primaryCtx);
+  const isKuliner = /\b(kuliner|boga|tata\s*boga|masak|makanan|minuman|food|resep|pastry|bakery|restoran)\b/i.test(primaryCtx);
+
+  // Kamus Istilah Teknis Komprehensif Tipografi & Desain Grafis
+  const kamusTipografiDKV = [
+    {
+      istilah: "Tipografi (Typography)",
+      definisi: "Seni dan teknik memilih, merancang, serta menyusun huruf (typeface/font) dengan pengaturan ruang bidang guna menciptakan keterbacaan (readability), kejelasan (legibility), dan estetika komunikasi visual yang optimal."
+    },
+    {
+      istilah: "Typeface vs Font",
+      definisi: "Perbedaan mendasar antara rumpun keluarga rancangan bentuk huruf (Typeface, contoh: Helvetica, Garamond, Futura) dengan berkas fisik/digital spesifik dalam ukuran, gaya, dan format bobot tertentu (Font, contoh: Helvetica Bold 14pt)."
+    },
+    {
+      istilah: "Kerning & Tracking",
+      definisi: "Kerning adalah pengaturan jarak spasial horizontal antar-dua karakter huruf spesifik agar seimbang dan proporsional, sedangkan Tracking adalah pengaturan jarak horizontal seragam di antara seluruh huruf dalam satu kata, baris, atau paragraf teks."
+    },
+    {
+      istilah: "Leading (Line Spacing)",
+      definisi: "Jarak vertikal antara baseline (garis dasar tempat huruf berpijak) satu baris teks ke baseline baris teks berikutnya untuk menjamin kenyamanan ritme mata saat membaca paragraf teks panjang."
+    },
+    {
+      istilah: "Hierarki Tipografi (Typographic Hierarchy)",
+      definisi: "Sistem penataan ukuran, bobot (weight), kontras gaya, dan posisi teks guna memandu alur pandang audiens mencerna informasi berdasarkan urutan prioritas kepentingan (Headline, Subheadline, Body Copy)."
+    },
+    {
+      istilah: "Legibility & Readability",
+      definisi: "Legibility merujuk pada tingkat kemudahan mata dalam mengenali dan membedakan bentuk fisik setiap karakter huruf secara individual, sedangkan Readability merujuk pada tingkat kenyamanan dan kelancaran membaca susunan teks dalam satu kesatuan desain."
+    },
+    {
+      istilah: "Variable Font & Responsif",
+      definisi: "Format font digital mutakhir yang mengintegrasikan berbagai variasi bobot (weight), lebar (width), dan kemiringan (slant) dalam satu berkas dinamis yang fleksibel dan adaptif untuk berbagai resolusi layar UI/UX media digital."
+    },
+    {
+      istilah: "Grid System & Baseline Grid",
+      definisi: "Struktur kisi garis panduan geometris kolom dan margin vertikal-horizontal yang menjadi landasan konsistensi penataan layout huruf dan elemen grafis dalam karya desain grafis profesional."
+    }
+  ];
 
   // Kamus Istilah Teknis Komprehensif Videografi, Sinematografi, dan Tata Kamera
   const kamusVideoSinematografi = [
@@ -3025,23 +3110,8 @@ function resolveContextualGlosarium(raw, data) {
     }
   ];
 
-  // JIKA KONTEKS VIDEOGRAFI/SINEMATOGRAFI/TATA KAMERA TERDETEKSI:
+  // 1. JIKA KONTEKS VIDEOGRAFI/SINEMATOGRAFI/TATA KAMERA TERDETEKSI:
   if (isVideoKamera) {
-    const existingLower = list.map(item => (item.istilah || '').toLowerCase());
-    const missingCore = kamusVideoSinematografi.filter(coreItem => {
-      const cName = coreItem.istilah.toLowerCase();
-      return !existingLower.some(ext => {
-        if (cName.includes('shot size') && ext.includes('shot')) return true;
-        if (cName.includes('camera angle') && ext.includes('angle')) return true;
-        if (cName.includes('camera movement') && ext.includes('move')) return true;
-        if (cName.includes('180') && ext.includes('180')) return true;
-        if (cName.includes('depth of field') && (ext.includes('depth') || ext.includes('dof'))) return true;
-        if (cName.includes('rule of thirds') && (ext.includes('thirds') || ext.includes('framing'))) return true;
-        if (cName.includes('white balance') && (ext.includes('white') || ext.includes('balance'))) return true;
-        return false;
-      });
-    });
-
     if (list.length < 5) {
       const merged = [...kamusVideoSinematografi];
       list.forEach(item => {
@@ -3051,11 +3121,31 @@ function resolveContextualGlosarium(raw, data) {
       });
       return merged;
     } else {
+      const existingLower = list.map(item => (item.istilah || '').toLowerCase());
+      const missingCore = kamusVideoSinematografi.filter(coreItem => {
+        const cName = coreItem.istilah.toLowerCase();
+        return !existingLower.some(ext => ext.includes(cName.split(' ')[0]));
+      });
       return [...missingCore, ...list];
     }
   }
 
-  // UNTUK KONTEKS BIDANG KEILMUAN LAINNYA:
+  // 2. JIKA KONTEKS TIPOGRAFI TERDETEKSI:
+  if (isTipografi) {
+    if (list.length < 5) {
+      const merged = [...kamusTipografiDKV];
+      list.forEach(item => {
+        if (!merged.some(m => m.istilah.toLowerCase() === item.istilah.toLowerCase())) {
+          merged.push(item);
+        }
+      });
+      return merged;
+    } else {
+      return list;
+    }
+  }
+
+  // 3. UNTUK KONTEKS BIDANG KEILMUAN LAINNYA:
   if (list.length < 5) {
     const d = data || {};
     const topik = d.topikMateri || 'Materi Pokok';
@@ -3187,7 +3277,14 @@ function resolveContextualDaftarPustaka(raw, data) {
     const d = data || {};
     const topik = d.topikMateri || 'Materi Pokok';
     const mapel = d.mataPelajaran || 'Mata Pelajaran';
-    const ctxRef = extractContextTahap1Dan2(data, raw);
+    const primaryCtx = extractPrimarySubjectContext(data, raw);
+
+    const isTipografi = /\b(tipografi|typography|typeface|font|huruf|kerning|tracking|leading|glif|glyph)\b/i.test(primaryCtx);
+    const isDKV = isTipografi || /\b(dkv|desain\s*grafis|desain\s*komunikasi\s*visual|nirmana|vektor|vector|coreldraw|illustrator|photoshop|layout|branding|logo|poster|identitas\s*visual)\b/i.test(primaryCtx);
+    const isVideoKamera = !isTipografi && (
+      /\b(videografi|sinematografi|tata\s*kamera|kamera\s*video|camera\s*movement|camera\s*angle|shot\s*size|ukuran\s*bidik|sudut\s*pandang\s*kamera|aturan\s*180|180-degree|depth\s*of\s*field|\bdof\b|white\s*balance|broadcasting|penyiaran|perfilman|tata\s*artistik\s*film)\b/i.test(primaryCtx) ||
+      (/\b(fotografi|kamera)\b/i.test(primaryCtx) && !isDKV)
+    );
 
     // 1. Dokumen Resmi Standar Kurikulum Merdeka (Kemendikbudristek)
     const refBSKAP = 'Badan Standar, Kurikulum, dan Asesmen Pendidikan (BSKAP). (2024). Panduan Pembelajaran dan Asesmen Pendidikan Anak Usia Dini, Pendidikan Dasar, dan Pendidikan Menengah. Jakarta: Kementerian Pendidikan, Kebudayaan, Riset, dan Teknologi.';
@@ -3199,28 +3296,34 @@ function resolveContextualDaftarPustaka(raw, data) {
 
     // 3. Buku Teks & Rujukan Keilmuan / Industri Spesifik
     let refKeilmuan = [];
-    if (/video|sinemat|kamera|camera|shot|angle|framing|broadcasting|perfilman|film|foto|lensa|shutter|aperture|iso/i.test(ctxRef)) {
+    if (isVideoKamera) {
       refKeilmuan = [
         'Bowen, C. J., & Thompson, R. (2020). Grammar of the Shot (4th ed.). New York: Routledge / Focal Press.',
         'Brown, B. (2021). Cinematography: Theory and Practice: Image Making for Cinematographers and Directors (4th ed.). London: Routledge.',
         'Direktorat Sekolah Menengah Kejuruan. (2022). Dasar-Dasar Broadcasting dan Perfilman untuk SMK/MAK Kelas X. Jakarta: Pusat Perbukuan Kemendikbudristek.'
       ];
-    } else if (/animasi|karakter|storyboard/i.test(ctxRef)) {
+    } else if (isTipografi) {
+      refKeilmuan = [
+        'Lupton, E. (2014). Thinking with Type: A Critical Guide for Designers, Writers, Editors, & Students (2nd ed.). New York: Princeton Architectural Press.',
+        'Bringhurst, R. (2012). The Elements of Typographic Style (4th ed.). Seattle: Hartley & Marks Publishers.',
+        'Direktorat Sekolah Menengah Kejuruan. (2022). Dasar-Dasar Desain Komunikasi Visual untuk SMK/MAK Kelas X. Jakarta: Pusat Perbukuan Kemendikbudristek.'
+      ];
+    } else if (/animasi|karakter|storyboard/i.test(primaryCtx)) {
       refKeilmuan = [
         'Williams, R. (2020). The Animator\'s Survival Kit: A Manual of Methods, Principles and Formulas for Classical, Computer, Games, Stop Motion and Internet Animators. London: Faber & Faber.',
         'Direktorat Sekolah Menengah Kejuruan. (2022). Dasar-Dasar Animasi untuk SMK/MAK. Jakarta: Pusat Perbukuan Kemendikbudristek.'
       ];
-    } else if (/desain|dkv|grafis/i.test(ctxRef)) {
+    } else if (isDKV) {
       refKeilmuan = [
         'Lupton, E., & Phillips, J. C. (2021). Graphic Design: The New Basics (2nd ed.). New York: Princeton Architectural Press.',
         'Direktorat Sekolah Menengah Kejuruan. (2022). Dasar-Dasar Desain Komunikasi Visual. Jakarta: Pusat Perbukuan Kemendikbudristek.'
       ];
-    } else if (/jaringan|komputer|it|server|rpl|software/i.test(ctxRef)) {
+    } else if (/jaringan|komputer|it|server|rpl|software/i.test(primaryCtx)) {
       refKeilmuan = [
         'Kurose, J. F., & Ross, K. W. (2021). Computer Networking: A Top-Down Approach (8th ed.). London: Pearson Education.',
         'Direktorat Sekolah Menengah Kejuruan. (2022). Dasar-Dasar Teknik Jaringan Komputer dan Telekomunikasi. Jakarta: Pusat Perbukuan Kemendikbudristek.'
       ];
-    } else if (/mesin|otomotif|motor|mobil/i.test(ctxRef)) {
+    } else if (/mesin|otomotif|motor|mobil/i.test(primaryCtx)) {
       refKeilmuan = [
         'Denton, T. (2020). Automobile Electrical and Electronic Systems (5th ed.). London: Routledge.',
         'Direktorat Sekolah Menengah Kejuruan. (2022). Dasar-Dasar Teknik Otomotif. Jakarta: Pusat Perbukuan Kemendikbudristek.'
