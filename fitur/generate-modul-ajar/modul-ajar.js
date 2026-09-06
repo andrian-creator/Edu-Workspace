@@ -1793,8 +1793,10 @@ async function proceedGenerateModul() {
     progressLoading.style.display = 'flex';
     progressSuccess.style.display = 'none';
 
-    // Scroll halus ke container progress
-    progressContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    // Scroll halus ke container progress dengan posisi nyaman di tengah (ada jarak lega di atas & bawah)
+    setTimeout(() => {
+      progressContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 80);
 
     // Inisialisasi indikator progres & teks proses generate
     const barEl = document.getElementById('generateProgressBar');
@@ -1918,8 +1920,8 @@ async function proceedGenerateModul() {
         progressLoading.style.display = 'none';
         progressSuccess.style.display = 'flex';
 
-        // Scroll halus ke kartu hasil agar tombol Buka Modul Ajar langsung terlihat oleh pengguna
-        progressContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        // Scroll halus ke kartu hasil agar tombol Buka Modul Ajar terlihat nyaman di layar
+        progressContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
 
         // Notifikasi "Generate sukses" sesuai permintaan pengguna
         showNotificationModal('Generate Sukses', 'Modul Ajar telah berhasil disusun dan disimpan!', 'success');

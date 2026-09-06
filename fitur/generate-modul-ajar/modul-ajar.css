@@ -1292,7 +1292,9 @@ body {
 
 /* Kartu Tersendiri: Hasil / Proses Generate (Terpisah dari Kartu Review) */
 .generate-result-standalone-wrapper {
-  margin-top: 28px;
+  margin-top: 36px;
+  margin-bottom: 96px;
+  padding-bottom: 24px;
   width: 100%;
   box-sizing: border-box;
   animation: fadeIn 0.35s ease;
