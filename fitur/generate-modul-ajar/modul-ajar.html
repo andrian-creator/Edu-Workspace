@@ -928,11 +928,11 @@
       <p class="confirm-modal-desc">
         Apakah Anda yakin seluruh data yang dimasukkan sudah benar? Data ini akan digunakan oleh AI untuk menyusun dokumen lengkap Modul Ajar.
       </p>
-      <div class="confirm-btn-group">
-        <button type="button" class="btn-modal-cancel" onclick="closeConfirmGenerateModal()">
+      <div class="confirm-btn-group" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; width: 100%; margin-top: 24px;">
+        <button type="button" class="btn-step-action btn-prev-action" style="height: 46px; font-size: 0.95rem; border-radius: 9999px;" onclick="closeConfirmGenerateModal()">
           <span>Periksa Kembali</span>
         </button>
-        <button type="button" class="btn-step-action btn-generate-action" style="height: 44px; font-size: 0.9rem;" onclick="proceedGenerateModul()">
+        <button type="button" class="btn-step-action btn-generate-action" style="height: 46px; font-size: 0.95rem; border-radius: 9999px;" onclick="proceedGenerateModul()">
           <img src="../../Assets/icon/icon_generate.png" class="btn-ai-icon" alt="">
           <span>Ya, Generate</span>
         </button>
@@ -963,8 +963,8 @@
   <!-- Modal logout diinjek otomatis oleh global.js -->
 
   <!-- Scripts -->
-  <script src="../../global.js?v=310"></script>
-  <script src="modul-ajar.js?v=310"></script>
+  <script src="../../global.js?v=311"></script>
+  <script src="modul-ajar.js?v=311"></script>
 </body>
 
 </html>
