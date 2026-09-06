@@ -930,6 +930,192 @@
     }
 
     /**
+     * Render Baris Kegiatan Inti Terpisah Per Sintaks Model Pembelajaran
+     */
+    function renderIntiRows(intiData, pendekatan, model) {
+      if (!intiData) {
+        return `
+          <tr>
+            <td style="vertical-align: top;"><strong>Inti</strong></td>
+            <td style="vertical-align: top;">60 Menit</td>
+            <td style="vertical-align: top;">-</td>
+            <td style="vertical-align: top;">-</td>
+          </tr>
+        `;
+      }
+
+      let list = [];
+      if (Array.isArray(intiData)) {
+        list = intiData;
+      } else if (typeof intiData === 'object') {
+        if (Array.isArray(intiData.sintaksList) && intiData.sintaksList.length > 0) {
+          list = intiData.sintaksList;
+        } else {
+          list = [intiData];
+        }
+      }
+
+      if (list.length === 0) {
+        return `
+          <tr>
+            <td style="vertical-align: top;"><strong>Inti</strong></td>
+            <td style="vertical-align: top;">60 Menit</td>
+            <td style="vertical-align: top;">-</td>
+            <td style="vertical-align: top;">-</td>
+          </tr>
+        `;
+      }
+
+      return list.map((item, idx) => {
+        let sintaksTitle = item.sintaks || item.namaSintaks || item.tahap || '';
+        if (!sintaksTitle && list.length > 1) {
+          sintaksTitle = `Sintaks Tahap ${idx + 1}`;
+        }
+        const waktu = item.waktu || (list.length > 1 ? `${Math.round(60 / list.length)} Menit` : '60 Menit');
+        const guru = formatActivityPoints(item.aktivitasGuru);
+        const murid = formatActivityPoints(item.aktivitasMurid);
+        const note = item.integrasiPendekatan || item.deepLearningSintaks || '';
+
+        return `
+          <tr>
+            <td style="vertical-align: top;">
+              <strong>Inti</strong>
+              ${sintaksTitle ? `<div style="font-size: 0.82rem; font-weight: 600; color: #1e40af; margin-top: 4px; line-height: 1.35;">${sintaksTitle}</div>` : ''}
+            </td>
+            <td style="vertical-align: top;">${waktu}</td>
+            <td style="vertical-align: top;">${guru}</td>
+            <td style="vertical-align: top;">${murid}</td>
+          </tr>
+          ${note ? `
+          <tr>
+            <td colspan="4" style="background: #fafafa; padding: 6px 12px; border-left: 3px solid #2563eb;">
+              <div class="deep-learning-box" style="margin: 0; padding: 2px 0;">
+                <strong>${getPendekatanModelLabel(pendekatan, model)}</strong> ${note}
+              </div>
+            </td>
+          </tr>
+          ` : ''}
+        `;
+      }).join('');
+    }
+
+    /**
+     * Parse Teks Paragraf & Tabel Markdown menjadi HTML Terformat
+     */
+    function renderFormattedContentWithTables(raw) {
+      if (!raw || (typeof raw === 'string' && !raw.trim())) return '';
+
+      let text = '';
+      if (Array.isArray(raw)) {
+        text = raw.map(p => String(p || '')).join('\n\n');
+      } else {
+        text = String(raw).trim();
+      }
+
+      // Bersihkan narasi meta kurikulum jika muncul secara tidak disengaja
+      text = text.replace(/Dalam konteks pembelajaran di[^.]*\.\s*/gi, '');
+      text = text.replace(/Penerapan model (Project Based Learning|PBL|PjBL|Discovery|Inquiry)[^.]*terbukti sangat efektif[^.]*\.\s*/gi, '');
+      text = text.replace(/Melalui sintaks (PjBL|PBL|Discovery|Inquiry)[^.]*peserta didik dilatih[^.]*\.\s*/gi, '');
+
+      const lines = text.split('\n');
+      const blocks = [];
+      let currentTable = null;
+      let currentParagraph = [];
+
+      function flushParagraph() {
+        if (currentParagraph.length > 0) {
+          const pText = currentParagraph.join('\n').trim();
+          if (pText) {
+            if (/^<(p|div|table|ol|ul|h[1-6])/i.test(pText)) {
+              blocks.push(pText);
+            } else {
+              const formatted = pText
+                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                .replace(/\*(.*?)\*/g, '<em>$1</em>');
+              blocks.push(`<p class="doc-paragraph">${formatted}</p>`);
+            }
+          }
+          currentParagraph = [];
+        }
+      }
+
+      function flushTable() {
+        if (currentTable && currentTable.length >= 2) {
+          const headerLine = currentTable[0];
+          const rawHeaders = headerLine.split('|').map(h => h.trim());
+          const headers = rawHeaders.filter((h, idx) => {
+            return (idx > 0 && idx < rawHeaders.length - 1) || (idx === 0 && h !== '') || (idx === rawHeaders.length - 1 && h !== '');
+          });
+
+          const dataRows = [];
+          for (let r = 1; r < currentTable.length; r++) {
+            const rowLine = currentTable[r];
+            if (/^\s*\|?\s*[-:]+[-| :]*\s*\|?\s*$/.test(rowLine)) continue;
+            const rawCols = rowLine.split('|').map(c => c.trim());
+            const cols = rawCols.filter((c, idx) => {
+              return (idx > 0 && idx < rawCols.length - 1) || (idx === 0 && c !== '') || (idx === rawCols.length - 1 && c !== '');
+            }).map(c => {
+              return c
+                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                .replace(/\*(.*?)\*/g, '<em>$1</em>');
+            });
+            if (cols.length > 0) dataRows.push(cols);
+          }
+
+          let tableHtml = '<table class="doc-table" style="margin: 12px 0;">';
+          if (headers.length > 0) {
+            tableHtml += '<thead><tr>';
+            headers.forEach(h => {
+              tableHtml += `<th>${h.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')}</th>`;
+            });
+            tableHtml += '</tr></thead>';
+          }
+          tableHtml += '<tbody>';
+          dataRows.forEach(row => {
+            tableHtml += '<tr>';
+            row.forEach(cell => {
+              tableHtml += `<td>${cell}</td>`;
+            });
+            tableHtml += '</tr>';
+          });
+          tableHtml += '</tbody></table>';
+
+          blocks.push(tableHtml);
+        } else if (currentTable) {
+          currentTable.forEach(l => currentParagraph.push(l));
+        }
+        currentTable = null;
+      }
+
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i];
+        const trimmed = line.trim();
+
+        if (trimmed.startsWith('|') && trimmed.endsWith('|') && trimmed.includes('|')) {
+          flushParagraph();
+          if (!currentTable) currentTable = [];
+          currentTable.push(trimmed);
+        } else if (currentTable && trimmed.includes('|') && /^\s*\|?.*\|.*\|?\s*$/.test(trimmed)) {
+          currentTable.push(trimmed);
+        } else {
+          if (currentTable) {
+            flushTable();
+          }
+          if (trimmed === '') {
+            flushParagraph();
+          } else {
+            currentParagraph.push(trimmed);
+          }
+        }
+      }
+
+      flushTable();
+      flushParagraph();
+
+      return blocks.join('');
+    }
+
+    /**
      * Render Isi Dokumen Modul Ajar Mengikuti Struktur Formal contoh modul.pdf
      */
     function renderModulDocument() {
@@ -1196,7 +1382,7 @@
       pengalamanContainer.innerHTML = listMeetings.map(m => `
         <div class="meeting-block">
           <div class="meeting-header-title">
-            PERTEMUAN ${m.pertemuan}: ${m.subTopik.toUpperCase()} (${durasi.split('(')[0].trim()})
+            PERTEMUAN ${m.pertemuan}: ${m.subTopik ? m.subTopik.toUpperCase() : ''} (${durasi.split('(')[0].trim()})
           </div>
 
           <table class="doc-table">
@@ -1210,45 +1396,19 @@
             </thead>
             <tbody>
               <tr>
-                <td><strong>Awal</strong></td>
-                <td>${m.awal?.waktu || '15 Menit'}</td>
-                <td>${formatActivityPoints(m.awal?.aktivitasGuru)}</td>
-                <td>${formatActivityPoints(m.awal?.aktivitasMurid)}</td>
-              </tr>
-              <tr>
-                <td colspan="4" style="background: #fafafa; padding: 6px 12px;">
-                  <div class="deep-learning-box">
-                    <strong>${getPendekatanModelLabel(pendekatan, model)}</strong> ${m.awal?.deepLearningSintaks || '-'}
-                  </div>
-                </td>
+                <td style="vertical-align: top;"><strong>Awal</strong></td>
+                <td style="vertical-align: top;">${m.awal?.waktu || '15 Menit'}</td>
+                <td style="vertical-align: top;">${formatActivityPoints(m.awal?.aktivitasGuru)}</td>
+                <td style="vertical-align: top;">${formatActivityPoints(m.awal?.aktivitasMurid)}</td>
               </tr>
 
-              <tr>
-                <td><strong>Inti</strong></td>
-                <td>${m.inti?.waktu || '60 Menit'}</td>
-                <td>${formatActivityPoints(m.inti?.aktivitasGuru)}</td>
-                <td>${formatActivityPoints(m.inti?.aktivitasMurid)}</td>
-              </tr>
-              <tr>
-                <td colspan="4" style="background: #fafafa; padding: 6px 12px;">
-                  <div class="deep-learning-box">
-                    <strong>${getPendekatanModelLabel(pendekatan, model)}</strong> ${m.inti?.deepLearningSintaks || '-'}
-                  </div>
-                </td>
-              </tr>
+              ${renderIntiRows(m.inti, pendekatan, model)}
 
               <tr>
-                <td><strong>Penutup</strong></td>
-                <td>${m.penutup?.waktu || '15 Menit'}</td>
-                <td>${formatActivityPoints(m.penutup?.aktivitasGuru)}</td>
-                <td>${formatActivityPoints(m.penutup?.aktivitasMurid)}</td>
-              </tr>
-              <tr>
-                <td colspan="4" style="background: #fafafa; padding: 6px 12px;">
-                  <div class="deep-learning-box">
-                    <strong>${getPendekatanModelLabel(pendekatan, model)}</strong> ${m.penutup?.deepLearningSintaks || '-'}
-                  </div>
-                </td>
+                <td style="vertical-align: top;"><strong>Penutup</strong></td>
+                <td style="vertical-align: top;">${m.penutup?.waktu || '15 Menit'}</td>
+                <td style="vertical-align: top;">${formatActivityPoints(m.penutup?.aktivitasGuru)}</td>
+                <td style="vertical-align: top;">${formatActivityPoints(m.penutup?.aktivitasMurid)}</td>
               </tr>
             </tbody>
           </table>
@@ -1259,34 +1419,24 @@
       // D. MATERI AJAR DAN ASESMEN (Hasil Generate AI)
       // ======================================================================
       let materiDeskriptif = '';
-      if (typeof ai.materiAjarDeskriptif === 'string' && ai.materiAjarDeskriptif.trim()) {
-        if (ai.materiAjarDeskriptif.includes('<p')) {
-          materiDeskriptif = ai.materiAjarDeskriptif;
-        } else {
-          materiDeskriptif = ai.materiAjarDeskriptif
-            .split(/\n\s*\n/)
-            .filter(p => p.trim())
-            .map(p => `<p class="doc-paragraph">${p.trim()}</p>`)
-            .join('');
-        }
-      } else if (Array.isArray(ai.materiAjarDeskriptif)) {
-        materiDeskriptif = ai.materiAjarDeskriptif
-          .map(p => `<p class="doc-paragraph">${p}</p>`)
-          .join('');
+      if (ai.materiAjarDeskriptif) {
+        materiDeskriptif = renderFormattedContentWithTables(ai.materiAjarDeskriptif);
       }
 
       if (!materiDeskriptif) {
-        materiDeskriptif = `
-        <p class="doc-paragraph">
-          Materi pokok <strong>${topik}</strong> pada mata pelajaran <strong>${mapel}</strong> mengkaji konsep fundamental, struktur sistematis, dan kerangka operasional yang berlaku dalam bidang keilmuan terkait. Pembahasan diawali dengan pemahaman teoretis mengenai hakikat, karakteristik dasar, dan prinsip kerja yang mendasari fenomena <em>${topik}</em>. Peserta didik dibimbing untuk mengidentifikasi komponen-komponen inti, memahami hubungan sebab-akibat antarelemen, serta mengenali terminologi teknis yang menjadi standar kompetensi kejuruan/akademik.
-        </p>
-        <p class="doc-paragraph">
-          Pada tataran analisis mendalam, materi ini mengeksplorasi ragam studi kasus kontekstual dan permasalahan aktual yang kerap dijumpai dalam praktik kehidupan nyata maupun lingkungan industri modern. Murid diajak membedah faktor-faktor penentu keberhasilan penerapan <em>${topik}</em>, menganalisis potensi kendala operasional, serta merumuskan mitigasi risiko yang relevan. Pengintegrasian data empiris dan telaah komparatif memberikan wawasan komprehensif bagi peserta didik agar mampu berpikir kritis dan tidak terpaku pada hafalan definisi semata.
-        </p>
-        <p class="doc-paragraph">
-          Sebagai wujud aplikasi praktis, naskah materi ini menjabarkan prosedur kerja bertahap (SOP), teknik pengujian, serta metodologi pemecahan masalah (<em>troubleshooting & problem solving</em>). Dengan memahami alur operasional materi <em>${topik}</em> secara terstruktur, peserta didik diharapkan mampu mengeksekusi tugas analitis secara mandiri, berkolaborasi secara efektif dalam tim, serta menghasilkan karya solutif yang inovatif, berdaya guna, dan menjunjung tinggi kode etik profesional.
-        </p>
-        `;
+        materiDeskriptif = renderFormattedContentWithTables(`
+Materi pokok **${topik}** pada mata pelajaran **${mapel}** mengkaji konsep fundamental, struktur sistematis, dan kerangka operasional yang berlaku dalam bidang keilmuan terkait. Pembahasan diawali dengan pemahaman teoretis mengenai hakikat, karakteristik dasar, dan prinsip kerja yang mendasari fenomena *${topik}*. Peserta didik mengidentifikasi komponen-komponen inti, memahami hubungan kausalitas antarelemen, serta menguasai terminologi teknis yang menjadi standar kompetensi kejuruan/akademik.
+
+Secara fungsional dan prosedural, implementasi materi ini melibatkan parameter kerja presisi dan standar operasional prosedur (SOP) baku guna menjamin efisiensi dan kualitas luaran kerja. Penguasaan instrumen, kalibrasi peralatan kerja, serta kepatuhan terhadap regulasi keselamatan kerja menjadi pilar utama dalam mengeksekusi setiap tahapan pekerjaan.
+
+| Parameter / Dimensi Teknis | Deskripsi & Prinsip Operasional | Standar Penerapan & Pengujian Mutu |
+|---|---|---|
+| Landasan Konseptual & Teori | Penguasaan definisi, fungsi inti, dan klasifikasi elemen ${topik} | Memenuhi standar acuan kurikulum dan standar kompetensi kerja |
+| Prosedur Kerja & SOP Praktik | Alur penyiapan alat, eksekusi teknis sistematis, dan kepatuhan K3 | Ketepatan langkah kerja sistematis dan kepatuhan SOP 100% |
+| Kontrol Kualitas & Analisis | Evaluasi parameter kerja, kalibrasi hasil, dan troubleshooting | Produk/analisis bebas dari cacat teknis dan terverifikasi akurat |
+
+Pada tataran analisis lanjutan, penguasaan materi *${topik}* menuntut kemampuan bernalar kritis dalam memecahkan masalah teknis (*troubleshooting*) saat menghadapi kendala operasional nyata di lapangan. Evaluasi berkelanjutan dan verifikasi empiris memastikan setiap karya atau solusi yang dihasilkan memiliki akurasi tinggi, daya guna optimal, dan nilai inovasi yang relevan dengan perkembangan industri modern.
+        `);
       }
       document.getElementById('docMateriAjarDeskriptif').innerHTML = materiDeskriptif;
 
@@ -1297,7 +1447,11 @@
 
       if (materiTambahanVal && materiTambahanVal.trim() && materiTambahanVal.trim() !== '-') {
         wrapperMateriTambahan.style.display = 'block';
-        document.getElementById('docMateriTambahan').innerHTML = formatMateriTambahanList(materiTambahanVal);
+        if (materiTambahanVal.includes('|') && materiTambahanVal.includes('\n')) {
+          document.getElementById('docMateriTambahan').innerHTML = renderFormattedContentWithTables(materiTambahanVal);
+        } else {
+          document.getElementById('docMateriTambahan').innerHTML = formatMateriTambahanList(materiTambahanVal);
+        }
         headingAsesmen.textContent = '3. Asesmen';
       } else {
         wrapperMateriTambahan.style.display = 'none';
@@ -1305,13 +1459,23 @@
       }
 
       const asesmenItems = ai.asesmen || [];
-      document.getElementById('tableAsesmenDinamisBody').innerHTML = asesmenItems.map(row => `
-        <tr>
-          <td><strong>${row.jenis}</strong></td>
-          <td>${row.bentuk}</td>
-          <td>${row.keterangan}</td>
-        </tr>
-      `).join('');
+      document.getElementById('tableAsesmenDinamisBody').innerHTML = asesmenItems.map(row => {
+        let bentuk = row.bentuk || '-';
+        if (row.jenis === 'Diagnostik' || /kuis\s+diagnostik/i.test(bentuk)) {
+          bentuk = 'Pretest (Tes Diagnostik Kognitif Awal)';
+        } else if (row.jenis === 'Formatif' && (/observasi/i.test(bentuk) || bentuk === '-')) {
+          bentuk = 'Asesmen Formatif (Lembar Observasi Proses & Kinerja Praktik)';
+        } else if (row.jenis === 'Sumatif' && (/uji|produk|kuis/i.test(bentuk) || bentuk === '-')) {
+          bentuk = 'Post-test / Asesmen Sumatif (Uji Kinerja Praktik & Portofolio)';
+        }
+        return `
+          <tr>
+            <td><strong>${row.jenis}</strong></td>
+            <td>${bentuk}</td>
+            <td>${row.keterangan || '-'}</td>
+          </tr>
+        `;
+      }).join('');
 
       // ======================================================================
       // E. REFLEKSI (Hasil Generate AI)
@@ -1815,335 +1979,484 @@
         ];
       }
 
-      // Sintesis Pengalaman Belajar Per Pertemuan (Array of string per poin tindakan)
+      function generateMeetingSintaksList(modelName, pNum, totalP, topicVal, mediaVal, facilityVal, methodVal, approachVal) {
+        const mL = (modelName || '').toLowerCase();
+        const isPj = mL.includes('project') || mL.includes('pjbl');
+        const isPb = !isPj && (mL.includes('problem') || mL.includes('pbl'));
+        const isInq = !isPj && !isPb && (mL.includes('inquiry') || mL.includes('inkuiri'));
+        const isDisc = !isPj && !isPb && !isInq && (mL.includes('discovery') || mL.includes('penemuan'));
+        const isTf = mL.includes('tefa') || mL.includes('factory');
+
+        let allSintaks = [];
+        if (isPj) {
+          allSintaks = [
+            {
+              name: "Sintaks 1: Penentuan Pertanyaan Mendasar (Start with Essential Question)",
+              guru: [
+                `Menayangkan stimulus tayangan studi kasus / karya kontekstual materi ${topicVal} menggunakan media digital ${mediaVal}.`,
+                `Mengajukan pertanyaan pemantik mendasar untuk memancing penalaran kritis murid dalam merumuskan gagasan pemecahan masalah.`,
+                `Membimbing murid mendefinisikan ruang lingkup tantangan proyek dan spesifikasi produk karya ${topicVal}.`
+              ],
+              murid: [
+                `Mengamati dan mencermati tayangan stimulus fenomena materi ${topicVal} yang disajikan guru.`,
+                `Merespons pertanyaan pemantik secara kritis dan mengemukakan ide-ide kreatif konsep proyek.`,
+                `Merumuskan fokus masalah utama serta target luaran produk karya bersama kelompok.`
+              ],
+              note: `Penerapan ${approachVal}: Pemanfaatan media ${mediaVal} untuk memvisualisasikan standar karya industri.`
+            },
+            {
+              name: "Sintaks 2: Mendesain Perencanaan Proyek (Design a Plan for the Project)",
+              guru: [
+                `Membagi peserta didik ke dalam tim kerja proyek heterogen (4-5 orang per tim).`,
+                `Membagikan LKPD dan memfasilitasi perancangan desain teknis serta pembagian peran tim memanfaatkan fasilitas ${facilityVal}.`,
+                `Memberikan pendampingan terarah (scaffolding) saat murid merancang spesifikasi kerja.`
+              ],
+              murid: [
+                `Berkumpul bersama kelompok kerja dan membagi tugas spesifik setiap anggota tim secara adil.`,
+                `Menyusun rancangan teknis, alur kerja, dan pembagian peran pada LKPD menggunakan fasilitas ${facilityVal}.`,
+                `Mengonsultasikan draf desain awal kepada guru untuk memperoleh masukan perbaikan.`
+              ],
+              note: `Penerapan ${approachVal}: Kolaborasi aktif kelompok mengeksplorasi sarana kerja dan media digital ${mediaVal}.`
+            },
+            {
+              name: "Sintaks 3: Menyusun Jadwal Pembuatan (Create a Schedule)",
+              guru: [
+                `Membimbing peserta didik menyusun linimasa (timeline milestone) pengerjaan proyek dan tahapan produksi.`,
+                `Mengingatkan alokasi waktu kritis, batas akhir penyelesaian, dan keselamatan kerja (SOP).`,
+                `Menyetujui jadwal kerja tim sebagai acuan komitmen penyelesaian produk proyek ${topicVal}.`
+              ],
+              murid: [
+                `Berdiskusi menyusun jadwal kerja rinci (tahapan persiapan, eksekusi, pengujian, dan finishing).`,
+                `Menentukan target penyelesaian per tahapan kerja agar pengerjaan tuntas tepat waktu.`,
+                `Menyepakati pembagian waktu kerja mandiri dan kolaborasi kelompok.`
+              ],
+              note: `Penerapan ${approachVal}: Manajemen linimasa kerja digital berbasis kolaborasi tim.`
+            },
+            {
+              name: "Sintaks 4: Memonitor Keaktifan dan Perkembangan Proyek (Monitor Students and Progress)",
+              guru: [
+                `Memonitor keaktifan seluruh anggota tim dan mengamati perkembangan pembuatan karya ${topicVal}.`,
+                `Memberikan bimbingan teknis troubleshooting dan asistensi langsung di fasilitas ${facilityVal}.`,
+                `Mencatat perkembangan kinerja kelompok pada lembar observasi proses asesmen formatif.`
+              ],
+              murid: [
+                `Mengeksekusi proses pembuatan produk karya nyata ${topicVal} secara bertahap sesuai rancangan.`,
+                `Memanfaatkan sarana fasilitas ${facilityVal} dan panduan media ${mediaVal} untuk mengatasi kendala teknis.`,
+                `Mendokumentasikan progres capaian karya dan berkonsultasi secara aktif kepada guru.`
+              ],
+              note: `Penerapan ${approachVal}: Praktik langsung terbimbing dan observasi formatif berkelanjutan.`
+            },
+            {
+              name: "Sintaks 5: Menguji Hasil / Uji Kualitas (Assess the Outcome & Quality Control)",
+              guru: [
+                `Memfasilitasi pengujian kelayakan fungsi dan standar mutu produk (Quality Control) hasil karya murid.`,
+                `Membimbing penilaian silang antar-kelompok (peer-review) menggunakan instrumen rubrik penilaian.`,
+                `Memberikan masukan perbaikan teknis sebelum produk dipamerkan atau dipresentasikan.`
+              ],
+              murid: [
+                `Melakukan uji coba fungsi mandiri dan pengecekan spesifikasi mutu produk karya ${topicVal}.`,
+                `Mengidentifikasi kekurangan teknis dan melakukan penyempurnaan akhir (finishing) pada karya.`,
+                `Menyiapkan materi tayang display atau media pameran untuk presentasi karya.`
+              ],
+              note: `Penerapan ${approachVal}: Evaluasi presisi teknis dan penerapan standar mutu kejuruan/akademik.`
+            },
+            {
+              name: "Sintaks 6: Mengevaluasi Pengalaman Belajar (Evaluate the Experience)",
+              guru: [
+                `Memandu sesi gelar karya (showcase) dan presentasi pleno pertanggungjawaban produk proyek.`,
+                `Memfasilitasi refleksi menyeluruh atas dinamika kerja tim, kendala lapangan, dan capaian kompetensi.`,
+                `Memberikan apresiasi pencapaian dan mengaitkan hasil proyek dengan peluang inovasi masa depan.`
+              ],
+              murid: [
+                `Mempresentasikan produk karya ${topicVal} di hadapan forum kelas dengan percaya diri dan komunikatif.`,
+                `Menjawab pertanyaan tanggapan dari guru dan kelompok lain mengenai proses produksi.`,
+                `Merefleksikan dinamika kerja tim dan mengidentifikasi pembelajaran bermakna yang didapatkan.`
+              ],
+              note: `Penerapan ${approachVal}: Gelar karya interaktif dan refleksi metakognitif penguasaan kompetensi.`
+            }
+          ];
+        } else if (isInq) {
+          allSintaks = [
+            {
+              name: "Sintaks 1: Orientasi Masalah dan Merumuskan Pertanyaan Penyelidikan",
+              guru: [
+                `Menyajikan stimulus fenomena kontekstual materi ${topicVal} melalui media ${mediaVal}.`,
+                `Membimbing murid merumuskan pertanyaan esensial penyelidikan ilmiah seputar fenomena yang diamati.`,
+                `Membagi murid ke dalam tim penyelidikan dan menetapkan fokus observasi.`
+              ],
+              murid: [
+                `Mencermati stimulus fenomena yang ditampilkan guru melalui media ${mediaVal}.`,
+                `Merumuskan pertanyaan penyelidikan ilmiah yang dapat diuji secara empiris.`,
+                `Menentukan batasan ruang lingkup variabel penyelidikan bersama tim.`
+              ],
+              note: `Penerapan ${approachVal}: Observasi fenomena kritis dan eksplorasi pertanyaan ilmiah.`
+            },
+            {
+              name: "Sintaks 2: Merumuskan Hipotesis Penyelidikan",
+              guru: [
+                `Memfasilitasi diskusi telaah pustaka awal untuk melandasi dugaan sementara murid.`,
+                `Membimbing kelompok dalam merumuskan kalimat hipotesis yang logis dan terukur.`,
+                `Mengklarifikasi variabel bebas, terikat, dan kontrol dalam penyelidikan.`
+              ],
+              murid: [
+                `Melakukan telaah konseptual ringkas terkait materi ${topicVal}.`,
+                `Menyusun hipotesis kerja sebagai jawaban sementara atas pertanyaan penyelidikan.`,
+                `Mengidentifikasi parameter yang akan diukur selama penyelidikan.`
+              ],
+              note: `Penerapan ${approachVal}: Penalaran deduktif dan perumusan hipotesis berbasis literatur.`
+            },
+            {
+              name: "Sintaks 3: Mengumpulkan Data Eksploratif dan Eksperimen",
+              guru: [
+                `Mendampingi kelompok melakukan eksperimen atau eksplorasi data di fasilitas ${facilityVal}.`,
+                `Memonitor ketepatan prosedur pengukuran dan pencatatan data pada lembar observasi.`,
+                `Memberikan asistensi teknis saat murid menghadapi kendala instrumen pengumpulan data.`
+              ],
+              murid: [
+                `Melaksanakan langkah kerja eksperimen/eksplorasi secara sistematis memanfaatkan fasilitas ${facilityVal}.`,
+                `Mencatat data hasil pengamatan secara objektif, teliti, dan jujur pada tabel kerja.`,
+                `Mendokumentasikan seluruh tahapan pengujian untuk bahan verifikasi bukti.`
+              ],
+              note: `Penerapan ${approachVal}: Investigasi langsung dengan dukungan sarana ${facilityVal}.`
+            },
+            {
+              name: "Sintaks 4: Menguji Hipotesis dan Analisis Data Temuan",
+              guru: [
+                `Membimbing peserta didik mengolah dan menginterpretasikan data hasil penyelidikan.`,
+                `Mendorong murid mengaitkan temuan data dengan teori ilmiah materi ${topicVal}.`,
+                `Memfasilitasi diskusi kritis untuk menguji keabsahan hipotesis awal.`
+              ],
+              murid: [
+                `Mentabulasi dan menganalisis data temuan menggunakan media digital ${mediaVal}.`,
+                `Membandingkan hasil analisis data dengan hipotesis awal untuk membuktikan kebenaran.`,
+                `Menyusun draf argumentasi ilmiah berbasis bukti data yang valid.`
+              ],
+              note: `Penerapan ${approachVal}: Analisis data digital dan penalaran kritis induktif.`
+            },
+            {
+              name: "Sintaks 5: Penarikan Kesimpulan (Generalisasi) & Evaluasi",
+              guru: [
+                `Memfasilitasi presentasi laporan hasil penyelidikan kelompok di forum kelas.`,
+                `Mengarahkan penarikan kesimpulan komprehensif (generalisasi) konsep ${topicVal}.`,
+                `Mengevaluasi metodologi penyelidikan dan memberikan penguatan konseptual mendalam.`
+              ],
+              murid: [
+                `Mempresentasikan hasil penyelidikan ilmiah dan pembuktian hipotesis di hadapan kelas.`,
+                `Merumuskan kesimpulan umum konsep materi ${topicVal} berdasarkan bukti empiris.`,
+                `Mengevaluasi kelemahan proses penyelidikan serta merencanakan eksplorasi lanjutan.`
+              ],
+              note: `Penerapan ${approachVal}: Komunikasi temuan ilmiah dan generalisasi konsep bermakna.`
+            }
+          ];
+        } else if (isDisc) {
+          allSintaks = [
+            {
+              name: "Sintaks 1: Pemberian Rangsangan (Stimulation) & Identifikasi Masalah",
+              guru: [
+                `Menayangkan materi stimulasi berupa fakta/anomali menarik terkait ${topicVal} melalui media ${mediaVal}.`,
+                `Membimbing murid menemukan kesenjangan pemahaman dan merumuskan identifikasi masalah.`,
+                `Menyusun daftar pertanyaan kunci penemuan konsep bersama peserta didik.`
+              ],
+              murid: [
+                `Mengamati fenomena rangsangan yang dipaparkan guru secara saksama.`,
+                `Mengidentifikasi sebanyak mungkin permasalahan yang relevan dengan materi ${topicVal}.`,
+                `Memilih masalah utama yang akan dipecahkan melalui proses penemuan.`
+              ],
+              note: `Penerapan ${approachVal}: Stimulasi rasa ingin tahu dan identifikasi fokus penemuan.`
+            },
+            {
+              name: "Sintaks 2: Pengumpulan Data (Data Collection)",
+              guru: [
+                `Mengorganisasikan kelompok kerja dan membagikan lembar panduan penemuan terbimbing.`,
+                `Memfasilitasi penelusuran informasi dan eksplorasi langsung di sarana ${facilityVal}.`,
+                `Mendorong murid mengumpulkan ragam data pendukung dari berbagai sumber terpercaya.`
+              ],
+              murid: [
+                `Melakukan eksplorasi mandiri dan studi literatur menggunakan fasilitas ${facilityVal}.`,
+                `Mencatat fakta, informasi, dan konsep relevan terkait materi ${topicVal}.`,
+                `Berdiskusi aktif dalam kelompok mengelompokkan data yang telah diperoleh.`
+              ],
+              note: `Penerapan ${approachVal}: Eksplorasi data terbimbing dengan sarana ${facilityVal}.`
+            },
+            {
+              name: "Sintaks 3: Pengolahan Data (Data Processing)",
+              guru: [
+                `Membimbing peserta didik mengklasifikasikan, menganalisis, dan mengolah data temuan.`,
+                `Mengarahkan kelompok menafsirkan pola hubungan antar-konsep pada materi ${topicVal}.`,
+                `Memantau kolaborasi kerja kelompok dan memberikan arahan jika terjadi miskonsepsi.`
+              ],
+              murid: [
+                `Mengolah data mentah ke dalam bentuk bagan, tabel perbandingan, atau diagram konseptual.`,
+                `Menelaah keterkaitan antardata untuk menemukan prinsip dasar materi ${topicVal}.`,
+                `Menyusun draf penjelasan konsep berdasarkan hasil pengolahan data kelompok.`
+              ],
+              note: `Penerapan ${approachVal}: Pengorganisasian informasi dan konstruksi pemahaman mandiri.`
+            },
+            {
+              name: "Sintaks 4: Pembuktian (Verification) & Menarik Kesimpulan",
+              guru: [
+                `Mengarahkan murid melakukan verifikasi hasil temuan terhadap konsep ilmiah baku.`,
+                `Memfasilitasi diskusi pleno antar-kelompok untuk menguji keabsahan temuan konsep.`,
+                `Bersama murid merumuskan generalisasi simpulan akhir materi ${topicVal}.`
+              ],
+              murid: [
+                `Memverifikasi kebenaran konsep yang ditemukan melalui uji kasus atau contoh nyata.`,
+                `Mempresentasikan hasil penemuan konsep di hadapan teman sekelas dan guru.`,
+                `Merumuskan kesimpulan umum materi ${topicVal} yang berlaku secara luas.`
+              ],
+              note: `Penerapan ${approachVal}: Verifikasi objektif dan penarikan simpulan konseptual.`
+            }
+          ];
+        } else if (isTf) {
+          allSintaks = [
+            {
+              name: "Sintaks 1: Penerimaan Order & Analisis Spesifikasi Job Sheet",
+              guru: [
+                `Membagikan Job Sheet order kerja standar industri materi ${topicVal}.`,
+                `Menjelaskan kriteria spesifikasi teknis, toleransi mutu, dan batas waktu produksi.`,
+                `Memeriksa kelengkapan APD dan kesiapan stasiun kerja di fasilitas ${facilityVal}.`
+              ],
+              murid: [
+                `Mempelajari lembar instruksi kerja (Job Sheet) dan mengidentifikasi kebutuhan spesifikasi.`,
+                `Menyiapkan peralatan kerja, bahan praktik, dan mengenakan APD sesuai SOP K3.`,
+                `Mengonfirmasi pemahaman parameter teknis produk kepada guru/instruktur.`
+              ],
+              note: `Penerapan ${approachVal}: Pembiasaan budaya industri dan analisis dokumen kerja profesional.`
+            },
+            {
+              name: "Sintaks 2: Perancangan Desain & Penjadwalan Produksi",
+              guru: [
+                `Membimbing perencanaan alur proses produksi dan pembagian stasiun kerja.`,
+                `Menetapkan standar estimasi waktu kerja dan tahapan verifikasi kualitas.`,
+                `Menyetujui rencana alur produksi kelompok kerja.`
+              ],
+              murid: [
+                `Merancang alur proses kerja bertahap dan membagi peran stasiun kerja tim.`,
+                `Menyusun estimasi waktu pengerjaan dan daftar cek persiapan alat/bahan.`,
+                `Mengatur alur material kerja di fasilitas ${facilityVal} agar efisien.`
+              ],
+              note: `Penerapan ${approachVal}: Manajemen waktu dan alur produksi standar kejuruan.`
+            },
+            {
+              name: "Sintaks 3: Eksekusi Produksi Sesuai SOP Industri",
+              guru: [
+                `Memonitor jalannya eksekusi pengerjaan produk ${topicVal} di stasiun kerja.`,
+                `Menegakkan kedisiplinan SOP keselamatan kerja dan presisi operasional alat.`,
+                `Memberikan asistensi teknis cepat saat terjadi kendala mesin/software.`
+              ],
+              murid: [
+                `Mengeksekusi tahapan produksi produk ${topicVal} sesuai SOP baku industri.`,
+                `Mengoperasikan sarana kerja di fasilitas ${facilityVal} dengan presisi dan hati-hati.`,
+                `Menjaga kerapian area kerja (5R/5S) selama proses manufaktur/kreasi.`
+              ],
+              note: `Penerapan ${approachVal}: Praktik langsung presisi tinggi dan penerapan budaya 5R.`
+            },
+            {
+              name: "Sintaks 4: Quality Control (QC), Serah Terima & Evaluasi",
+              guru: [
+                `Memandu proses inspeksi mutu (Quality Control) menggunakan alat ukur/standar uji baku.`,
+                `Memvalidasi kelayakan produk akhir sebelum serah terima pekerjaan.`,
+                `Mengevaluasi efisiensi biaya, waktu pengerjaan, dan produktivitas tim.`
+              ],
+              murid: [
+                `Melakukan kalibrasi dan pengujian mutu produk secara mandiri dan silang.`,
+                `Menyerahkan produk hasil kerja disertai dokumen lembar pengujian (QC Sheet).`,
+                `Mengevaluasi efisiensi kerja dan membersihkan area kerja (5R/5S).`
+              ],
+              note: `Penerapan ${approachVal}: Quality Control terstandar dan evaluasi akuntabilitas produksi.`
+            }
+          ];
+        } else {
+          allSintaks = [
+            {
+              name: "Sintaks 1: Orientasi Peserta Didik pada Masalah Otentik",
+              guru: [
+                `Menyajikan studi kasus permasalahan nyata terkait materi ${topicVal} melalui media ${mediaVal}.`,
+                `Mengajukan pertanyaan pemantik kontekstual untuk memancing nalar kritis murid.`,
+                `Memfasilitasi diskusi pembuka untuk membatasi ruang lingkup persoalan.`
+              ],
+              murid: [
+                `Menyimak paparan studi kasus fenomena materi ${topicVal} yang disajikan guru.`,
+                `Merespons pertanyaan pemantik dan mengemukakan perspektif awal secara kritis.`,
+                `Mencatat pokok permasalahan yang perlu diinvestigasi lebih mendalam.`
+              ],
+              note: `Penerapan ${approachVal}: Paparan fenomena kontekstual menggunakan media ${mediaVal}.`
+            },
+            {
+              name: "Sintaks 2: Mengorganisasikan Peserta Didik untuk Belajar",
+              guru: [
+                `Membagi peserta didik ke dalam tim investigasi heterogen (4-5 orang).`,
+                `Membagikan LKPD studi kasus dan membantu mendefinisikan pembagian tugas kelompok.`,
+                `Memastikan setiap anggota tim memahami fokus investigasi yang menjadi tanggung jawabnya.`
+              ],
+              murid: [
+                `Bergabung dengan kelompok kerja dan membagi tugas peran investigasi secara musyawarah.`,
+                `Mempelajari lembar studi kasus pada LKPD dan menyusun rencana pengumpulan fakta.`,
+                `Menentukan strategi penelusuran data memanfaatkan fasilitas ${facilityVal}.`
+              ],
+              note: `Penerapan ${approachVal}: Pengorganisasian tim belajar kolaboratif dan terstruktur.`
+            },
+            {
+              name: "Sintaks 3: Membimbing Penyelidikan Individu maupun Kelompok",
+              guru: [
+                `Mendampingi penyelidikan lapangan/studi pustaka kelompok di sarana ${facilityVal}.`,
+                `Mendorong murid mengumpulkan data empiris yang valid dari berbagai sumber digital.`,
+                `Memberikan pertanyaan penuntun (scaffolding) saat murid menemui jalan buntu analitis.`
+              ],
+              murid: [
+                `Melakukan riset data, penelusuran informasi, dan eksplorasi menggunakan sarana ${facilityVal}.`,
+                `Menganalisis faktor penyebab akar masalah terkait materi ${topicVal}.`,
+                `Menyusun tabulasi bukti temuan fakta untuk mendasari perumusan solusi.`
+              ],
+              note: `Penerapan ${approachVal}: Penyelidikan mandiri dan scaffolding instruksional.`
+            },
+            {
+              name: "Sintaks 4: Mengembangkan dan Menyajikan Hasil Karya Solutif",
+              guru: [
+                `Membimbing kelompok merumuskan alternatif solusi pemecahan masalah yang aplikatif.`,
+                `Memfasilitasi penyusunan laporan analisis atau prototipe karya pemecahan masalah ${topicVal}.`,
+                `Memandu jalannya sesi presentasi pleno dan diskusi interaktif antar-kelompok.`
+              ],
+              murid: [
+                `Merumuskan alternatif solusi pemecahan masalah berdasarkan data hasil penyelidikan.`,
+                `Menyusun media presentasi interaktif atau laporan ringkas hasil kerja tim.`,
+                `Mempresentasikan hasil karya solutif di depan kelas dan menjawab tanggapan teman.`
+              ],
+              note: `Penerapan ${approachVal}: Kreasi solusi berbasis data dan komunikasi publik interaktif.`
+            },
+            {
+              name: "Sintaks 5: Menganalisis dan Mengevaluasi Proses Pemecahan Masalah",
+              guru: [
+                `Memfasilitasi reviu kritis terhadap solusi yang diajukan oleh masing-masing kelompok.`,
+                `Mengklarifikasi konsep inti materi ${topicVal} dan memberikan penguatan teoretis komprehensif.`,
+                `Mengarahkan refleksi metakognitif mengenai efektivitas proses pemecahan masalah.`
+              ],
+              murid: [
+                `Melakukan refleksi dan evaluasi terhadap kelebihan serta kelemahan solusi yang dirumuskan.`,
+                `Mencatat klarifikasi dan penguatan konsep esensial yang diberikan guru.`,
+                `Menyimpulkan strategi penyelesaian masalah terbaik yang dapat diaplikasikan di dunia nyata.`
+              ],
+              note: `Penerapan ${approachVal}: Refleksi metakognitif dan konsolidasi pemahaman konsep baru.`
+            }
+          ];
+        }
+
+        const totalS = allSintaks.length;
+        let startIndex = 0;
+        let endIndex = totalS;
+
+        if (totalP === 1) {
+          startIndex = 0;
+          endIndex = totalS;
+        } else {
+          const perMeeting = totalS / totalP;
+          startIndex = Math.floor((pNum - 1) * perMeeting);
+          endIndex = (pNum === totalP) ? totalS : Math.max(startIndex + 1, Math.floor(pNum * perMeeting));
+        }
+
+        let selected = allSintaks.slice(startIndex, endIndex);
+        if (selected.length === 0) {
+          selected = [allSintaks[Math.min(pNum - 1, totalS - 1)]];
+        }
+
+        const allocatedTime = Math.round(60 / selected.length);
+        return selected.map(s => ({
+          sintaks: s.name,
+          waktu: `${allocatedTime} Menit`,
+          aktivitasGuru: s.guru,
+          aktivitasMurid: s.murid,
+          integrasiPendekatan: s.note
+        }));
+      }
+
       const pengalamanBelajar = [];
       for (let i = 1; i <= countPertemuan; i++) {
         const theme = subThemes[i - 1] || subThemes[(i - 1) % subThemes.length];
-
-        let awalGuru = [];
-        let awalMurid = [];
-        let sintaksAwal = '';
-
-        let intiGuru = [];
-        let intiMurid = [];
-        let sintaksInti = '';
-
-        let penutupGuru = [];
-        let penutupMurid = [];
-        let sintaksPenutup = '';
-
-        if (isPjBL) {
-          awalGuru = [
-            `Membuka sesi kelas dengan salam hangat, berdoa bersama, dan presensi kedisiplinan murid.`,
-            `Mengajukan pertanyaan pemantik mendasar (essential question) terkait urgensi pembuatan karya/produk proyek ${topik}.`,
-            `Menyampaikan tujuan pembelajaran, standar kriteria mutu proyek, dan alur sintaks Project Based Learning.`
-          ];
-          awalMurid = [
-            `Menjawab salam, berdoa bersama guru, dan merespons pertanyaan pemantik secara antusias.`,
-            `Menyimak penjelasan tujuan pembelajaran serta memahami spesifikasi produk proyek ${topik} yang akan dihasilkan.`
-          ];
-          sintaksAwal = `Sintaks PjBL: 'Menentukan Pertanyaan Mendasar & Perencanaan Proyek'. Metode: ${metode}. ${getPendekatanPrinsipText(pendekatan, 'awal', topik, media)}`;
-
-          intiGuru = [
-            `Membagi murid ke dalam tim kerja proyek heterogen (4-5 orang per tim).`,
-            `Memfasilitasi perancangan desain dan penyusunan spesifikasi teknis produk karya ${topik} dengan memanfaatkan sarana ${fasilitas}.`,
-            `Membimbing penyusunan jadwal kerja (timeline) dan alur produksi bertahap dengan memanfaatkan panduan media digital ${media}.`,
-            `Memonitor keaktifan murid, mengamati progres pembuatan karya proyek, dan memberikan pendampingan teknis troubleshooting.`
-          ];
-          intiMurid = [
-            `Berkolaborasi dalam tim merumuskan konsep kreatif dan spesifikasi rancangan produk karya ${topik}.`,
-            `Menyusun jadwal pelaksanaan, pembagian peran anggota tim, dan tahapan produksi proyek.`,
-            `Mengeksekusi proses pembuatan produk karya ${topik} secara bertahap memanfaatkan sarana ${fasilitas} dan arahan media ${media}.`,
-            `Melakukan uji coba awal, quality control (QC), serta mengonsultasikan kendala teknis pembuatan karya kepada guru.`
-          ];
-          sintaksInti = `Sintaks PjBL: 'Mendesain Perencanaan Proyek', 'Menyusun Jadwal', dan 'Memonitor Kemajuan Proyek'. Metode: ${metode}. ${getPendekatanPrinsipText(pendekatan, 'inti', topik, media)}`;
-
-          penutupGuru = [
-            `Memfasilitasi murid mereviu pencapaian target milestone pembuatan produk proyek hari ini.`,
-            `Memberikan umpan balik konstruktif dan penguatan terhadap aspek mutu karya yang sedang diproduksi.`,
-            `Mengingatkan agenda tindak lanjut penyelesaian proyek pada pertemuan berikutnya, berdoa bersama, dan menutup sesi pelajaran.`
-          ];
-          penutupMurid = [
-            `Menyampaikan progres capaian pembuatan karya proyek dan mencatat poin-poin perbaikan produk.`,
-            `Merapikan kembali sarana kerja dan fasilitas ${fasilitas}, lalu berdoa bersama guru sebelum mengakhiri kelas.`
-          ];
-          sintaksPenutup = `Sintaks PjBL: 'Menguji Hasil (QC)' dan 'Mengevaluasi Pengalaman Belajar'. Metode: ${metode}. ${getPendekatanPrinsipText(pendekatan, 'penutup', topik, media)}`;
-
-        } else if (isInquiry) {
-          awalGuru = [
-            `Membuka sesi kelas dengan salam hangat, doa bersama, dan memeriksa kesiapan belajar murid.`,
-            `Menyajikan stimulus fenomena kontekstual materi ${topik} melalui media ${media} untuk membangkitkan rasa ingin tahu.`,
-            `Membimbing murid merumuskan pertanyaan penyelidikan (inquiry questions) dan menyampaikan tujuan pembelajaran.`
-          ];
-          awalMurid = [
-            `Menjawab salam, berdoa bersama, dan mencermati tayangan stimulus fenomena materi ${topik}.`,
-            `Merespons pertanyaan awal guru dan merumuskan fokus penyelidikan ilmiah yang akan dijalankan.`
-          ];
-          sintaksAwal = `Sintaks Inquiry: 'Orientasi Masalah & Merumuskan Pertanyaan Penyelidikan'. Metode: ${metode}. ${getPendekatanPrinsipText(pendekatan, 'awal', topik, media)}`;
-
-          intiGuru = [
-            `Membimbing murid merumuskan hipotesis awal terkait topik permasalahan ${topik}.`,
-            `Memfasilitasi kegiatan eksplorasi data dan eksperimen/praktik terstruktur menggunakan fasilitas ${fasilitas}.`,
-            `Mendampingi analisis pembuktian hipotesis dan pengolahan data temuan kelompok.`,
-            `Mengarahkan pengujian hasil dan perumusan argumentasi ilmiah berdasarkan bukti.`
-          ];
-          intiMurid = [
-            `Menyusun hipotesis kerja dan merancang langkah investigasi bersama kelompok.`,
-            `Melakukan eksplorasi data dan praktik nyata memanfaatkan sarana ${fasilitas} serta panduan media ${media}.`,
-            `Mengolah data temuan, menguji kesesuaian hipotesis, dan mendiskusikan hasil penyelidikan.`,
-            `Mendokumentasikan seluruh tahapan kerja dan bukti temuan pada lembar kerja penyelidikan.`
-          ];
-          sintaksInti = `Sintaks Inquiry: 'Merumuskan Hipotesis', 'Pengumpulan Data Eksploratif', dan 'Pengujian Hipotesis'. Metode: ${metode}. ${getPendekatanPrinsipText(pendekatan, 'inti', topik, media)}`;
-
-          penutupGuru = [
-            `Memfasilitasi perwakilan kelompok mempresentasikan simpulan generalisasi atas penyelidikan materi ${topik}.`,
-            `Memberikan umpan balik penguatan konseptual dan apresiasi proses berpikir kritis murid.`,
-            `Menutup sesi pembelajaran dengan doa bersama dan salam penutup.`
-          ];
-          penutupMurid = [
-            `Menyampaikan simpulan akhir hasil pembuktian dan generalisasi pemahaman materi ${topik}.`,
-            `Menyampaikan refleksi pengalaman penyelidikan mandiri dan mencatat poin penguatan dari guru.`,
-            `Merapikan sarana belajar dan fasilitas ${fasilitas}, lalu berdoa bersama sebelum mengakhiri kelas.`
-          ];
-          sintaksPenutup = `Sintaks Inquiry: 'Penarikan Kesimpulan (Generalisasi)' dan 'Evaluasi Penyelidikan'. Metode: ${metode}. ${getPendekatanPrinsipText(pendekatan, 'penutup', topik, media)}`;
-
-        } else if (isDiscovery) {
-          awalGuru = [
-            `Membuka sesi kelas dengan salam, doa bersama, dan memeriksa kesiapan belajar murid.`,
-            `Memberikan stimulus fenomena awal materi ${topik} melalui media ${media} untuk membangkitkan rasa ingin tahu.`,
-            `Menyampaikan tujuan pembelajaran dan alur kerja penemuan konsep.`
-          ];
-          awalMurid = [
-            `Menjawab salam, berdoa, dan mencermati tayangan stimulus fenomena ${topik}.`,
-            `Merespons pertanyaan awal guru dan memahami target capaian penemuan belajar.`
-          ];
-          sintaksAwal = `Sintaks Discovery: 'Stimulasi (Pemberian Rangsangan)' dan 'Identifikasi Masalah'. Metode: ${metode}. ${getPendekatanPrinsipText(pendekatan, 'awal', topik, media)}`;
-
-          intiGuru = [
-            `Membimbing murid mengidentifikasi masalah dan merumuskan fokus penemuan terkait materi ${topik}.`,
-            `Memfasilitasi pengumpulan data dan eksplorasi terbimbing menggunakan fasilitas ${fasilitas}.`,
-            `Mengarahkan pengolahan data dan pembuktian (verifikasi) konsep secara kolaboratif.`
-          ];
-          intiMurid = [
-            `Mengidentifikasi masalah dan mencatat parameter kunci terkait materi ${topik}.`,
-            `Mengumpulkan data dan fakta pendukung melalui pengamatan langsung memanfaatkan sarana ${fasilitas}.`,
-            `Mengolah data temuan dan memverifikasi kebenaran konsep bersama kelompok kerja.`
-          ];
-          sintaksInti = `Sintaks Discovery: 'Pengumpulan Data' dan 'Pengolahan Data / Pembuktian'. Metode: ${metode}. ${getPendekatanPrinsipText(pendekatan, 'inti', topik, media)}`;
-
-          penutupGuru = [
-            `Memandu murid merumuskan generalisasi simpulan konsep materi ${topik}.`,
-            `Memberikan umpan balik dan penguatan konseptual, lalu menutup pembelajaran dengan doa bersama.`
-          ];
-          penutupMurid = [
-            `Menarik kesimpulan umum atas pembuktian konsep materi ${topik}.`,
-            `Menyampaikan refleksi pengalaman belajar, lalu berdoa bersama guru.`
-          ];
-          sintaksPenutup = `Sintaks Discovery: 'Generalisasi (Menarik Kesimpulan)'. Metode: ${metode}. ${getPendekatanPrinsipText(pendekatan, 'penutup', topik, media)}`;
-
-        } else if (isTeFa) {
-          awalGuru = [
-            `Membuka sesi dengan salam dan briefing SOP kerja industri materi ${topik}.`,
-            `Membagikan Job Sheet order industri dan menjelaskan standar spesifikasi teknis ${topik}.`,
-            `Memeriksa kelengkapan APD dan kesiapan peralatan di sarana ${fasilitas}.`
-          ];
-          awalMurid = [
-            `Menjawab salam, mengikuti briefing, dan mempelajari Job Sheet order industri.`,
-            `Memeriksa kelengkapan perlengkapan kerja dan mematuhi SOP keselamatan.`
-          ];
-          sintaksAwal = `Sintaks TeFa: 'Penerimaan Order / Analisis Job Sheet Industri'. Metode: ${metode}. ${getPendekatanPrinsipText(pendekatan, 'awal', topik, media)}`;
-
-          intiGuru = [
-            `Membimbing alur perencanaan produksi dan pembagian stasiun kerja kelompok.`,
-            `Memonitor proses pengerjaan produk ${topik} sesuai standar toleransi industri.`,
-            `Mendampingi pelaksanaan quality control (QC) dan pengujian kelayakan hasil pengerjaan.`
-          ];
-          intiMurid = [
-            `Mengeksekusi tahapan produksi materi ${topik} menggunakan fasilitas ${fasilitas} dan panduan ${media}.`,
-            `Melakukan pengukuran presisi dan pengecekan parameter mutu sesuai instruksi Job Sheet.`,
-            `Melakukan pengujian fungsi dan mencatat data uji kelayakan produk.`
-          ];
-          sintaksInti = `Sintaks TeFa: 'Perencanaan Produksi', 'Pengerjaan Standar Industri', dan 'Quality Control (QC)'. Metode: ${metode}. ${getPendekatanPrinsipText(pendekatan, 'inti', topik, media)}`;
-
-          penutupGuru = [
-            `Memvalidasi hasil serah terima pekerjaan produk dan mengevaluasi efisiensi proses kerja.`,
-            `Memberikan feedback standar mutu industri dan menutup sesi kerja dengan doa.`
-          ];
-          penutupMurid = [
-            `Menyerahkan produk hasil kerja dan menyusun laporan pertanggungjawaban produksi.`,
-            `Membersihkan area kerja (5R/5S) dan berdoa bersama guru.`
-          ];
-          sintaksPenutup = `Sintaks TeFa: 'Serah Terima Hasil Pekerjaan' dan 'Evaluasi Efisiensi Produksi'. Metode: ${metode}. ${getPendekatanPrinsipText(pendekatan, 'penutup', topik, media)}`;
-
-        } else {
-          // PBL (Problem Based Learning) atau Model Lainnya
-          const modelTitle = (modelRaw && !isPBL) ? modelRaw : 'PBL';
-          awalGuru = [
-            `Membuka sesi kelas dengan salam hangat, doa bersama, dan presensi kedisiplinan murid.`,
-            `Mengaitkan apersepsi kontekstual dengan fenomena permasalahan riil terkait materi ${topik}.`,
-            `Menyampaikan tujuan pembelajaran, alur kegiatan belajar, dan skenario pembelajaran model ${modelTitle}.`
-          ];
-          awalMurid = [
-            `Menjawab salam, berdoa bersama, dan merespons pertanyaan pemantik dari guru.`,
-            `Menyimak penjelasan tujuan pembelajaran serta memahami alur investigasi masalah yang akan dilaksanakan.`
-          ];
-          sintaksAwal = `Sintaks ${modelTitle}: 'Orientasi Murid pada Masalah Otentik'. Metode: ${metode}. ${getPendekatanPrinsipText(pendekatan, 'awal', topik, media)}`;
-
-          intiGuru = [
-            `Membagi murid ke dalam tim kerja heterogen (4-5 orang per tim).`,
-            `Memfasilitasi stimulus masalah kontekstual materi ${topik} melalui media digital ${media}.`,
-            `Membimbing penyelidikan kelompok memanfaatkan fasilitas ${fasilitas}.`,
-            `Memantau perkembangan investigasi dan mengarahkan perumusan solusi pemecahan masalah materi ${topik}.`
-          ];
-          intiMurid = [
-            `Mengamati dan mencermati tayangan stimulus permasalahan materi ${topik}.`,
-            `Berdiskusi secara aktif dan kritis dalam kelompok untuk membedah akar persoalan.`,
-            `Melakukan riset data dan studi kasus dengan memanfaatkan sarana fasilitas ${fasilitas}.`,
-            `Menyusun draf karya dan alternatif solusi pemecahan masalah pada Lembar Kerja (LKPD) kelompok.`
-          ];
-          sintaksInti = `Sintaks ${modelTitle}: 'Mengorganisasi Murid untuk Belajar', 'Membimbing Penyelidikan', dan 'Mengembangkan Solusi'. Metode: ${metode}. ${getPendekatanPrinsipText(pendekatan, 'inti', topik, media)}`;
-
-          penutupGuru = [
-            `Memfasilitasi perwakilan kelompok dalam merumuskan simpulan bersama terkait inti materi ${topik}.`,
-            `Memandu sesi refleksi proses dan pencapaian hasil pembelajaran.`,
-            `Memberikan apresiasi, umpan balik konstruktif, dan tindak lanjut pertemuan berikutnya.`,
-            `Menutup sesi pembelajaran dengan doa bersama dan salam.`
-          ];
-          penutupMurid = [
-            `Bersama guru merumuskan inti kesimpulan pembelajaran materi ${topik}.`,
-            `Menyampaikan refleksi diri secara jujur dan terbuka mengenai kendala serta pemahaman belajar.`,
-            `Merapikan sarana belajar dan berdoa bersama sebelum mengakhiri kelas.`
-          ];
-          sintaksPenutup = `Sintaks ${modelTitle}: 'Menganalisis dan Mengevaluasi Proses Pemecahan Masalah'. Metode: ${metode}. ${getPendekatanPrinsipText(pendekatan, 'penutup', topik, media)}`;
-        }
+        const meetingSintaks = generateMeetingSintaksList(modelRaw, i, countPertemuan, topik, media, fasilitas, metode, pendekatan);
 
         pengalamanBelajar.push({
           pertemuan: i,
           subTopik: theme,
           awal: {
             waktu: '15 Menit',
-            aktivitasGuru: awalGuru,
-            aktivitasMurid: awalMurid,
-            deepLearningSintaks: sintaksAwal
+            aktivitasGuru: [
+              `Membuka sesi pembelajaran dengan salam pembuka, memimpin doa bersama, dan memeriksa presensi kehadiran murid.`,
+              `Mengaitkan apersepsi kontekstual fenomena nyata dengan materi ${topik}.`,
+              `Melaksanakan Pretest singkat untuk mendiagnosis pengetahuan prasyarat dan kesiapan awal murid.`,
+              `Menyampaikan tujuan pembelajaran, skenario aktivitas, dan kriteria penilaian yang akan diterapkan.`
+            ],
+            aktivitasMurid: [
+              `Menjawab salam dari guru, berdoa dengan khidmat, dan mempersiapkan perlengkapan belajar.`,
+              `Merespons pertanyaan apersepsi guru dan mengemukakan pengetahuan awal seputar ${topik}.`,
+              `Mengerjakan instrumen Pretest diagnostik awal secara mandiri dan jujur.`,
+              `Menyimak pemaparan tujuan pembelajaran dan alur kerja yang akan dilaksanakan.`
+            ]
           },
-          inti: {
-            waktu: '60 Menit',
-            aktivitasGuru: intiGuru,
-            aktivitasMurid: intiMurid,
-            deepLearningSintaks: sintaksInti
-          },
+          inti: meetingSintaks,
           penutup: {
             waktu: '15 Menit',
-            aktivitasGuru: penutupGuru,
-            aktivitasMurid: penutupMurid,
-            deepLearningSintaks: sintaksPenutup
+            aktivitasGuru: [
+              `Memfasilitasi murid melakukan refleksi metakognitif terhadap pemahaman konsep materi ${topik} hari ini.`,
+              `Bersama murid merumuskan intisari simpulan komprehensif atas materi yang telah dipelajari.`,
+              `Memberikan umpan balik penguatan serta menginformasikan agenda tindak lanjut pertemuan berikutnya.`,
+              `Menutup pembelajaran dengan doa bersama dan salam penutup.`
+            ],
+            aktivitasMurid: [
+              `Menyampaikan refleksi diri terkait penguasaan materi, kendala yang dihadapi, dan kepuasan belajar.`,
+              `Merangkum intisari kesimpulan materi inti secara lisan maupun catatan ringkas.`,
+              `Merapikan kembali sarana kerja dan fasilitas ${fasilitas} yang telah digunakan.`,
+              `Berdoa bersama guru dan menjawab salam penutup dengan tertib.`
+            ]
           }
         });
       }
 
-      // Sintesis LKPD Sesuai Model Pembelajaran, TP, dan Konteks
       const topicLower = topik.toLowerCase();
       let lkpdData = {};
       if (isPjBL) {
-        let t1 = `Analisis naskah, tema, atau spesifikasi awal, lalu rancang konsep kreatif serta sketsa/rancangan teknis karya produk ${topik}!`;
-        let t2 = `Susun jadwal pengerjaan proyek (timeline milestone), bagi peran anggota tim, dan siapkan perlengkapan/software kerja dengan memanfaatkan fasilitas ${fasilitas}!`;
-        let t3 = `Eksekusi proses pembuatan produk karya nyata ${topik} secara bertahap bersama kelompok dengan memanfaatkan panduan media digital ${media}!`;
-        let t4 = `Lakukan pengujian kelayakan fungsi/mutu produk (Quality Control), evaluasi kesesuaian karya terhadap standar teknis, dan lakukan penyempurnaan berdasarkan rubrik penilaian proyek!`;
-        let t5 = `Siapkan display pameran (showcase), ekspor/dokumentasikan portofolio karya produk ${topik}, dan presentasikan hasilnya di hadapan forum kelas untuk evaluasi bersama!`;
-
-        if (topicLower.includes('karakter') || topicLower.includes('storyboard') || topicLower.includes('animasi')) {
-          t1 = `Analisis skenario atau narasi cerita yang ditentukan, lalu rancang sketsa awal dan lembar model karakter (Model Sheet / Turnaround) 2D mencakup tampak depan, samping, ekspresi wajah, dan proporsi warna!`;
-          t2 = `Susun jadwal kerja proyek (timeline milestone) serta siapkan pembagian peran tim produksi storyboard pada perangkat di ${fasilitas}!`;
-          t3 = `Buat dan susun rangkaian panel storyboard visual (minimal 30 detik durasi animasi) dengan menerapkan prinsip sinematografi, staging, dan timeline gerak menggunakan software digital dan panduan media ${media}!`;
-          t4 = `Lakukan uji kelayakan teknis (Quality Control / Animatic kasar), telaah konsistensi desain karakter dan kelayakan produksi animasi 2D, lalu lakukan perbaikan karya!`;
-          t5 = `Susun display presentasi gelar karya (showcase), tampilkan hasil akhir karya proyek ${topik} di depan kelas menggunakan proyektor, dan refleksikan pengalaman proses produksi!`;
-        }
-
         lkpdData = {
           judul: `Lembar Kerja Proyek (PjBL): Perancangan dan Pembuatan Karya ${topik}`,
           tujuan: `Peserta didik mampu merancang konsep desain/teknis, memproduksi karya nyata ${topik}, menguji mutu produk, dan menyajikan hasil gelar karya secara kolaboratif sesuai tujuan pembelajaran yang ditetapkan.`,
-          tugas: [t1, t2, t3, t4, t5]
+          tugas: [`Analisis naskah, tema, atau spesifikasi awal, lalu rancang konsep kreatif serta sketsa/rancangan teknis karya produk ${topik}!`, `Susun jadwal pengerjaan proyek (timeline milestone), bagi peran anggota tim, dan siapkan perlengkapan/software kerja dengan memanfaatkan fasilitas ${fasilitas}!`, `Eksekusi proses pembuatan produk karya nyata ${topik} secara bertahap bersama kelompok dengan memanfaatkan panduan media digital ${media}!`, `Lakukan pengujian kelayakan fungsi/mutu produk (Quality Control), evaluasi kesesuaian karya terhadap standar teknis, dan lakukan penyempurnaan berdasarkan rubrik penilaian proyek!`, `Siapkan display pameran (showcase), ekspor/dokumentasikan portofolio karya produk ${topik}, dan presentasikan hasilnya di hadapan forum kelas untuk evaluasi bersama!`]
         };
       } else if (isInquiry) {
         lkpdData = {
           judul: `Lembar Kerja Penyelidikan (Inquiry Based Learning): Eksplorasi dan Pembuktian Konsep ${topik}`,
           tujuan: `Peserta didik mampu mengamati fenomena, merumuskan pertanyaan penyelidikan dan hipotesis, mengumpulkan data eksperimen, dan membuktikan prinsip kerja materi ${topik} secara ilmiah sesuai metode ${metode}.`,
-          tugas: [
-            `Amatilah fenomena atau data awal terkait materi ${topik} yang disajikan melalui media ${media}!`,
-            `Rumuskan minimal 2 pertanyaan penyelidikan dan susunlah hipotesis kerja berdasarkan analisis awal Anda!`,
-            `Kumpulkan data empiris dan lakukan pengujian terstruktur dengan metode ${metode} memanfaatkan sarana ${fasilitas}!`,
-            `Analisis dan olah data temuan untuk menguji keabsahan hipotesis yang telah kelompok Anda rumuskan!`,
-            `Tarik simpulan ilmiah secara generalisasi dan presentasikan laporan portofolio temuan kelompok di depan kelas!`
-          ]
+          tugas: [`Amatilah fenomena atau data awal terkait materi ${topik} yang disajikan melalui media ${media}!`, `Rumuskan minimal 2 pertanyaan penyelidikan dan susunlah hipotesis kerja berdasarkan analisis awal Anda!`, `Kumpulkan data empiris dan lakukan pengujian terstruktur dengan metode ${metode} memanfaatkan sarana ${fasilitas}!`, `Analisis dan olah data temuan untuk menguji keabsahan hipotesis yang telah kelompok Anda rumuskan!`, `Tarik simpulan ilmiah secara generalisasi dan presentasikan laporan portofolio temuan kelompok di depan kelas!`]
         };
       } else if (isDiscovery) {
         lkpdData = {
           judul: `Lembar Kerja Penemuan (Discovery Learning): Eksplorasi dan Penemuan Konsep ${topik}`,
           tujuan: `Peserta didik mampu menemukan konsep inti materi ${topik} secara mandiri melalui stimulasi, pengumpulan data, dan verifikasi empiris.`,
-          tugas: [
-            `Amatilah stimulus fenomena terkait materi ${topik} yang disajikan melalui media ${media}!`,
-            `Identifikasi dan catat permasalahan kunci yang perlu ditemukan solusinya!`,
-            `Lakukan pengumpulan data dan eksplorasi terarah dengan memanfaatkan sarana ${fasilitas}!`,
-            `Olah data hasil pengamatan dan lakukan pembuktian konsep secara kolaboratif!`,
-            `Rumuskan generalisasi simpulan konsep materi ${topik} dan laporkan hasilnya!`
-          ]
+          tugas: [`Amatilah stimulus fenomena terkait materi ${topik} yang disajikan melalui media ${media}!`, `Identifikasi dan catat permasalahan kunci yang perlu ditemukan solusinya!`, `Lakukan pengumpulan data dan eksplorasi terarah dengan memanfaatkan sarana ${fasilitas}!`, `Olah data hasil pengamatan dan lakukan pembuktian konsep secara kolaboratif!`, `Rumuskan generalisasi simpulan konsep materi ${topik} dan laporkan hasilnya!`]
         };
       } else {
-        // PBL
         lkpdData = {
           judul: `Lembar Kerja Peserta Didik (PBL): Analisis Masalah dan Perumusan Solusi Inovatif ${topik}`,
           tujuan: `Peserta didik mampu membedah permasalahan kontekstual materi ${topik}, menguji variabel penyebab, dan menyusun alternatif rekomendasi solusi yang aplikatif dan terukur.`,
-          tugas: [
-            `Pilihlah salah satu studi kasus permasalahan aktual terkait materi ${topik} yang disajikan dalam media pembelajaran ${media}!`,
-            `Lakukan penelusuran data dan investigasi penyebab masalah menggunakan sarana fasilitas ${fasilitas} untuk menemukan akar persoalan!`,
-            `Diskusikan bersama kelompok dan bandingkan ragam alternatif solusi berdasarkan konsep teori mata pelajaran ${mapel}!`,
-            `Rumuskan rencana aksi konkret dan desain karya pemecahan masalah yang paling efektif dan rasional!`,
-            `Susunlah hasil analisis dan rekomendasi solusi kelompok Anda ke dalam media presentasi interaktif untuk disajikan pada forum kelas!`
-          ]
+          tugas: [`Pilihlah salah satu studi kasus permasalahan aktual terkait materi ${topik} yang disajikan dalam media pembelajaran ${media}!`, `Lakukan penelusuran data dan investigasi penyebab masalah menggunakan sarana fasilitas ${fasilitas} untuk menemukan akar persoalan!`, `Diskusikan bersama kelompok dan bandingkan ragam alternatif solusi berdasarkan konsep teori mata pelajaran ${mapel}!`, `Rumuskan rencana aksi konkret dan desain karya pemecahan masalah yang paling efektif dan rasional!`, `Susunlah hasil analisis dan rekomendasi solusi kelompok Anda ke dalam media presentasi interaktif untuk disajikan pada forum kelas!`]
         };
       }
 
-      // Sintesis Asesmen Sesuai Model
-      let asesmenData = [];
-      if (isPjBL) {
-        asesmenData = [
-          {
-            jenis: "Diagnostik",
-            bentuk: `Asesmen diagnostik non-kognitif & tes kesiapan keterampilan teknis pembuatan karya ${topik}`,
-            keterangan: "Mengidentifikasi kesiapan awal keterampilan, pengenalan software/peralatan kerja, dan minat gaya belajar murid."
-          },
-          {
-            jenis: "Formatif",
-            bentuk: "Lembar observasi proses pengerjaan proyek (keaktifan tim, kepatuhan timeline jadwal, dan progres milestone karya)",
-            keterangan: "Memantau perkembangan produksi secara bertahap dan memberikan umpan balik perbaikan teknis selama proses pengerjaan."
-          },
-          {
-            jenis: "Sumatif",
-            bentuk: `Penilaian autentik produk akhir karya proyek ${topik} (estetika, fungsionalitas, orisinalitas) dan presentasi gelar karya`,
-            keterangan: "Mengukur pencapaian kompetensi utuh peserta didik dalam menghasilkan produk karya nyata dan mengomunikasikan proses kreasinya."
-          }
-        ];
-      } else {
-        asesmenData = [
-          {
-            jenis: "Diagnostik",
-            bentuk: "Pre-test apersepsi singkat lisan / kuis interaktif digital awal",
-            keterangan: `Mengukur pemahaman prasyarat murid tentang materi ${topik} dan mengidentifikasi kesiapan serta gaya belajar masing-masing individu.`
-          },
-          {
-            jenis: "Formatif",
-            bentuk: "Observasi kinerja diskusi kelompok, kualitas analisis studi kasus, dan progres LKPD",
-            keterangan: "Menilai proses kolaborasi, penalaran kritis saat memecahkan masalah, keaktifan bertanya, serta memberikan umpan balik perbaikan berkelanjutan."
-          },
-          {
-            jenis: "Sumatif",
-            bentuk: `Penilaian produk karya presentasi interaktif dan laporan evaluasi akhir kasus ${topik}`,
-            keterangan: "Mengukur pencapaian kompetensi utuh murid dalam menganalisis, merumuskan solusi inovatif, dan mengomunikasikan simpulan akhir secara komprehensif."
-          }
-        ];
-      }
+      const asesmenData = [
+        {
+          jenis: "Diagnostik",
+          bentuk: `Pretest (Tes Diagnostik Kognitif Awal) seputar ${topik}`,
+          keterangan: "Mengukur kesiapan pengetahuan awal, pemahaman prasyarat, dan modalitas belajar peserta didik."
+        },
+        {
+          jenis: "Formatif",
+          bentuk: `Asesmen Formatif (Lembar Observasi Proses, Kinerja Praktik & Kolaborasi Tim)`,
+          keterangan: "Memantau keterlibatan aktif, kedisiplinan kerja, daya nalar kritis, dan keterampilan proses selama pembelajaran."
+        },
+        {
+          jenis: "Sumatif",
+          bentuk: `Post-test / Asesmen Sumatif (Uji Kinerja Praktik & Evaluasi Produk Portofolio)`,
+          keterangan: "Mengukur ketuntasan pencapaian seluruh indikator Tujuan Pembelajaran (TP) secara komprehensif dan objektif."
+        }
+      ];
 
-      // Sintesis Rubrik Penilaian Sesuai Model
       let rubrikData = [];
       if (isPjBL) {
         rubrikData = [
@@ -2195,7 +2508,6 @@
         ];
       }
 
-      // Sintesis Pengayaan & Remedial Sesuai Model
       let pengayaanText = '';
       let remedialText = '';
       if (isPjBL) {
@@ -2206,7 +2518,6 @@
         remedialText = `Murid yang belum mencapai kriteria ketuntasan direkomendasikan mengerjakan <strong>Tugas Lembar Kerja Terbimbing (Scaffolding Worksheet)</strong>: Mengisi bagan alur konsep esensial materi <em>${topik}</em> dengan panduan bertahap, menyelesaikan soal analisis terarah bersama tutor sebaya (peer tutoring), serta mengulang simulasi terapan dasar hingga tuntas.`;
       }
 
-      // Sintesis Glosarium Khusus Materi Pokok
       let glosariumList = [];
       if (topicLower.includes('foto') || topicLower.includes('kamera') || topicLower.includes('lens') || topicLower.includes('shutter') || topicLower.includes('aperture') || topicLower.includes('iso') || topicLower.includes('eksposur') || topicLower.includes('exposure')) {
         glosariumList = [
@@ -2222,38 +2533,29 @@
           { istilah: "Model Sheet / Turnaround", definisi: "Dokumen panduan visual standar yang menampilkan karakter dari berbagai sudut pandang (depan, samping, belakang, 3/4) beserta ekspresi dan proporsi baku untuk acuan animator." },
           { istilah: "Storyboard Non-Linear", definisi: "Rangkaian visualisasi panel cerita yang memuat percabangan alur interaktif atau multi-skenario adegan sebelum diproduksi ke dalam format animasi utuh." },
           { istilah: "Animatic", definisi: "Versi kasar gerak dari susunan storyboard yang diselaraskan dengan trek suara dan timing durasi untuk mengevaluasi ritme serta sinematografi adegan." },
-          { istilah: "Timeline Animasi & Keyframing", definisi: "Garis waktu operasional perangkat lunak tempat animator mengatur kemunculan adegan, perpindahan frame kunci (keyframes), dan tempo pergerakan karakter." },
-          { istilah: "Motion Graphic", definisi: "Teknik penggabungan grafis visual, tipografi kinetik, dan ilustrasi digital yang digerakkan untuk menyampaikan pesan komunikasi visual secara ringkas dan dinamis." }
-        ];
-      } else if (topicLower.includes('jaringan') || topicLower.includes('komputer') || topicLower.includes('it') || topicLower.includes('ip')) {
-        glosariumList = [
-          { istilah: "Topologi Jaringan", definisi: "Struktur geometris dan tata letak fisik maupun logis yang menghubungkan node-node komputer dalam satu kesatuan sistem komunikasi." },
-          { istilah: "IP Addressing & Subnetting", definisi: "Metode pengalamatan numerik unik yang diberikan ke setiap perangkat terhubung serta teknik segmentasi jaringan untuk efisiensi rute dan keamanan." },
-          { istilah: "Routing Protocol", definisi: "Standar aturan dan algoritma yang digunakan router untuk menentukan jalur terbaik dalam meneruskan paket data antarnetwork." },
-          { istilah: "Bandwidth & Throughput", definisi: "Kapasitas maksimum transfer data pada kanal komunikasi (bandwidth) dan kecepatan transfer data riil yang terukur pada waktu tertentu (throughput)." },
-          { istilah: "Firewall & Packet Filtering", definisi: "Sistem keamanan yang memantau dan mengontrol lalu lintas jaringan masuk dan keluar berdasarkan aturan keamanan yang telah ditetapkan." }
+          { istilah: "Keyframe & Inbetween", definisi: "Gambar pose utama penentu titik awal-akhir gerakan dramatis (Keyframe) serta rangkaian gambar transisi pengisi kehalusan gerak (Inbetween)." },
+          { istilah: "Staging & Cinematography", definisi: "Penataan komposisi visual, sudut kamera, dan tata letak karakter dalam frame agar fokus perhatian penonton tertuju pada narasi emosional utama." }
         ];
       } else {
         glosariumList = [
-          { istilah: `Konseptualisasi ${topik}`, definisi: `Kerangka teori mendasar, struktur operasional, dan prinsip kerja utama materi ${topik} dalam mata pelajaran ${mapel}.` },
-          { istilah: `Analisis Variabel ${topik}`, definisi: `Proses identifikasi dan pengujian faktor-faktor penentu yang memengaruhi keberhasilan penerapan ${topik}.` },
-          { istilah: `Standardisasi Operasional (SOP)`, definisi: `Rangkaian prosedur baku yang menjamin kualitas, akurasi, dan keselamatan kerja dalam praktik materi ${topik}.` },
-          { istilah: `Sintesis Solutif`, definisi: `Kemampuan mengintegrasikan ragam data temuan untuk menghasilkan pemecahan masalah kontekstual yang berdaya guna.` },
-          { istilah: `Verifikasi Empiris`, definisi: `Metode pembuktian kebenaran teori melalui pengujian data, pengamatan langsung, atau eksperimen terukur.` }
+          { istilah: `Prinsip Operasional ${topik}`, definisi: `Kerangka kerja fundamental yang mengatur alur logika, standardisasi teknis, dan metodologi pelaksanaan materi ${topik}.` },
+          { istilah: "Standard Operating Procedure (SOP)", definisi: "Serangkaian instruksi kerja tertulis yang dibakukan mengenai berbagai proses penyelenggaraan aktivitas kejuruan dan keselamatan kerja." },
+          { istilah: "Quality Assurance (QA)", definisi: "Proses sistematis untuk memverifikasi bahwa produk atau layanan memenuhi persyaratan dan standar mutu yang ditentukan." },
+          { istilah: "Troubleshooting & Analisis", definisi: "Pendekatan sistematis untuk mendeteksi, mendiagnosis, dan memecahkan permasalahan teknis operasional yang muncul di lapangan." },
+          { istilah: "Scaffolding Instruksional", definisi: "Pemberian dukungan atau bimbingan bertahap oleh guru yang secara perlahan dikurangi seiring meningkatnya kemandirian belajar murid." }
         ];
       }
 
-      // Daftar Pustaka Ilmiah 5 Tahun Terakhir
-      const currentYear = new Date().getFullYear();
       const refPendekatan = (() => {
         const pL = (pendekatan || '').toLowerCase();
-        if (pL.includes('deep learning')) return `"Kajian Efektivitas Pembelajaran Mendalam (Deep Learning) pada Bidang ${mapel} di Tingkat Menengah."`;
-        if (pL.includes('tpack')) return `"Integrasi Kerangka TPACK dalam Pembelajaran ${mapel} di Era Digital."`;
-        if (pL.includes('saintifik') || pL.includes('scientific')) return `"Penerapan Pendekatan Saintifik dalam Meningkatkan Nalar Kritis Siswa pada Bidang ${mapel}."`;
-        if (pL.includes('kontekstual') || pL.includes('ctl')) return `"Efektivitas Pendekatan Kontekstual (CTL) dalam Pembelajaran Terapan ${mapel}."`;
-        return `"Inovasi Pembelajaran ${mapel} Berbasis Model ${modelRaw} dan Pendekatan ${pendekatan}."`;
+        if (pL.includes('deep learning')) return `"Penerapan Prinsip Deep Learning (Mindful, Meaningful, Joyful) dalam Meningkatkan Retensi Belajar Siswa pada Topik ${topik}."`;
+        if (pL.includes('tpack')) return `"Integrasi Technological Pedagogical Content Knowledge (TPACK) dalam Pembelajaran Berbasis Proyek Materi ${topik}."`;
+        if (pL.includes('saintifik') || pL.includes('scientific')) return `"Efektivitas Pendekatan Saintifik terhadap Keterampilan Proses Sains dan Berpikir Kritis Materi ${topik}."`;
+        if (pL.includes('kontekstual') || pL.includes('ctl')) return `"Penerapan Contextual Teaching and Learning (CTL) untuk Penguatan Kompetensi Kejuruan Materi ${topik}."`;
+        return `"Implementasi Pendekatan ${pendekatan} untuk Mengembangkan Kemandirian dan Kompetensi Unggul Murid pada Materi ${topik}."`;
       })();
 
+      const currentYear = new Date().getFullYear();
       const daftarPustakaList = [
         `Pratama, A., & Wibowo, S. (${currentYear - 2}). "Analisis dan Implementasi Konseptual Materi ${topik} dalam Penguatan Kompetensi Abad ke-21." Jurnal Ilmiah Pendidikan dan Pembelajaran Terapan, 8(2), 142-155.`,
         `Rahmawati, D., Suryadi, K., & Hidayat, T. (${currentYear - 1}). "Pengembangan Media Interaktif Berbasis Kasus Otentik pada Materi ${topik}." Jurnal Inovasi Kurikulum dan Teknologi Pendidikan, 11(1), 78-92.`,
@@ -2316,37 +2618,24 @@
             `Gagasan atau inovasi karya apa yang dapat kita ciptakan untuk menjawab kebutuhan nyata terkait bidang ${topik} ini?`
           ],
           lintasDisiplin: `Pembelajaran materi ${topik} beririsan dengan literasi digital, penalaran logis matematika/sains, etika sosial kemasyarakatan, serta keterampilan komunikasi visual dan verbal.`,
-          praktikPedagogis: (() => {
-            const pL = (pendekatan || '').toLowerCase();
-            if (pL.includes('deep learning')) {
-              return `Model ${modelRaw} diintegrasikan secara utuh dengan memfasilitasi murid mempraktikkan materi ${topik}. Pendekatan Deep Learning diterapkan melalui tahapan Surface Learning (fondasi konsep), Deep Learning (analisis mendalam), dan Transfer Learning (kreasi karya aplikatif) menggunakan metode ${metode}.`;
-            }
-            if (pL.includes('tpack')) {
-              return `Model ${modelRaw} diintegrasikan secara utuh dengan memfasilitasi murid mempraktikkan materi ${topik}. Pendekatan TPACK diterapkan melalui integrasi teknologi (${media}), strategi pedagogis aktif, dan penguasaan konten materi (${topik}) menggunakan metode ${metode}.`;
-            }
-            if (pL.includes('saintifik') || pL.includes('scientific')) {
-              return `Model ${modelRaw} diintegrasikan secara utuh dengan memfasilitasi murid mempraktikkan materi ${topik}. Pendekatan Saintifik diterapkan melalui tahapan 5M (Mengamati, Menanya, Mengumpulkan Data, Mengasosiasi, dan Mengomunikasikan) menggunakan metode ${metode}.`;
-            }
-            if (pL.includes('kontekstual') || pL.includes('ctl')) {
-              return `Model ${modelRaw} diintegrasikan secara utuh dengan memfasilitasi murid mempraktikkan materi ${topik}. Pendekatan Kontekstual (CTL) diterapkan dengan mengaitkan materi secara langsung ke pengalaman otentik dunia nyata menggunakan metode ${metode}.`;
-            }
-            return `Model ${modelRaw} diintegrasikan secara utuh dengan memfasilitasi murid mempraktikkan materi ${topik}. Pendekatan ${pendekatan} diterapkan secara aktif dan kolaboratif untuk memperdalam kompetensi melalui metode ${metode}.`;
-          })(),
+          praktikPedagogis: `Model ${modelRaw} diintegrasikan secara utuh dengan memfasilitasi murid mempraktikkan materi ${topik}. Pendekatan ${pendekatan} diterapkan secara aktif dan kolaboratif untuk memperdalam kompetensi melalui metode ${metode}.`,
           kemitraan: `Pembelajaran memperkuat kemitraan dengan praktisi industri, pakar profesional, komunitas pegiat bidang ${mapel}, atau organisasi terkait guna membagikan standar operasional dunia nyata.`,
           lingkungan: `Kegiatan pembelajaran memanfaatkan fasilitas ${fasilitas} yang didukung sarana media digital ${media} guna menciptakan iklim belajar aktif, aman, inspiratif, dan kolaboratif.`
         },
         pengalamanBelajar: pengalamanBelajar,
         materiAjarDeskriptif: `
-          <p class="doc-paragraph">
-            Materi pokok <strong>${topik}</strong> pada mata pelajaran <strong>${mapel}</strong> merupakan pilar kompetensi fundamental yang memadukan wawasan teoretis dengan kemahiran terapan profesional. Pembahasan diawali dengan pemahaman mendalam mengenai hakikat, karakteristik dasar, serta kerangka operasional yang berlaku dalam bidang keilmuan terkait. Peserta didik dibimbing untuk mengidentifikasi komponen inti, memahami hubungan sebab-akibat antarelemen, serta mengenali standar teknis yang menjadi acuan baku di dunia akademik maupun industri modern.
-          </p>
-          <p class="doc-paragraph">
-            Pada tataran analisis mendalam, materi ini mengeksplorasi ragam studi kasus kontekstual dan skenario pemecahan masalah aktual yang kerap dijumpai di lapangan. Melalui model pembelajaran <em>${modelRaw}</em> yang berpadu dengan pendekatan <em>${pendekatan}</em>, peserta didik diarahkan untuk menguji variabel-variabel penentu, mendiagnosis potensi kendala operasional, serta merumuskan inovasi solutif yang aplikatif. Pengintegrasian fasilitas <em>${fasilitas}</em> dan media digital <em>${media}</em> memperkaya pengalaman belajar agar murid mampu berpikir kritis, objektif, dan berbasis data empiris.
-          </p>
-          <p class="doc-paragraph">
-            Sebagai wujud capaian konkret sesuai tujuan pembelajaran, materi ini memandu prosedur kerja bertahap (SOP), teknik pengujian kualitas, serta metodologi kreasi karya yang bertanggung jawab. Diharapkan setelah menuntaskan seluruh rangkaian aktivitas pembelajaran <strong>${topik}</strong>${materiTambahanVal ? ` beserta penguatan materi tambahan <em>${materiTambahanVal.split('\n')[0]}</em>` : ''}, peserta didik memiliki kemandirian berpikir, kecakapan kolaboratif yang solid, serta daya cipta inovatif untuk berkontribusi secara nyata bagi kemajuan masyarakat dan dunia kerja masa depan.
-          </p>
-        `,
+Materi pokok **${topik}** pada mata pelajaran **${mapel}** merupakan pilar kompetensi fundamental yang memadukan wawasan teoretis dengan kemahiran terapan profesional. Pembahasan diawali dengan pemahaman mendalam mengenai hakikat, karakteristik dasar, serta kerangka operasional yang berlaku dalam bidang keilmuan terkait. Peserta didik mempelajari komponen-komponen inti, memahami hubungan kausalitas antarelemen, serta menguasai terminologi teknis yang menjadi standar baku di dunia kerja profesional.
+
+Secara fungsional dan prosedural, penguasaan materi ini melibatkan penerapan parameter kerja presisi dan standar operasional prosedur (SOP) baku guna menjamin efisiensi dan kualitas luaran karya. Penguasaan instrumen kerja, kalibrasi peralatan, serta kepatuhan terhadap regulasi keselamatan kerja menjadi penentu utama dalam mengeksekusi setiap tahapan pekerjaan.
+
+| Parameter / Dimensi Teknis | Deskripsi & Prinsip Operasional | Standar Penerapan & Pengujian Mutu |
+|---|---|---|
+| Landasan Konseptual & Teori | Pemahaman definisi, fungsi inti, dan klasifikasi elemen ${topik} | Memenuhi standar acuan kurikulum dan kriteria kompetensi industri |
+| Prosedur Kerja & SOP Praktik | Alur penyiapan alat, eksekusi teknis sistematis, dan kepatuhan K3 | Ketepatan langkah kerja operasional dan akurasi hasil 100% |
+| Kontrol Kualitas & Analisis | Evaluasi parameter kerja, kalibrasi instrumen, dan troubleshooting | Hasil karya/analisis bebas cacat teknis dan terverifikasi handal |
+
+Pada tataran analisis lanjutan, penguasaan materi *${topik}* menuntut kemampuan bernalar kritis dalam mendiagnosis anomali teknis dan memecahkan permasalahan (*troubleshooting*) saat menghadapi dinamika kondisi riil di lapangan. Evaluasi berkelanjutan dan pengujian terukur memastikan setiap karya atau solusi yang dihasilkan memiliki presisi tinggi, daya guna optimal, dan nilai inovasi yang relevan dengan perkembangan industri modern.
+        `.trim(),
         materiTambahan: materiTambahanVal,
         asesmen: asesmenData,
         refleksi: {
