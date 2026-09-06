@@ -303,7 +303,12 @@ function getLearningContext() {
 async function getAvailableGeminiModels(apiKey) {
   for (const ver of ['v1beta', 'v1']) {
     try {
-      const res = await fetch(`https://generativelanguage.googleapis.com/${ver}/models?key=${encodeURIComponent(apiKey)}`);
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 4000);
+      const res = await fetch(`https://generativelanguage.googleapis.com/${ver}/models?key=${encodeURIComponent(apiKey)}`, {
+        signal: controller.signal
+      });
+      clearTimeout(timeoutId);
       if (res.ok) {
         const data = await res.json();
         if (data && Array.isArray(data.models) && data.models.length > 0) {
@@ -674,7 +679,7 @@ async function callGeminiWithAccountKey(promptText, fallbackFn, customConfig) {
     `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent`
   );
 
-  const uniqueEndpoints = Array.from(new Set(candidateEndpoints));
+  const uniqueEndpoints = Array.from(new Set(candidateEndpoints)).slice(0, 3);
   let lastErrorMsg = '';
 
   const config = {
@@ -687,7 +692,7 @@ async function callGeminiWithAccountKey(promptText, fallbackFn, customConfig) {
     try {
       const url = `${baseEndpoint}?key=${encodeURIComponent(apiKey)}`;
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 20000);
+      const timeoutId = setTimeout(() => controller.abort(), 12000);
 
       const res = await fetch(url, {
         method: 'POST',
@@ -1796,19 +1801,21 @@ async function proceedGenerateModul() {
     const percentEl = document.getElementById('generatePercentText');
     const stepTextEl = document.getElementById('generateProgressStepText');
 
-    if (barEl) barEl.style.width = '18%';
-    if (percentEl) percentEl.textContent = '18%';
+    if (barEl) barEl.style.width = '15%';
+    if (percentEl) percentEl.textContent = '15%';
     if (stepTextEl) stepTextEl.textContent = 'Menghubungkan ke AI dan menganalisis parameter pembelajaran...';
 
     const progressSteps = [
-      { p: 35, text: 'Merumuskan tujuan pembelajaran, profil & pendekatan...' },
-      { p: 60, text: 'Menyusun alur kegiatan & pengalaman belajar per pertemuan...' },
-      { p: 82, text: 'Menyusun materi ajar deskriptif, instrumen asesmen & LKPD...' },
-      { p: 94, text: 'Melakukan finalisasi struktur dokumen Modul Ajar...' }
+      { p: 30, text: 'Merumuskan tujuan pembelajaran, profil & pendekatan...' },
+      { p: 55, text: 'Menyusun alur kegiatan & pengalaman belajar per pertemuan...' },
+      { p: 75, text: 'Menyusun materi ajar deskriptif, instrumen asesmen & LKPD...' },
+      { p: 88, text: 'Sedang memproses perumusan & verifikasi struktur dokumen...' }
     ];
     let stepIndex = 0;
-    let currentPct = 18;
+    let currentPct = 15;
 
+    // Interval progres berjalan halus, dibatasi maksimal 92% selama AI masih bekerja
+    // JIKA BELUM SELESAI JANGAN TERTULIS 100% — BUAT TETAP STATUS PROSES
     const progressTimer = setInterval(() => {
       if (stepIndex < progressSteps.length) {
         const item = progressSteps[stepIndex];
@@ -1817,12 +1824,12 @@ async function proceedGenerateModul() {
         if (percentEl) percentEl.textContent = currentPct + '%';
         if (stepTextEl) stepTextEl.textContent = item.text;
         stepIndex++;
-      } else if (currentPct < 96) {
+      } else if (currentPct < 92) {
         currentPct += 1;
         if (barEl) barEl.style.width = currentPct + '%';
         if (percentEl) percentEl.textContent = currentPct + '%';
       }
-    }, 1200);
+    }, 1500);
 
     try {
       // Panggil AI secara nyata untuk men-generate seluruh konten Modul Ajar
@@ -1833,12 +1840,16 @@ async function proceedGenerateModul() {
       modulPayload.aiGeneratedContent = buildComprehensiveAiModulContent(modulPayload);
     } finally {
       clearInterval(progressTimer);
-      if (barEl) barEl.style.width = '100%';
-      if (percentEl) percentEl.textContent = '100%';
     }
+
+    // AI selesai menyusun, perbarui indikator ke tahap finalisasi penyimpanan lokal (95%)
+    if (barEl) barEl.style.width = '95%';
+    if (percentEl) percentEl.textContent = '95%';
+    if (stepTextEl) stepTextEl.textContent = 'Menyimpan dokumen Modul Ajar dan menyiapkan dokumen...';
 
     // 1. Simpan sesi aktif modul secara aman ke localStorage
     try {
+      modulPayload.status = 'Lengkap';
       const payloadStr = JSON.stringify(modulPayload);
       safeSetLocalStorage('edu_last_modul_payload', payloadStr);
       safeSetLocalStorage('edu_current_generated_modul', payloadStr);
@@ -1847,37 +1858,91 @@ async function proceedGenerateModul() {
       console.warn('[Storage] Gagal simpan sesi modul:', errStorage);
     }
 
-    // 2. Simpan otomatis ke daftar riwayat akun guru (Daftar Modul Ajar & Supabase)
+    // 2. Simpan instan ke daftar riwayat akun guru di localStorage
     try {
-      modulPayload.status = 'Lengkap';
-      await saveModulToUserAccountList(modulPayload, 'Lengkap');
-    } catch (errList) {
-      console.warn('[List] Gagal simpan ke daftar akun:', errList);
+      let curUser = null;
+      try {
+        const rawU = localStorage.getItem(CURRENT_USER_KEY);
+        if (rawU) curUser = JSON.parse(rawU);
+      } catch (eU) {}
+      const userEmail = (curUser && curUser.email) ? curUser.email.trim().toLowerCase() : 'guest';
+      const listKey = `edu_modul_list_${userEmail}`;
+      let localList = [];
+      try {
+        const rawL = localStorage.getItem(listKey);
+        if (rawL) localList = JSON.parse(rawL);
+      } catch (eL) { localList = []; }
+
+      const modulId = modulPayload.id || ('modul_' + Date.now());
+      modulPayload.id = modulId;
+      const namaTopik = (modulPayload.topikMateri || modulPayload.isiTopikMateri || 'Topik Pembelajaran').trim();
+      const namaJurusan = (modulPayload.jurusanSekolah || 'Reguler').trim();
+      const nowD = new Date();
+      const monthsD = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+
+      const itemRecord = {
+        id: modulId,
+        userEmail: userEmail,
+        namaModul: `${namaTopik} - ${namaJurusan}`,
+        topikMateri: namaTopik,
+        jurusanSekolah: namaJurusan,
+        mataPelajaran: modulPayload.mataPelajaran || 'Mata Pelajaran',
+        jenjangSekolah: modulPayload.jenjangSekolah || 'SMA / MA',
+        jenjang: modulPayload.jenjangSekolah || 'SMA / MA',
+        faseKelas: modulPayload.faseKelas || 'Fase E (Kelas 10 SMA/MA)',
+        status: 'Lengkap',
+        createdAt: modulPayload.createdAt || nowD.toISOString(),
+        updatedAt: nowD.toISOString(),
+        updatedAtFormatted: `${String(nowD.getDate()).padStart(2, '0')} ${monthsD[nowD.getMonth()]} ${nowD.getFullYear()}, ${String(nowD.getHours()).padStart(2, '0')}:${String(nowD.getMinutes()).padStart(2, '0')}`,
+        payload: modulPayload
+      };
+      const exIdx = localList.findIndex(x => x.id === modulId);
+      if (exIdx !== -1) {
+        localList[exIdx] = itemRecord;
+      } else {
+        localList.unshift(itemRecord);
+      }
+      safeSetLocalStorage(listKey, JSON.stringify(localList));
+    } catch (eList) {
+      console.warn('[List Local] Warning:', eList);
     }
 
-    // 3. PASTI PINDAH KE TAMPILAN SUKSES & MUNCULKAN TOMBOL BUKA MODUL AJAR
-    try {
-      progressLoading.style.display = 'none';
-      progressSuccess.style.display = 'flex';
+    // 3. SEMUA DATA SIAP — SEKARANG SET TEPAT 100% DAN LANGSUNG PINDAH KE TAMPILAN SUKSES!
+    if (barEl) barEl.style.width = '100%';
+    if (percentEl) percentEl.textContent = '100%';
+    if (stepTextEl) stepTextEl.textContent = 'Selesai! Modul Ajar berhasil disusun.';
 
-      // Scroll halus ke kartu hasil agar tombol Buka Modul Ajar langsung terlihat oleh pengguna
-      progressContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    // Jeda transisi 250ms agar animasi bar 100% terlihat mulus lalu tampilkan tombol "Buka Modul Ajar"
+    setTimeout(() => {
+      try {
+        progressLoading.style.display = 'none';
+        progressSuccess.style.display = 'flex';
 
-      // Notifikasi "Generate sukses" sesuai permintaan pengguna
-      showNotificationModal('Generate Sukses', 'Modul Ajar telah berhasil disusun dan disimpan!', 'success');
-    } catch (errUi) {
-      console.warn('[UI] Transisi sukses warning:', errUi);
-    } finally {
-      // Aktifkan kembali tombol Generate Modul Ajar dan Ubah Konteks agar bisa digunakan lagi
-      if (btnGenerate) {
-        btnGenerate.disabled = false;
+        // Scroll halus ke kartu hasil agar tombol Buka Modul Ajar langsung terlihat oleh pengguna
+        progressContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+        // Notifikasi "Generate sukses" sesuai permintaan pengguna
+        showNotificationModal('Generate Sukses', 'Modul Ajar telah berhasil disusun dan disimpan!', 'success');
+      } catch (errUi) {
+        console.warn('[UI] Transisi sukses warning:', errUi);
+      } finally {
+        // Aktifkan kembali tombol Generate Modul Ajar dan Ubah Konteks
+        if (btnGenerate) {
+          btnGenerate.disabled = false;
+        }
+        if (btnUbahKonteks) {
+          btnUbahKonteks.disabled = false;
+          btnUbahKonteks.style.opacity = '1';
+          btnUbahKonteks.style.cursor = 'pointer';
+        }
       }
-      if (btnUbahKonteks) {
-        btnUbahKonteks.disabled = false;
-        btnUbahKonteks.style.opacity = '1';
-        btnUbahKonteks.style.cursor = 'pointer';
-      }
-    }
+    }, 250);
+
+    // 4. Sinkronisasi ke Supabase Database Server berjalan di BACKGROUND (non-blocking)
+    // Tidak akan pernah menahan tampilan atau membuat UI guru macet
+    saveModulToUserAccountList(modulPayload, 'Lengkap').catch(errList => {
+      console.warn('[Background Sync] Gagal sinkron ke database server:', errList);
+    });
   } else {
     if (btnGenerate) {
       btnGenerate.disabled = false;
@@ -3218,11 +3283,15 @@ async function saveModulToUserAccountList(modulPayload, status = 'Lengkap') {
       console.warn('Gagal simpan ke Supabase, mencoba server lokal:', e);
       // Fallback ke server lokal
       try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 3500);
         const resp = await fetch('/api/moduls', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(itemRecord)
+          body: JSON.stringify(itemRecord),
+          signal: controller.signal
         });
+        clearTimeout(timeoutId);
         if (resp && resp.ok) {
           const d = await resp.json().catch(() => null);
           console.log('[Server API] Modul tersimpan di database server:', d);

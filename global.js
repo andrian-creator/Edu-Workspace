@@ -26,11 +26,15 @@ async function supabaseRequest(path, options = {}) {
     ...(options.headers || {})
   };
   try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000);
     const res = await fetch(url, {
       method: options.method || 'GET',
       headers,
-      body: options.body ? JSON.stringify(options.body) : undefined
+      body: options.body ? JSON.stringify(options.body) : undefined,
+      signal: controller.signal
     });
+    clearTimeout(timeoutId);
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
       console.warn('[Supabase]', res.status, path, err.message || err);
