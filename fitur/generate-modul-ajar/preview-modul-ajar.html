@@ -990,12 +990,19 @@
         const waktu = item.waktu || (list.length > 1 ? `${Math.round(60 / list.length)} Menit` : '60 Menit');
         const guru = formatActivityPoints(item.aktivitasGuru);
         const murid = formatActivityPoints(item.aktivitasMurid);
-        return `
-          <tr>
-            <td style="vertical-align: top;">
-              <strong>Inti</strong>
-              ${sintaksTitle ? `<div style="font-size: 0.82rem; font-weight: 600; color: #1e40af; margin-top: 4px; line-height: 1.35;">${sintaksTitle}</div>` : ''}
+
+        const sintaksHeader = sintaksTitle ? `
+          <tr style="background-color: #f8fafc;">
+            <td colspan="4" style="background-color: #f8fafc; padding: 7px 12px; font-weight: 700; color: #1e40af; font-size: 0.88rem; border: 1px solid #cbd5e1; line-height: 1.4;">
+              ${sintaksTitle}
             </td>
+          </tr>
+        ` : '';
+
+        return `
+          ${sintaksHeader}
+          <tr>
+            <td style="vertical-align: top;"><strong>Inti</strong></td>
             <td style="vertical-align: top;">${waktu}</td>
             <td style="vertical-align: top;">${guru}</td>
             <td style="vertical-align: top;">${murid}</td>
