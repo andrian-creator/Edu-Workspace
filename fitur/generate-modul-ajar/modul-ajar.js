@@ -709,7 +709,7 @@ async function callGeminiWithAccountKey(promptText, fallbackFn, customConfig) {
     try {
       const url = `${baseEndpoint}?key=${encodeURIComponent(apiKey)}`;
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 7000); // 7 detik per endpoint
+      const timeoutId = setTimeout(() => controller.abort(), 20000); // Beri waktu 20 detik per endpoint agar Gemini selesai menyusun dokumen utuh
 
       const res = await fetch(url, {
         method: 'POST',
@@ -730,6 +730,7 @@ async function callGeminiWithAccountKey(promptText, fallbackFn, customConfig) {
         const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
         if (text && text.trim()) {
           console.log('[Gemini API] Berhasil generate via Google Gemini:', baseEndpoint);
+          window._lastGeminiAuthFailed = false;
           return cleanAiText(text);
         }
       } else {
@@ -737,6 +738,7 @@ async function callGeminiWithAccountKey(promptText, fallbackFn, customConfig) {
         lastErrorMsg = errData?.error?.message || `HTTP ${res.status}`;
         if (res.status === 401 || res.status === 403 || lastErrorMsg.includes('UNAUTHENTICATED') || lastErrorMsg.includes('API key not valid')) {
           console.warn('[Gemini API] Google menolak kunci API (' + res.status + '):', lastErrorMsg);
+          window._lastGeminiAuthFailed = true;
           break;
         }
       }
@@ -1872,13 +1874,13 @@ async function proceedGenerateModul() {
     }, 1500);
 
     try {
-      // Panggil AI dengan batas waktu ketat maksimal 8 detik (Promise.race)
-      // Menjamin 100% proses tidak akan pernah macet atau tertahan berlama-lama
-      const AI_MAX_TIMEOUT_MS = 8000;
+      // Panggil AI dengan batas waktu 25 detik (Promise.race)
+      // Memberikan waktu yang cukup bagi Google Gemini menyusun dokumen utuh multi-pertemuan
+      const AI_MAX_TIMEOUT_MS = 25000;
       const aiContent = await Promise.race([
         generateFullModulWithAI(modulPayload),
         new Promise((_, reject) =>
-          setTimeout(() => reject(new Error('Batas waktu AI 8 detik terlampaui')), AI_MAX_TIMEOUT_MS)
+          setTimeout(() => reject(new Error('Batas waktu AI 25 detik terlampaui')), AI_MAX_TIMEOUT_MS)
         )
       ]);
       modulPayload.aiGeneratedContent = aiContent || buildComprehensiveAiModulContent(modulPayload);
@@ -1972,8 +1974,17 @@ async function proceedGenerateModul() {
         // Scroll halus ke kartu hasil agar tombol Buka Modul Ajar terlihat nyaman dengan jarak di bawah layar
         scrollCardIntoViewWithGap(progressContainer, 70);
 
-        // Notifikasi "Generate sukses" sesuai permintaan pengguna
-        showNotificationModal('Generate Sukses', 'Modul Ajar telah berhasil disusun dan disimpan!', 'success');
+        // Notifikasi hasil generate
+        if (window._lastGeminiAuthFailed) {
+          showNotificationModal(
+            'Modul Ajar Tersimpan (Mode Cadangan)',
+            'Modul ajar telah selesai disusun. Namun Kunci API Google Gemini Anda terdeteksi belum aktif / ditolak (HTTP 401). Silakan simpan Kunci API resmi terbaru Anda di menu API Key agar berikutnya di-generate langsung secara live oleh Google Gemini.',
+            'warning'
+          );
+          window._lastGeminiAuthFailed = false;
+        } else {
+          showNotificationModal('Generate Sukses', 'Modul Ajar telah berhasil disusun dan disimpan!', 'success');
+        }
       } catch (errUi) {
         console.warn('[UI] Transisi sukses warning:', errUi);
       } finally {
