@@ -692,13 +692,17 @@ async function callGeminiWithAccountKey(promptText, customConfig) {
   const uniqueEndpoints = Array.from(new Set(candidateEndpoints)).slice(0, 3);
   let lastErrorMsg = '';
 
-  const config = {
-    temperature: 0.7,
-    maxOutputTokens: 8192,
-    ...(customConfig || {})
-  };
-
   const reqTimeoutMs = (customConfig && customConfig.timeoutMs) ? customConfig.timeoutMs : 35000;
+  const isSilent = Boolean(customConfig && customConfig.silentError);
+
+  // Hanya sertakan parameter resmi Google Gemini generationConfig
+  const genConfig = {
+    temperature: typeof customConfig?.temperature === 'number' ? customConfig.temperature : 0.7,
+    maxOutputTokens: typeof customConfig?.maxOutputTokens === 'number' ? customConfig.maxOutputTokens : 8192
+  };
+  if (typeof customConfig?.topP === 'number') genConfig.topP = customConfig.topP;
+  if (typeof customConfig?.topK === 'number') genConfig.topK = customConfig.topK;
+  if (customConfig?.responseMimeType) genConfig.responseMimeType = customConfig.responseMimeType;
 
   // Uji coba eksekusi nyata ke Google Gemini API
   for (const baseEndpoint of uniqueEndpoints) {
@@ -714,7 +718,7 @@ async function callGeminiWithAccountKey(promptText, customConfig) {
         },
         body: JSON.stringify({
           contents: [{ parts: [{ text: promptText }] }],
-          generationConfig: config
+          generationConfig: genConfig
         }),
         signal: controller.signal
       });
@@ -748,7 +752,7 @@ async function callGeminiWithAccountKey(promptText, customConfig) {
 
   // Jika gagal, tampilkan pesan error resmi dari Google Gemini — JANGAN MENGGUNAKAN TEMPLATE JAWABAN
   console.warn('[Gemini API] Google Gemini tidak merespon:', lastErrorMsg);
-  if (!customConfig?.silentError) {
+  if (!isSilent) {
     showNotificationModal(
       'Generate AI Gagal',
       `Google Gemini tidak dapat merumuskan konten: ${lastErrorMsg}. Pastikan Kunci API Google Gemini Anda valid dan tersimpan di menu Kunci API.`,
