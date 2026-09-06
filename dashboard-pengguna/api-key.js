@@ -31,7 +31,7 @@ function showNotificationModal(title, msg, type = 'success') {
   if (!modal || !titleEl || !descEl) return;
 
   titleEl.textContent = title;
-  descEl.textContent = msg;
+  descEl.innerHTML = msg;
 
   if (iconBox && iconContent) {
     iconBox.className = 'confirm-icon-box';
@@ -258,8 +258,19 @@ async function verifyGeminiKeySilently(key) {
       }
     });
 
-    // 2. Fallback via query parameter jika header ditolak
-    if (!response.ok) {
+    // 2. Jika 404/400, coba endpoint v1
+    if (!response.ok && (response.status === 404 || response.status === 400)) {
+      const v1Res = await fetch('https://generativelanguage.googleapis.com/v1/models', {
+        method: 'GET',
+        headers: {
+          'x-goog-api-key': key
+        }
+      });
+      if (v1Res.ok) response = v1Res;
+    }
+
+    // 3. Fallback via query parameter untuk kunci legacy AIza
+    if (!response.ok && !isAQ) {
       const qRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${encodeURIComponent(key)}`, {
         method: 'GET'
       });
@@ -274,11 +285,19 @@ async function verifyGeminiKeySilently(key) {
         const errJson = await response.json();
         if (errJson && errJson.error && errJson.error.message) errText = errJson.error.message;
       } catch (e) {}
+
+      if (response.status === 401 || errText.includes('UNAUTHENTICATED') || errText.includes('ACCESS_TOKEN_TYPE_UNSUPPORTED')) {
+        errText = 'Kunci ditolak Google (HTTP 401). Pastikan kunci aktif di Google AI Studio (aistudio.google.com/app/apikey).';
+      } else if (response.status === 403) {
+        errText = 'Izin ditolak Google Cloud (HTTP 403). Pastikan Generative Language API aktif.';
+      } else if (response.status === 429) {
+        errText = 'Batas kuota Google tercapai (HTTP 429). Silakan tunggu beberapa menit.';
+      }
       setGeminiBadgeError(errText);
     }
   } catch (e) {
     // Jangan ubah status menjadi sukses jika jaringan gagal
-    setGeminiBadgeError('Tidak dapat memverifikasi koneksi ke Google Gemini');
+    setGeminiBadgeError('Gagal menghubungi server Google Gemini. Periksa koneksi internet Anda.');
   }
 }
 
@@ -479,7 +498,19 @@ async function saveAndTestApiKey() {
     setGeminiBadgeError("Format kunci tidak sesuai (harus diawali 'AQ.' atau 'AIza')");
     showNotificationModal(
       'Format Kunci Salah',
-      "Format kunci Google Gemini tidak sesuai. Kunci resmi dari Google AI Studio diawali dengan 'AQ.' (format baru) atau 'AIza' (format lama). Silakan periksa kembali.",
+      `<div style="text-align: left; font-size: 0.92rem; line-height: 1.6;">
+        <div class="modal-diagnostic-box box-error">
+          Format kunci Google Gemini tidak dikenali.
+        </div>
+        <p style="margin-bottom: 8px; font-weight: 600;">Standar format resmi dari Google:</p>
+        <ul class="modal-diagnostic-list">
+          <li><strong>AQ.</strong> : Format Authentication Key resmi terbaru Google AI Studio (misal: <code>AQ.Ab8RN...</code>).</li>
+          <li><strong>AIza</strong> : Format Standard Key Google API terdahulu (misal: <code>AIzaSy...</code>).</li>
+        </ul>
+        <p style="margin-top: 10px; font-size: 0.88rem; color: #64748b;">
+          Dapatkan kunci resmi Anda di: <a href="https://aistudio.google.com/app/apikey" target="_blank" style="color: #2563eb; text-decoration: underline; font-weight: 600;">aistudio.google.com/app/apikey</a>
+        </p>
+      </div>`,
       'error'
     );
     return;
@@ -530,7 +561,9 @@ async function saveAndTestApiKey() {
 
   // Uji koneksi nyata ke Google Gemini Models API
   let isConnected = false;
-  let errorMsg = '';
+  let httpStatus = 0;
+  let rawErrorMsg = '';
+  let errorReason = '';
 
   try {
     // 1. Coba verifikasi dengan header x-goog-api-key (standar resmi untuk kunci AQ dan AIza)
@@ -541,43 +574,51 @@ async function saveAndTestApiKey() {
       }
     });
 
-    // 2. Fallback via query parameter jika diperlukan
-    if (!response.ok) {
+    // 2. Jika 404/400, coba endpoint v1
+    if (!response.ok && (response.status === 404 || response.status === 400)) {
+      const v1Res = await fetch('https://generativelanguage.googleapis.com/v1/models', {
+        method: 'GET',
+        headers: {
+          'x-goog-api-key': key
+        }
+      });
+      if (v1Res.ok) response = v1Res;
+    }
+
+    // 3. Fallback via query parameter untuk kunci legacy AIza
+    if (!response.ok && !isAQ) {
       const qRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${encodeURIComponent(key)}`, {
         method: 'GET'
       });
       if (qRes.ok) response = qRes;
     }
 
+    httpStatus = response.status;
     if (response.ok) {
       isConnected = true;
     } else {
       isConnected = false;
-      let errData = {};
       try {
-        errData = await response.json();
+        const errJson = await response.json();
+        if (errJson && errJson.error) {
+          rawErrorMsg = errJson.error.message || '';
+          if (Array.isArray(errJson.error.details) && errJson.error.details[0]) {
+            errorReason = errJson.error.details[0].reason || '';
+          }
+        }
       } catch (e) {}
-
-      if (errData && errData.error && errData.error.message) {
-        errorMsg = errData.error.message;
-      } else {
-        errorMsg = `HTTP ${response.status}`;
-      }
-
-      if (errorMsg.includes('ACCESS_TOKEN_TYPE_UNSUPPORTED') || errorMsg.includes('UNAUTHENTICATED')) {
-        errorMsg = "Autentikasi ditolak Google. Pastikan kunci telah diaktifkan di Google AI Studio (buka aistudio.google.com/app/apikey) dan seluruh karakter kunci tersalin lengkap.";
-      }
     }
   } catch (err) {
     isConnected = false;
-    errorMsg = 'Gagal menghubungi server Google Gemini. Periksa koneksi internet Anda.';
+    httpStatus = 0;
+    rawErrorMsg = err.message || 'NetworkError';
   }
 
   // Pulihkan Tombol Simpan
   if (btnSave) {
     btnSave.disabled = false;
     btnSave.innerHTML = `
-      <img src="../Assets/icon/icon_save.png" class="btn-icon-img" alt="">
+      <img src="../Assets/icon/icon_save.png" class="btn-icon-img" width="18" height="18" style="width: 18px !important; height: 18px !important; max-width: 18px !important; max-height: 18px !important; object-fit: contain; filter: brightness(0) invert(1);" alt="">
       <span>Simpan Kunci API</span>
     `;
   }
@@ -606,10 +647,94 @@ async function saveAndTestApiKey() {
     }).catch(e => {});
 
     setGeminiBadgeSuccess();
-    showNotificationModal('Koneksi Berhasil!', 'Kunci API Google Gemini berhasil disimpan ke akun Anda dan terverifikasi aktif.', 'success');
+    showNotificationModal(
+      'Koneksi Berhasil!',
+      `<div style="text-align: left; font-size: 0.92rem; line-height: 1.6; color: #334155;">
+        <div class="modal-diagnostic-box box-success">
+          ✓ Kunci API Google Gemini <strong>terverifikasi aktif</strong> dan berhasil terhubung ke server Google AI Studio.
+        </div>
+        <p style="margin-bottom: 6px;">Kunci telah disimpan aman pada akun Anda dan siap digunakan untuk membuat rancangan Modul Ajar otomatis.</p>
+      </div>`,
+      'success'
+    );
   } else {
-    setGeminiBadgeError(errorMsg);
-    showNotificationModal('Kunci API Tidak Sesuai', `Kunci API Google Gemini tidak sesuai atau ditolak: "${errorMsg}". Tanda koneksi tidak akan hijau sampai kunci yang valid dimasukkan.`, 'error');
+    // GAGAL KONEKSI: Berikan informasi lengkap, spesifik, dan solutif
+    let errorTitle = 'Kunci API Gagal Terkoneksi';
+    let modalHtml = '';
+    let shortBadgeDesc = '';
+
+    if (httpStatus === 401 || rawErrorMsg.includes('UNAUTHENTICATED') || errorReason === 'ACCESS_TOKEN_TYPE_UNSUPPORTED') {
+      errorTitle = 'Kunci Ditolak Google (HTTP 401)';
+      shortBadgeDesc = 'Kunci API ditolak Google (HTTP 401 - Unauthenticated). Kredensial tidak dikenali atau format belum terdaftar.';
+      modalHtml = `
+        <div style="text-align: left; font-size: 0.92rem; line-height: 1.6; color: #334155;">
+          <div class="modal-diagnostic-box box-error">
+            <strong>Penyebab:</strong> Server Google menolak kunci API (Status 401 - Unauthenticated). Kredensial tidak valid atau tidak dikenali oleh Google AI Studio.
+          </div>
+          <p style="margin-bottom: 8px; font-weight: 600; color: #1e293b;">Langkah Perbaikan:</p>
+          <ul class="modal-diagnostic-list">
+            <li><strong>Salin Ulang Kunci:</strong> Pastikan Anda menyalin seluruh karakter kunci tanpa ada yang terpotong dan tanpa spasi di awal/akhir.</li>
+            <li><strong>Tunggu Sinkronisasi:</strong> Jika kunci baru saja dibuat di Google AI Studio beberapa detik lalu, tunggu 1–2 menit agar gateway Google selesai mengaktifkannya.</li>
+            <li><strong>Buat Kunci Baru:</strong> Buka portal resmi Google di <a href="https://aistudio.google.com/app/apikey" target="_blank" style="color: #2563eb; text-decoration: underline; font-weight: 600;">aistudio.google.com/app/apikey</a> dengan akun Google aktif Anda, klik <em>Create API Key</em>, lalu tempelkan kuncinya ke sini.</li>
+          </ul>
+          <p style="margin-top: 10px; font-size: 0.85rem; color: #dc2626; font-weight: 500;">
+            ⚠️ Tanda koneksi tetap merah dan kunci belum diaktifkan sampai verifikasi ke server Google berhasil.
+          </p>
+        </div>
+      `;
+    } else if (httpStatus === 403) {
+      errorTitle = 'Izin Akses Ditolak (HTTP 403)';
+      shortBadgeDesc = 'Akses Google Cloud ditolak (HTTP 403 - Permission Denied). Periksa izin API Generative Language pada akun Google Anda.';
+      modalHtml = `
+        <div style="text-align: left; font-size: 0.92rem; line-height: 1.6; color: #334155;">
+          <div class="modal-diagnostic-box box-error">
+            <strong>Penyebab:</strong> Akses ditolak oleh Google Cloud (HTTP 403 - Permission Denied).
+          </div>
+          <p style="margin-bottom: 8px; font-weight: 600; color: #1e293b;">Langkah Perbaikan:</p>
+          <ul class="modal-diagnostic-list">
+            <li>Pastikan project Google Cloud Anda telah mengaktifkan <em>Generative Language API</em>.</li>
+            <li>Periksa apakah kunci memiliki pembatasan IP atau domain (*API Key restrictions*) yang memblokir permintaan dari EduWorkspace.</li>
+          </ul>
+          <p style="margin-top: 10px; font-size: 0.85rem; color: #dc2626; font-weight: 500;">
+            ⚠️ Tanda koneksi tidak akan hijau sampai izin API diaktifkan di Google Cloud.
+          </p>
+        </div>
+      `;
+    } else if (httpStatus === 429) {
+      errorTitle = 'Batas Kuota Tercapai (HTTP 429)';
+      shortBadgeDesc = 'Kunci terhubung namun batas kuota permintaan Google (Rate Limit) telah habis. Tunggu beberapa menit atau buat kunci baru.';
+      modalHtml = `
+        <div style="text-align: left; font-size: 0.92rem; line-height: 1.6; color: #334155;">
+          <div class="modal-diagnostic-box box-warning">
+            <strong>Penyebab:</strong> Batas kuota permintaan Google telah tercapai (HTTP 429 - Resource Exhausted).
+          </div>
+          <p style="margin-bottom: 8px;">Kunci API ini valid dan terhubung, namun kuota gratis akun Google Anda sedang mencapai batas permintaan per menit (RPM).</p>
+          <p style="margin-bottom: 8px;"><strong>Langkah Perbaikan:</strong> Silakan tunggu 2–5 menit lalu coba simpan kembali, atau gunakan akun Google lain untuk membuat kunci baru di <a href="https://aistudio.google.com/app/apikey" target="_blank" style="color: #2563eb; text-decoration: underline;">Google AI Studio</a>.</p>
+        </div>
+      `;
+    } else {
+      // Network Error / CORS / DNS
+      errorTitle = 'Gagal Menghubungi Google';
+      shortBadgeDesc = 'Gagal tersambung ke server Google API. Periksa jaringan internet atau pastikan tidak ada VPN/AdBlocker yang memblokir.';
+      modalHtml = `
+        <div style="text-align: left; font-size: 0.92rem; line-height: 1.6; color: #334155;">
+          <div class="modal-diagnostic-box box-error">
+            <strong>Penyebab:</strong> Browser tidak dapat menghubungi server <code>generativelanguage.googleapis.com</code>.
+          </div>
+          <p style="margin-bottom: 8px; font-weight: 600; color: #1e293b;">Kemungkinan Penyebab:</p>
+          <ul class="modal-diagnostic-list">
+            <li>Koneksi internet Anda terputus atau tidak stabil.</li>
+            <li>Adanya ekstensi browser (adblocker/shield), VPN, atau firewall jaringan kantor/sekolah yang memblokir request ke domain API Google.</li>
+          </ul>
+          <p style="margin-top: 10px; font-size: 0.85rem; color: #64748b;">
+            Silakan periksa koneksi internet Anda lalu klik <strong>Simpan Kunci API</strong> kembali.
+          </p>
+        </div>
+      `;
+    }
+
+    setGeminiBadgeError(shortBadgeDesc);
+    showNotificationModal(errorTitle, modalHtml, 'error');
   }
 }
 
@@ -638,7 +763,19 @@ async function saveAndTestChatgptApiKey() {
 
   if (!key.startsWith('sk-')) {
     setChatgptBadgeError("Format kunci salah (kunci OpenAI harus diawali 'sk-...')");
-    showNotificationModal('Format Kunci Salah', "Kunci API ChatGPT / OpenAI harus diawali dengan 'sk-...'. Tanda koneksi tidak akan hijau sampai kunci yang benar dimasukkan.", 'error');
+    showNotificationModal(
+      'Format Kunci Salah',
+      `<div style="text-align: left; font-size: 0.92rem; line-height: 1.6;">
+        <div class="modal-diagnostic-box box-error">
+          Format kunci ChatGPT / OpenAI tidak valid.
+        </div>
+        <p style="margin-bottom: 8px;">Kunci resmi dari platform OpenAI selalu diawali dengan <code>sk-...</code>.</p>
+        <p style="margin: 0; font-size: 0.88rem; color: #64748b;">
+          Dapatkan kunci resmi di: <a href="https://platform.openai.com/api-keys" target="_blank" style="color: #2563eb; text-decoration: underline; font-weight: 600;">platform.openai.com/api-keys</a>
+        </p>
+      </div>`,
+      'error'
+    );
     return;
   }
 
@@ -685,7 +822,8 @@ async function saveAndTestChatgptApiKey() {
   if (chatgptDesc) chatgptDesc.textContent = 'Memverifikasi status dan autentikasi kunci API langsung ke server OpenAI.';
 
   let isConnected = false;
-  let errorMsg = '';
+  let httpStatus = 0;
+  let rawErrorMsg = '';
 
   // UJI NYATA KE SERVER OPENAI RESMI
   try {
@@ -696,6 +834,7 @@ async function saveAndTestChatgptApiKey() {
       }
     });
 
+    httpStatus = response.status;
     if (response.ok) {
       isConnected = true;
     } else {
@@ -703,13 +842,9 @@ async function saveAndTestChatgptApiKey() {
       try {
         const errData = await response.json();
         if (errData && errData.error && errData.error.message) {
-          errorMsg = errData.error.message;
-        } else {
-          errorMsg = `HTTP ${response.status} (Autentikasi ditolak)`;
+          rawErrorMsg = errData.error.message;
         }
-      } catch (e) {
-        errorMsg = `HTTP ${response.status}`;
-      }
+      } catch (e) {}
     }
   } catch (err) {
     // Jika fetch browser terkena kendala jaringan, uji via proxy jika server lokal ada
@@ -725,23 +860,24 @@ async function saveAndTestChatgptApiKey() {
           isConnected = true;
         } else {
           isConnected = false;
-          errorMsg = pData.message || 'Kunci API OpenAI tidak valid.';
+          rawErrorMsg = pData.message || 'Kunci API OpenAI tidak valid.';
         }
       } else {
         const pErr = await proxyRes.json().catch(() => ({}));
         isConnected = false;
-        errorMsg = pErr.message || `HTTP ${proxyRes.status}`;
+        httpStatus = proxyRes.status;
+        rawErrorMsg = pErr.message || `HTTP ${proxyRes.status}`;
       }
     } catch (pe) {
       isConnected = false;
-      errorMsg = 'Gagal menghubungi server OpenAI. Periksa koneksi internet Anda.';
+      rawErrorMsg = 'NetworkError';
     }
   }
 
   if (btnSave) {
     btnSave.disabled = false;
     btnSave.innerHTML = `
-      <img src="../Assets/icon/icon_save.png" class="btn-icon-img" alt="">
+      <img src="../Assets/icon/icon_save.png" class="btn-icon-img" width="18" height="18" style="width: 18px !important; height: 18px !important; max-width: 18px !important; max-height: 18px !important; object-fit: contain; filter: brightness(0) invert(1);" alt="">
       <span>Simpan Kunci API</span>
     `;
   }
@@ -773,15 +909,67 @@ async function saveAndTestChatgptApiKey() {
     }).catch(e => {});
 
     setChatgptBadgeSuccess();
-    showNotificationModal('Koneksi Berhasil!', 'Kunci API ChatGPT (OpenAI) berhasil disimpan ke akun Anda dan terverifikasi aktif.', 'success');
-  } else {
-    // JIKA SALAH / GAGAL / TIDAK SESUAI -> MERAH (TIDAK HIJAU!)
-    setChatgptBadgeError(errorMsg);
     showNotificationModal(
-      'Kunci API Tidak Sesuai',
-      `Kunci API ChatGPT yang Anda masukkan tidak terhubung atau tidak sesuai: "${errorMsg}". Tanda koneksi tidak akan hijau sampai kunci yang valid dimasukkan.`,
-      'error'
+      'Koneksi Berhasil!',
+      `<div style="text-align: left; font-size: 0.92rem; line-height: 1.6; color: #334155;">
+        <div class="modal-diagnostic-box box-success">
+          ✓ Kunci API ChatGPT (OpenAI) <strong>terverifikasi aktif</strong> dan terhubung ke server OpenAI.
+        </div>
+        <p style="margin-bottom: 6px;">Kunci telah disimpan aman pada akun Anda.</p>
+      </div>`,
+      'success'
     );
+  } else {
+    // JIKA GAGAL: Berikan informasi lengkap
+    let errTitle = 'Kunci OpenAI Gagal Terkoneksi';
+    let modalHtml = '';
+    let shortDesc = '';
+
+    if (httpStatus === 401 || rawErrorMsg.includes('Incorrect API key') || rawErrorMsg.includes('invalid_api_key')) {
+      errTitle = 'Kunci Ditolak OpenAI (HTTP 401)';
+      shortDesc = 'Kunci API OpenAI ditolak (HTTP 401 - Invalid API Key). Pastikan kunci valid dan tersalin lengkap.';
+      modalHtml = `
+        <div style="text-align: left; font-size: 0.92rem; line-height: 1.6; color: #334155;">
+          <div class="modal-diagnostic-box box-error">
+            <strong>Penyebab:</strong> Server OpenAI menolak kunci API (Status 401 - Unauthorized). Kunci tidak ditemukan atau sudah dicabut (*revoked*).
+          </div>
+          <p style="margin-bottom: 8px; font-weight: 600; color: #1e293b;">Langkah Perbaikan:</p>
+          <ul class="modal-diagnostic-list">
+            <li>Pastikan kunci diawali <code>sk-...</code> dan disalin utuh tanpa spasi.</li>
+            <li>Buka <a href="https://platform.openai.com/api-keys" target="_blank" style="color: #2563eb; text-decoration: underline; font-weight: 600;">platform.openai.com/api-keys</a>, buat kunci baru, dan tempelkan ke sini.</li>
+          </ul>
+          <p style="margin-top: 10px; font-size: 0.85rem; color: #dc2626; font-weight: 500;">
+            ⚠️ Tanda koneksi tidak akan hijau sampai kunci terverifikasi aktif.
+          </p>
+        </div>
+      `;
+    } else if (httpStatus === 429 || rawErrorMsg.includes('insufficient_quota')) {
+      errTitle = 'Saldo / Kuota OpenAI Habis (429)';
+      shortDesc = 'Kunci terhubung namun kuota saldo OpenAI akun Anda $0.00 / habis (insufficient_quota).';
+      modalHtml = `
+        <div style="text-align: left; font-size: 0.92rem; line-height: 1.6; color: #334155;">
+          <div class="modal-diagnostic-box box-warning">
+            <strong>Penyebab:</strong> Kuota kredit OpenAI habis atau batas panggilan tercapai (HTTP 429).
+          </div>
+          <p style="margin-bottom: 8px;">Kunci API ini valid, namun akun OpenAI Anda tidak memiliki sisa saldo kredit aktif.</p>
+          <p style="margin-bottom: 8px;"><strong>Langkah Perbaikan:</strong> Periksa dan isi saldo akun Anda di <a href="https://platform.openai.com/account/billing" target="_blank" style="color: #2563eb; text-decoration: underline; font-weight: 600;">Billing OpenAI</a>.</p>
+        </div>
+      `;
+    } else {
+      errTitle = 'Gagal Menghubungi OpenAI';
+      shortDesc = 'Gagal tersambung ke server OpenAI. Periksa jaringan internet Anda.';
+      modalHtml = `
+        <div style="text-align: left; font-size: 0.92rem; line-height: 1.6; color: #334155;">
+          <div class="modal-diagnostic-box box-error">
+            <strong>Penyebab:</strong> Gagal tersambung ke server <code>api.openai.com</code>.
+          </div>
+          <p style="margin-bottom: 8px;">Periksa jaringan internet Anda atau pastikan tidak ada VPN/ekstensi yang memblokir akses ke OpenAI.</p>
+        </div>
+      `;
+    }
+
+    setChatgptBadgeError(shortDesc);
+    showNotificationModal(errTitle, modalHtml, 'error');
   }
 }
 

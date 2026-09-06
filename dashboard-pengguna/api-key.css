@@ -791,3 +791,55 @@ html, body {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
 }
+
+/* ==========================================================================
+   6. DIAGNOSTIC MODAL & DETAILED FEEDBACK
+   ========================================================================== */
+.confirm-modal-overlay .confirm-modal-card {
+  max-width: 500px;
+  width: 92%;
+  box-sizing: border-box;
+}
+
+.modal-diagnostic-box {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 12px 14px;
+  text-align: left;
+  margin: 10px 0 14px;
+  font-size: 0.88rem;
+  line-height: 1.55;
+  color: #334155;
+  box-sizing: border-box;
+}
+
+.modal-diagnostic-box.box-error {
+  background: #fef2f2;
+  border-color: #fecaca;
+  color: #991b1b;
+}
+
+.modal-diagnostic-box.box-warning {
+  background: #fffbeb;
+  border-color: #fde68a;
+  color: #92400e;
+}
+
+.modal-diagnostic-box.box-success {
+  background: #f0fdf4;
+  border-color: #bbf7d0;
+  color: #166534;
+}
+
+.modal-diagnostic-list {
+  padding-left: 20px;
+  margin: 8px 0;
+}
+
+.modal-diagnostic-list li {
+  margin-bottom: 6px;
+  font-size: 0.88rem;
+  line-height: 1.5;
+}
+
