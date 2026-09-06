@@ -683,10 +683,10 @@ async function callGeminiWithAccountKey(promptText, customConfig) {
 
   // Tambahkan endpoint resmi Google terkini
   candidateEndpoints.push(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent`,
     `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent`,
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent`,
     `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent`,
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent`
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent`
   );
 
   const uniqueEndpoints = Array.from(new Set(candidateEndpoints)).slice(0, 3);
@@ -729,7 +729,7 @@ async function callGeminiWithAccountKey(promptText, customConfig) {
         const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
         if (text && text.trim()) {
           console.log('[Gemini API] Berhasil generate via Google Gemini:', baseEndpoint);
-          return cleanAiText(text);
+          return text.trim();
         }
       } else {
         const errData = await res.json().catch(() => ({}));
@@ -2017,6 +2017,81 @@ async function proceedGenerateModul() {
 }
 
 /**
+ * Ekstraktor Bagian JSON Secara Granular (Fallback jika JSON utuh mengalami cacat tanda baca lokal)
+ */
+function extractSectionsManually(text) {
+  if (!text || typeof text !== 'string') return null;
+  const result = {};
+
+  function extractChunk(keyName, isArray) {
+    const regex = new RegExp(`["']${keyName}["']\\s*:\\s*([\\{\\[])`);
+    const match = text.match(regex);
+    if (!match) return null;
+
+    const startIdx = match.index + match[0].length - 1;
+    const opener = match[1];
+    const closer = opener === '{' ? '}' : ']';
+    let depth = 0;
+    let inStr = false;
+    let esc = false;
+
+    for (let i = startIdx; i < text.length; i++) {
+      const c = text[i];
+      if (esc) { esc = false; continue; }
+      if (c === '\\') { esc = true; continue; }
+      if (c === '"') { inStr = !inStr; continue; }
+      if (!inStr) {
+        if (c === opener) depth++;
+        else if (c === closer) {
+          depth--;
+          if (depth === 0) {
+            const rawChunk = text.slice(startIdx, i + 1);
+            try {
+              return JSON.parse(rawChunk);
+            } catch (e) {
+              const cleanChunk = rawChunk
+                .replace(/,\s*([\}\]])/g, '$1')
+                .replace(/\/\*[\s\S]*?\*\//g, '');
+              try {
+                return JSON.parse(cleanChunk);
+              } catch (e2) {}
+            }
+            break;
+          }
+        }
+      }
+    }
+    return null;
+  }
+
+  function extractStringChunk(keyName) {
+    const regex = new RegExp(`["']${keyName}["']\\s*:\\s*"([\\s\\S]*?)"(?=\\s*[,\\}])`);
+    const match = text.match(regex);
+    return match ? match[1] : '';
+  }
+
+  result.desainPembelajaran = extractChunk('desainPembelajaran', false);
+  result.pengalamanBelajar = extractChunk('pengalamanBelajar', true);
+  result.identifikasiPesertaDidik = extractChunk('identifikasiPesertaDidik', true);
+  result.identifikasiMateri = extractChunk('identifikasiMateri', true);
+  result.dimensiProfil = extractChunk('dimensiProfil', true);
+  result.asesmen = extractChunk('asesmen', true);
+  result.refleksi = extractChunk('refleksi', false);
+  result.lkpd = extractChunk('lkpd', false);
+  result.rubrikPenilaian = extractChunk('rubrikPenilaian', true);
+  result.glosarium = extractChunk('glosarium', true);
+  result.daftarPustaka = extractChunk('daftarPustaka', true);
+  result.materiAjarDeskriptif = extractStringChunk('materiAjarDeskriptif') || '';
+  result.pengayaan = extractStringChunk('pengayaan') || '';
+  result.remedial = extractStringChunk('remedial') || '';
+
+  if (result.desainPembelajaran && Array.isArray(result.pengalamanBelajar) && result.pengalamanBelajar.length > 0) {
+    return result;
+  }
+  return null;
+}
+
+/**
  * Parser JSON AI Berketahanan Tinggi (Robust JSON Parser)
  * Mampu membersihkan markdown wrapper, komentar C-style, trailing comma, unescaped control chars,
  * serta secara cerdas memperbaiki penutupan kurung jika terpotong batas token.
@@ -2026,86 +2101,88 @@ function robustParseAiJson(rawText) {
 
   let text = rawText.trim();
 
-  // 1. Bersihkan markdown code fence jika ada
-  text = text.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').trim();
-
-  // 2. Coba parse langsung
+  // 1. Coba parse langsung jika output sudah JSON murni valid
   try {
     return JSON.parse(text);
   } catch (e) {}
 
+  // 2. Bersihkan markdown code fence jika ada
+  const mdMatch = text.match(/```(?:json)?\s*([\s\S]*?)\s*```/i);
+  if (mdMatch && mdMatch[1]) {
+    try {
+      return JSON.parse(mdMatch[1].trim());
+    } catch (e) {}
+    text = mdMatch[1].trim();
+  }
+
   // 3. Ekstrak substring dari kurung kurawal pertama hingga terakhir
   const firstBrace = text.indexOf('{');
   const lastBrace = text.lastIndexOf('}');
-  if (firstBrace === -1) return null;
+  if (firstBrace !== -1 && lastBrace > firstBrace) {
+    let sub = text.slice(firstBrace, lastBrace + 1);
 
-  let sub = lastBrace > firstBrace ? text.slice(firstBrace, lastBrace + 1) : text.slice(firstBrace);
+    try {
+      return JSON.parse(sub);
+    } catch (e) {}
 
-  // 4. Bersihkan komentar (/* ... */ dan // ...)
-  sub = sub.replace(/\/\*[\s\S]*?\*\//g, '');
-  sub = sub.replace(/(^|[^\\])\/\/.*$/gm, '$1');
+    // Bersihkan komentar multi-baris /* ... */ (JANGAN hapus // karena bisa memotong URL https://)
+    let cleaned = sub.replace(/\/\*[\s\S]*?\*\//g, '');
+    // Bersihkan trailing comma sebelum } atau ]
+    cleaned = cleaned.replace(/,\s*([}\]])/g, '$1');
 
-  // 5. Bersihkan trailing comma sebelum } atau ]
-  sub = sub.replace(/,\s*([}\]])/g, '$1');
+    try {
+      return JSON.parse(cleaned);
+    } catch (e) {}
 
-  // 6. Coba parse kembali
+    // Perbaiki literal newlines dan karakter kontrol di dalam string JSON
+    let inStr = false;
+    let isEsc = false;
+    let fixed = '';
+    for (let i = 0; i < cleaned.length; i++) {
+      const c = cleaned[i];
+      if (isEsc) {
+        fixed += c;
+        isEsc = false;
+        continue;
+      }
+      if (c === '\\') {
+        fixed += c;
+        isEsc = true;
+        continue;
+      }
+      if (c === '"') {
+        inStr = !inStr;
+        fixed += c;
+        continue;
+      }
+      if (inStr) {
+        if (c === '\n') fixed += '\\n';
+        else if (c === '\r') {}
+        else if (c === '\t') fixed += '\\t';
+        else if (c.charCodeAt(0) < 32) {}
+        else fixed += c;
+      } else {
+        fixed += c;
+      }
+    }
+
+    try {
+      return JSON.parse(fixed);
+    } catch (e) {}
+  }
+
+  // 4. Fallback: Ekstraksi independen per blok JSON modul
   try {
-    return JSON.parse(sub);
-  } catch (e) {}
-
-  // 7. Bersihkan unescaped control characters
-  sub = sub.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, ' ');
-
-  try {
-    return JSON.parse(sub);
-  } catch (e) {}
-
-  // 8. Perbaiki unclosed string dan kurung jika terpotong di akhir
-  let openBraces = 0;
-  let openBrackets = 0;
-  let inString = false;
-  let isEscaped = false;
-
-  for (let i = 0; i < sub.length; i++) {
-    const ch = sub[i];
-    if (isEscaped) {
-      isEscaped = false;
-      continue;
+    const sectionObj = extractSectionsManually(rawText);
+    if (sectionObj) {
+      console.log('[Robust JSON] Berhasil mengekstrak bagian modul secara modular.');
+      return sectionObj;
     }
-    if (ch === '\\') {
-      isEscaped = true;
-      continue;
-    }
-    if (ch === '"') {
-      inString = !inString;
-      continue;
-    }
-    if (!inString) {
-      if (ch === '{') openBraces++;
-      else if (ch === '}') openBraces--;
-      else if (ch === '[') openBrackets++;
-      else if (ch === ']') openBrackets--;
-    }
+  } catch (errSec) {
+    console.warn('[Robust JSON] Ekstraksi granular warning:', errSec);
   }
 
-  let patched = sub;
-  if (inString) patched += '"';
-  patched = patched.replace(/,\s*$/, '');
-  while (openBrackets > 0) {
-    patched += ']';
-    openBrackets--;
-  }
-  while (openBraces > 0) {
-    patched += '}';
-    openBraces--;
-  }
-
-  try {
-    return JSON.parse(patched);
-  } catch (errLast) {
-    console.warn('[Robust JSON Parse] Gagal parse teks AI:', errLast.message);
-    return null;
-  }
+  return null;
 }
 
 /**
@@ -2474,13 +2551,35 @@ FORMAT RESPONS — OUTPUT WAJIB JSON MURNI (VALID JSON TANPA TEKS PEMBUKA/PENUTU
   // ========================================================================
   const parsed = robustParseAiJson(aiRawText);
   if (!parsed) {
-    console.warn('[Generate] Raw text gagal diparse (150 chars):', aiRawText.slice(0, 150));
+    console.warn('[Generate] Raw text gagal diparse (first 250 chars):', aiRawText.slice(0, 250));
+    console.warn('[Generate] Raw text gagal diparse (last 250 chars):', aiRawText.slice(-250));
     throw new Error('Google Gemini mengembalikan format JSON yang belum lengkap. Silakan coba klik tombol Generate sekali lagi.');
   }
 
-  // Validasi: minimal memiliki pengalamanBelajar dan desainPembelajaran
-  if (!parsed.desainPembelajaran || !parsed.pengalamanBelajar || !Array.isArray(parsed.pengalamanBelajar)) {
-    throw new Error('Struktur modul yang dihasilkan Google Gemini belum lengkap. Silakan klik tombol Generate sekali lagi.');
+  // Normalisasi nama properti jika AI menggunakan sinonim
+  if (!parsed.pengalamanBelajar && parsed.alurPembelajaran) {
+    parsed.pengalamanBelajar = parsed.alurPembelajaran;
+  }
+  if (!parsed.pengalamanBelajar && parsed.kegiatanPembelajaran) {
+    parsed.pengalamanBelajar = parsed.kegiatanPembelajaran;
+  }
+  if (!parsed.desainPembelajaran && parsed.rancanganPembelajaran) {
+    parsed.desainPembelajaran = parsed.rancanganPembelajaran;
+  }
+
+  // Validasi: minimal memiliki pengalamanBelajar berbentuk array
+  if (!parsed.pengalamanBelajar || !Array.isArray(parsed.pengalamanBelajar) || parsed.pengalamanBelajar.length === 0) {
+    throw new Error('Struktur pengalaman belajar belum lengkap dari respon AI. Silakan klik tombol Generate kembali.');
+  }
+
+  if (!parsed.desainPembelajaran) {
+    parsed.desainPembelajaran = {
+      pemahamanBermakna: `Peserta didik menguasai konsep dan aplikasi nyata materi ${topik}.`,
+      pertanyaanPemantik: [
+        `Bagaimana materi ${topik} berkaitan dengan situasi nyata sehari-hari?`,
+        `Mengapa penguasaan ${topik} sangat krusial dalam bidang ${mapel}?`
+      ]
+    };
   }
 
   console.log('[Generate] AI berhasil menghasilkan output JSON valid dari master prompt.');
