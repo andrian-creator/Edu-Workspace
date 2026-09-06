@@ -305,7 +305,7 @@ async function getAvailableGeminiModels(apiKey) {
     try {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 2500);
-      const res = await fetch(`https://generativelanguage.googleapis.com/${ver}/models?key=${encodeURIComponent(apiKey)}`, {
+      const res = await fetch(`https://generativelanguage.googleapis.com/${ver}/models`, {
         signal: controller.signal,
         headers: {
           'x-goog-api-key': apiKey
@@ -616,7 +616,7 @@ function parseIdentifikasiAwal(rawText) {
 
 // Eksekusi Panggilan AI untuk Halaman Modul Ajar:
 // HANYA MENGGUNAKAN GOOGLE GEMINI API (TIDAK MENGGUNAKAN MODEL LAIN)
-async function callGeminiWithAccountKey(promptText, fallbackFn, customConfig) {
+async function callGeminiWithAccountKey(promptText, customConfig) {
   let apiKey = getEffectiveApiKey();
   if (!apiKey) {
     try {
@@ -643,17 +643,16 @@ async function callGeminiWithAccountKey(promptText, fallbackFn, customConfig) {
     } catch (e) { }
   }
 
-  // JIKA KUNCI GEMINI BELUM DISET:
+  // JIKA KUNCI GEMINI BELUM DISET DI AKUN PENGGUNA:
   if (!apiKey) {
-    if (fallbackFn) {
-      return cleanAiText(fallbackFn());
+    callGeminiWithAccountKey.lastError = 'Kunci API Google Gemini belum disimpan di akun Anda.';
+    if (!customConfig?.silentError) {
+      showNotificationModal(
+        'Kunci API Belum Disimpan',
+        'Fitur <strong>Generate With AI</strong> memerlukan API Key Google Gemini pada akun Anda.<br><br>Silakan buka menu <a href="../../dashboard-pengguna/api-key.html" style="color:#2563eb;font-weight:700;text-decoration:underline;">Kunci API</a> dan simpan API Key Google Gemini resmi Anda terlebih dahulu.',
+        'warning'
+      );
     }
-
-    showNotificationModal(
-      'API Key Belum Disimpan',
-      'Fitur "Generate With AI" memerlukan API Key Google Gemini pada akun Anda. Silakan masukkan dan simpan API Key Google Gemini Anda di menu API Key.',
-      'warning'
-    );
     return null;
   }
 
@@ -662,18 +661,13 @@ async function callGeminiWithAccountKey(promptText, fallbackFn, customConfig) {
   let candidateEndpoints = [];
 
   if (availableModels.length > 0) {
-    // Urutkan prioritas berdasarkan model aktif Google (mendukung v1beta & v1)
     const priorityChecks = [
-      m => m.rawName === 'gemini-3.5-flash',
+      m => m.rawName === 'gemini-2.5-flash',
+      m => m.rawName === 'gemini-2.0-flash',
       m => m.rawName === 'gemini-flash-latest',
-      m => m.rawName.includes('3.5-flash'),
-      m => m.rawName.includes('3.6-flash'),
-      m => m.rawName.includes('3.7-flash'),
-      m => m.rawName.includes('3-flash'),
-      m => m.rawName.includes('2.5-flash-lite'),
       m => m.rawName.includes('2.5-flash') && !m.rawName.includes('preview'),
-      m => m.rawName.includes('flash'),
       m => m.rawName.includes('2.0-flash'),
+      m => m.rawName.includes('flash'),
       m => m.rawName.includes('1.5-flash'),
       () => true
     ];
@@ -695,7 +689,7 @@ async function callGeminiWithAccountKey(promptText, fallbackFn, customConfig) {
     `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent`
   );
 
-  const uniqueEndpoints = Array.from(new Set(candidateEndpoints)).slice(0, 2);
+  const uniqueEndpoints = Array.from(new Set(candidateEndpoints)).slice(0, 3);
   let lastErrorMsg = '';
 
   const config = {
@@ -704,14 +698,15 @@ async function callGeminiWithAccountKey(promptText, fallbackFn, customConfig) {
     ...(customConfig || {})
   };
 
-  // Uji coba eksekusi hanya ke Google Gemini API
+  const reqTimeoutMs = (customConfig && customConfig.timeoutMs) ? customConfig.timeoutMs : 35000;
+
+  // Uji coba eksekusi nyata ke Google Gemini API
   for (const baseEndpoint of uniqueEndpoints) {
     try {
-      const url = `${baseEndpoint}?key=${encodeURIComponent(apiKey)}`;
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 20000); // Beri waktu 20 detik per endpoint agar Gemini selesai menyusun dokumen utuh
+      const timeoutId = setTimeout(() => controller.abort(), reqTimeoutMs);
 
-      const res = await fetch(url, {
+      const res = await fetch(baseEndpoint, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -730,7 +725,6 @@ async function callGeminiWithAccountKey(promptText, fallbackFn, customConfig) {
         const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
         if (text && text.trim()) {
           console.log('[Gemini API] Berhasil generate via Google Gemini:', baseEndpoint);
-          window._lastGeminiAuthFailed = false;
           return cleanAiText(text);
         }
       } else {
@@ -738,21 +732,29 @@ async function callGeminiWithAccountKey(promptText, fallbackFn, customConfig) {
         lastErrorMsg = errData?.error?.message || `HTTP ${res.status}`;
         if (res.status === 401 || res.status === 403 || lastErrorMsg.includes('UNAUTHENTICATED') || lastErrorMsg.includes('API key not valid')) {
           console.warn('[Gemini API] Google menolak kunci API (' + res.status + '):', lastErrorMsg);
-          window._lastGeminiAuthFailed = true;
+          lastErrorMsg = 'Kunci API Google Gemini pada akun Anda tidak valid atau ditolak Google (HTTP 401). Silakan periksa kembali di menu Kunci API.';
+          break;
+        } else if (res.status === 429) {
+          lastErrorMsg = 'Batas kuota Google Gemini API akun Anda tercapai (HTTP 429 - Rate Limit). Silakan tunggu beberapa menit.';
           break;
         }
       }
     } catch (e) {
-      lastErrorMsg = e.name === 'AbortError' ? 'Batas waktu koneksi Google Gemini terlampaui (timeout)' : (e.message || 'Koneksi terputus');
+      lastErrorMsg = e.name === 'AbortError' ? `Batas waktu koneksi Google Gemini (${Math.round(reqTimeoutMs / 1000)} detik) terlampaui` : (e.message || 'Koneksi ke Google Gemini terputus');
     }
   }
 
+  callGeminiWithAccountKey.lastError = lastErrorMsg;
+
+  // Jika gagal, tampilkan pesan error resmi dari Google Gemini — JANGAN MENGGUNAKAN TEMPLATE JAWABAN
   console.warn('[Gemini API] Google Gemini tidak merespon:', lastErrorMsg);
-
-  if (fallbackFn) {
-    return cleanAiText(fallbackFn());
+  if (!customConfig?.silentError) {
+    showNotificationModal(
+      'Generate AI Gagal',
+      `Google Gemini tidak dapat merumuskan konten: ${lastErrorMsg}. Pastikan Kunci API Google Gemini Anda valid dan tersimpan di menu Kunci API.`,
+      'error'
+    );
   }
-
   return null;
 }
 
@@ -827,9 +829,7 @@ ATURAN FORMAT OUTPUT SANGAT KETAT:
 2. DILARANG MENAMBAHKAN KATA PEMBUKA, SALAM, PENJELASAN, ATAU PENUTUP APAPUN.
 3. DILARANG MENGGUNAKAN NOMOR (1, 2, 3), BULLET POINT, ATAU TANDA BINTANG (* ATAU **).`;
 
-  const fallback = () => getElemenCPFallback(mapel, jenjang, faseKelas, jurusan);
-
-  const result = await callGeminiWithAccountKey(prompt, fallback);
+  const result = await callGeminiWithAccountKey(prompt);
   if (result) {
     targetArea.value = cleanElemenCP(result);
   } else if (targetArea.value.startsWith('Mohon tunggu')) {
@@ -886,13 +886,7 @@ ATURAN WAJIB SANGAT KETAT:
 3. DILARANG MENGGUNAKAN TANDA BINTANG (* ATAU **) SAMA SEKALI. DILARANG MENGGUNAKAN MARKDOWN BOLD.
 4. Tuliskan teks biasa/polos (plain text) 1., 2., 3. sampai selesai tuntas.`;
 
-  const fallback = () => {
-    return `1. Melalui model ${ctx.model}, peserta didik mampu menganalisis karakteristik utama dari ${ctx.topik} secara kritis dan mendalam.\n` +
-           `2. Melalui diskusi kelompok berbasis ${ctx.pendekatan}, peserta didik dapat mengidentifikasi penerapan konsep ${ctx.topik} dalam kehidupan sehari-hari dengan percaya diri.\n` +
-           `3. Peserta didik mampu menyajikan hasil karya pemecahan masalah terkait ${ctx.topik} sesuai elemen ${ctx.elemenCP} secara kolaboratif dan sistematis.`;
-  };
-
-  const result = await callGeminiWithAccountKey(prompt, fallback);
+  const result = await callGeminiWithAccountKey(prompt);
   if (result) {
     targetArea.value = cleanTujuanPembelajaran(result);
   } else if (targetArea.value.startsWith('Mohon tunggu')) {
@@ -948,13 +942,7 @@ ATURAN WAJIB SANGAT KETAT:
 4. DILARANG MENGGUNAKAN TANDA BINTANG (* ATAU **) SAMA SEKALI. DILARANG MENGGUNAKAN MARKDOWN BOLD.
 5. Gunakan format nomor 1., 2., 3. dalam teks polos.`;
 
-  const fallback = () => {
-    return `1. Konsep Kunci Esensial: Pemahaman struktur, prinsip dasar, dan terminologi baku dari ${ctx.topik}.\n` +
-           `2. Studi Kasus Nyata: Analisis peristiwa aktual kontekstual yang mencerminkan penerapan konsep ${ctx.topik} pada kehidupan sehari-hari.\n` +
-           `3. Pengayaan Kontekstual: Eksplorasi tantangan kontekstual serta solusi inovatif berbasis elemen ${ctx.elemenCP}.`;
-  };
-
-  const result = await callGeminiWithAccountKey(prompt, fallback);
+  const result = await callGeminiWithAccountKey(prompt);
   if (result) {
     targetArea.value = cleanMateriTambahan(result);
   } else if (targetArea.value.startsWith('Mohon tunggu')) {
@@ -1019,14 +1007,7 @@ ATURAN WAJIB SANGAT KETAT:
 3. DILARANG MENGGUNAKAN TANDA BINTANG (* ATAU **) SAMA SEKALI. DILARANG MENGGUNAKAN MARKDOWN BOLD.
 4. Tulis langsung narasi polos yang padat dan selesai tuntas sampai tanda titik.${isRingkasCP ? '\n5. Pastikan rumusan narasi CP secara eksplisit berpusat pada penguasaan topik ' + ctx.topik + '.' : ''}`;
 
-  const fallback = () => {
-    if (isRingkasCP) {
-      return `Pada akhir ${ctx.fase}, peserta didik mampu menguasai elemen ${ctx.elemenCP} secara spesifik dan mendalam pada materi ${ctx.topik}. Peserta didik mampu memahami konsep esensial, menerapkan prosedur secara tepat, serta memecahkan permasalahan nyata yang berkaitan langsung dengan ${ctx.topik} secara kritis dan mandiri.`;
-    }
-    return `Pada akhir ${ctx.fase}, peserta didik memiliki kemampuan komprehensif pada elemen ${ctx.elemenCP} dalam mata pelajaran ${ctx.mapel}. Peserta didik mampu memahami, menganalisis, serta mengaplikasikan konsep ${ctx.topik} secara mandiri dan bernalar kritis dalam menyelesaikan permasalahan kontekstual di lingkungan belajar maupun kehidupan bermasyarakat.`;
-  };
-
-  const result = await callGeminiWithAccountKey(prompt, fallback);
+  const result = await callGeminiWithAccountKey(prompt);
   if (result) {
     targetArea.value = cleanCapaianPembelajaran(result);
   } else if (targetArea.value.startsWith('Mohon tunggu')) {
@@ -1095,16 +1076,7 @@ ATURAN SANGAT KETAT:
 [PROFIL]
 (Tuliskan narasi ringkas dimensi profil lulusan di sini)`;
 
-  const fallback = () => {
-    return `[PESERTA]\n` +
-           `Sebagian besar peserta didik memiliki pemahaman dasar terkait konsep pengantar, namun membutuhkan panduan bertahap pada analisis tingkat tinggi. Gaya belajar bervariasi dengan dominasi visual dan kinestetik yang memerlukan media interaktif.\n` +
-           `[MATERI]\n` +
-           `Materi ${ctx.topik} memiliki tingkat abstraksi sedang hingga tinggi yang menuntut penguasaan prasyarat konsep dasar. Potensi miskonsepsi sering terjadi pada generalisasi contoh kasus tanpa landasan teori yang memadai.\n` +
-           `[PROFIL]\n` +
-           `Penanaman penalaran kritis melalui telaah kasus, kolaborasi dalam diskusi kelompok kerja, serta komunikasi efektif dalam mempresentasikan temuan solusi.`;
-  };
-
-  const result = await callGeminiWithAccountKey(prompt, fallback);
+  const result = await callGeminiWithAccountKey(prompt);
   if (result) {
     const parsed = parseIdentifikasiAwal(result);
 
@@ -1809,6 +1781,17 @@ async function proceedGenerateModul() {
     return;
   }
 
+  // Validasi: Pastikan Kunci API Google Gemini sudah tersimpan di akun pengguna
+  const activeApiKey = getEffectiveApiKey();
+  if (!activeApiKey) {
+    showNotificationModal(
+      'Kunci API Belum Disimpan',
+      'Fitur <strong>Generate Modul Ajar</strong> memerlukan API Key Google Gemini pada akun Anda.<br><br>Silakan buka menu <a href="../../dashboard-pengguna/api-key.html" style="color:#2563eb;font-weight:700;text-decoration:underline;">Kunci API</a> dan simpan API Key Google Gemini resmi Anda terlebih dahulu.',
+      'warning'
+    );
+    return;
+  }
+
   // Kumpulkan Seluruh Data Lengkap dari Tahap 1 dan Tahap 2
   const modulPayload = collectCurrentFormPayload();
 
@@ -1845,19 +1828,18 @@ async function proceedGenerateModul() {
 
     if (barEl) barEl.style.width = '15%';
     if (percentEl) percentEl.textContent = '15%';
-    if (stepTextEl) stepTextEl.textContent = 'Menghubungkan ke AI dan menganalisis parameter pembelajaran...';
+    if (stepTextEl) stepTextEl.textContent = 'Menghubungkan ke Google Gemini API...';
 
     const progressSteps = [
-      { p: 30, text: 'Merumuskan tujuan pembelajaran, profil & pendekatan...' },
-      { p: 55, text: 'Menyusun alur kegiatan & pengalaman belajar per pertemuan...' },
-      { p: 75, text: 'Menyusun materi ajar deskriptif, instrumen asesmen & LKPD...' },
+      { p: 25, text: 'Menganalisis parameter pembelajaran dan menyusun master prompt...' },
+      { p: 45, text: 'Google Gemini sedang merumuskan tujuan & sintaks pembelajaran...' },
+      { p: 70, text: 'Menyusun alur pengalaman belajar, materi deskriptif & LKPD per pertemuan...' },
       { p: 88, text: 'Sedang memproses perumusan & verifikasi struktur dokumen...' }
     ];
     let stepIndex = 0;
     let currentPct = 15;
 
     // Interval progres berjalan halus, dibatasi maksimal 92% selama AI masih bekerja
-    // JIKA BELUM SELESAI JANGAN TERTULIS 100% — BUAT TETAP STATUS PROSES
     const progressTimer = setInterval(() => {
       if (stepIndex < progressSteps.length) {
         const item = progressSteps[stepIndex];
@@ -1874,23 +1856,36 @@ async function proceedGenerateModul() {
     }, 1500);
 
     try {
-      // Panggil AI dengan batas waktu 25 detik (Promise.race)
-      // Memberikan waktu yang cukup bagi Google Gemini menyusun dokumen utuh multi-pertemuan
-      const AI_MAX_TIMEOUT_MS = 25000;
+      // Panggil AI dengan batas waktu 60 detik (Promise.race)
+      const AI_MAX_TIMEOUT_MS = 60000;
       const aiContent = await Promise.race([
         generateFullModulWithAI(modulPayload),
         new Promise((_, reject) =>
-          setTimeout(() => reject(new Error('Batas waktu AI 25 detik terlampaui')), AI_MAX_TIMEOUT_MS)
+          setTimeout(() => reject(new Error('Batas waktu koneksi Google Gemini (60 detik) terlampaui. Silakan coba klik Generate lagi.')), AI_MAX_TIMEOUT_MS)
         )
       ]);
-      modulPayload.aiGeneratedContent = aiContent || buildComprehensiveAiModulContent(modulPayload);
-    } catch (e) {
-      console.warn('AI generation timeout/error, applying comprehensive fallback immediately:', e);
-      try {
-        modulPayload.aiGeneratedContent = buildComprehensiveAiModulContent(modulPayload);
-      } catch (errBuild) {
-        console.warn('Fallback builder error, safe assign:', errBuild);
+
+      if (!aiContent) {
+        throw new Error('Google Gemini API tidak mengembalikan konten modul.');
       }
+
+      modulPayload.aiGeneratedContent = aiContent;
+    } catch (e) {
+      clearInterval(progressTimer);
+      console.error('[Generate] AI generation error:', e);
+      if (progressContainer) progressContainer.style.display = 'none';
+      if (btnGenerate) btnGenerate.disabled = false;
+      if (btnUbahKonteks) {
+        btnUbahKonteks.disabled = false;
+        btnUbahKonteks.style.opacity = '1';
+        btnUbahKonteks.style.cursor = 'pointer';
+      }
+      showNotificationModal(
+        'Generate Modul Gagal',
+        `Google Gemini belum berhasil menyusun Modul Ajar: <strong>${e.message || 'Koneksi terputus atau tidak ada respon'}</strong>.<br><br>Pastikan Kunci API Google Gemini Anda valid dan tersimpan di menu Kunci API, lalu coba klik tombol <strong>Generate Modul Ajar</strong> kembali.`,
+        'error'
+      );
+      return;
     } finally {
       clearInterval(progressTimer);
     }
@@ -2363,54 +2358,58 @@ FORMAT RESPONS — OUTPUT WAJIB JSON MURNI (VALID JSON TANPA TEKS PEMBUKA/PENUTU
 
   let aiRawText = null;
   try {
-    aiRawText = await callGeminiWithAccountKey(masterPrompt, null, {
+    aiRawText = await callGeminiWithAccountKey(masterPrompt, {
       maxOutputTokens: 8192,
-      temperature: 0.85,   // Lebih tinggi agar output lebih variatif setiap input berbeda
+      temperature: 0.85,
       topP: 0.95,
-      topK: 40
+      topK: 40,
+      timeoutMs: 60000,
+      silentError: true
     });
   } catch (e) {
     console.warn('[Generate] Gemini API call error:', e);
   }
 
-  // ========================================================================
-  // STEP 4: PARSING RESPONSE JSON DARI AI
-  // ========================================================================
-  if (aiRawText && aiRawText.trim()) {
-    try {
-      // Hapus markdown wrapping jika ada
-      let cleanJsonStr = aiRawText
-        .replace(/```json\s*/gi, '')
-        .replace(/```\s*/g, '')
-        .trim();
-
-      // Ekstrak JSON object dari response
-      const matchJson = cleanJsonStr.match(/\{[\s\S]*\}/);
-      if (matchJson) {
-        const parsed = JSON.parse(matchJson[0]);
-        // Validasi: minimal memiliki pengalamanBelajar dan desainPembelajaran
-        if (parsed && parsed.desainPembelajaran && parsed.pengalamanBelajar && Array.isArray(parsed.pengalamanBelajar)) {
-          console.log('[Generate] AI berhasil menghasilkan output JSON valid dari master prompt.');
-          ensureCompleteMeetings(parsed, targetPertemuanCount, modulPayload);
-          return parsed;
-        }
-      }
-    } catch (parseErr) {
-      console.warn('[Generate] Gagal parse JSON dari AI response:', parseErr.message);
-      console.warn('[Generate] AI raw text (200 chars):', aiRawText?.slice(0, 200));
-    }
+  if (!aiRawText || !aiRawText.trim()) {
+    const lastErr = callGeminiWithAccountKey.lastError || 'Google Gemini API tidak mengembalikan respon.';
+    throw new Error(lastErr);
   }
 
   // ========================================================================
-  // STEP 5: FALLBACK — Jika AI tidak merespons, gunakan generator terstruktur
-  // yang juga sepenuhnya berbasis data input terbaru (bukan template statis).
+  // STEP 4: PARSING RESPONSE JSON DARI AI
   // ========================================================================
-  console.warn('[Generate] AI tidak merespons atau parse gagal. Menggunakan generator lokal berbasis data input.');
-  return buildComprehensiveAiModulContent(modulPayload);
+  // Hapus markdown wrapping jika ada
+  let cleanJsonStr = aiRawText
+    .replace(/```json\s*/gi, '')
+    .replace(/```\s*/g, '')
+    .trim();
+
+  // Ekstrak JSON object dari response
+  const matchJson = cleanJsonStr.match(/\{[\s\S]*\}/);
+  if (!matchJson) {
+    throw new Error('Respon dari Google Gemini belum berupa format JSON yang terstruktur. Silakan coba klik tombol Generate sekali lagi.');
+  }
+
+  let parsed = null;
+  try {
+    parsed = JSON.parse(matchJson[0]);
+  } catch (parseErr) {
+    console.warn('[Generate] Gagal parse JSON dari AI response:', parseErr.message);
+    throw new Error('Google Gemini mengembalikan format JSON yang belum lengkap. Silakan coba klik tombol Generate sekali lagi.');
+  }
+
+  // Validasi: minimal memiliki pengalamanBelajar dan desainPembelajaran
+  if (!parsed || !parsed.desainPembelajaran || !parsed.pengalamanBelajar || !Array.isArray(parsed.pengalamanBelajar)) {
+    throw new Error('Struktur modul yang dihasilkan Google Gemini belum lengkap. Silakan klik tombol Generate sekali lagi.');
+  }
+
+  console.log('[Generate] AI berhasil menghasilkan output JSON valid dari master prompt.');
+  ensureCompleteMeetings(parsed, targetPertemuanCount, modulPayload);
+  return parsed;
 }
 
 /**
- * Pastikan Seluruh Pertemuan (1 s/d targetCount) Tersedia Lengkap
+ * Pastikan Seluruh Pertemuan (1 s/d targetCount) Tersedia Lengkap Berdasarkan Konten AI
  */
 function ensureCompleteMeetings(aiData, targetCount, p) {
   if (!aiData) return;
@@ -2418,17 +2417,15 @@ function ensureCompleteMeetings(aiData, targetCount, p) {
     aiData.pengalamanBelajar = [];
   }
   const currentCount = aiData.pengalamanBelajar.length;
-  if (currentCount >= targetCount) return;
+  if (currentCount >= targetCount || currentCount === 0) return;
 
   console.log(`[Pertemuan] Melengkapi pengalamanBelajar dari ${currentCount} pertemuan menjadi ${targetCount} pertemuan...`);
-  const fullFallback = buildComprehensiveAiModulContent({ ...p, jumlahPertemuan: `${targetCount} Pertemuan` });
-  const fallbackMeetings = fullFallback?.pengalamanBelajar || [];
-
   for (let i = currentCount + 1; i <= targetCount; i++) {
-    const fallbackItem = fallbackMeetings.find(m => m.pertemuan === i) || fallbackMeetings[(i - 1) % fallbackMeetings.length];
-    if (fallbackItem) {
-      const copy = JSON.parse(JSON.stringify(fallbackItem));
+    const baseItem = aiData.pengalamanBelajar[(i - 1) % currentCount];
+    if (baseItem) {
+      const copy = JSON.parse(JSON.stringify(baseItem));
       copy.pertemuan = i;
+      copy.tahap = `Pertemuan ${i} (Lanjutan Penerapan & Evaluasi)`;
       aiData.pengalamanBelajar.push(copy);
     }
   }

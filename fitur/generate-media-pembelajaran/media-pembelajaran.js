@@ -464,7 +464,7 @@ Format Keluaran WAJIB berupa JSON ARRAY murni tanpa teks pembuka atau penutup ma
     let slidesData = parseSlideJsonResponse(aiResponse);
 
     if (!slidesData || slidesData.length === 0) {
-      slidesData = createFallbackSlides(mapel, materi, kelas, targetSlideCount);
+      throw new Error("Google Gemini AI belum berhasil merumuskan outline slide. Silakan coba klik tombol Generate Outline Slide kembali.");
     }
 
     currentOutlineSlides = slidesData;
@@ -1449,7 +1449,7 @@ async function callGeminiApi(apiKey, promptText) {
   for (const model of models) {
     try {
       updateSub(`Menghubungkan ke Gemini AI (${model})...`);
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(apiKey)}`;
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
 
       const controller = new AbortController();
       const timeout = setTimeout(() => controller.abort(), 35000);

@@ -1092,7 +1092,7 @@
       const expectedMeetings = matchExpected ? Math.min(Math.max(parseInt(matchExpected[0]), 1), 16) : 4;
       const hasFewerMeetings = ai && Array.isArray(ai.pengalamanBelajar) && ai.pengalamanBelajar.length < expectedMeetings;
 
-      if (!ai || (isPjBL && isOldPblTemplate) || hasMismatchedDeepLearning || hasMismatchedInquiry || hasMismatchedPraktikPedagogis) {
+      if (!ai) {
         ai = buildComprehensiveAiModulContent(data);
         data.aiGeneratedContent = ai;
         try {
@@ -1393,17 +1393,15 @@
         aiData.pengalamanBelajar = [];
       }
       const currentCount = aiData.pengalamanBelajar.length;
-      if (currentCount >= targetCount) return;
+      if (currentCount >= targetCount || currentCount === 0) return;
 
       console.log(`[Pertemuan] Melengkapi pengalamanBelajar dari ${currentCount} pertemuan menjadi ${targetCount} pertemuan...`);
-      const fullFallback = buildComprehensiveAiModulContent({ ...p, jumlahPertemuan: `${targetCount} Pertemuan` });
-      const fallbackMeetings = fullFallback?.pengalamanBelajar || [];
-
       for (let i = currentCount + 1; i <= targetCount; i++) {
-        const fallbackItem = fallbackMeetings.find(m => m.pertemuan === i) || fallbackMeetings[(i - 1) % fallbackMeetings.length];
-        if (fallbackItem) {
-          const copy = JSON.parse(JSON.stringify(fallbackItem));
+        const baseItem = aiData.pengalamanBelajar[(i - 1) % currentCount];
+        if (baseItem) {
+          const copy = JSON.parse(JSON.stringify(baseItem));
           copy.pertemuan = i;
+          copy.tahap = `Pertemuan ${i} (Lanjutan Penerapan & Evaluasi)`;
           aiData.pengalamanBelajar.push(copy);
         }
       }
