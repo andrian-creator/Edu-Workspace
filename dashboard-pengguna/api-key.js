@@ -243,13 +243,29 @@ function setGeminiBadgeError(errorMsg) {
 }
 
 async function verifyGeminiKeySilently(key) {
-  if (!key.startsWith('AIza')) {
-    setGeminiBadgeError("Format kunci tidak sesuai standar Google Gemini (harus diawali 'AIzaSy...')");
+  const isAQ = key.startsWith('AQ.');
+  const isAIza = key.startsWith('AIza');
+  if (!isAQ && !isAIza) {
+    setGeminiBadgeError("Format kunci tidak sesuai standar Google Gemini (harus diawali 'AQ.' atau 'AIza')");
     return;
   }
   try {
-    const testUrl = `https://generativelanguage.googleapis.com/v1beta/models?key=${encodeURIComponent(key)}`;
-    const response = await fetch(testUrl, { method: 'GET' });
+    // 1. Coba verifikasi dengan header x-goog-api-key (standar resmi untuk kunci AQ dan AIza)
+    let response = await fetch('https://generativelanguage.googleapis.com/v1beta/models', {
+      method: 'GET',
+      headers: {
+        'x-goog-api-key': key
+      }
+    });
+
+    // 2. Fallback via query parameter jika header ditolak
+    if (!response.ok) {
+      const qRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${encodeURIComponent(key)}`, {
+        method: 'GET'
+      });
+      if (qRes.ok) response = qRes;
+    }
+
     if (response.ok) {
       setGeminiBadgeSuccess();
     } else {
@@ -456,9 +472,16 @@ async function saveAndTestApiKey() {
     return;
   }
 
-  if (!key.startsWith('AIza')) {
-    setGeminiBadgeError("Format kunci tidak sesuai standar Google Gemini (harus diawali 'AIzaSy...')");
-    showNotificationModal('Format Kunci Salah', "Format kunci Google Gemini tidak sesuai (harus diawali 'AIzaSy...'). Tanda koneksi tidak akan hijau.", 'error');
+  const isAQ = key.startsWith('AQ.');
+  const isAIza = key.startsWith('AIza');
+
+  if (!isAQ && !isAIza) {
+    setGeminiBadgeError("Format kunci tidak sesuai (harus diawali 'AQ.' atau 'AIza')");
+    showNotificationModal(
+      'Format Kunci Salah',
+      "Format kunci Google Gemini tidak sesuai. Kunci resmi dari Google AI Studio diawali dengan 'AQ.' (format baru) atau 'AIza' (format lama). Silakan periksa kembali.",
+      'error'
+    );
     return;
   }
 
@@ -510,18 +533,39 @@ async function saveAndTestApiKey() {
   let errorMsg = '';
 
   try {
-    const testUrl = `https://generativelanguage.googleapis.com/v1beta/models?key=${encodeURIComponent(key)}`;
-    const response = await fetch(testUrl, { method: 'GET' });
+    // 1. Coba verifikasi dengan header x-goog-api-key (standar resmi untuk kunci AQ dan AIza)
+    let response = await fetch('https://generativelanguage.googleapis.com/v1beta/models', {
+      method: 'GET',
+      headers: {
+        'x-goog-api-key': key
+      }
+    });
+
+    // 2. Fallback via query parameter jika diperlukan
+    if (!response.ok) {
+      const qRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${encodeURIComponent(key)}`, {
+        method: 'GET'
+      });
+      if (qRes.ok) response = qRes;
+    }
 
     if (response.ok) {
       isConnected = true;
     } else {
       isConnected = false;
+      let errData = {};
       try {
-        const errData = await response.json();
-        errorMsg = errData.error && errData.error.message ? errData.error.message : `HTTP ${response.status}`;
-      } catch (e) {
+        errData = await response.json();
+      } catch (e) {}
+
+      if (errData && errData.error && errData.error.message) {
+        errorMsg = errData.error.message;
+      } else {
         errorMsg = `HTTP ${response.status}`;
+      }
+
+      if (errorMsg.includes('ACCESS_TOKEN_TYPE_UNSUPPORTED') || errorMsg.includes('UNAUTHENTICATED')) {
+        errorMsg = "Autentikasi ditolak Google. Pastikan kunci telah diaktifkan di Google AI Studio (buka aistudio.google.com/app/apikey) dan seluruh karakter kunci tersalin lengkap.";
       }
     }
   } catch (err) {

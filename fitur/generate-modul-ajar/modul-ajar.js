@@ -306,7 +306,10 @@ async function getAvailableGeminiModels(apiKey) {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 4000);
       const res = await fetch(`https://generativelanguage.googleapis.com/${ver}/models?key=${encodeURIComponent(apiKey)}`, {
-        signal: controller.signal
+        signal: controller.signal,
+        headers: {
+          'x-goog-api-key': apiKey
+        }
       });
       clearTimeout(timeoutId);
       if (res.ok) {
@@ -700,7 +703,10 @@ async function callGeminiWithAccountKey(promptText, fallbackFn, customConfig) {
 
       const res = await fetch(url, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'x-goog-api-key': apiKey
+        },
         body: JSON.stringify({
           contents: [{ parts: [{ text: promptText }] }],
           generationConfig: config
