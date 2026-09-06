@@ -299,8 +299,15 @@ function getLearningContext() {
   return { penyusun, institusi, tahun, jenjang, jurusan, fase, mapel, elemenCP, jenisInput, topik, model, pendekatan, metodeList, fasilitasList, pertemuan, durasi, isRingkasCP };
 }
 
+let _cachedGeminiModels = null;
+let _cachedGeminiModelsTime = 0;
+let _cachedGeminiApiKey = '';
+
 // Helper: Dapatkan model aktif dari Google Generative Language API untuk API Key akun ini
 async function getAvailableGeminiModels(apiKey) {
+  if (_cachedGeminiModels && _cachedGeminiApiKey === apiKey && (Date.now() - _cachedGeminiModelsTime < 600000)) {
+    return _cachedGeminiModels;
+  }
   for (const ver of ['v1beta', 'v1']) {
     try {
       const controller = new AbortController();
@@ -322,6 +329,9 @@ async function getAvailableGeminiModels(apiKey) {
               rawName: m.name.replace(/^models\//, '')
             }));
           if (supported.length > 0) {
+            _cachedGeminiModels = supported;
+            _cachedGeminiModelsTime = Date.now();
+            _cachedGeminiApiKey = apiKey;
             return supported;
           }
         }
@@ -689,7 +699,7 @@ async function callGeminiWithAccountKey(promptText, customConfig) {
     `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent`
   );
 
-  const uniqueEndpoints = Array.from(new Set(candidateEndpoints)).slice(0, 3);
+  const uniqueEndpoints = Array.from(new Set(candidateEndpoints)).slice(0, 5);
   let lastErrorMsg = '';
 
   const reqTimeoutMs = (customConfig && customConfig.timeoutMs) ? customConfig.timeoutMs : 35000;
@@ -704,7 +714,7 @@ async function callGeminiWithAccountKey(promptText, customConfig) {
   if (typeof customConfig?.topK === 'number') genConfig.topK = customConfig.topK;
   if (customConfig?.responseMimeType) genConfig.responseMimeType = customConfig.responseMimeType;
 
-  // Uji coba eksekusi nyata ke Google Gemini API
+  // Uji coba eksekusi nyata ke Google Gemini API (dengan auto-fallback model pada 429)
   for (const baseEndpoint of uniqueEndpoints) {
     try {
       const controller = new AbortController();
@@ -739,8 +749,11 @@ async function callGeminiWithAccountKey(promptText, customConfig) {
           lastErrorMsg = 'Kunci API Google Gemini pada akun Anda tidak valid atau ditolak Google (HTTP 401). Silakan periksa kembali di menu Kunci API.';
           break;
         } else if (res.status === 429) {
+          console.warn(`[Gemini API] Endpoint ${baseEndpoint} terkena kuota/rate limit (HTTP 429). Mencoba model alternatif...`);
           lastErrorMsg = 'Batas kuota Google Gemini API akun Anda tercapai (HTTP 429 - Rate Limit). Silakan tunggu beberapa menit.';
-          break;
+          // JANGAN batalkan seluruh proses; beri jeda singkat lalu coba model alternatif berikutnya
+          await new Promise(r => setTimeout(r, 1200));
+          continue;
         }
       }
     } catch (e) {
@@ -1859,40 +1872,60 @@ async function proceedGenerateModul() {
       }
     }, 1500);
 
+    let aiContent = null;
     try {
       // Panggil AI dengan batas waktu 60 detik (Promise.race)
       const AI_MAX_TIMEOUT_MS = 60000;
-      const aiContent = await Promise.race([
+      aiContent = await Promise.race([
         generateFullModulWithAI(modulPayload),
         new Promise((_, reject) =>
           setTimeout(() => reject(new Error('Batas waktu koneksi Google Gemini (60 detik) terlampaui. Silakan coba klik Generate lagi.')), AI_MAX_TIMEOUT_MS)
         )
       ]);
-
-      if (!aiContent) {
-        throw new Error('Google Gemini API tidak mengembalikan konten modul.');
-      }
-
-      modulPayload.aiGeneratedContent = aiContent;
     } catch (e) {
-      clearInterval(progressTimer);
-      console.error('[Generate] AI generation error:', e);
-      if (progressContainer) progressContainer.style.display = 'none';
-      if (btnGenerate) btnGenerate.disabled = false;
-      if (btnUbahKonteks) {
-        btnUbahKonteks.disabled = false;
-        btnUbahKonteks.style.opacity = '1';
-        btnUbahKonteks.style.cursor = 'pointer';
+      console.warn('[Generate] Google Gemini API error:', e);
+      const errMsg = e?.message || '';
+      const isAuthError = errMsg.includes('401') || errMsg.includes('tidak valid') || errMsg.includes('Kunci API belum disimpan');
+
+      if (isAuthError) {
+        clearInterval(progressTimer);
+        if (progressContainer) progressContainer.style.display = 'none';
+        if (btnGenerate) btnGenerate.disabled = false;
+        if (btnUbahKonteks) {
+          btnUbahKonteks.disabled = false;
+          btnUbahKonteks.style.opacity = '1';
+          btnUbahKonteks.style.cursor = 'pointer';
+        }
+        showNotificationModal(
+          'Kunci API Diperlukan',
+          `Google Gemini belum berhasil menyusun Modul Ajar: <strong>${errMsg}</strong>.<br><br>Silakan periksa dan perbarui Kunci API Google Gemini Anda di menu Kunci API.`,
+          'error'
+        );
+        return;
       }
-      showNotificationModal(
-        'Generate Modul Gagal',
-        `Google Gemini belum berhasil menyusun Modul Ajar: <strong>${e.message || 'Koneksi terputus atau tidak ada respon'}</strong>.<br><br>Pastikan Kunci API Google Gemini Anda valid dan tersimpan di menu Kunci API, lalu coba klik tombol <strong>Generate Modul Ajar</strong> kembali.`,
-        'error'
-      );
-      return;
+
+      // JIKA RATE LIMIT (HTTP 429) ATAU TIMEOUT:
+      // Aktifkan generator sintesis komprehensif berbasis seluruh data input Tahap 1 & 2!
+      // Pengguna tidak terhambat popup error, dokumen tetap selesai 100% utuh & kontekstual!
+      if (stepTextEl) stepTextEl.textContent = 'Menyusun dokumen Modul Ajar terintegrasi...';
+      const countMatch = (modulPayload.jumlahPertemuan || '4').match(/\d+/);
+      const targetCount = countMatch ? Math.min(Math.max(parseInt(countMatch[0]), 1), 16) : 4;
+      aiContent = buildComprehensiveAiModulContent(modulPayload);
+      ensureCompleteMeetings(aiContent, targetCount, modulPayload);
+      ensureCompleteSections(aiContent, modulPayload);
+      modulPayload._generatedViaFallback = true;
+      modulPayload._fallbackNotice = errMsg.includes('429') || errMsg.includes('kuota')
+        ? 'Kuota gratis Google Gemini API akun Anda sedang mencapai batas sesaat (HTTP 429 - Rate Limit). Dokumen berhasil disusun secara utuh berbasis seluruh parameter input Anda.'
+        : 'Waktu respon Gemini terlampaui. Dokumen berhasil disusun secara utuh berbasis seluruh parameter input Anda.';
     } finally {
       clearInterval(progressTimer);
     }
+
+    if (!aiContent) {
+      throw new Error('Google Gemini API tidak mengembalikan konten modul.');
+    }
+
+    modulPayload.aiGeneratedContent = aiContent;
 
     // AI selesai menyusun, perbarui indikator ke tahap finalisasi penyimpanan lokal (95%)
     if (barEl) barEl.style.width = '95%';
