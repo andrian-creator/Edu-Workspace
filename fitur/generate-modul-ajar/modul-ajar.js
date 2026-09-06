@@ -2487,13 +2487,13 @@ ATURAN WAJIB DAN MENGIKAT — PELANGGARAN TIDAK DIIZINKAN:
      Pembahasan materi teknis WAJIB mencakup pemahaman mendalam tentang Anatomi Huruf, Klasifikasi Typeface, Kerning, Tracking, Leading, Hierarki Tipografi, Legibility & Readability, Variable Font & Responsif, serta Grid System tata letak.
      DILARANG KERAS MEMASUKKAN ISTILAH KAMERA/TATA KAMERA KE DALAM MATERI TIPOGRAFI ATAU DESAIN GRAFIS!
    - DILARANG KERAS MENULIS NARASI META SEPERTI: "Dalam konteks pembelajaran di SMK...", "Penerapan model Project Based Learning berbasis pendekatan TPACK terbukti...", "Melalui sintaks PjBL peserta didik dilatih...". Naskah materi ajar adalah bahan ajar teknis/keilmuan murni untuk penguasaan materi "${topik}"!
-   - Tuliskan dengan format teks terstruktur yang rapi: gunakan sub-judul bernomor (contoh: "1. Konsep Dasar ...", "2. Karakteristik & Prinsip Kerja ...", "3. Standar Operasional ..."), serta paragraf penjelasan ilmiah yang mendalam dan tuntas. Tabel ringkasan/parameter teknis TIDAK WAJIB ADA; namun jika dibutuhkan data komparasi atau spesifikasi teknis terstruktur, tabel Markdown dapat disertakan.
+   - Tuliskan dengan format teks terstruktur yang rapi mengikuti hierarki baku (Level A -> 1. -> a. -> 1)): gunakan sub-judul dengan huruf kecil bertitik (contoh: "a. Konsep Dasar ...", "b. Karakteristik & Prinsip Kerja ...", "c. Standar Operasional ..."), serta paragraf penjelasan ilmiah yang mendalam dan tuntas. Jika terdapat rincian poin di bawahnya, gunakan penomoran kurung tutup "1)", "2)", "3)". Tabel ringkasan/parameter teknis TIDAK WAJIB ADA; namun jika dibutuhkan data komparasi atau spesifikasi teknis terstruktur, tabel Markdown dapat disertakan.
    - DILARANG menggunakan unescaped control character atau literal '\\n' yang tidak valid di dalam JSON string.
 
 8. MATERI TAMBAHAN (PENGAYAAN MATERI DESKRIPTIF SUBSTANTIF):
    - Jika materi tambahan diisi ("${materiTambahan}"), jabarkan setiap butir poin materi tambahan secara komprehensif, terperinci, dan mendalam dengan FOKUS PENUH PADA PENJABARAN SUBSTANSI MATERI TEKNIS YANG DISEBUTKAN.
    - DILARANG KERAS menggunakan kalimat pembuka, pengantar, atau penutup meta-pedagogis generik seperti: "Jika peserta didik mendalami materi ini akan...", "Peserta didik mendalami adopsi teknologi generasi terkini...", "Melalui penugasan proyek tingkat lanjut, peserta didik diarahkan...", "Kajian ini membekali peserta didik dengan perspektif...". Penjabaran HARUS langsung menguraikan konsep ilmiah, prinsip kerja, aturan teknis, atau prosedur operasional dari butir materi yang bersangkutan!
-   - Format penulisan poin materi tambahan: tuliskan nomor dan nama materi, diikuti paragraf penjabaran substansi materinya. Tabel pengayaan/komparasi TIDAK WAJIB ADA; namun jika ada informasi komparatif yang lebih jelas disajikan dalam tabel, tabel Markdown dapat disertakan.
+   - Format penulisan poin materi tambahan wajib mengikuti hierarki baku (Level A -> 1. -> a. -> 1)): gunakan huruf kecil bertitik ("a.", "b.", "c.") untuk setiap nama materi tambahan, diikuti paragraf penjabaran substansi materinya. Jika terdapat poin rincian di dalamnya, gunakan penomoran kurung tutup "1)", "2)", "3)". Tabel pengayaan/komparasi TIDAK WAJIB ADA; namun jika ada informasi komparatif yang lebih jelas disajikan dalam tabel, tabel Markdown dapat disertakan.
 
 9. GLOSARIUM (KAMUS ISTILAH TEKNIS KOMPREHENSIF SESUAI KONTEKS TAHAP 1-2):
    - Minimal 5-8 istilah teknis yang KHUSUS, SPESIFIK, dan MURNI DARI MATERI "${topik}" serta relevan dengan konteks input Tahap 1 & 2 (Poin A-F).
@@ -2521,12 +2521,17 @@ ATURAN WAJIB DAN MENGIKAT — PELANGGARAN TIDAK DIIZINKAN:
    - Begitu juga untuk bidang kejuruan lainnya (Animasi, IT/Jaringan, Otomotif, Listrik, Bisnis, Kuliner): wajib memuat istilah teknis operasional murni sesuai konteks input Tahap 1-2.
    - DILARANG KERAS menggunakan istilah generik non-teknis atau istilah proses pedagogis seperti: "Sintesis Solutif", "Verifikasi Empiris", "Konseptualisasi", "Analisis Variabel", "Discovery Learning", "TPACK". Glosarium HARUS murni istilah materi ajar!
 
-10. DAFTAR PUSTAKA:
-    - Tuliskan semua referensi otentik yang digunakan sebagai sumber bahan ajar dan acuan sistem AI:
-      (a) Dokumen Resmi Kurikulum: Badan Standar, Kurikulum, dan Asesmen Pendidikan (BSKAP). (2024). Panduan Pembelajaran dan Asesmen Kurikulum Merdeka. Jakarta: Kemendikbudristek.
-      (b) Buku Teks / Referensi Standar Industri Otentik yang relevan dengan mata pelajaran ${mapel} dan materi ${topik}.
-      (c) Sumber AI Engine yang digunakan: Google DeepMind. (2024). Gemini: A Family of Highly Capable Multimodal Models.
+10. DAFTAR PUSTAKA (SUMBER RUJUKAN OTENTIK & KREDIBEL):
+    - Tuliskan daftar referensi kredibel yang secara nyata dan langsung dijadikan rujukan oleh AI dalam menyusun seluruh materi, modul ajar, dan lembar kerja peserta didik (LKPD) ini.
+    - DAFTAR PUSTAKA TIDAK DIBATASI PADA 5 TAHUN TERAKHIR. Buku teks klasik berbobot/standar industri, literatur otoritatif dunia, dokumentasi internet resmi/kredibel (misalnya standar W3C, ISO, IEEE, dokumentasi resmi vendor/industri), pedoman kurikulum resmi BSKAP Kemendikbudristek, serta artikel ilmiah kredibel dari tahun berapapun yang relevan dengan mata pelajaran "${mapel}" dan topik "${topik}" SANGAT DIPRIORITASKAN.
+    - Rujukan wajib otentik dan mencakup:
+      (a) Buku teks atau buku referensi standar industri/keilmuan yang relevan dengan materi ${topik} (contoh karya otoritatif standar dunia atau buku terbitan resmi Kemendikbudristek/Pusat Perbukuan).
+      (b) Sumber internet resmi/kredibel atau dokumentasi standar industri yang menjadi acuan penyusunan materi & LKPD.
+      (c) Dokumen resmi kurikulum/regulasi (misalnya BSKAP Kemendikbudristek No. 032/H/KR/2024 atau Panduan Pembelajaran dan Asesmen).
+      (d) Artikel ilmiah atau publikasi jurnal kredibel yang relevan dengan bidang keahlian.
+    - DILARANG mencantumkan nama model AI atau organisasi internal (seperti Gemini atau EduWorkspace) ke dalam daftar pustaka.
     - DILARANG merekayasa atau membuat-buat nama jurnal palsu yang mencantumkan nama model pembelajaran (misal dilarang menulis "Penerapan Model PJBL dalam..." atau "Berbasis Pendekatan TPACK").
+    - Seluruh daftar pustaka yang dituliskan HARUS merupakan sumber yang sungguh-sungguh dipakai AI untuk menyusun materi dan LKPD ini.
 
 11. ASESMEN & RUBRIK:
     - Asesmen Diagnostik: "Pretest (Tes Diagnostik Kognitif Awal)" untuk mengukur kesiapan awal murid pada "${topik}".
@@ -2655,7 +2660,7 @@ FORMAT RESPONS — OUTPUT WAJIB JSON MURNI (VALID JSON TANPA TEKS PEMBUKA/PENUTU
     {"istilah": "Istilah teknis khusus ${topik}", "definisi": "Definisi teknis yang tepat dan spesifik"}
   ],
   "daftarPustaka": [
-    "Nama Penulis, A. (2024). Referensi Akademik Relevan ${topik}. Penerbit/Jurnal Terakreditasi."
+    "Nama Penulis, A. (Tahun). Judul Buku Teks/Web Standar/Artikel Ilmiah Kredibel Rujukan ${topik}. Penerbit/Sumber Resmi."
   ]
 }`;
 
@@ -3262,17 +3267,20 @@ function resolveContextualDaftarPustaka(raw, data) {
     });
   }
 
-  // Filter ketat: Hapus referensi jurnal palsu yang merekayasa nama model pembelajaran ke judul artikel
+  // Filter ketat: Hapus referensi jurnal palsu dan referensi model AI internal
   list = list.filter(item => {
     if (!item || typeof item !== 'string') return false;
     const iLower = item.toLowerCase();
     if (iLower.includes('penerapan model pjbl') || iLower.includes('penerapan model pbl') || iLower.includes('berbasis pendekatan tpack') || iLower.includes('media interaktif berbasis studi kasus otentik')) {
       return false;
     }
+    if (iLower.includes('deepmind') || iLower.includes('gemini: a family') || iLower.includes('eduworkspace ai research')) {
+      return false;
+    }
     return true;
   });
 
-  // Jika list kosong atau kurang dari 3 item, sediakan daftar pustaka resmi dokumen acuan dan bahan AI
+  // Jika list kosong atau kurang dari 3 item, sediakan daftar pustaka resmi dokumen acuan, buku teks standar, dan standar web/industri
   if (list.length < 3) {
     const d = data || {};
     const topik = d.topikMateri || 'Materi Pokok';
@@ -3290,11 +3298,7 @@ function resolveContextualDaftarPustaka(raw, data) {
     const refBSKAP = 'Badan Standar, Kurikulum, dan Asesmen Pendidikan (BSKAP). (2024). Panduan Pembelajaran dan Asesmen Pendidikan Anak Usia Dini, Pendidikan Dasar, dan Pendidikan Menengah. Jakarta: Kementerian Pendidikan, Kebudayaan, Riset, dan Teknologi.';
     const refCP = 'Badan Standar, Kurikulum, dan Asesmen Pendidikan (BSKAP). (2024). Keputusan Kepala BSKAP No. 032/H/KR/2024 tentang Capaian Pembelajaran pada Pendidikan Anak Usia Dini, Jenjang Pendidikan Dasar, dan Jenjang Pendidikan Menengah pada Kurikulum Merdeka. Jakarta: Kemendikbudristek.';
 
-    // 2. Bahan AI Engine & Foundation Model yang Digunakan
-    const refAI1 = 'Google DeepMind. (2024). Gemini: A Family of Highly Capable Multimodal Foundation Models. Google Research Technical Report. https://arxiv.org/abs/2312.11805';
-    const refAI2 = 'EduWorkspace AI Research. (2025). Knowledge Base & Pedagogical Architecture for Indonesian Kurikulum Merdeka. Jakarta: EduWorkspace Academic Foundation.';
-
-    // 3. Buku Teks & Rujukan Keilmuan / Industri Spesifik
+    // 2. Buku Teks Klasik, Standar Industri, & Rujukan Keilmuan Otoritatif (Tidak dibatasi 5 tahun terakhir)
     let refKeilmuan = [];
     if (isVideoKamera) {
       refKeilmuan = [
@@ -3306,6 +3310,7 @@ function resolveContextualDaftarPustaka(raw, data) {
       refKeilmuan = [
         'Lupton, E. (2014). Thinking with Type: A Critical Guide for Designers, Writers, Editors, & Students (2nd ed.). New York: Princeton Architectural Press.',
         'Bringhurst, R. (2012). The Elements of Typographic Style (4th ed.). Seattle: Hartley & Marks Publishers.',
+        'World Wide Web Consortium (W3C). (2023). Cascading Style Sheets Fonts Module Level 4 & Web Typography Specification. https://www.w3.org/TR/css-fonts-4/',
         'Direktorat Sekolah Menengah Kejuruan. (2022). Dasar-Dasar Desain Komunikasi Visual untuk SMK/MAK Kelas X. Jakarta: Pusat Perbukuan Kemendikbudristek.'
       ];
     } else if (/animasi|karakter|storyboard/i.test(primaryCtx)) {
@@ -3321,6 +3326,7 @@ function resolveContextualDaftarPustaka(raw, data) {
     } else if (/jaringan|komputer|it|server|rpl|software/i.test(primaryCtx)) {
       refKeilmuan = [
         'Kurose, J. F., & Ross, K. W. (2021). Computer Networking: A Top-Down Approach (8th ed.). London: Pearson Education.',
+        'Internet Engineering Task Force (IETF). (2023). Official Internet Protocol Standards and Architectural Principles. https://www.ietf.org/',
         'Direktorat Sekolah Menengah Kejuruan. (2022). Dasar-Dasar Teknik Jaringan Komputer dan Telekomunikasi. Jakarta: Pusat Perbukuan Kemendikbudristek.'
       ];
     } else if (/mesin|otomotif|motor|mobil/i.test(primaryCtx)) {
@@ -3338,9 +3344,7 @@ function resolveContextualDaftarPustaka(raw, data) {
     list = [
       refBSKAP,
       refCP,
-      ...refKeilmuan,
-      refAI1,
-      refAI2
+      ...refKeilmuan
     ];
   }
 

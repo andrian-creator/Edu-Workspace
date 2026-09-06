@@ -285,22 +285,81 @@
       margin-bottom: 6px;
     }
 
-    /* Daftar Aktivitas Guru & Murid Per Poin */
+    /* Daftar Aktivitas Guru & Murid Per Poin (Hierarki Baku: sub-a. adalah 1)) */
     .activity-points-list {
       margin: 0;
-      padding-left: 18px;
-      list-style-type: decimal;
+      padding-left: 0;
+      list-style-type: none;
+      counter-reset: act-counter;
     }
 
     .activity-points-list li {
+      counter-increment: act-counter;
+      position: relative;
+      list-style: none;
+      padding-left: 20px;
       margin-bottom: 6px;
       text-align: justify;
       text-justify: inter-word;
       line-height: 1.6;
     }
 
+    .activity-points-list li::before {
+      content: counter(act-counter) ") ";
+      position: absolute;
+      left: 0;
+      top: 0;
+      font-weight: 700;
+      color: #0f172a;
+    }
+
     .activity-points-list li:last-child {
       margin-bottom: 0;
+    }
+
+    /* Sub-penomoran hierarki baku dokumen: A. -> 1. -> a. -> 1) -> a) */
+    ol.doc-list-alpha,
+    .doc-list-alpha {
+      list-style-type: lower-alpha;
+      margin-left: 24px;
+      margin-bottom: 12px;
+      padding-left: 0;
+    }
+
+    ol.doc-list-alpha > li {
+      margin-bottom: 6px;
+      text-align: justify;
+      text-justify: inter-word;
+      line-height: 1.68;
+    }
+
+    ol.doc-list-paren,
+    .doc-list-paren {
+      list-style-type: none;
+      counter-reset: paren-counter;
+      margin-left: 0;
+      padding-left: 0;
+      margin-bottom: 12px;
+    }
+
+    ol.doc-list-paren > li {
+      counter-increment: paren-counter;
+      position: relative;
+      list-style: none;
+      padding-left: 22px;
+      margin-bottom: 6px;
+      text-align: justify;
+      text-justify: inter-word;
+      line-height: 1.68;
+    }
+
+    ol.doc-list-paren > li::before {
+      content: counter(paren-counter) ") ";
+      position: absolute;
+      left: 0;
+      top: 0;
+      font-weight: 700;
+      color: #0f172a;
     }
 
     /* Boks Prinsip Deep Learning & Sintaks Model */
@@ -488,6 +547,63 @@
       .materi-tambahan-item-desc {
         margin-left: 10pt !important;
       }
+
+      ol.doc-list-alpha, .doc-list-alpha {
+        list-style-type: lower-alpha !important;
+        margin-left: 18pt !important;
+        margin-bottom: 6pt !important;
+        padding-left: 0 !important;
+      }
+      ol.doc-list-alpha > li {
+        margin-bottom: 4pt !important;
+        line-height: 1.5 !important;
+        text-align: justify !important;
+      }
+      ol.doc-list-paren, .doc-list-paren {
+        list-style-type: none !important;
+        counter-reset: paren-counter;
+        margin-left: 0 !important;
+        padding-left: 0 !important;
+        margin-bottom: 6pt !important;
+      }
+      ol.doc-list-paren > li {
+        counter-increment: paren-counter;
+        position: relative;
+        list-style: none !important;
+        padding-left: 18pt !important;
+        margin-bottom: 4pt !important;
+        text-align: justify !important;
+        line-height: 1.5 !important;
+      }
+      ol.doc-list-paren > li::before {
+        content: counter(paren-counter) ") " !important;
+        position: absolute;
+        left: 0;
+        top: 0;
+        font-weight: bold;
+      }
+      .activity-points-list {
+        margin: 0 !important;
+        padding-left: 0 !important;
+        list-style-type: none !important;
+        counter-reset: act-counter;
+      }
+      .activity-points-list li {
+        counter-increment: act-counter;
+        position: relative;
+        list-style: none !important;
+        padding-left: 16pt !important;
+        margin-bottom: 3pt !important;
+        text-align: justify !important;
+        line-height: 1.45 !important;
+      }
+      .activity-points-list li::before {
+        content: counter(act-counter) ") " !important;
+        position: absolute;
+        left: 0;
+        top: 0;
+        font-weight: bold;
+      }
     }
 
     tr, .doc-table tr, .doc-metadata-table tr {
@@ -629,28 +745,28 @@
       <section class="doc-section">
         <div class="doc-section-title">B. DESAIN PEMBELAJARAN</div>
 
-        <div class="doc-sub-heading">Capaian Pembelajaran</div>
+        <div class="doc-sub-heading">1. Capaian Pembelajaran</div>
         <p class="doc-paragraph" id="docCapaianPembelajaran">-</p>
 
-        <div class="doc-sub-heading">Tujuan Pembelajaran</div>
+        <div class="doc-sub-heading">2. Tujuan Pembelajaran</div>
         <div id="docTujuanPembelajaran"></div>
 
-        <div class="doc-sub-heading">Pemahaman Bermakna</div>
+        <div class="doc-sub-heading">3. Pemahaman Bermakna</div>
         <p class="doc-paragraph" id="docPemahamanBermakna">-</p>
 
-        <div class="doc-sub-heading">Pertanyaan Pemantik</div>
-        <ul class="doc-list" id="docPertanyaanPemantik"></ul>
+        <div class="doc-sub-heading">4. Pertanyaan Pemantik</div>
+        <ol class="doc-list doc-list-alpha" id="docPertanyaanPemantik"></ol>
 
-        <div class="doc-sub-heading">Lintas Disiplin Ilmu</div>
+        <div class="doc-sub-heading">5. Lintas Disiplin Ilmu</div>
         <p class="doc-paragraph" id="docLintasDisiplin">-</p>
 
-        <div class="doc-sub-heading">Praktik Pedagogis</div>
+        <div class="doc-sub-heading">6. Praktik Pedagogis</div>
         <p class="doc-paragraph" id="docPraktikPedagogis">-</p>
 
-        <div class="doc-sub-heading">Kemitraan Pembelajaran</div>
+        <div class="doc-sub-heading">7. Kemitraan Pembelajaran</div>
         <p class="doc-paragraph" id="docKemitraanPembelajaran">-</p>
 
-        <div class="doc-sub-heading">Lingkungan Pembelajaran</div>
+        <div class="doc-sub-heading">8. Lingkungan Pembelajaran</div>
         <p class="doc-paragraph" id="docLingkunganPembelajaran">-</p>
       </section>
 
@@ -692,11 +808,11 @@
       <section class="doc-section">
         <div class="doc-section-title">E. REFLEKSI</div>
 
-        <div class="doc-sub-heading">Refleksi Guru</div>
-        <ul class="doc-list" id="docRefleksiGuru"></ul>
+        <div class="doc-sub-heading">1. Refleksi Guru</div>
+        <ol class="doc-list doc-list-alpha" id="docRefleksiGuru"></ol>
 
-        <div class="doc-sub-heading">Refleksi Murid</div>
-        <ul class="doc-list" id="docRefleksiMurid"></ul>
+        <div class="doc-sub-heading">2. Refleksi Murid</div>
+        <ol class="doc-list doc-list-alpha" id="docRefleksiMurid"></ol>
       </section>
 
       <!-- F. LAMPIRAN -->
@@ -706,10 +822,10 @@
         <!-- 1. LKPD -->
         <div class="doc-sub-heading">1. Lembar Kerja Peserta Didik (LKPD)</div>
         <div class="lkpd-container">
-          <p><strong>Judul:</strong> <span id="lkpdJudul">Lembar Kerja Murid: Analisis Kasus & Penerapan Konsep</span></p>
-          <p><strong>Tujuan:</strong> <span id="lkpdTujuan">-</span></p>
-          <p style="margin-top: 10px;"><strong>Tugas:</strong></p>
-          <ol class="doc-list" id="lkpdTugasList"></ol>
+          <p style="margin-bottom: 6px;"><strong>a. Judul LKPD:</strong> <span id="lkpdJudul">Lembar Kerja Murid: Analisis Kasus & Penerapan Konsep</span></p>
+          <p style="margin-bottom: 6px;"><strong>b. Tujuan Kegiatan:</strong> <span id="lkpdTujuan">-</span></p>
+          <p style="margin-top: 10px; margin-bottom: 6px;"><strong>c. Petunjuk & Langkah Kerja:</strong></p>
+          <ol class="doc-list doc-list-paren" id="lkpdTugasList"></ol>
         </div>
 
         <!-- 2. Rubrik Penilaian -->
@@ -733,17 +849,17 @@
         <!-- 3. Pengayaan dan Remedial (Rekomendasi Tugas) -->
         <div class="doc-sub-heading" style="margin-top: 26px;">3. Pengayaan dan Remedial</div>
         <div style="margin-bottom: 12px;">
-          <p class="doc-paragraph" style="margin-bottom: 4px;"><strong>Rekomendasi Tugas Pengayaan:</strong></p>
-          <div class="doc-paragraph" id="docPengayaanText" style="padding-left: 14px; border-left: 3px solid #10b981;"></div>
+          <p class="doc-paragraph" style="margin-bottom: 4px; font-weight: 700; color: #0f172a;">a. Rekomendasi Tugas Pengayaan</p>
+          <div class="doc-paragraph" id="docPengayaanText" style="padding-left: 14px; border-left: 3px solid #10b981; margin-left: 12px;"></div>
         </div>
         <div>
-          <p class="doc-paragraph" style="margin-bottom: 4px;"><strong>Rekomendasi Tugas Remedial:</strong></p>
-          <div class="doc-paragraph" id="docRemedialText" style="padding-left: 14px; border-left: 3px solid #f59e0b;"></div>
+          <p class="doc-paragraph" style="margin-bottom: 4px; font-weight: 700; color: #0f172a;">b. Rekomendasi Tugas Remedial</p>
+          <div class="doc-paragraph" id="docRemedialText" style="padding-left: 14px; border-left: 3px solid #f59e0b; margin-left: 12px;"></div>
         </div>
 
         <!-- 4. Glosarium (Fokus Khusus Poin-Poin Materi Pokok) -->
         <div class="doc-sub-heading" style="margin-top: 26px;">4. Glosarium Materi</div>
-        <div id="docGlosariumList"></div>
+        <ol class="doc-list doc-list-alpha" id="docGlosariumList"></ol>
 
         <!-- 5. Daftar Pustaka -->
         <div class="doc-sub-heading" style="margin-top: 26px;">5. Daftar Pustaka</div>
@@ -1016,7 +1132,7 @@
           ${parsedPoints.map((pt, i) => `
             <div class="materi-tambahan-item" style="margin-bottom: 14px; text-align: justify; line-height: 1.65;">
               <div class="materi-tambahan-item-title" style="font-weight: 700; color: #0f172a; margin-bottom: 4px; font-size: 0.95rem;">
-                ${i + 1}. ${pt.title}
+                ${String.fromCharCode(97 + i)}. ${pt.title}
               </div>
               <div class="materi-tambahan-item-desc" style="margin-left: 12px; color: #334155; line-height: 1.65;">
                 ${pt.fullExplanation}
@@ -1049,7 +1165,7 @@
       if (!intiData) {
         return `
           <tr>
-            <td style="vertical-align: top;"><strong>Inti</strong></td>
+            <td style="vertical-align: top;"><strong>b. Kegiatan Inti</strong></td>
             <td style="vertical-align: top;">60 Menit</td>
             <td style="vertical-align: top;">-</td>
             <td style="vertical-align: top;">-</td>
@@ -1071,7 +1187,7 @@
       if (list.length === 0) {
         return `
           <tr>
-            <td style="vertical-align: top;"><strong>Inti</strong></td>
+            <td style="vertical-align: top;"><strong>b. Kegiatan Inti</strong></td>
             <td style="vertical-align: top;">60 Menit</td>
             <td style="vertical-align: top;">-</td>
             <td style="vertical-align: top;">-</td>
@@ -1099,7 +1215,7 @@
         return `
           ${sintaksHeader}
           <tr>
-            <td style="vertical-align: top;"><strong>Inti</strong></td>
+            <td style="vertical-align: top;"><strong>b. Kegiatan Inti</strong></td>
             <td style="vertical-align: top;">${waktu}</td>
             <td style="vertical-align: top;">${guru}</td>
             <td style="vertical-align: top;">${murid}</td>
@@ -1481,10 +1597,10 @@
       const tpContainer = document.getElementById('docTujuanPembelajaran');
       if (tp) {
         const tpLines = tp.split('\n').map(l => l.trim()).filter(Boolean);
-        tpContainer.innerHTML = `<ol class="doc-list">${tpLines.map(line => `<li>${line.replace(/^[0-9]+[.\-)]\s*/, '')}</li>`).join('')}</ol>`;
+        tpContainer.innerHTML = `<ol class="doc-list doc-list-alpha">${tpLines.map(line => `<li>${line.replace(/^[0-9]+[.\-)]\s*|^[a-zA-Z][.\-)]\s*/, '')}</li>`).join('')}</ol>`;
       } else {
         tpContainer.innerHTML = `
-          <ol class="doc-list">
+          <ol class="doc-list doc-list-alpha">
             <li>Murid mampu mengidentifikasi dan menjelaskan konsep dasar, prinsip inti, serta kerangka kerja materi <em>${topik}</em> secara komprehensif.</li>
             <li>Murid mampu menganalisis permasalahan kontekstual dan menguji berbagai alternatif pemecahan masalah terkait <em>${topik}</em> melalui studi kasus nyata.</li>
             <li>Murid mampu mengembangkan solusi inovatif, mendesain karya atau laporan analisis <em>${topik}</em>, dan mempresentasikannya secara terstruktur dan kolaboratif.</li>
@@ -1495,7 +1611,7 @@
 
       const desain = ai.desainPembelajaran || {};
       document.getElementById('docPemahamanBermakna').textContent = desain.pemahamanBermakna || '-';
-      document.getElementById('docPertanyaanPemantik').innerHTML = (desain.pertanyaanPemantik || []).map(p => `<li>${p}</li>`).join('');
+      document.getElementById('docPertanyaanPemantik').innerHTML = (desain.pertanyaanPemantik || []).map(p => `<li>${p.replace(/^[0-9]+[.\-)]\s*|^[a-zA-Z][.\-)]\s*/, '')}</li>`).join('');
       document.getElementById('docLintasDisiplin').textContent = desain.lintasDisiplin || '-';
       document.getElementById('docPraktikPedagogis').textContent = desain.praktikPedagogis || '-';
       document.getElementById('docKemitraanPembelajaran').textContent = desain.kemitraan || '-';
@@ -1506,10 +1622,10 @@
       // ======================================================================
       const listMeetings = ai.pengalamanBelajar || [];
       const pengalamanContainer = document.getElementById('docPengalamanBelajarContainer');
-      pengalamanContainer.innerHTML = listMeetings.map(m => `
+      pengalamanContainer.innerHTML = listMeetings.map((m, idx) => `
         <div class="meeting-block">
           <div class="meeting-header-title">
-            PERTEMUAN ${m.pertemuan}: ${m.subTopik ? m.subTopik.toUpperCase() : ''} (${durasi.split('(')[0].trim()})
+            ${idx + 1}. Pertemuan ${m.pertemuan}: ${m.subTopik ? m.subTopik.toUpperCase() : ''} (${durasi.split('(')[0].trim()})
           </div>
 
           <table class="doc-table">
@@ -1523,7 +1639,7 @@
             </thead>
             <tbody>
               <tr>
-                <td style="vertical-align: top;"><strong>Awal</strong></td>
+                <td style="vertical-align: top;"><strong>a. Kegiatan Awal</strong></td>
                 <td style="vertical-align: top;">${m.awal?.waktu || '15 Menit'}</td>
                 <td style="vertical-align: top;">${formatActivityPoints(m.awal?.aktivitasGuru)}</td>
                 <td style="vertical-align: top;">${formatActivityPoints(m.awal?.aktivitasMurid)}</td>
@@ -1532,7 +1648,7 @@
               ${renderIntiRows(m.inti, pendekatan, model)}
 
               <tr>
-                <td style="vertical-align: top;"><strong>Penutup</strong></td>
+                <td style="vertical-align: top;"><strong>c. Kegiatan Penutup</strong></td>
                 <td style="vertical-align: top;">${m.penutup?.waktu || '15 Menit'}</td>
                 <td style="vertical-align: top;">${formatActivityPoints(m.penutup?.aktivitasGuru)}</td>
                 <td style="vertical-align: top;">${formatActivityPoints(m.penutup?.aktivitasMurid)}</td>
@@ -1625,8 +1741,8 @@ Pada tataran analisis lanjutan, penguasaan materi *${topik}* menuntut kemampuan 
       // ======================================================================
       const refGuru = ai.refleksi?.guru || [];
       const refMurid = ai.refleksi?.murid || [];
-      document.getElementById('docRefleksiGuru').innerHTML = refGuru.map(g => `<li>${g}</li>`).join('');
-      document.getElementById('docRefleksiMurid').innerHTML = refMurid.map(m => `<li>${m}</li>`).join('');
+      document.getElementById('docRefleksiGuru').innerHTML = refGuru.map(g => `<li>${String(g).replace(/^[0-9]+[.\-)]\s*|^[a-zA-Z][.\-)]\s*/, '')}</li>`).join('');
+      document.getElementById('docRefleksiMurid').innerHTML = refMurid.map(m => `<li>${String(m).replace(/^[0-9]+[.\-)]\s*|^[a-zA-Z][.\-)]\s*/, '')}</li>`).join('');
 
       // ======================================================================
       // F. LAMPIRAN (Hasil Generate AI)
@@ -1634,7 +1750,10 @@ Pada tataran analisis lanjutan, penguasaan materi *${topik}* menuntut kemampuan 
       const lkpd = ai.lkpd || {};
       document.getElementById('lkpdJudul').textContent = lkpd.judul || (isPjBL ? `Lembar Kerja Proyek (PjBL): Perancangan dan Pembuatan Karya ${topik}` : `Lembar Kerja Peserta Didik: Penerapan Konsep ${topik}`);
       document.getElementById('lkpdTujuan').textContent = lkpd.tujuan || (isPjBL ? `Peserta didik mampu merancang, memproduksi karya nyata ${topik}, dan menyajikan hasil gelar karya secara kolaboratif sesuai tujuan pembelajaran.` : `Peserta didik mampu menelaah materi ${topik} dan menyelesaikan penugasan pembelajaran secara kontekstual.`);
-      document.getElementById('lkpdTugasList').innerHTML = (lkpd.tugas || []).map(t => `<li>${t}</li>`).join('');
+      document.getElementById('lkpdTugasList').innerHTML = (lkpd.tugas || []).map(t => {
+        const cleanT = String(t).replace(/^(\d+[\.\)]|Langkah\s*\d+:?|Tahap\s*\d+:?)\s*/i, '').trim();
+        return `<li>${cleanT}</li>`;
+      }).join('');
 
       const rubrikItems = resolveRubrikList(ai, data);
       document.getElementById('tableRubrikBody').innerHTML = rubrikItems.map(r => `
@@ -1653,7 +1772,7 @@ Pada tataran analisis lanjutan, penguasaan materi *${topik}* menuntut kemampuan 
 
       // 4. Glosarium Materi (Khusus istilah teknis materi pokok, bukan istilah umum pedagogis/asesmen)
       const glosarium = resolveGlosariumList(ai, data);
-      document.getElementById('docGlosariumList').innerHTML = `<ul class="doc-list">${glosarium.map(g => `<li><strong>${g.istilah}:</strong> ${g.definisi}</li>`).join('')}</ul>`;
+      document.getElementById('docGlosariumList').innerHTML = glosarium.map(g => `<li><strong>${g.istilah}:</strong> ${g.definisi}</li>`).join('');
 
       // 5. Daftar Pustaka (Artikel Ilmiah & Dokumen Acuan Kurikulum Merdeka)
       const pustaka = resolveDaftarPustakaList(ai, data);
@@ -2123,17 +2242,20 @@ Pada tataran analisis lanjutan, penguasaan materi *${topik}* menuntut kemampuan 
         });
       }
 
-      // Filter ketat: Hapus referensi jurnal palsu yang merekayasa nama model pembelajaran ke judul artikel
+      // Filter ketat: Hapus referensi jurnal palsu dan referensi model AI internal
       list = list.filter(item => {
         if (!item || typeof item !== 'string') return false;
         const iLower = item.toLowerCase();
         if (iLower.includes('penerapan model pjbl') || iLower.includes('penerapan model pbl') || iLower.includes('berbasis pendekatan tpack') || iLower.includes('media interaktif berbasis studi kasus otentik')) {
           return false;
         }
+        if (iLower.includes('deepmind') || iLower.includes('gemini: a family') || iLower.includes('eduworkspace ai research')) {
+          return false;
+        }
         return true;
       });
 
-      // Jika list kosong atau kurang dari 3 item, sediakan daftar pustaka resmi dokumen acuan dan bahan AI
+      // Jika list kosong atau kurang dari 3 item, sediakan daftar pustaka resmi dokumen acuan, buku teks standar, dan standar web/industri
       if (list.length < 3) {
         const d = data || {};
         const topik = d.topikMateri || 'Materi Pokok';
@@ -2151,11 +2273,7 @@ Pada tataran analisis lanjutan, penguasaan materi *${topik}* menuntut kemampuan 
         const refBSKAP = 'Badan Standar, Kurikulum, dan Asesmen Pendidikan (BSKAP). (2024). Panduan Pembelajaran dan Asesmen Pendidikan Anak Usia Dini, Pendidikan Dasar, dan Pendidikan Menengah. Jakarta: Kementerian Pendidikan, Kebudayaan, Riset, dan Teknologi.';
         const refCP = 'Badan Standar, Kurikulum, dan Asesmen Pendidikan (BSKAP). (2024). Keputusan Kepala BSKAP No. 032/H/KR/2024 tentang Capaian Pembelajaran pada Pendidikan Anak Usia Dini, Jenjang Pendidikan Dasar, dan Jenjang Pendidikan Menengah pada Kurikulum Merdeka. Jakarta: Kemendikbudristek.';
 
-        // 2. Bahan AI Engine & Foundation Model yang Digunakan
-        const refAI1 = 'Google DeepMind. (2024). Gemini: A Family of Highly Capable Multimodal Foundation Models. Google Research Technical Report. https://arxiv.org/abs/2312.11805';
-        const refAI2 = 'EduWorkspace AI Research. (2025). Knowledge Base & Pedagogical Architecture for Indonesian Kurikulum Merdeka. Jakarta: EduWorkspace Academic Foundation.';
-
-        // 3. Buku Teks & Rujukan Keilmuan / Industri Spesifik
+        // 2. Buku Teks Klasik, Standar Industri, & Rujukan Keilmuan Otoritatif (Tidak dibatasi 5 tahun terakhir)
         let refKeilmuan = [];
         if (isVideoKamera) {
           refKeilmuan = [
@@ -2167,6 +2285,7 @@ Pada tataran analisis lanjutan, penguasaan materi *${topik}* menuntut kemampuan 
           refKeilmuan = [
             'Lupton, E. (2014). Thinking with Type: A Critical Guide for Designers, Writers, Editors, & Students (2nd ed.). New York: Princeton Architectural Press.',
             'Bringhurst, R. (2012). The Elements of Typographic Style (4th ed.). Seattle: Hartley & Marks Publishers.',
+            'World Wide Web Consortium (W3C). (2023). Cascading Style Sheets Fonts Module Level 4 & Web Typography Specification. https://www.w3.org/TR/css-fonts-4/',
             'Direktorat Sekolah Menengah Kejuruan. (2022). Dasar-Dasar Desain Komunikasi Visual untuk SMK/MAK Kelas X. Jakarta: Pusat Perbukuan Kemendikbudristek.'
           ];
         } else if (/animasi|karakter|storyboard/i.test(primaryCtx)) {
@@ -2182,6 +2301,7 @@ Pada tataran analisis lanjutan, penguasaan materi *${topik}* menuntut kemampuan 
         } else if (/jaringan|komputer|it|server|rpl|software/i.test(primaryCtx)) {
           refKeilmuan = [
             'Kurose, J. F., & Ross, K. W. (2021). Computer Networking: A Top-Down Approach (8th ed.). London: Pearson Education.',
+            'Internet Engineering Task Force (IETF). (2023). Official Internet Protocol Standards and Architectural Principles. https://www.ietf.org/',
             'Direktorat Sekolah Menengah Kejuruan. (2022). Dasar-Dasar Teknik Jaringan Komputer dan Telekomunikasi. Jakarta: Pusat Perbukuan Kemendikbudristek.'
           ];
         } else if (/mesin|otomotif|motor|mobil/i.test(primaryCtx)) {
@@ -2199,9 +2319,7 @@ Pada tataran analisis lanjutan, penguasaan materi *${topik}* menuntut kemampuan 
         list = [
           refBSKAP,
           refCP,
-          ...refKeilmuan,
-          refAI1,
-          refAI2
+          ...refKeilmuan
         ];
       }
 
@@ -3290,14 +3408,55 @@ Pada tataran analisis lanjutan, penguasaan materi *${topik}* menuntut kemampuan 
               margin-left: 18pt;
               margin-bottom: 8pt;
             }
-            .activity-points-list {
-              margin: 0 0 0 16pt;
-              padding: 0;
+            ol.doc-list-alpha, .doc-list-alpha {
+              list-style-type: lower-alpha;
+              margin-left: 18pt;
+              margin-bottom: 6pt;
             }
-            .activity-points-list li {
+            ol.doc-list-paren, .doc-list-paren {
+              list-style-type: none;
+              counter-reset: paren-counter;
+              margin-left: 0;
+              padding-left: 0;
+              margin-bottom: 6pt;
+            }
+            ol.doc-list-paren > li {
+              counter-increment: paren-counter;
+              position: relative;
+              list-style: none;
+              padding-left: 18pt;
               margin-bottom: 4pt;
               text-align: justify;
               line-height: 1.5;
+            }
+            ol.doc-list-paren > li::before {
+              content: counter(paren-counter) ") ";
+              position: absolute;
+              left: 0;
+              top: 0;
+              font-weight: bold;
+            }
+            .activity-points-list {
+              margin: 0;
+              padding-left: 0;
+              list-style-type: none;
+              counter-reset: act-counter;
+            }
+            .activity-points-list li {
+              counter-increment: act-counter;
+              position: relative;
+              list-style: none;
+              padding-left: 16pt;
+              margin-bottom: 3pt;
+              text-align: justify;
+              line-height: 1.45;
+            }
+            .activity-points-list li::before {
+              content: counter(act-counter) ") ";
+              position: absolute;
+              left: 0;
+              top: 0;
+              font-weight: bold;
             }
             li {
               margin-bottom: 3pt;
