@@ -42,6 +42,16 @@
       "permanent": true
     },
     {
+      "source": "/fitur/generate-modul-ajar/preview%20modul-ajar",
+      "destination": "/fitur/generate-modul-ajar/preview-modul-ajar",
+      "permanent": true
+    },
+    {
+      "source": "/fitur/generate-modul-ajar/preview%20modul-ajar.html",
+      "destination": "/fitur/generate-modul-ajar/preview-modul-ajar.html",
+      "permanent": true
+    },
+    {
       "source": "/halaman%20login/halaman%20login",
       "destination": "/halaman-login/halaman-login",
       "permanent": true

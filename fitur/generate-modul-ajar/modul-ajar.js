@@ -3078,12 +3078,12 @@ const media = p.mediaDigital || 'Slide Presentasi Canva, Video Pembelajaran';
  */
 function openGeneratedModulTab() {
   try {
-    const newWin = window.open('preview modul-ajar.html', '_blank');
+    const newWin = window.open('preview-modul-ajar.html', '_blank');
     if (!newWin || newWin.closed || typeof newWin.closed === 'undefined') {
-      window.location.href = 'preview modul-ajar.html';
+      window.location.href = 'preview-modul-ajar.html';
     }
   } catch (e) {
-    window.location.href = 'preview modul-ajar.html';
+    window.location.href = 'preview-modul-ajar.html';
   }
 }
 
