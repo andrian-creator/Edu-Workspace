@@ -424,18 +424,45 @@
         box-shadow: none !important;
       }
 
-      tr {
+      tr, .doc-table tr, .doc-metadata-table tr {
         page-break-inside: avoid !important;
+        break-inside: avoid !important;
+      }
+
+      thead {
+        display: table-header-group !important;
       }
 
       .doc-section-title,
-      .meeting-header-title {
+      .meeting-header-title,
+      .doc-sub-heading {
         page-break-after: avoid !important;
+        break-after: avoid !important;
       }
 
-      .signature-grid {
+      .signature-grid,
+      .deep-learning-box {
         page-break-inside: avoid !important;
+        break-inside: avoid !important;
       }
+    }
+
+    tr, .doc-table tr, .doc-metadata-table tr {
+      page-break-inside: avoid;
+      break-inside: avoid;
+    }
+
+    .signature-grid,
+    .deep-learning-box {
+      page-break-inside: avoid;
+      break-inside: avoid;
+    }
+
+    .doc-section-title,
+    .meeting-header-title,
+    .doc-sub-heading {
+      page-break-after: avoid;
+      break-after: avoid;
     }
   </style>
 </head>
@@ -675,8 +702,8 @@
         <div class="doc-sub-heading" style="margin-top: 26px;">4. Glosarium Materi</div>
         <div id="docGlosariumList"></div>
 
-        <!-- 5. Daftar Pustaka (Artikel Ilmiah 5 Tahun Terakhir) -->
-        <div class="doc-sub-heading" style="margin-top: 26px;">5. Daftar Pustaka (5 Tahun Terakhir)</div>
+        <!-- 5. Daftar Pustaka -->
+        <div class="doc-sub-heading" style="margin-top: 26px;">5. Daftar Pustaka</div>
         <ul class="doc-list" id="docDaftarPustaka"></ul>
       </section>
 
@@ -2418,14 +2445,199 @@
 
       const tempContainer = document.createElement('div');
       tempContainer.id = 'pdfTempExportContainer';
-      tempContainer.style.position = 'fixed';
-      tempContainer.style.left = '0';
-      tempContainer.style.top = '-99999px';
+      tempContainer.style.position = 'absolute';
+      tempContainer.style.left = '-9999px';
+      tempContainer.style.top = '0px';
       tempContainer.style.width = contentWidthMm + 'mm';
       tempContainer.style.background = '#ffffff';
       tempContainer.style.zIndex = '-9999';
       tempContainer.appendChild(clone);
       document.body.appendChild(tempContainer);
+
+      // ======================================================================
+      // PAGINATION PREPROCESSOR UNTUK EKSPOR PDF
+      // Membagi tabel dan menyisipkan blank spacer agar tidak ada baris tabel,
+      // teks, kotak catatan, atau judul yang terpotong garis batas halaman.
+      // ======================================================================
+      function paginatePdfClone(targetClone) {
+        const cRect = targetClone.getBoundingClientRect();
+        const cTop = cRect.top;
+        const cWidthPx = cRect.width;
+        // Rasio tinggi A4 inner: (297 - 14 - 14) / (210 - 12 - 12) = 269 / 186
+        const pageHeightPx = cWidthPx * (269 / 186);
+
+        function splitTableBeforeRow(table, splitRow, pushNeeded) {
+          const newTable = document.createElement('table');
+          newTable.className = table.className;
+          newTable.style.width = '100%';
+          newTable.style.borderCollapse = 'collapse';
+          newTable.style.boxSizing = 'border-box';
+          newTable.style.marginTop = '0';
+
+          const oldThead = table.querySelector('thead');
+          if (oldThead) {
+            newTable.appendChild(oldThead.cloneNode(true));
+          }
+
+          const newTbody = document.createElement('tbody');
+          newTable.appendChild(newTbody);
+
+          let curr = splitRow;
+          while (curr) {
+            const next = curr.nextElementSibling;
+            newTbody.appendChild(curr);
+            curr = next;
+          }
+
+          table.style.marginBottom = '0';
+
+          const spacer = document.createElement('div');
+          spacer.className = 'pdf-pagebreak-spacer-div';
+          spacer.style.display = 'block';
+          spacer.style.height = `${pushNeeded}px`;
+          spacer.style.margin = '0';
+          spacer.style.padding = '0';
+          spacer.style.border = 'none';
+          spacer.style.background = 'transparent';
+
+          const parent = table.parentNode;
+          parent.insertBefore(spacer, table.nextSibling);
+          parent.insertBefore(newTable, spacer.nextSibling);
+        }
+
+        const maxPages = 25;
+        const pageSplitsCount = {};
+
+        for (let page = 1; page <= maxPages; page++) {
+          const currentCRect = targetClone.getBoundingClientRect();
+          const currentTop = currentCRect.top;
+          const pageBottom = page * pageHeightPx;
+
+          if (currentCRect.height <= pageBottom) {
+            break;
+          }
+
+          if ((pageSplitsCount[page] || 0) >= 5) {
+            continue;
+          }
+
+          const candidateElements = Array.from(targetClone.querySelectorAll(
+            'tr, .meeting-header-title, .doc-section-title, .doc-sub-heading, .signature-grid, .deep-learning-box, table.doc-table, .doc-paragraph'
+          ));
+
+          let splitHappened = false;
+
+          for (let i = 0; i < candidateElements.length; i++) {
+            const el = candidateElements[i];
+            if (el.classList.contains('pdf-pagebreak-spacer-div')) continue;
+
+            const rect = el.getBoundingClientRect();
+            const elTop = rect.top - currentTop;
+            const elBottom = rect.bottom - currentTop;
+            const elHeight = rect.height;
+
+            if (elHeight <= 0) continue;
+
+            const isHeading = el.classList.contains('meeting-header-title') ||
+                              el.classList.contains('doc-section-title') ||
+                              el.classList.contains('doc-sub-heading');
+            const isTable = el.tagName === 'TABLE';
+            const isTr = el.tagName === 'TR';
+            const isSig = el.classList.contains('signature-grid');
+
+            let shouldPush = false;
+
+            if (isHeading) {
+              if (elTop < pageBottom && elBottom > (pageBottom - 75)) {
+                shouldPush = true;
+              }
+            } else if (isSig) {
+              if (elTop < pageBottom && elBottom > (pageBottom - 12)) {
+                shouldPush = true;
+              }
+            } else if (isTable) {
+              if (elTop < pageBottom && (pageBottom - elTop) < 80 && elHeight > 85) {
+                shouldPush = true;
+              }
+            } else if (isTr) {
+              if (el.closest('thead')) {
+                if (elTop < pageBottom && elBottom > (pageBottom - 15)) {
+                  const parentTable = el.closest('table');
+                  if (parentTable) {
+                    const tRect = parentTable.getBoundingClientRect();
+                    const tTop = tRect.top - currentTop;
+                    const pushNeeded = Math.ceil(pageBottom - tTop) + 6;
+                    const spacer = document.createElement('div');
+                    spacer.className = 'pdf-pagebreak-spacer-div';
+                    spacer.style.display = 'block';
+                    spacer.style.height = `${pushNeeded}px`;
+                    spacer.style.margin = '0';
+                    spacer.style.padding = '0';
+                    spacer.style.border = 'none';
+                    spacer.style.background = 'transparent';
+                    parentTable.parentNode.insertBefore(spacer, parentTable);
+                    splitHappened = true;
+                    break;
+                  }
+                }
+                continue;
+              }
+
+              // Baris tabel di tbody
+              if (elTop < pageBottom && elBottom > (pageBottom - 8)) {
+                const parentTable = el.closest('table');
+                if (parentTable && parentTable.querySelectorAll('tbody tr').length > 1) {
+                  // Cek apakah ini row deep learning box, jika ya satukan dengan row aktivitasnya
+                  let targetRow = el;
+                  const isDeepLearning = el.querySelector && el.querySelector('.deep-learning-box');
+                  if (isDeepLearning && el.previousElementSibling) {
+                    const prevRow = el.previousElementSibling;
+                    const prevRect = prevRow.getBoundingClientRect();
+                    const prevTop = prevRect.top - currentTop;
+                    if (prevTop < pageBottom && (pageBottom - prevTop) < 180) {
+                      targetRow = prevRow;
+                    }
+                  }
+
+                  const targetRect = targetRow.getBoundingClientRect();
+                  const targetTop = targetRect.top - currentTop;
+                  const pushNeeded = Math.ceil(pageBottom - targetTop) + 6;
+                  splitTableBeforeRow(parentTable, targetRow, pushNeeded);
+                  splitHappened = true;
+                  break;
+                }
+              }
+            } else {
+              if (elTop < pageBottom && elBottom > (pageBottom - 8) && elHeight < (pageHeightPx * 0.8)) {
+                shouldPush = true;
+              }
+            }
+
+            if (shouldPush) {
+              const pushNeeded = Math.ceil(pageBottom - elTop) + 6;
+              const spacer = document.createElement('div');
+              spacer.className = 'pdf-pagebreak-spacer-div';
+              spacer.style.display = 'block';
+              spacer.style.height = `${pushNeeded}px`;
+              spacer.style.margin = '0';
+              spacer.style.padding = '0';
+              spacer.style.border = 'none';
+              spacer.style.background = 'transparent';
+              el.parentNode.insertBefore(spacer, el);
+              splitHappened = true;
+              break;
+            }
+          }
+
+          if (splitHappened) {
+            pageSplitsCount[page] = (pageSplitsCount[page] || 0) + 1;
+            page--; // Evaluasi ulang halaman ini setelah DOM bergeser
+          }
+        }
+      }
+
+      // Jalankan paginasi presisi pada clone
+      paginatePdfClone(clone);
 
       // Hitung scale adaptif agar canvas height tidak melampaui limit browser 16,384px (mencegah blank canvas/halaman kosong)
       const measuredHeight = clone.scrollHeight || 6000;
