@@ -304,7 +304,7 @@ async function getAvailableGeminiModels(apiKey) {
   for (const ver of ['v1beta', 'v1']) {
     try {
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 4000);
+      const timeoutId = setTimeout(() => controller.abort(), 2500);
       const res = await fetch(`https://generativelanguage.googleapis.com/${ver}/models?key=${encodeURIComponent(apiKey)}`, {
         signal: controller.signal,
         headers: {
@@ -325,6 +325,10 @@ async function getAvailableGeminiModels(apiKey) {
             return supported;
           }
         }
+      } else if (res.status === 401 || res.status === 403) {
+        // Kunci API ditolak oleh Google (UNAUTHENTICATED / ACCESS_TOKEN_TYPE_UNSUPPORTED)
+        console.warn(`[Gemini API] Kunci ditolak Google (${res.status}), batalkan loop pengecekan.`);
+        return [];
       }
     } catch (e) {
       console.warn(`[Gemini API] Check on ${ver} failed:`, e);
@@ -654,7 +658,7 @@ async function callChatgptForModulAjar(promptText, customConfig) {
       const curEmail = (cur?.email || '').toLowerCase().trim();
       if (curEmail) {
         const ctrl = new AbortController();
-        const tid = setTimeout(() => ctrl.abort(), 2000);
+        const tid = setTimeout(() => ctrl.abort(), 1500);
         const res = await fetch('/api/users', { signal: ctrl.signal });
         clearTimeout(tid);
         if (res.ok) {
@@ -682,58 +686,57 @@ async function callChatgptForModulAjar(promptText, customConfig) {
 
   console.log('[Auto-Fallback] Menghubungi server API ChatGPT (OpenAI)...');
 
-  const models = ['gpt-4o-mini', 'gpt-4o', 'gpt-3.5-turbo'];
   const maxTokens = (customConfig && customConfig.maxOutputTokens) ? customConfig.maxOutputTokens : 4096;
   const temperature = (customConfig && customConfig.temperature !== undefined) ? customConfig.temperature : 0.7;
 
-  // 1. Coba koneksi langsung ke OpenAI REST API
-  for (const m of models) {
-    try {
-      const ctrl = new AbortController();
-      const tid = setTimeout(() => ctrl.abort(), 20000);
-      const res = await fetch('https://api.openai.com/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${chatgptKey}`
-        },
-        body: JSON.stringify({
-          model: m,
-          messages: [
-            {
-              role: 'system',
-              content: 'Anda adalah asisten pakar kurikulum dan pengembang Modul Ajar Kurikulum Merdeka Indonesia. Hasilkan keluaran berkualitas tinggi, terstruktur rapi, dan sesuai instruksi secara presisi.'
-            },
-            {
-              role: 'user',
-              content: promptText
-            }
-          ],
-          temperature: temperature,
-          max_tokens: maxTokens
-        }),
-        signal: ctrl.signal
-      });
-      clearTimeout(tid);
+  // 1. Coba koneksi langsung ke OpenAI REST API (gpt-4o-mini cepat, batas 5 detik)
+  try {
+    const ctrl = new AbortController();
+    const tid = setTimeout(() => ctrl.abort(), 5000);
+    const res = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${chatgptKey}`
+      },
+      body: JSON.stringify({
+        model: 'gpt-4o-mini',
+        messages: [
+          {
+            role: 'system',
+            content: 'Anda adalah asisten pakar kurikulum dan pengembang Modul Ajar Kurikulum Merdeka Indonesia. Hasilkan keluaran berkualitas tinggi, terstruktur rapi, dan sesuai instruksi secara presisi.'
+          },
+          {
+            role: 'user',
+            content: promptText
+          }
+        ],
+        temperature: temperature,
+        max_tokens: maxTokens
+      }),
+      signal: ctrl.signal
+    });
+    clearTimeout(tid);
 
-      if (res.ok) {
-        const json = await res.json();
-        const text = json?.choices?.[0]?.message?.content;
-        if (text && text.trim()) {
-          console.log(`[Auto-Fallback] Sukses! Berhasil generate modul ajar via ChatGPT OpenAI (${m})`);
-          return cleanAiText(text);
-        }
-      } else {
-        const errJson = await res.json().catch(() => ({}));
-        console.warn(`[Auto-Fallback] ChatGPT model ${m} mengembalikan error:`, errJson?.error?.message || res.status);
+    if (res.ok) {
+      const json = await res.json();
+      const text = json?.choices?.[0]?.message?.content;
+      if (text && text.trim()) {
+        console.log('[Auto-Fallback] Sukses! Berhasil generate modul ajar via ChatGPT OpenAI (gpt-4o-mini)');
+        return cleanAiText(text);
       }
-    } catch (err) {
-      console.warn(`[Auto-Fallback] Gagal menghubungi ChatGPT model ${m}:`, err.message);
+    } else {
+      const errJson = await res.json().catch(() => ({}));
+      console.warn('[Auto-Fallback] ChatGPT mengembalikan respon:', errJson?.error?.message || res.status);
     }
+  } catch (err) {
+    console.warn('[Auto-Fallback] Gagal menghubungi ChatGPT direct API:', err.message);
   }
 
-  // 2. Fallback melalui proxy backend server lokal jika ada
+  // 2. Fallback melalui proxy backend server lokal jika koneksi direct terkendala (batas 4 detik)
   try {
+    const proxyCtrl = new AbortController();
+    const proxyTid = setTimeout(() => proxyCtrl.abort(), 4000);
     const proxyRes = await fetch('/api/openai/chat', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -743,8 +746,10 @@ async function callChatgptForModulAjar(promptText, customConfig) {
         systemPrompt: 'Anda adalah asisten pakar kurikulum dan pengembang Modul Ajar Kurikulum Merdeka Indonesia.',
         temperature: temperature,
         maxTokens: maxTokens
-      })
+      }),
+      signal: proxyCtrl.signal
     });
+    clearTimeout(proxyTid);
     if (proxyRes.ok) {
       const pData = await proxyRes.json();
       if (pData.status === 'success' && pData.content) {
@@ -856,12 +861,12 @@ async function callGeminiWithAccountKey(promptText, fallbackFn, customConfig) {
     ...(customConfig || {})
   };
 
-  // Uji coba eksekusi ke Google Gemini API
+  // Uji coba eksekusi ke Google Gemini API (maksimal 3.5 detik per endpoint)
   for (const baseEndpoint of uniqueEndpoints) {
     try {
       const url = `${baseEndpoint}?key=${encodeURIComponent(apiKey)}`;
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 7000); // 7 detik per endpoint
+      const timeoutId = setTimeout(() => controller.abort(), 3500);
 
       const res = await fetch(url, {
         method: 'POST',
@@ -887,6 +892,11 @@ async function callGeminiWithAccountKey(promptText, fallbackFn, customConfig) {
       } else {
         const errData = await res.json().catch(() => ({}));
         lastErrorMsg = errData?.error?.message || `HTTP ${res.status}`;
+        // Jika token tidak valid / ditolak autentikasi (401/403), stop segera dan alihkan ke fallback
+        if (res.status === 401 || res.status === 403 || lastErrorMsg.includes('UNAUTHENTICATED') || lastErrorMsg.includes('API key not valid')) {
+          console.warn('[Gemini API] Google menolak kunci API (' + res.status + '):', lastErrorMsg);
+          break;
+        }
       }
     } catch (e) {
       lastErrorMsg = e.name === 'AbortError' ? 'Batas waktu koneksi Google Gemini terlampaui (timeout)' : (e.message || 'Koneksi terputus');
@@ -902,6 +912,10 @@ async function callGeminiWithAccountKey(promptText, fallbackFn, customConfig) {
   const progressStepText = document.getElementById('generateProgressStepText');
   if (progressStepText) {
     progressStepText.innerHTML = '<span style="color:#2563eb; font-weight:600;">Gemini tidak merespon, otomatis dialihkan ke ChatGPT (OpenAI)...</span>';
+  }
+  const indicatorCaption = document.getElementById('generateIndicatorCaption');
+  if (indicatorCaption) {
+    indicatorCaption.textContent = 'Proses dialihkan ke ChatGPT / AI Engine';
   }
 
   const chatgptResult = await callChatgptForModulAjar(promptText, customConfig);
@@ -2036,16 +2050,16 @@ async function proceedGenerateModul() {
     }, 1500);
 
     try {
-      // Panggil AI dengan batas waktu ketat maksimal 15 detik (Promise.race)
+      // Panggil AI dengan batas waktu ketat maksimal 8 detik (Promise.race)
       // Menjamin 100% proses tidak akan pernah macet atau tertahan berlama-lama
-      const AI_MAX_TIMEOUT_MS = 15000;
+      const AI_MAX_TIMEOUT_MS = 8000;
       const aiContent = await Promise.race([
         generateFullModulWithAI(modulPayload),
         new Promise((_, reject) =>
-          setTimeout(() => reject(new Error('Batas waktu AI 15 detik terlampaui')), AI_MAX_TIMEOUT_MS)
+          setTimeout(() => reject(new Error('Batas waktu AI 8 detik terlampaui')), AI_MAX_TIMEOUT_MS)
         )
       ]);
-      modulPayload.aiGeneratedContent = aiContent;
+      modulPayload.aiGeneratedContent = aiContent || buildComprehensiveAiModulContent(modulPayload);
     } catch (e) {
       console.warn('AI generation timeout/error, applying comprehensive fallback immediately:', e);
       modulPayload.aiGeneratedContent = buildComprehensiveAiModulContent(modulPayload);
@@ -2123,11 +2137,11 @@ async function proceedGenerateModul() {
     if (percentEl) percentEl.textContent = '100%';
     if (stepTextEl) stepTextEl.textContent = 'Selesai! Modul Ajar berhasil disusun.';
 
-    // Jeda transisi 250ms agar animasi bar 100% terlihat mulus lalu tampilkan tombol "Buka Modul Ajar"
+    // Jeda transisi 200ms agar animasi bar 100% terlihat mulus lalu tampilkan tombol "Buka Modul Ajar"
     setTimeout(() => {
       try {
-        progressLoading.style.display = 'none';
-        progressSuccess.style.display = 'flex';
+        if (progressLoading) progressLoading.style.display = 'none';
+        if (progressSuccess) progressSuccess.style.display = 'flex';
 
         // Scroll halus ke kartu hasil agar tombol Buka Modul Ajar terlihat nyaman dengan jarak di bawah layar
         scrollCardIntoViewWithGap(progressContainer, 70);
@@ -2147,7 +2161,7 @@ async function proceedGenerateModul() {
           btnUbahKonteks.style.cursor = 'pointer';
         }
       }
-    }, 250);
+    }, 200);
 
     // 4. Sinkronisasi ke Supabase Database Server berjalan di BACKGROUND (non-blocking)
     // Tidak akan pernah menahan tampilan atau membuat UI guru macet
