@@ -1292,9 +1292,8 @@ body {
 
 /* Kartu Tersendiri: Hasil / Proses Generate (Terpisah dari Kartu Review) */
 .generate-result-standalone-wrapper {
-  margin-top: 36px;
-  margin-bottom: 96px;
-  padding-bottom: 24px;
+  margin-top: 28px;
+  margin-bottom: 32px;
   width: 100%;
   box-sizing: border-box;
   animation: fadeIn 0.35s ease;
@@ -1305,11 +1304,11 @@ body {
   flex-direction: row !important;
   align-items: center !important;
   justify-content: center !important;
-  gap: 60px;
+  gap: 40px;
   background: var(--color-card, #ffffff);
   border: 1.5px solid var(--color-border, #e2e8f0);
   border-radius: var(--radius-card, 24px);
-  padding: 44px 48px;
+  padding: 36px 44px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
   box-sizing: border-box;
   width: 100%;
@@ -1317,8 +1316,8 @@ body {
 
 .generate-result-left {
   flex-shrink: 0;
-  width: 460px;
-  max-width: 48%;
+  width: 380px;
+  max-width: 44%;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1326,7 +1325,7 @@ body {
 
 .generate-result-img {
   width: 100%;
-  max-width: 460px;
+  max-width: 380px;
   height: auto;
   object-fit: contain;
   display: block;
