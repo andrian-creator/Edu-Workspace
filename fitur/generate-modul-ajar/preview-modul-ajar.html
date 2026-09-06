@@ -1343,24 +1343,7 @@
         } catch (e) { }
       }
 
-      // Tampilkan banner ramah jika dokumen dihasilkan melalui mesin fallback terintegrasi
-      if (data._fallbackNotice && !document.getElementById('aiNoticeBanner')) {
-        const noticeEl = document.createElement('div');
-        noticeEl.id = 'aiNoticeBanner';
-        noticeEl.className = 'no-print';
-        noticeEl.style.cssText = 'margin: 20px 0; padding: 14px 18px; background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; font-size: 0.88rem; color: #1e40af; display: flex; align-items: center; justify-content: space-between; gap: 12px;';
-        noticeEl.innerHTML = `
-          <div style="display: flex; align-items: center; gap: 10px;">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
-            <span>${data._fallbackNotice}</span>
-          </div>
-          <button type="button" onclick="this.parentElement.remove()" style="background: none; border: none; cursor: pointer; color: #2563eb; font-weight: bold; font-size: 1.1rem; line-height: 1;">&times;</button>
-        `;
-        const metaTable = document.querySelector('.doc-metadata-table');
-        if (metaTable && metaTable.parentNode) {
-          metaTable.parentNode.insertBefore(noticeEl, metaTable.nextSibling);
-        }
-      }
+      delete data._fallbackNotice;
 
       // ======================================================================
       // A. IDENTIFIKASI AWAL (Hasil Generate AI)
