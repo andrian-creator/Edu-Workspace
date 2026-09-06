@@ -912,16 +912,19 @@ async function callGeminiWithAccountKey(promptText, fallbackFn, customConfig) {
                        (lastErrorMsg || '').includes('429');
   const reasonText = isLimitHabis ? 'Gemini limit kuota habis' : 'Gemini tidak merespon';
 
-  console.warn(`[Auto-Fallback] ${reasonText}:`, lastErrorMsg, '-> Langsung beralih ke ChatGPT (OpenAI)...');
+  console.warn(`[Auto-Fallback] ${reasonText}:`, lastErrorMsg, '-> Beralih ke ChatGPT (OpenAI) di latar belakang...');
 
-  // Berikan update status pada form jika elemen status proses sedang aktif
-  const progressStepText = document.getElementById('generateProgressStepText');
-  if (progressStepText) {
-    progressStepText.innerHTML = `<span style="color:#2563eb; font-weight:600;">${reasonText}, otomatis dialihkan ke ChatGPT (OpenAI)...</span>`;
-  }
-  const indicatorCaption = document.getElementById('generateIndicatorCaption');
-  if (indicatorCaption) {
-    indicatorCaption.textContent = 'Proses dialihkan ke ChatGPT (OpenAI)';
+  // Keterangan ganti ChatGPT TIDAK ditampilkan di UI (hanya ditampilkan jika proses benar-benar lebih dari 5 menit)
+  const elapsedMs = window._modulGenerateStartTime ? (Date.now() - window._modulGenerateStartTime) : 0;
+  if (elapsedMs > 300000) {
+    const progressStepText = document.getElementById('generateProgressStepText');
+    if (progressStepText) {
+      progressStepText.innerHTML = `<span style="color:#2563eb; font-weight:600;">${reasonText}, otomatis dialihkan ke ChatGPT (OpenAI)...</span>`;
+    }
+    const indicatorCaption = document.getElementById('generateIndicatorCaption');
+    if (indicatorCaption) {
+      indicatorCaption.textContent = 'Proses dialihkan ke ChatGPT (OpenAI)';
+    }
   }
 
   const chatgptResult = await callChatgptForModulAjar(promptText, customConfig);
@@ -2013,6 +2016,7 @@ async function proceedGenerateModul() {
 
   if (progressContainer && progressLoading && progressSuccess) {
     modulGeneratedInThisSession = true;
+    window._modulGenerateStartTime = Date.now();
     progressContainer.style.display = 'block';
     progressLoading.style.display = 'flex';
     progressSuccess.style.display = 'none';
@@ -2068,7 +2072,11 @@ async function proceedGenerateModul() {
       modulPayload.aiGeneratedContent = aiContent || buildComprehensiveAiModulContent(modulPayload);
     } catch (e) {
       console.warn('AI generation timeout/error, applying comprehensive fallback immediately:', e);
-      modulPayload.aiGeneratedContent = buildComprehensiveAiModulContent(modulPayload);
+      try {
+        modulPayload.aiGeneratedContent = buildComprehensiveAiModulContent(modulPayload);
+      } catch (errBuild) {
+        console.warn('Fallback builder error, safe assign:', errBuild);
+      }
     } finally {
       clearInterval(progressTimer);
     }
