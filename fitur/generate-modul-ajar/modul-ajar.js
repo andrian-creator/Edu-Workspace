@@ -610,7 +610,155 @@ function parseIdentifikasiAwal(rawText) {
   };
 }
 
-// Eksekusi Panggilan Google Gemini API Menggunakan Kunci API Tiap Akun
+// Helper: Dapatkan API Key ChatGPT (OpenAI) milik akun
+function getEffectiveChatgptApiKey() {
+  try {
+    const cur = getCurrentUser();
+    if (cur) {
+      if (cur.openaiApiKey && cur.openaiApiKey.trim()) return cur.openaiApiKey.trim();
+      if (cur.chatgptApiKey && cur.chatgptApiKey.trim()) return cur.chatgptApiKey.trim();
+      if (cur.neosantaraApiKey && cur.neosantaraApiKey.trim()) return cur.neosantaraApiKey.trim();
+      if (cur.email) {
+        const emailLow = cur.email.trim().toLowerCase();
+        const keyLow = localStorage.getItem(`edu_openai_api_key_${emailLow}`) ||
+                       localStorage.getItem(`edu_chatgpt_api_key_${emailLow}`) ||
+                       localStorage.getItem(`edu_neosantara_api_key_${emailLow}`);
+        if (keyLow && keyLow.trim()) return keyLow.trim();
+        const keyRaw = localStorage.getItem(`edu_openai_api_key_${cur.email.trim()}`) ||
+                       localStorage.getItem(`edu_chatgpt_api_key_${cur.email.trim()}`);
+        if (keyRaw && keyRaw.trim()) return keyRaw.trim();
+      }
+    }
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (k && (k.startsWith('edu_openai_api_key') || k.startsWith('edu_chatgpt_api_key') || k.startsWith('edu_neosantara_api_key'))) {
+        const val = localStorage.getItem(k);
+        if (val && val.trim()) return val.trim();
+      }
+    }
+    return localStorage.getItem('edu_openai_api_key') || localStorage.getItem('edu_chatgpt_api_key') || '';
+  } catch (e) {
+    return '';
+  }
+}
+
+/**
+ * Eksekusi Panggilan ChatGPT (OpenAI) API sebagai Mesin Cadangan
+ */
+async function callChatgptForModulAjar(promptText, customConfig) {
+  let chatgptKey = getEffectiveChatgptApiKey();
+
+  if (!chatgptKey) {
+    try {
+      const cur = getCurrentUser();
+      const curEmail = (cur?.email || '').toLowerCase().trim();
+      if (curEmail) {
+        const ctrl = new AbortController();
+        const tid = setTimeout(() => ctrl.abort(), 2000);
+        const res = await fetch('/api/users', { signal: ctrl.signal });
+        clearTimeout(tid);
+        if (res.ok) {
+          const rawUsers = await res.json();
+          const users = Array.isArray(rawUsers) ? rawUsers : (rawUsers?.users || []);
+          const found = users.find(u => (u.email || '').toLowerCase() === curEmail);
+          if (found && (found.openaiApiKey || found.chatgptApiKey || found.neosantaraApiKey)) {
+            chatgptKey = (found.openaiApiKey || found.chatgptApiKey || found.neosantaraApiKey).trim();
+            if (cur) {
+              cur.openaiApiKey = chatgptKey;
+              cur.chatgptApiKey = chatgptKey;
+              localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(cur));
+            }
+            localStorage.setItem(`edu_openai_api_key_${curEmail}`, chatgptKey);
+          }
+        }
+      }
+    } catch (e) {}
+  }
+
+  if (!chatgptKey) {
+    console.warn('[Auto-Fallback] Kunci API ChatGPT (OpenAI) belum dikonfigurasi di akun.');
+    return null;
+  }
+
+  console.log('[Auto-Fallback] Menghubungi server API ChatGPT (OpenAI)...');
+
+  const models = ['gpt-4o-mini', 'gpt-4o', 'gpt-3.5-turbo'];
+  const maxTokens = (customConfig && customConfig.maxOutputTokens) ? customConfig.maxOutputTokens : 4096;
+  const temperature = (customConfig && customConfig.temperature !== undefined) ? customConfig.temperature : 0.7;
+
+  // 1. Coba koneksi langsung ke OpenAI REST API
+  for (const m of models) {
+    try {
+      const ctrl = new AbortController();
+      const tid = setTimeout(() => ctrl.abort(), 20000);
+      const res = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${chatgptKey}`
+        },
+        body: JSON.stringify({
+          model: m,
+          messages: [
+            {
+              role: 'system',
+              content: 'Anda adalah asisten pakar kurikulum dan pengembang Modul Ajar Kurikulum Merdeka Indonesia. Hasilkan keluaran berkualitas tinggi, terstruktur rapi, dan sesuai instruksi secara presisi.'
+            },
+            {
+              role: 'user',
+              content: promptText
+            }
+          ],
+          temperature: temperature,
+          max_tokens: maxTokens
+        }),
+        signal: ctrl.signal
+      });
+      clearTimeout(tid);
+
+      if (res.ok) {
+        const json = await res.json();
+        const text = json?.choices?.[0]?.message?.content;
+        if (text && text.trim()) {
+          console.log(`[Auto-Fallback] Sukses! Berhasil generate modul ajar via ChatGPT OpenAI (${m})`);
+          return cleanAiText(text);
+        }
+      } else {
+        const errJson = await res.json().catch(() => ({}));
+        console.warn(`[Auto-Fallback] ChatGPT model ${m} mengembalikan error:`, errJson?.error?.message || res.status);
+      }
+    } catch (err) {
+      console.warn(`[Auto-Fallback] Gagal menghubungi ChatGPT model ${m}:`, err.message);
+    }
+  }
+
+  // 2. Fallback melalui proxy backend server lokal jika ada
+  try {
+    const proxyRes = await fetch('/api/openai/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        apiKey: chatgptKey,
+        prompt: promptText,
+        systemPrompt: 'Anda adalah asisten pakar kurikulum dan pengembang Modul Ajar Kurikulum Merdeka Indonesia.',
+        temperature: temperature,
+        maxTokens: maxTokens
+      })
+    });
+    if (proxyRes.ok) {
+      const pData = await proxyRes.json();
+      if (pData.status === 'success' && pData.content) {
+        console.log('[Auto-Fallback] Sukses generate modul ajar via proxy ChatGPT backend.');
+        return cleanAiText(pData.content);
+      }
+    }
+  } catch (pe) {}
+
+  return null;
+}
+
+// Eksekusi Panggilan AI untuk Halaman Modul Ajar:
+// UTAMA: Google Gemini API -> JIKA TIDAK MERESPON: Otomatis ganti menggunakan ChatGPT (OpenAI) API!
 async function callGeminiWithAccountKey(promptText, fallbackFn, customConfig) {
   let apiKey = getEffectiveApiKey();
   if (!apiKey) {
@@ -638,10 +786,24 @@ async function callGeminiWithAccountKey(promptText, fallbackFn, customConfig) {
     } catch (e) { }
   }
 
+  // JIKA KUNCI GEMINI BELUM DISET: Langsung coba ChatGPT API jika tersedia
   if (!apiKey) {
+    const chatgptKey = getEffectiveChatgptApiKey();
+    if (chatgptKey) {
+      console.log('[AI Generator] Kunci Gemini belum ada, langsung mencoba via ChatGPT API (OpenAI)...');
+      const chatgptResult = await callChatgptForModulAjar(promptText, customConfig);
+      if (chatgptResult) {
+        return chatgptResult;
+      }
+    }
+
+    if (fallbackFn) {
+      return cleanAiText(fallbackFn());
+    }
+
     showNotificationModal(
       'API Key Belum Disimpan',
-      'Fitur "Generate With AI" memerlukan API Key Google Gemini pada akun Anda. Silakan masukkan dan simpan API Key Anda di menu API Key terlebih dahulu.',
+      'Fitur "Generate With AI" memerlukan API Key Google Gemini atau ChatGPT pada akun Anda. Silakan masukkan dan simpan API Key di menu API Key.',
       'warning'
     );
     return null;
@@ -679,10 +841,9 @@ async function callGeminiWithAccountKey(promptText, fallbackFn, customConfig) {
 
   // Tambahkan endpoint resmi Google terkini
   candidateEndpoints.push(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent`,
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent`,
     `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent`,
     `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent`,
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent`,
     `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent`
   );
 
@@ -695,11 +856,12 @@ async function callGeminiWithAccountKey(promptText, fallbackFn, customConfig) {
     ...(customConfig || {})
   };
 
+  // Uji coba eksekusi ke Google Gemini API
   for (const baseEndpoint of uniqueEndpoints) {
     try {
       const url = `${baseEndpoint}?key=${encodeURIComponent(apiKey)}`;
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 8000);
+      const timeoutId = setTimeout(() => controller.abort(), 7000); // 7 detik per endpoint
 
       const res = await fetch(url, {
         method: 'POST',
@@ -719,36 +881,41 @@ async function callGeminiWithAccountKey(promptText, fallbackFn, customConfig) {
         const data = await res.json();
         const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
         if (text && text.trim()) {
-          console.log('[Gemini API] Berhasil generate via:', baseEndpoint);
+          console.log('[Gemini API] Berhasil generate via Google Gemini:', baseEndpoint);
           return cleanAiText(text);
         }
       } else {
         const errData = await res.json().catch(() => ({}));
         lastErrorMsg = errData?.error?.message || `HTTP ${res.status}`;
-        // Jika kunci API tidak valid atau dinonaktifkan (400 invalid key / 403), stop
-        if (lastErrorMsg.toLowerCase().includes('api key not valid') || res.status === 403) {
-          showNotificationModal('API Key Tidak Valid', 'Kunci API Google Gemini pada akun Anda tidak valid atau dinonaktifkan di Google AI Studio. Silakan periksa kembali di menu API Key.', 'error');
-          return null;
-        }
       }
     } catch (e) {
-      lastErrorMsg = e.name === 'AbortError' ? 'Batas waktu koneksi terlampaui (timeout)' : (e.message || 'Koneksi terputus');
+      lastErrorMsg = e.name === 'AbortError' ? 'Batas waktu koneksi Google Gemini terlampaui (timeout)' : (e.message || 'Koneksi terputus');
     }
   }
 
-  // Jika Google API gagal karena model tidak ditemukan/kuota habis pada project Google:
-  console.warn('[Gemini API] Semua endpoint model Google tidak merespons, beralih ke engine kurikulum cerdas:', lastErrorMsg);
+  // =========================================================================
+  // SISTEM AUTO-FALLBACK: JIKA GOOGLE GEMINI TIDAK MERESPON -> LANGSUNG GANTI KE CHATGPT!
+  // =========================================================================
+  console.warn('[Auto-Fallback] Google Gemini tidak merespon:', lastErrorMsg, '-> Langsung beralih ke ChatGPT (OpenAI)...');
 
+  // Berikan update status pada form jika elemen status proses sedang aktif
+  const progressStepText = document.getElementById('generateProgressStepText');
+  if (progressStepText) {
+    progressStepText.innerHTML = '<span style="color:#2563eb; font-weight:600;">Gemini tidak merespon, otomatis dialihkan ke ChatGPT (OpenAI)...</span>';
+  }
+
+  const chatgptResult = await callChatgptForModulAjar(promptText, customConfig);
+  if (chatgptResult && chatgptResult.trim()) {
+    console.log('[Auto-Fallback] Sukses! Modul ajar berhasil diselesaikan menggunakan API ChatGPT (OpenAI).');
+    return chatgptResult;
+  }
+
+  // Jika ChatGPT juga tidak merespons atau kunci tidak ada, panggil kurikulum cerdas internal
   if (fallbackFn) {
-    showNotificationModal(
-      'AI Edu Workspace',
-      'Model pada akun Google Gemini Anda sedang tidak merespons di Google API. Sistem otomatis merumuskan menggunakan AI Edu Workspace cerdas agar perencanaan Anda tetap tersusun lengkap.',
-      'info'
-    );
+    console.log('[Auto-Fallback] Menggunakan engine kurikulum cerdas terpadu Edu Workspace...');
     return cleanAiText(fallbackFn());
   }
 
-  // Jika dipanggil tanpa fallbackFn (seperti generateFullModulWithAI yang punya comprehensive generator sendiri)
   return null;
 }
 

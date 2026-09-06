@@ -390,7 +390,60 @@ class EduWorkspaceHandler(http.server.SimpleHTTPRequestHandler):
                 self._send_json_response({"status": "error", "message": str(e)}, 500)
                 return
 
-        # 6. API: Proxy OpenAI / ChatGPT API (Generasi Visual Ilustrasi Slide DALL-E)
+        # 6. API: Proxy OpenAI / ChatGPT Chat Completion (Fallback Modul Ajar)
+        if parsed.path == '/api/openai/chat':
+            api_key = (body.get('apiKey') or '').strip()
+            prompt = (body.get('prompt') or '').strip()
+            system_prompt = (body.get('systemPrompt') or 'Anda adalah asisten pakar kurikulum Kurikulum Merdeka Indonesia.').strip()
+            model = body.get('model') or 'gpt-4o-mini'
+            temperature = body.get('temperature', 0.7)
+            max_tokens = body.get('maxTokens', 4096)
+
+            if not api_key:
+                self._send_json_response({"status": "error", "message": "Kunci API ChatGPT belum diisi."}, 400)
+                return
+
+            try:
+                payload = {
+                    "model": model,
+                    "messages": [
+                        {"role": "system", "content": system_prompt},
+                        {"role": "user", "content": prompt}
+                    ],
+                    "temperature": temperature,
+                    "max_tokens": max_tokens
+                }
+                chat_req_data = json.dumps(payload).encode('utf-8')
+                chat_req = urllib.request.Request(
+                    'https://api.openai.com/v1/chat/completions',
+                    data=chat_req_data,
+                    headers={
+                        'Authorization': f'Bearer {api_key}',
+                        'Content-Type': 'application/json',
+                        'User-Agent': 'EduWorkspace/1.0'
+                    },
+                    method='POST'
+                )
+                with urllib.request.urlopen(chat_req, timeout=30) as chat_resp:
+                    if chat_resp.status == 200:
+                        chat_data = json.loads(chat_resp.read().decode('utf-8'))
+                        content = chat_data.get('choices', [{}])[0].get('message', {}).get('content', '')
+                        self._send_json_response({
+                            "status": "success",
+                            "content": content
+                        })
+                        return
+                    else:
+                        self._send_json_response({
+                            "status": "error",
+                            "message": f"Server OpenAI mengembalikan status {chat_resp.status}"
+                        }, 400)
+                        return
+            except Exception as e:
+                self._send_json_response({"status": "error", "message": str(e)}, 500)
+                return
+
+        # 7. API: Proxy OpenAI / ChatGPT API (Generasi Visual Ilustrasi Slide DALL-E)
         if parsed.path in ['/api/openai/generate', '/api/neosantara/generate']:
             api_key = (body.get('apiKey') or '').strip()
             prompt = (body.get('prompt') or '').strip()
