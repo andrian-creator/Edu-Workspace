@@ -1681,6 +1681,17 @@ function updateReviewSummary() {
     document.getElementById('reviewMapel').textContent = mapel;
   }
 
+  const rawPertemuan = document.getElementById('jumlahPertemuan')?.value.trim() || '4';
+  const rawJP = document.getElementById('totalJPDurasi')?.value.trim() || '';
+  if (document.getElementById('reviewPertemuan')) {
+    const matchNum = rawPertemuan.match(/\d+/);
+    const countNum = matchNum ? matchNum[0] : rawPertemuan;
+    document.getElementById('reviewPertemuan').textContent = `${countNum} Pertemuan`;
+  }
+  if (document.getElementById('reviewTotalJP')) {
+    document.getElementById('reviewTotalJP').textContent = rawJP || `${rawPertemuan} JP x 45 Menit (${rawPertemuan} Pertemuan)`;
+  }
+
   // 3. Konteks Pembelajaran
   const elemenRaw = document.getElementById('elemenCP')?.value.trim() || '-';
   const elemenList = elemenRaw.split(/[;,\n]/).map(s => s.trim()).filter(Boolean);
@@ -1753,6 +1764,22 @@ function closeConfirmModalOnOverlay(e) {
 }
 
 /**
+ * Helper: Scroll kartu ke layar dengan jarak lega dari tepi bawah jendela browser
+ */
+function scrollCardIntoViewWithGap(element, gapBottom = 70) {
+  if (!element) return;
+  setTimeout(() => {
+    const rect = element.getBoundingClientRect();
+    const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+    const targetY = scrollTop + rect.bottom - window.innerHeight + gapBottom;
+    window.scrollTo({
+      top: Math.max(0, targetY),
+      behavior: 'smooth'
+    });
+  }, 100);
+}
+
+/**
  * Eksekusi Generate Modul Ajar Setelah Setuju di Popup
  */
 async function proceedGenerateModul() {
@@ -1793,10 +1820,8 @@ async function proceedGenerateModul() {
     progressLoading.style.display = 'flex';
     progressSuccess.style.display = 'none';
 
-    // Scroll halus ke container progress
-    setTimeout(() => {
-      progressContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-    }, 80);
+    // Scroll halus ke container progress dengan jarak lega dari tepi bawah jendela browser
+    scrollCardIntoViewWithGap(progressContainer, 70);
 
     // Inisialisasi indikator progres & teks proses generate
     const barEl = document.getElementById('generateProgressBar');
@@ -1920,8 +1945,8 @@ async function proceedGenerateModul() {
         progressLoading.style.display = 'none';
         progressSuccess.style.display = 'flex';
 
-        // Scroll halus ke kartu hasil agar tombol Buka Modul Ajar terlihat nyaman di layar
-        progressContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        // Scroll halus ke kartu hasil agar tombol Buka Modul Ajar terlihat nyaman dengan jarak di bawah layar
+        scrollCardIntoViewWithGap(progressContainer, 70);
 
         // Notifikasi "Generate sukses" sesuai permintaan pengguna
         showNotificationModal('Generate Sukses', 'Modul Ajar telah berhasil disusun dan disimpan!', 'success');
