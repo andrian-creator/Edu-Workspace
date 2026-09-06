@@ -974,8 +974,6 @@
         const waktu = item.waktu || (list.length > 1 ? `${Math.round(60 / list.length)} Menit` : '60 Menit');
         const guru = formatActivityPoints(item.aktivitasGuru);
         const murid = formatActivityPoints(item.aktivitasMurid);
-        const note = item.integrasiPendekatan || item.deepLearningSintaks || '';
-
         return `
           <tr>
             <td style="vertical-align: top;">
@@ -986,15 +984,6 @@
             <td style="vertical-align: top;">${guru}</td>
             <td style="vertical-align: top;">${murid}</td>
           </tr>
-          ${note ? `
-          <tr>
-            <td colspan="4" style="background: #fafafa; padding: 6px 12px; border-left: 3px solid #2563eb;">
-              <div class="deep-learning-box" style="margin: 0; padding: 2px 0;">
-                <strong>${getPendekatanModelLabel(pendekatan, model)}</strong> ${note}
-              </div>
-            </td>
-          </tr>
-          ` : ''}
         `;
       }).join('');
     }
