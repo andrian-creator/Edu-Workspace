@@ -2484,6 +2484,8 @@ ATURAN WAJIB DAN MENGIKAT — PELANGGARAN TIDAK DIIZINKAN:
 
 7. MATERI AJAR DESKRIPTIF (FOKUS MATERI TEKNIS, SUB-JUDUL RAPI & TABEL):
    - WAJIB FOKUS PENUH PADA SUBSTANSI MATERI DAN KONTEN ILMIAH/TEKNIS dari "${topik}".
+   - Khusus jika konteks input dari Tahap 1 & 2 berkaitan dengan Videografi, Sinematografi, Tata Kamera, Fotografi, atau Broadcasting Perfilman:
+     Pembahasan materi dan tabel parameter teknis WAJIB mencakup pemahaman operasional komprehensif tentang Shot Size, Camera Angle, Camera Movement, Aturan 180 Derajat, Depth of Field (DoF), Rule of Thirds & Framing, serta White Balance (WB).
    - DILARANG KERAS MENULIS NARASI META SEPERTI: "Dalam konteks pembelajaran di SMK...", "Penerapan model Project Based Learning berbasis pendekatan TPACK terbukti...", "Melalui sintaks PjBL peserta didik dilatih...". Naskah materi ajar adalah bahan ajar teknis/keilmuan murni untuk penguasaan materi "${topik}"!
    - Tuliskan dengan format teks terstruktur yang rapi: gunakan sub-judul bernomor (contoh: "1. Konsep Dasar ...", "2. Sudut Pandang ...", "3. Standar Operasional ..."), paragraf penjelasan ilmiah yang mendalam dan tuntas, serta WAJIB SERTAKAN MINIMAL 1 TABEL PARAMETER TEKNIS RINGKASAN MATERI (format Markdown Table: | Parameter Teknis | Deskripsi & Prinsip Kerja | Standar SOP / Kriteria Industri |\n|---|---|---|\n...).
    - DILARANG menggunakan unescaped control character atau literal '\\n' yang tidak valid di dalam JSON string.
@@ -2491,8 +2493,18 @@ ATURAN WAJIB DAN MENGIKAT — PELANGGARAN TIDAK DIIZINKAN:
 8. MATERI TAMBAHAN (PENGAYAAN DESKRIPTIF LENGKAP & TABEL KOMPARATIF):
    - Jika materi tambahan diisi ("${materiTambahan}"), JANGAN HANYA menuliskan 1-3 butir kalimat pendek! Uraikan secara komprehensif, mendalam, dan deskriptif dalam bentuk paragraf penjelasan terperinci (minimal 2-3 paragraf mendalam), sertakan studi kasus atau aplikasi teknologi terkini industri, serta WAJIB SERTAKAN 1 TABEL RINGKASAN PENGAYAAN / KOMPARASI MATERI TINGKAT LANJUT (format Markdown Table: | Dimensi Eksplorasi / Inovasi | Penerapan Terapan Lanjut | Relevansi Industri & Portofolio |).
 
-9. GLOSARIUM:
-   - Minimal 5 istilah teknis yang KHUSUS, SPESIFIK, dan MURNI DARI MATERI "${topik}" (misal terminologi teknis keilmuan/kejuruan).
+9. GLOSARIUM (KAMUS ISTILAH TEKNIS KOMPREHENSIF SESUAI KONTEKS TAHAP 1-2):
+   - Minimal 5-8 istilah teknis yang KHUSUS, SPESIFIK, dan MURNI DARI MATERI "${topik}" serta relevan dengan konteks input Tahap 1 & 2.
+   - Khusus jika konteks input berkaitan dengan Videografi, Sinematografi, Tata Kamera, Fotografi, atau Broadcasting Perfilman:
+     WAJIB sertakan kamus istilah teknis komprehensif mencakup:
+     1) Shot Size (Extreme Long Shot s.d. Extreme Close Up)
+     2) Camera Angle (Bird Eye, High Angle, Eye Level, Low Angle, Frog Eye, Dutch Angle)
+     3) Camera Movement (Pan, Tilt, Dolly, Pedestal, Truck, Crane, Arc, Zoom)
+     4) Aturan 180 Derajat (180-Degree Rule & Line of Action)
+     5) Depth of Field (DoF: Aperture, Focal Length, Jarak Fokus)
+     6) Rule of Thirds & Framing (Komposisi Sepertiga Bidang, Headroom, Lookspace)
+     7) White Balance (Kalibrasi Suhu Warna Kelvin)
+   - Begitu juga untuk bidang kejuruan lainnya (Animasi, DKV, IT/Jaringan, Otomotif, Listrik, Bisnis, Kuliner): wajib memuat istilah teknis operasional murni sesuai konteks input Tahap 1-2.
    - DILARANG KERAS menggunakan istilah generik non-teknis atau istilah proses pedagogis seperti: "Sintesis Solutif", "Verifikasi Empiris", "Konseptualisasi", "Analisis Variabel", "Discovery Learning", "TPACK". Glosarium HARUS murni istilah materi ajar!
 
 10. DAFTAR PUSTAKA:
@@ -2884,8 +2896,45 @@ function resolveContextualRubrik(raw, data) {
 }
 
 /**
+ * Ekstraksi Konteks Holistik dari Seluruh Isian Formulir Tahap 1 & Tahap 2
+ */
+function extractContextTahap1Dan2(data, rawOrAi) {
+  const d = data || {};
+  const a = rawOrAi || {};
+  const fields = [
+    d.mataPelajaran,
+    d.topikMateri,
+    d.isiTopikMateri,
+    d.elemenCP,
+    d.jurusanSekolah,
+    d.jenjangSekolah,
+    d.faseKelas,
+    d.capaianPembelajaran,
+    d.tujuanPembelajaran,
+    d.materiTambahan,
+    d.identifikasiMateri,
+    d.identifikasiPesertaDidik,
+    d.identifikasiProfilLulusan,
+    d.mediaDigital,
+    d.fasilitas,
+    d.saranaPrasarana,
+    d.modelPembelajaran,
+    d.pendekatanPembelajaran,
+    a.mataPelajaran,
+    a.topikMateri,
+    a.materiAjarDeskriptif
+  ];
+  return fields
+    .filter(Boolean)
+    .map(v => (typeof v === 'object' ? JSON.stringify(v) : String(v)))
+    .join(' ')
+    .toLowerCase();
+}
+
+/**
  * Normalisasi dan Resolusi Glosarium Materi (Multi-Format & Contextual Fallback)
  * Hanya berisi materi/istilah teknis murni yang diambil, tidak memuat istilah pedagogis generik
+ * Konteks diekstraksi holistik dari seluruh informasi Tahap 1 & 2
  */
 function resolveContextualGlosarium(raw, data) {
   let list = [];
@@ -2936,65 +2985,147 @@ function resolveContextualGlosarium(raw, data) {
     return !forbiddenTerms.some(fb => termLower.includes(fb));
   });
 
-  // Jika list kosong atau kurang dari 3 item, sintesiskan glosarium teknis murni berdasarkan topik & mapel
-  if (list.length < 3) {
+  // Deteksi konteks holistik dari seluruh informasi Tahap 1 & 2
+  const ctx = extractContextTahap1Dan2(data, raw);
+  const isVideoKamera = /video|sinemat|kamera|camera|shot|angle|framing|broadcasting|perfilman|film|foto|lensa|shutter|aperture|iso|eksposur|exposure|white\s*balance|depth\s*of\s*field|rule\s*of\s*thirds/i.test(ctx);
+  const isAnimasi = /animasi|karakter|storyboard|motion|keyframe|rigging|tweening|render/i.test(ctx);
+  const isIT = /jaringan|komputer|it|server|cisco|mikrotik|rpl|software|cyber|cloud|lan|wan|routing|switch|firewall/i.test(ctx);
+  const isDKV = /desain|dkv|grafis|ilustrasi|layout|tipografi|vektor|vector|branding|logo|poster/i.test(ctx);
+  const isOtomotif = /otomotif|motor|mobil|mesin|injeksi|ecu|transmisi|rem|suspensi/i.test(ctx);
+  const isListrik = /listrik|elektronika|arus|tegangan|daya|plc|mikrokontroler|arduino|sensor/i.test(ctx);
+  const isBisnis = /akuntansi|keuangan|bisnis|manajemen|pasar|uang|jurnal|neraca|laba|faktur|pajak/i.test(ctx);
+  const isKuliner = /kuliner|boga|masak|makanan|minuman|food|resep|pastry|bakery/i.test(ctx);
+
+  // Kamus Istilah Teknis Komprehensif Videografi, Sinematografi, dan Tata Kamera
+  const kamusVideoSinematografi = [
+    {
+      istilah: "Shot Size (Ukuran Bidik Kamera)",
+      definisi: "Standar klasifikasi luas area bidang pandang kamera terhadap subjek dan latar belakang, mulai dari Extreme Long Shot (ELS) untuk establishing shot lingkungan, Long Shot (LS) untuk figur utuh dan orientasi aksi, Medium Shot (MS) dari pinggang ke atas untuk interaksi wajar, Medium Close-Up (MCU) dada ke atas untuk ekspresi vokal, Close-Up (CU) kepala dan bahu untuk intensitas emosional, hingga Big Close-Up (BCU) dan Extreme Close-Up (ECU) untuk detail dramatis mikro objek."
+    },
+    {
+      istilah: "Camera Angle (Sudut Pandang Kamera)",
+      definisi: "Variasi penempatan sudut elevasi dan perspektif sumbu vertikal kamera terhadap subjek, meliputi Bird Eye View (sudut pandang tegak lurus dari atas untuk memetakan ruang), High Angle (kamera menunduk ke bawah memberikan kesan subjek kecil/rentan), Eye Level (sudut pandang sejajar mata manusia yang netral dan objektif), Low Angle (kamera menengadah ke atas memberikan impresi subjek dominan, berwibawa, atau megah), Frog Eye (kamera sejajar permukaan tanah ekstrem), serta Dutch Angle / Canted Angle (posisi kamera miring untuk efek disorientasi psikologis atau ketegangan situasi)."
+    },
+    {
+      istilah: "Camera Movement (Pergerakan Kamera)",
+      definisi: "Dinamika manuver penggerakan kamera untuk membangun ritme visual dan mengarahkan fokus penonton, terdiri atas pergerakan pada poros tetap seperti Pan (menoleh horizontal ke kiri/kanan) dan Tilt (mendongak ke atas/menunduk ke bawah), maupun pergerakan fisik seluruh badan kamera meliputi Dolly/Track (bergerak mendekat atau menjauhi subjek), Pedestal (bergerak naik atau turun vertikal), Truck/Tracking (bergerak menyamping mengikuti aksi subjek), Crane/Jib (gerakan melayang dinamis multi-arah), Arc (bergerak melingkar mengitari subjek), serta Zoom (perubahan panjang fokus lensa secara optik)."
+    },
+    {
+      istilah: "Aturan 180 Derajat (180-Degree Rule)",
+      definisi: "Kaidah kontinuitas sinematografi fundamental yang menetapkan garis imajiner (line of action) 180 derajat antara dua karakter atau arah gerak adegan. Kamera wajib selalu berada di satu sisi garis yang sama agar orientasi spasial penonton, arah pandangan mata (eyeline match), dan kesinambungan posisi layar kiri-kanan antartokoh tidak terbalik saat perpindahan shot bergantian."
+    },
+    {
+      istilah: "Depth of Field (DoF - Kedalaman Ruang Fokus)",
+      definisi: "Rentang zona ketajaman fokus di depan dan di belakang subjek yang tampak tajam dalam bingkai gambar. Shallow Depth of Field (ruang tajam sempit) menghasilkan latar belakang buram (bokeh artistik) untuk mengisolasi subjek utama dari distraksi latar, sedangkan Deep Depth of Field (ruang tajam luas) mempertahankan ketajaman dari latar depan hingga latar belakang. Dipengaruhi oleh tiga parameter fisik utama: bukaan diafragma (aperture/f-stop), panjang fokus lensa (focal length), dan jarak fisik kamera ke subjek."
+    },
+    {
+      istilah: "Rule of Thirds & Framing (Komposisi Sepertiga Bidang & Pembingkaian)",
+      definisi: "Prinsip estetika komposisi visual dengan membagi bidang bidik secara proporsional menjadi kisi 3x3 (sembilan kotak simetris dengan empat titik persimpangan daya tarik visual). Menempatkan subjek utama pada titik temu (point of interest) atau sepanjang garis kisi, disertai pengaturan proporsi Headroom (ruang di atas kepala subjek), Look Space / Nose Room (ruang kosong ke arah pandangan mata subjek), Lead Room (ruang di depan arah gerak objek), serta teknik Frame within Frame untuk menambah kedalaman dimensional gambar."
+    },
+    {
+      istilah: "White Balance (WB - Kalibrasi Keseimbangan Putih)",
+      definisi: "Proses kalibrasi digital dan optik pada sensor kamera untuk menyesuaikan respons warna terhadap suhu warna sumber pencahayaan aktual (dinyatakan dalam skala Kelvin/K), sehingga objek berwarna putih murni terekam secara netral tanpa bias warna (color cast) yang tidak diinginkan, seperti rona kebiruan di bawah naungan awan/bayangan atau rona kekuningan di bawah lampu pijar (tungsten)."
+    }
+  ];
+
+  // JIKA KONTEKS VIDEOGRAFI/SINEMATOGRAFI/TATA KAMERA TERDETEKSI:
+  if (isVideoKamera) {
+    const existingLower = list.map(item => (item.istilah || '').toLowerCase());
+    const missingCore = kamusVideoSinematografi.filter(coreItem => {
+      const cName = coreItem.istilah.toLowerCase();
+      return !existingLower.some(ext => {
+        if (cName.includes('shot size') && ext.includes('shot')) return true;
+        if (cName.includes('camera angle') && ext.includes('angle')) return true;
+        if (cName.includes('camera movement') && ext.includes('move')) return true;
+        if (cName.includes('180') && ext.includes('180')) return true;
+        if (cName.includes('depth of field') && (ext.includes('depth') || ext.includes('dof'))) return true;
+        if (cName.includes('rule of thirds') && (ext.includes('thirds') || ext.includes('framing'))) return true;
+        if (cName.includes('white balance') && (ext.includes('white') || ext.includes('balance'))) return true;
+        return false;
+      });
+    });
+
+    if (list.length < 5) {
+      const merged = [...kamusVideoSinematografi];
+      list.forEach(item => {
+        if (!merged.some(m => m.istilah.toLowerCase() === item.istilah.toLowerCase())) {
+          merged.push(item);
+        }
+      });
+      return merged;
+    } else {
+      return [...missingCore, ...list];
+    }
+  }
+
+  // UNTUK KONTEKS BIDANG KEILMUAN LAINNYA:
+  if (list.length < 5) {
     const d = data || {};
     const topik = d.topikMateri || 'Materi Pokok';
     const mapel = d.mataPelajaran || 'Mata Pelajaran';
-    const tLower = (topik + ' ' + mapel).toLowerCase();
 
-    if (tLower.includes('foto') || tLower.includes('kamera') || tLower.includes('lens') || tLower.includes('shutter') || tLower.includes('aperture') || tLower.includes('iso') || tLower.includes('eksposur') || tLower.includes('exposure') || tLower.includes('gambar') || tLower.includes('video') || tLower.includes('sinematik') || tLower.includes('sinematografi') || tLower.includes('videografi') || tLower.includes('film') || tLower.includes('shot') || tLower.includes('framing') || tLower.includes('broadcasting')) {
-      list = [
-        { istilah: "Shot Size (Ukuran Bidik Gambar)", definisi: "Klasifikasi skala luas area subjek dalam bingkai kamera, mulai dari Extreme Long Shot (ELS), Medium Shot (MS), hingga Extreme Close Up (ECU) untuk membangun konteks dramatik dan kedekatan emosional penonton." },
-        { istilah: "Camera Angle (Sudut Pandang Kamera)", definisi: "Sudut elevasi penempatan kamera terhadap objek (Eye Level, High Angle, Low Angle, Frog Eye, Bird Eye) yang menentukan hierarki kekuatan visual dan impresi psikologis adegan." },
-        { istilah: "Camera Movement (Pergerakan Kamera)", definisi: "Dinamika gerak kamera baik pada poros statis (Pan, Tilt) maupun pergerakan fisik seluruh badan kamera (Dolly/Track, Pedestal, Crane, Tracking Shot) guna mengarahkan perhatian penonton." },
-        { istilah: "Aturan 180 Derajat (180-Degree Rule)", definisi: "Kaidah kontinuitas spasial dalam perekaman adegan sinematik yang menetapkan garis imajiner antar-karakter agar orientasi arah pandang (eyeline) dan posisi layar tetap konsisten saat perpindahan shot." },
-        { istilah: "Depth of Field (DoF)", definisi: "Rentang jarak ketajaman fokus di depan dan di belakang objek utama, ditentukan oleh kombinasi bukaan diafragma (aperture), panjang fokus lensa (focal length), dan jarak fisik kamera ke subjek." },
-        { istilah: "Rule of Thirds & Framing", definisi: "Prinsip komposisi visual dengan membagi bidang bidik menjadi sembilan bagian simetris untuk memposisikan titik minat (point of interest), headroom, dan lookspace/noseroom secara proporsional." },
-        { istilah: "White Balance (WB)", definisi: "Kalibrasi sensitivitas warna sensor kamera untuk memastikan objek berwarna putih tampak putih netral di bawah berbagai suhu warna pencahayaan (skala Kelvin)." }
-      ];
-    } else if (tLower.includes('animasi') || tLower.includes('karakter') || tLower.includes('storyboard') || tLower.includes('motion')) {
-      list = [
+    let domainFallback = [];
+    if (isAnimasi) {
+      domainFallback = [
         { istilah: "Model Sheet / Turnaround", definisi: "Dokumen panduan visual standar yang menampilkan karakter dari berbagai sudut pandang (depan, samping, belakang, 3/4) beserta ekspresi dan proporsi baku untuk acuan animator." },
         { istilah: "Storyboard Non-Linear", definisi: "Rangkaian visualisasi panel cerita yang memuat percabangan alur interaktif atau multi-skenario adegan sebelum diproduksi ke dalam format animasi utuh." },
         { istilah: "Animatic", definisi: "Versi kasar gerak dari susunan storyboard yang diselaraskan dengan trek suara dan timing durasi untuk mengevaluasi ritme serta sinematografi adegan." },
         { istilah: "Timeline Animasi & Keyframing", definisi: "Garis waktu operasional perangkat lunak tempat animator mengatur kemunculan adegan, perpindahan frame kunci (keyframes), dan tempo pergerakan karakter." },
-        { istilah: "Motion Graphic", definisi: "Teknik penggabungan grafis visual, tipografi kinetik, dan ilustrasi digital yang digerakkan untuk menyampaikan pesan komunikasi visual secara ringkas dan dinamis." }
+        { istilah: "Motion Graphic", definisi: "Teknik penggabungan grafis visual, tipografi kinetik, dan ilustrasi digital yang digerakkan untuk menyampaikan pesan komunikasi visual secara ringkas dan dinamis." },
+        { istilah: "Rigging & Weighting", definisi: "Proses penanaman struktur kerangka tulang digital (bones/skeleton) dan penentuan bobot pengaruh deformasi gerak pada mesh karakter animasi." }
       ];
-    } else if (tLower.includes('jaringan') || tLower.includes('komputer') || tLower.includes('it') || tLower.includes('ip') || tLower.includes('server') || tLower.includes('cisco') || tLower.includes('mikrotik') || tLower.includes('rpl') || tLower.includes('software')) {
-      list = [
+    } else if (isIT) {
+      domainFallback = [
         { istilah: "Topologi Jaringan", definisi: "Struktur geometris dan tata letak fisik maupun logis yang menghubungkan node-node komputer dalam satu kesatuan sistem komunikasi data." },
         { istilah: "IP Addressing & Subnetting", definisi: "Metode pengalamatan numerik unik pada setiap perangkat jaringan serta teknik segmentasi jaringan untuk efisiensi rute dan isolasi keamanan." },
         { istilah: "Routing Protocol", definisi: "Standar aturan dan algoritma yang digunakan router untuk menentukan jalur terbaik dan tercepat dalam meneruskan paket data antarnetwork." },
         { istilah: "Bandwidth & Throughput", definisi: "Kapasitas maksimum transfer data pada kanal komunikasi (bandwidth) dan kecepatan transfer data aktual yang terukur pada waktu tertentu (throughput)." },
-        { istilah: "Firewall & Packet Filtering", definisi: "Sistem pertahanan keamanan yang memantau dan menyaring paket lalu lintas data masuk dan keluar berdasarkan aturan kebijakan keamanan." }
+        { istilah: "Firewall & Packet Filtering", definisi: "Sistem pertahanan keamanan yang memantau dan menyaring paket lalu lintas data masuk dan keluar berdasarkan aturan kebijakan keamanan." },
+        { istilah: "VLAN (Virtual Local Area Network)", definisi: "Pengelompokan logis perangkat jaringan pada segmen switch yang sama secara terisolasi tanpa bergantung pada lokasi fisik." }
       ];
-    } else if (tLower.includes('desain') || tLower.includes('dkv') || tLower.includes('grafis') || tLower.includes('ilustrasi') || tLower.includes('layout')) {
-      list = [
+    } else if (isDKV) {
+      domainFallback = [
         { istilah: "Hierarki Visual", definisi: "Prinsip penataan urutan dan penekanan elemen desain berdasarkan skala prioritas agar pesan utama dapat dicerna audiens secara runtut dan efektif." },
         { istilah: "Tipografi & Kerning", definisi: "Seni pemilihan, penataan gaya huruf, serta pengaturan jarak antar-karakter (kerning) guna menghasilkan keterbacaan (readability) dan keindahan estetika visual." },
         { istilah: "Color Harmony (Harmoni Warna)", definisi: "Kaidah kombinasi warna (analog, komplementer, triadik) yang diaplikasikan untuk membangun nuansa psikologis dan daya tarik visual komposisi karya." },
         { istilah: "Vector Graphic", definisi: "Citra grafis berbasis formula matematis titik dan kurva vektor yang tidak mengalami penurunan resolusi atau pecah saat diperbesar dalam skala apapun." },
-        { istilah: "Grid System & Whitespace", definisi: "Struktur garis panduan penataan layout serta pemanfaatan ruang kosong (negatif) untuk memberi ruang bernapas dan keseimbangan pada karya desain." }
+        { istilah: "Grid System & Whitespace", definisi: "Struktur garis panduan penataan layout serta pemanfaatan ruang kosong (negatif) untuk memberi ruang bernapas dan keseimbangan pada karya desain." },
+        { istilah: "Brand Identity & Guide", definisi: "Sistem identitas visual terpadu (logo, palet warna, tipografi, elemen grafis) yang mencerminkan karakter dan nilai sebuah jenama." }
       ];
-    } else if (tLower.includes('bisnis') || tLower.includes('ekonomi') || tLower.includes('akuntansi') || tLower.includes('pasar') || tLower.includes('uang') || tLower.includes('keuangan')) {
-      list = [
+    } else if (isOtomotif) {
+      domainFallback = [
+        { istilah: "Siklus Motor 4 Langkah", definisi: "Rangkaian empat tahapan kerja mesin pembakaran dalam (hisap, kompresi, usaha, dan buang) untuk menghasilkan satu siklus tenaga mekanik." },
+        { istilah: "Electronic Fuel Injection (EFI)", definisi: "Sistem pengabutan bahan bakar presisi yang dikontrol secara elektronik oleh Engine Control Unit (ECU) berdasarkan sensor-sensor mesin." },
+        { istilah: "Torsi & Daya Kuda (Horsepower)", definisi: "Besaran gaya putar yang dihasilkan mesin pada poros engkol (torsi) dan kemampuan akumulatif mesin dalam melakukan usaha per satuan waktu (daya)." },
+        { istilah: "Sistem Transmisi & Kopling", definisi: "Mekanisme pemindah daya dan pengatur rasio putaran mesin ke roda penggerak sesuai beban dan kecepatan kendaraan." },
+        { istilah: "Anti-lock Braking System (ABS)", definisi: "Sistem pengereman keselamatan aktif yang mencegah roda terkunci saat pengereman mendadak agar traksi dan kendali kemudi tetap terjaga." }
+      ];
+    } else if (isListrik) {
+      domainFallback = [
+        { istilah: "Hukum Ohm & Kirchhoff", definisi: "Prinsip fisika fundamental yang menghubungkan tegangan, kuat arus, hambatan, serta percabangan arus dan beda potensial dalam rangkaian listrik tertutup." },
+        { istilah: "Programmable Logic Controller (PLC)", definisi: "Komputer industri khusus yang dirancang untuk mengendalikan proses otomasi manufaktur melalui instruksi logika terprogram." },
+        { istilah: "Pulse Width Modulation (PWM)", definisi: "Metode modulasi sinyal digital dengan memvariasikan lebar pulsa aktif untuk mengatur daya rata-rata motor listrik atau intensitas beban." },
+        { istilah: "Sensor & Transduser", definisi: "Perangkat yang mendeteksi perubahan besaran fisis (suhu, tekanan, cahaya, gerak) dan mengonversinya menjadi sinyal listrik yang terukur." },
+        { istilah: "Faktor Daya (Cos Phi)", definisi: "Perbandingan antara daya aktif (watt) dan daya semu (volt-ampere) yang mengindikasikan efisiensi pemanfaatan energi listrik pada beban induktif." }
+      ];
+    } else if (isBisnis) {
+      domainFallback = [
         { istilah: "Break Even Point (BEP)", definisi: "Titik impas operasional bisnis ketika total pendapatan yang diterima setara dengan total pengeluaran beban biaya produksi dan usaha." },
         { istilah: "Cash Flow (Arus Kas)", definisi: "Laporan catatan pergerakan masuk dan keluarnya uang kas yang mencerminkan tingkat likuiditas dan stabilitas keuangan suatu entitas usaha." },
         { istilah: "Digital Marketing Funnel", definisi: "Kerangka tahapan konversi perjalanan konsumen mulai dari pembentukan awareness (kesadaran), penimbangan (consideration), hingga transaksi pembelian." },
         { istilah: "Jurnal Penyesuaian", definisi: "Pencatatan akuntansi pada akhir periode untuk menyesuaikan saldo akun-akun nominal dan riil agar mencerminkan kondisi riil berbasis akrual." },
         { istilah: "Value Proposition", definisi: "Nilai keunggulan atau manfaat unik yang ditawarkan suatu produk/jasa sebagai solusi utama atas permasalahan atau kebutuhan target pasar." }
       ];
-    } else if (tLower.includes('mesin') || tLower.includes('otomotif') || tLower.includes('motor') || tLower.includes('mobil') || tLower.includes('listrik') || tLower.includes('las')) {
-      list = [
-        { istilah: "Siklus Motor 4 Langkah", definisi: "Rangkaian empat tahapan kerja mesin pembakaran dalam (hisap, kompresi, usaha, dan buang) untuk menghasilkan satu siklus tenaga mekanik." },
-        { istilah: "Electronic Fuel Injection (EFI)", definisi: "Sistem pengabutan bahan bakar presisi yang dikontrol secara elektronik oleh Engine Control Unit (ECU) berdasarkan sensor-sensor mesin." },
-        { istilah: "Torsi & Daya Kuda (Horsepower)", definisi: "Besaran gaya putar yang dihasilkan mesin pada poros engkol (torsi) dan kemampuan akumulatif mesin dalam melakukan usaha per satuan waktu (daya)." },
-        { istilah: "Sistem Pendingin (Cooling System)", definisi: "Mekanisme sirkulasi cairan radiator dan udara yang menjaga temperatur kerja mesin tetap berada pada titik suhu optimal." },
-        { istilah: "Alat Pelindung Diri & K3", definisi: "Standar peralatan keselamatan kerja (wearpack, kacamata pelindung, sepatu safety) dan prosedur pencegahan kecelakaan di area bengkel." }
+    } else if (isKuliner) {
+      domainFallback = [
+        { istilah: "Mise en Place", definisi: "Persiapan menyeluruh dan penataan seluruh bahan masakan serta peralatan kerja sebelum proses memasak dimulai demi efisiensi dapur profesional." },
+        { istilah: "HACCP (Hazard Analysis Critical Control Point)", definisi: "Sistem manajemen jaminan keamanan pangan preventif yang mengidentifikasi titik kritis bahaya biologis, kimia, dan fisik." },
+        { istilah: "Teknik Blanching & Braising", definisi: "Metode perebusan cepat diikuti pendinginan es (blanching) serta teknik memasak kombinasi panas basah bertutup lambat (braising)." },
+        { istilah: "Reaksi Maillard", definisi: "Reaksi kimia antara asam amino dan gula pereduksi akibat panas yang menghasilkan aroma khas dan warna kecokelatan lezat pada makanan matang." },
+        { istilah: "Food Costing & Yield Management", definisi: "Kalkulasi proporsi biaya bahan baku terhadap harga jual serta penghitungan persentase hasil bersih bahan makanan setelah dibersihkan." }
       ];
     } else {
-      list = [
+      domainFallback = [
         { istilah: `Prinsip Operasional ${topik}`, definisi: `Kaidah dasar, struktur kerja, dan mekanisme fundamental yang mendasari pelaksanaan teknis materi ${topik} dalam mata pelajaran ${mapel}.` },
         { istilah: `Parameter Teknis ${topik}`, definisi: `Spesifikasi, variabel terukur, dan tolok ukur presisi yang menjadi standar baku keberhasilan implementasi ${topik}.` },
         { istilah: `Standar Operasional Prosedur (SOP)`, definisi: `Instruksi kerja baku yang sistematis untuk menjamin akurasi, efisiensi kerja, dan keselamatan kerja dalam materi ${topik}.` },
@@ -3002,6 +3133,14 @@ function resolveContextualGlosarium(raw, data) {
         { istilah: `Kendali Mutu (Quality Control)`, definisi: `Rangkaian verifikasi dan pemeriksaan hasil kerja guna memastikan luaran ${topik} memenuhi standar spesifikasi tanpa kecacatan.` }
       ];
     }
+
+    const merged = [...list];
+    domainFallback.forEach(df => {
+      if (!merged.some(m => m.istilah.toLowerCase() === df.istilah.toLowerCase())) {
+        merged.push(df);
+      }
+    });
+    list = merged;
   }
 
   return list;
@@ -3051,7 +3190,7 @@ function resolveContextualDaftarPustaka(raw, data) {
     const d = data || {};
     const topik = d.topikMateri || 'Materi Pokok';
     const mapel = d.mataPelajaran || 'Mata Pelajaran';
-    const tLower = (topik + ' ' + mapel).toLowerCase();
+    const ctxRef = extractContextTahap1Dan2(data, raw);
 
     // 1. Dokumen Resmi Standar Kurikulum Merdeka (Kemendikbudristek)
     const refBSKAP = 'Badan Standar, Kurikulum, dan Asesmen Pendidikan (BSKAP). (2024). Panduan Pembelajaran dan Asesmen Pendidikan Anak Usia Dini, Pendidikan Dasar, dan Pendidikan Menengah. Jakarta: Kementerian Pendidikan, Kebudayaan, Riset, dan Teknologi.';
@@ -3063,28 +3202,28 @@ function resolveContextualDaftarPustaka(raw, data) {
 
     // 3. Buku Teks & Rujukan Keilmuan / Industri Spesifik
     let refKeilmuan = [];
-    if (tLower.includes('foto') || tLower.includes('kamera') || tLower.includes('lens') || tLower.includes('shutter') || tLower.includes('aperture') || tLower.includes('iso') || tLower.includes('gambar') || tLower.includes('video') || tLower.includes('sinematik') || tLower.includes('sinematografi') || tLower.includes('videografi') || tLower.includes('film') || tLower.includes('shot') || tLower.includes('broadcasting')) {
+    if (/video|sinemat|kamera|camera|shot|angle|framing|broadcasting|perfilman|film|foto|lensa|shutter|aperture|iso/i.test(ctxRef)) {
       refKeilmuan = [
         'Bowen, C. J., & Thompson, R. (2020). Grammar of the Shot (4th ed.). New York: Routledge / Focal Press.',
         'Brown, B. (2021). Cinematography: Theory and Practice: Image Making for Cinematographers and Directors (4th ed.). London: Routledge.',
         'Direktorat Sekolah Menengah Kejuruan. (2022). Dasar-Dasar Broadcasting dan Perfilman untuk SMK/MAK Kelas X. Jakarta: Pusat Perbukuan Kemendikbudristek.'
       ];
-    } else if (tLower.includes('animasi') || tLower.includes('karakter') || tLower.includes('storyboard')) {
+    } else if (/animasi|karakter|storyboard/i.test(ctxRef)) {
       refKeilmuan = [
         'Williams, R. (2020). The Animator\'s Survival Kit: A Manual of Methods, Principles and Formulas for Classical, Computer, Games, Stop Motion and Internet Animators. London: Faber & Faber.',
         'Direktorat Sekolah Menengah Kejuruan. (2022). Dasar-Dasar Animasi untuk SMK/MAK. Jakarta: Pusat Perbukuan Kemendikbudristek.'
       ];
-    } else if (tLower.includes('desain') || tLower.includes('dkv') || tLower.includes('grafis')) {
+    } else if (/desain|dkv|grafis/i.test(ctxRef)) {
       refKeilmuan = [
         'Lupton, E., & Phillips, J. C. (2021). Graphic Design: The New Basics (2nd ed.). New York: Princeton Architectural Press.',
         'Direktorat Sekolah Menengah Kejuruan. (2022). Dasar-Dasar Desain Komunikasi Visual. Jakarta: Pusat Perbukuan Kemendikbudristek.'
       ];
-    } else if (tLower.includes('jaringan') || tLower.includes('komputer') || tLower.includes('it') || tLower.includes('server') || tLower.includes('rpl') || tLower.includes('software')) {
+    } else if (/jaringan|komputer|it|server|rpl|software/i.test(ctxRef)) {
       refKeilmuan = [
         'Kurose, J. F., & Ross, K. W. (2021). Computer Networking: A Top-Down Approach (8th ed.). London: Pearson Education.',
         'Direktorat Sekolah Menengah Kejuruan. (2022). Dasar-Dasar Teknik Jaringan Komputer dan Telekomunikasi. Jakarta: Pusat Perbukuan Kemendikbudristek.'
       ];
-    } else if (tLower.includes('mesin') || tLower.includes('otomotif') || tLower.includes('motor') || tLower.includes('mobil')) {
+    } else if (/mesin|otomotif|motor|mobil/i.test(ctxRef)) {
       refKeilmuan = [
         'Denton, T. (2020). Automobile Electrical and Electronic Systems (5th ed.). London: Routledge.',
         'Direktorat Sekolah Menengah Kejuruan. (2022). Dasar-Dasar Teknik Otomotif. Jakarta: Pusat Perbukuan Kemendikbudristek.'
