@@ -904,18 +904,24 @@ async function callGeminiWithAccountKey(promptText, fallbackFn, customConfig) {
   }
 
   // =========================================================================
-  // SISTEM AUTO-FALLBACK: JIKA GOOGLE GEMINI TIDAK MERESPON -> LANGSUNG GANTI KE CHATGPT!
+  // SISTEM AUTO-FALLBACK: HANYA 2 MODEL (GEMINI -> CHATGPT)
+  // JIKA GEMINI LIMIT HABIS ATAU TIDAK MERESPON -> LANGSUNG GANTI KE CHATGPT!
   // =========================================================================
-  console.warn('[Auto-Fallback] Google Gemini tidak merespon:', lastErrorMsg, '-> Langsung beralih ke ChatGPT (OpenAI)...');
+  const isLimitHabis = (lastErrorMsg || '').toLowerCase().includes('quota') ||
+                       (lastErrorMsg || '').toLowerCase().includes('exhaust') ||
+                       (lastErrorMsg || '').includes('429');
+  const reasonText = isLimitHabis ? 'Gemini limit kuota habis' : 'Gemini tidak merespon';
+
+  console.warn(`[Auto-Fallback] ${reasonText}:`, lastErrorMsg, '-> Langsung beralih ke ChatGPT (OpenAI)...');
 
   // Berikan update status pada form jika elemen status proses sedang aktif
   const progressStepText = document.getElementById('generateProgressStepText');
   if (progressStepText) {
-    progressStepText.innerHTML = '<span style="color:#2563eb; font-weight:600;">Gemini tidak merespon, otomatis dialihkan ke ChatGPT (OpenAI)...</span>';
+    progressStepText.innerHTML = `<span style="color:#2563eb; font-weight:600;">${reasonText}, otomatis dialihkan ke ChatGPT (OpenAI)...</span>`;
   }
   const indicatorCaption = document.getElementById('generateIndicatorCaption');
   if (indicatorCaption) {
-    indicatorCaption.textContent = 'Proses dialihkan ke ChatGPT / AI Engine';
+    indicatorCaption.textContent = 'Proses dialihkan ke ChatGPT (OpenAI)';
   }
 
   const chatgptResult = await callChatgptForModulAjar(promptText, customConfig);
@@ -2613,12 +2619,18 @@ function buildComprehensiveAiModulContent(p) {
   const metodeArr = Array.isArray(p.metodePembelajaran) ? p.metodePembelajaran : [p.metodePembelajaran || 'Ceramah Interaktif, Praktik Langsung'];
   const metode = metodeArr.join(', ') || 'Ceramah Interaktif, Praktikum Langsung, Diskusi Kelompok';
   const fasilitas = p.fasilitasBelajar || 'Lab Komputer, Proyektor/LCD, Internet Cepat';
-const media = p.mediaDigital || 'Slide Presentasi Canva, Video Pembelajaran';
+  const media = p.mediaDigital || 'Slide Presentasi Canva, Video Pembelajaran';
   const gaya = p.gayaBelajarMurid || 'Campuran / Multimodal (Visual, Auditori, Kinestetik)';
   const profilList = p.dimensiProfilLulusan || ['Penalaran Kritis', 'Kreativitas', 'Kolaborasi', 'Kemandirian'];
   const tpText = p.tujuanPembelajaran || '';
   const cpText = p.capaianPembelajaran || '';
   const materiTambahanVal = p.materiTambahan || '';
+
+  // Identifikasi Awal Murid, Materi, dan Profil Lulusan
+  const idAwal = p.identifikasiAwal || {};
+  const idPeserta = p.identifikasiPesertaDidik || idAwal.pesertaDidik || '-';
+  const idMateri = p.identifikasiMateri || idAwal.materi || '-';
+  const idProfil = p.identifikasiProfilLulusan || idAwal.profilLulusan || '-';
 
   function getPendekatanPrinsipText(pendekatanVal, phase, topicVal, mediaVal) {
     const pL = (pendekatanVal || '').toLowerCase();
