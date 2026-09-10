@@ -1112,46 +1112,29 @@
         ];
       }
 
-      // Elaborasi teknis substantif untuk setiap butir materi tambahan (bukan kalimat pedagogis generik, tanpa tanda bintang asteris yang bukan bold)
+
+      // Gunakan langsung deskripsi dari AI — tanpa tambahan techElab generik
       parsedPoints.forEach((pt) => {
-        const tLower = pt.title.toLowerCase();
-        let techElab = '';
-
-        if (/variabel|variable|responsif|responsive/i.test(tLower)) {
-          techElab = `Pembahasan difokuskan pada implementasi teknologi font variabel (variable fonts) dengan pengendalian sumbu variasi (variation axes) seperti bobot (weight), lebar (width), dan kemiringan (slant) dalam satu berkas terpadu. Pengaturan dinamis ini memungkinkan penyesuaian skala hierarki visual secara adaptif terhadap berbagai resolusi layar antarmuka digital (UI/UX) guna menjaga efisiensi berkas dan kenyamanan keterbacaan (readability).`;
-        } else if (/lisensi|hukum|hak\s*cipta|etika|komersial|brief/i.test(tLower)) {
-          techElab = `Pembahasan mencakup pemahaman komprehensif atas klasifikasi lisensi jenis huruf komersial (End User License Agreement / EULA), lisensi terbuka (Open Font License / OFL), lisensi desktop komersial, webfont embedding, hingga lisensi aplikasi digital. Siswa mendalami kepatuhan hak kekayaan intelektual (HKI), batasan distribusi, dan etika atribusi desainer guna menjamin setiap luaran karya desain komersial bebas dari risiko pelanggaran hukum industri.`;
-        } else if (/perancangan|typeface|huruf|branding|kustom|custom|glif|glyph/i.test(tLower)) {
-          techElab = `Pembahasan mencakup alur kerja perancangan anatomi karakter huruf khusus (custom typeface/lettering) dari sketsa manual proporsi optik (garis dasar, x-height, ascender, descender), digitalisasi kurva vektor berbasis kurva Bézier yang presisi, hingga pengujian keterbacaan (legibility) dan harmoni visual guna memperkuat diferensiasi identitas visual jenama (branding).`;
-        } else if (/tata\s*kamera|camera|shot|sudut|angle|gerak|pergerakan/i.test(tLower)) {
-          techElab = `Pembahasan difokuskan pada penguasaan parameter operasional instrumen kamera, pemilihan ukuran bidik (shot size), penentuan elevasi sudut (camera angle), serta eksekusi pergerakan dinamis (camera movement) terkalibrasi guna memperkuat bahasa visual sinematik adegan.`;
-        } else {
-          techElab = `Pembahasan difokuskan pada penguasaan konsep fundamental, mekanisme kerja teknis, serta parameter operasional baku dari <strong>${pt.title}</strong>. Penekanan diarahkan pada ketepatan prosedur eksekusi, kontrol kualitas hasil kerja, dan pemecahan kendala teknis dalam alur kerja profesional.`;
-        }
-
-        let combined = pt.desc ? `${pt.desc} ${techElab}` : techElab;
-        pt.fullExplanation = sanitizeAsterisksKeepBold(combined).trim();
+        pt.fullExplanation = pt.desc ? sanitizeAsterisksKeepBold(pt.desc).trim() : '';
         pt.title = sanitizeAsterisksKeepBold(pt.title).trim();
       });
 
       let html = `
-        <p style="margin-bottom: 12px; text-align: justify; line-height: 1.68; color: #1e293b;">
-          Materi tambahan ini dirancang sebagai pengayaan terstruktur guna memperdalam pemahaman konseptual dan kemahiran terapan peserta didik melampaui capaian pembelajaran dasar. Pembahasan difokuskan pada penguasaan materi lanjutan, prinsip kerja mendalam, serta standar penerapan profesional pada mata pelajaran <strong>${mapel}</strong> dengan materi pokok <strong>${topik}</strong>:
-        </p>
-        <div class="materi-tambahan-subpoints" style="margin-left: 0; margin-top: 10px; margin-bottom: 16px;">
+        <div class="materi-tambahan-subpoints" style="margin-left: 0; margin-top: 4px; margin-bottom: 16px;">
           ${parsedPoints.map((pt, i) => `
-            <div class="materi-tambahan-item" style="display: flex; align-items: flex-start; gap: 0; margin-bottom: 14px; text-align: justify; line-height: 1.65;">
+            <div class="materi-tambahan-item" style="display: flex; align-items: flex-start; gap: 0; margin-bottom: 18px; text-align: justify; line-height: 1.65;">
               <div class="materi-tambahan-item-label" style="flex-shrink: 0; font-weight: 700; color: #0f172a; font-size: 0.95rem; width: 24px; padding-top: 0;">
                 ${String.fromCharCode(97 + i)}.
               </div>
               <div class="materi-tambahan-item-body" style="flex: 1; color: #1e293b;">
-                <div style="font-weight: 700; color: #0f172a; margin-bottom: 4px; font-size: 0.95rem;">${sanitizeAsterisksKeepBold(pt.title)}</div>
-                <div style="color: #334155; line-height: 1.65;">${sanitizeAsterisksKeepBold(pt.fullExplanation)}</div>
+                <div style="font-weight: 700; color: #0f172a; margin-bottom: 6px; font-size: 0.95rem;">${sanitizeAsterisksKeepBold(pt.title)}</div>
+                ${pt.fullExplanation ? `<div style="color: #334155; line-height: 1.7;">${sanitizeAsterisksKeepBold(pt.fullExplanation)}</div>` : ''}
               </div>
             </div>
           `).join('')}
         </div>
       `;
+
 
       // Jika ada tabel markdown yang disertakan dari input/AI, render tabelnya; jika tidak ada, tabel TIDAK wajib
       if (tableMarkdown) {
@@ -2587,9 +2570,9 @@ Pada tataran analisis lanjutan, penguasaan materi **${topik}** menuntut kemampua
             'World Wide Web Consortium (W3C). (2023). Cascading Style Sheets Fonts Module Level 4 & Web Typography Specification. https://www.w3.org/TR/css-fonts-4/',
             'Direktorat Sekolah Menengah Kejuruan. (2022). Dasar-Dasar Desain Komunikasi Visual untuk SMK/MAK Kelas X. Jakarta: Pusat Perbukuan Kemendikbudristek.'
           ];
-        } else if (/animasi|karakter|storyboard/i.test(primaryCtx)) {
+        } else if (/\b(animasi|animation|2d|3d|stopmotion|storyboard|motion\s*graphic|keyframe|rigging|tweening|blender|maya|render)\b/i.test(primaryCtx)) {
           refKeilmuan = [
-            'Williams, R. (2020). The Animator\'s Survival Kit: A Manual of Methods, Principles and Formulas for Classical, Computer, Games, Stop Motion and Internet Animators. London: Faber & Faber.',
+            "Williams, R. (2020). The Animator's Survival Kit: A Manual of Methods, Principles and Formulas for Classical, Computer, Games, Stop Motion and Internet Animators. London: Faber & Faber.",
             'Direktorat Sekolah Menengah Kejuruan. (2022). Dasar-Dasar Animasi untuk SMK/MAK. Jakarta: Pusat Perbukuan Kemendikbudristek.'
           ];
         } else if (isDKV) {
@@ -2597,21 +2580,43 @@ Pada tataran analisis lanjutan, penguasaan materi **${topik}** menuntut kemampua
             'Lupton, E., & Phillips, J. C. (2021). Graphic Design: The New Basics (2nd ed.). New York: Princeton Architectural Press.',
             'Direktorat Sekolah Menengah Kejuruan. (2022). Dasar-Dasar Desain Komunikasi Visual. Jakarta: Pusat Perbukuan Kemendikbudristek.'
           ];
-        } else if (/jaringan|komputer|server|rpl|software/i.test(topicCtxP)) {
+        } else if (/\b(bubut|pembubutan|frais|pemfraisan|las|pengelasan|gerinda|penggerindaan|pemesinan|mesin\s*cnc|cnc|turning|milling|welding|grinding|manufaktur|logam|metalurgi|permesinan|machining|lathe|drill|boring|shaping)\b/i.test(primaryCtx)) {
+          refKeilmuan = [
+            'Kalpakjian, S., & Schmid, S. R. (2020). Manufacturing Engineering and Technology (8th ed.). Upper Saddle River: Pearson Education.',
+            'Groover, M. P. (2020). Fundamentals of Modern Manufacturing: Materials, Processes, and Systems (6th ed.). Hoboken: John Wiley & Sons.',
+            'Wirawan, S. (2018). Teknik Pemesinan Bubut. Jakarta: Direktorat Pembinaan Sekolah Menengah Kejuruan, Kemendikbud.',
+            'Direktorat Sekolah Menengah Kejuruan. (2022). Dasar-Dasar Teknik Mesin untuk SMK/MAK Kelas X. Jakarta: Pusat Perbukuan Kemendikbudristek.'
+          ];
+        } else if (/\b(jaringan|komputer|rpl|server|cisco|mikrotik|software|cyber|cloud|lan|wan|routing|switch|firewall|database|sql|pemrograman|coding|web)\b/i.test(topicCtxP)) {
           refKeilmuan = [
             'Kurose, J. F., & Ross, K. W. (2021). Computer Networking: A Top-Down Approach (8th ed.). London: Pearson Education.',
             'Internet Engineering Task Force (IETF). (2023). Official Internet Protocol Standards and Architectural Principles. https://www.ietf.org/',
             'Direktorat Sekolah Menengah Kejuruan. (2022). Dasar-Dasar Teknik Jaringan Komputer dan Telekomunikasi. Jakarta: Pusat Perbukuan Kemendikbudristek.'
           ];
-        } else if (/mesin|otomotif|motor|mobil/i.test(primaryCtx)) {
+        } else if (/\b(otomotif|motor\s*bakar|injeksi|ecu|transmisi|rem|suspensi|chassis|tune\s*up|kendaraan)\b/i.test(primaryCtx)) {
           refKeilmuan = [
             'Denton, T. (2020). Automobile Electrical and Electronic Systems (5th ed.). London: Routledge.',
             'Direktorat Sekolah Menengah Kejuruan. (2022). Dasar-Dasar Teknik Otomotif. Jakarta: Pusat Perbukuan Kemendikbudristek.'
           ];
+        } else if (/\b(listrik|elektronika|arus|tegangan|daya|plc|mikrokontroler|arduino|sensor|instalasi\s*motor|rangkaian)\b/i.test(primaryCtx)) {
+          refKeilmuan = [
+            'Floyd, T. L. (2019). Electronic Devices: Conventional Current Version (10th ed.). Upper Saddle River: Pearson Education.',
+            'Direktorat Sekolah Menengah Kejuruan. (2022). Dasar-Dasar Teknik Elektronika untuk SMK/MAK. Jakarta: Pusat Perbukuan Kemendikbudristek.'
+          ];
+        } else if (/\b(akuntansi|keuangan|bisnis|manajemen|pasar|jurnal|neraca|laba|faktur|pajak|pemasaran|marketing)\b/i.test(primaryCtx)) {
+          refKeilmuan = [
+            'Horngren, C. T., Datar, S. M., & Rajan, M. V. (2021). Cost Accounting: A Managerial Emphasis (17th ed.). Upper Saddle River: Pearson Education.',
+            'Direktorat Sekolah Menengah Kejuruan. (2022). Dasar-Dasar Bisnis dan Manajemen untuk SMK/MAK. Jakarta: Pusat Perbukuan Kemendikbudristek.'
+          ];
+        } else if (/\b(kuliner|boga|tata\s*boga|masak|makanan|minuman|food|resep|pastry|bakery|restoran)\b/i.test(primaryCtx)) {
+          refKeilmuan = [
+            'McGee, H. (2020). On Food and Cooking: The Science and Lore of the Kitchen. New York: Scribner.',
+            'Direktorat Sekolah Menengah Kejuruan. (2022). Dasar-Dasar Kuliner untuk SMK/MAK. Jakarta: Pusat Perbukuan Kemendikbudristek.'
+          ];
         } else {
           refKeilmuan = [
-            `Pusat Perbukuan. (2023). Buku Panduan Guru dan Buku Siswa: ${mapel} - ${topik}. Jakarta: Kemendikbudristek.`,
-            `Kementerian Pendidikan, Kebudayaan, Riset, dan Teknologi. (2024). Modul Standar Praktik Kejuruan & Kualifikasi Kerja Nasional Materi ${topik}. Jakarta: Kemendikbudristek.`
+            `Kementerian Pendidikan, Kebudayaan, Riset, dan Teknologi. (2023). Buku Panduan Pendidik dan Modul Ajar Mata Pelajaran ${mapel}. Jakarta: Pusat Kurikulum dan Pembelajaran Kemendikbudristek.`,
+            `Kementerian Ketenagakerjaan Republik Indonesia. (2023). Standar Kompetensi Kerja Nasional Indonesia (SKKNI) Bidang Keahlian ${mapel} — Materi ${topik}. Jakarta: Kemnaker RI.`
           ];
         }
 
