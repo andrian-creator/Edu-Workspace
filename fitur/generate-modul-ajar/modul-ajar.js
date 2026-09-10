@@ -3298,106 +3298,25 @@ function resolveContextualDaftarPustaka(raw, data) {
     return true;
   });
 
-  // Jika list kosong atau kurang dari 3 item, sediakan daftar pustaka resmi dokumen acuan, buku teks standar, dan standar web/industri
+  // Jika AI tidak menghasilkan referensi yang cukup, gunakan fallback standar
+  // Dokumen kurikulum resmi + referensi Teknologi Pendidikan — domain/materi dari konteks Tahap 1 & 2 sudah ditangani AI
   if (list.length < 3) {
     const d = data || {};
     const topik = d.topikMateri || 'Materi Pokok';
     const mapel = d.mataPelajaran || 'Mata Pelajaran';
-    // PRIORITAS: topikMateri >> mataPelajaran/jurusan agar domain tidak salah hanya karena nama kursus generik
-    const topicCtxM = [d.topikMateri, d.isiTopikMateri, d.elemenCP, d.tujuanPembelajaran, d.materiTambahan]
-      .filter(Boolean).map(v => String(v)).join(' ').toLowerCase();
-    const courseCtxM = [d.mataPelajaran, d.jurusanSekolah].filter(Boolean).map(v => String(v)).join(' ').toLowerCase();
-    const primaryCtx = topicCtxM || courseCtxM;
-
-    const isTipografi = /\b(tipografi|typography|typeface|font|huruf|kerning|tracking|leading|glif|glyph)\b/i.test(primaryCtx);
-    const isDKV = isTipografi || /\b(dkv|desain\s*grafis|desain\s*komunikasi\s*visual|nirmana|vektor|vector|coreldraw|illustrator|photoshop|layout|branding|logo|poster|identitas\s*visual)\b/i.test(primaryCtx);
-    const isVideoKamera = !isTipografi && (
-      /\b(videografi|sinematografi|tata\s*kamera|kamera\s*video|camera\s*movement|camera\s*angle|shot\s*size|ukuran\s*bidik|sudut\s*pandang\s*kamera|aturan\s*180|180-degree|depth\s*of\s*field|\bdof\b|white\s*balance|broadcasting|penyiaran|perfilman|tata\s*artistik\s*film)\b/i.test(primaryCtx) ||
-      (/\b(fotografi|kamera)\b/i.test(primaryCtx) && !isDKV)
-    );
-    const isAnimasi = !isTipografi && /\b(animasi|animation|2d|3d|stopmotion|storyboard|motion\s*graphic|keyframe|rigging|tweening|blender|maya|render)\b/i.test(primaryCtx);
-    // isIT: hanya berdasar topik, bukan nama kursus
-    const isIT = !isTipografi && !isDKV && !isVideoKamera && !isAnimasi && /\b(jaringan|komputer|rpl|server|cisco|mikrotik|software|cyber|cloud|lan|wan|routing|switch|firewall|database|sql|pemrograman|coding|web)\b/i.test(topicCtxM);
-    // Pemesinan/Manufaktur: bubut, frais, las, CNC, gerinda, metalurgi, teknik mesin
-    const isPemesinan = !isIT && /\b(bubut|pembubutan|frais|pemfraisan|las|pengelasan|gerinda|penggerindaan|pemesinan|mesin\s*cnc|cnc|turning|milling|welding|grinding|manufaktur|logam|metalurgi|permesinan|machining|lathe|drill|boring|shaping)\b/i.test(primaryCtx);
-    const isOtomotif = !isPemesinan && /\b(otomotif|motor\s*bakar|injeksi|ecu|transmisi|rem|suspensi|chassis|tune\s*up|kendaraan)\b/i.test(primaryCtx);
-    const isListrik = /\b(listrik|elektronika|arus|tegangan|daya|plc|mikrokontroler|arduino|sensor|instalasi\s*motor|rangkaian)\b/i.test(primaryCtx);
-    const isBisnis = /\b(akuntansi|keuangan|bisnis|manajemen|pasar|uang|jurnal|neraca|laba|faktur|pajak|pemasaran|marketing)\b/i.test(primaryCtx);
-    const isKuliner = /\b(kuliner|boga|tata\s*boga|masak|makanan|minuman|food|resep|pastry|bakery|restoran)\b/i.test(primaryCtx);
-
-    // 1. Dokumen Resmi Standar Kurikulum Merdeka (Kemendikbudristek)
-    const refBSKAP = 'Badan Standar, Kurikulum, dan Asesmen Pendidikan (BSKAP). (2024). Panduan Pembelajaran dan Asesmen Pendidikan Anak Usia Dini, Pendidikan Dasar, dan Pendidikan Menengah. Jakarta: Kementerian Pendidikan, Kebudayaan, Riset, dan Teknologi.';
-    const refCP = 'Badan Standar, Kurikulum, dan Asesmen Pendidikan (BSKAP). (2024). Keputusan Kepala BSKAP No. 032/H/KR/2024 tentang Capaian Pembelajaran pada Pendidikan Anak Usia Dini, Jenjang Pendidikan Dasar, dan Jenjang Pendidikan Menengah pada Kurikulum Merdeka. Jakarta: Kemendikbudristek.';
-
-    // 2. Buku Teks & Rujukan Keilmuan Otoritatif berdasarkan domain topik
-    let refKeilmuan = [];
-    if (isVideoKamera) {
-      refKeilmuan = [
-        'Bowen, C. J., & Thompson, R. (2020). Grammar of the Shot (4th ed.). New York: Routledge / Focal Press.',
-        'Brown, B. (2021). Cinematography: Theory and Practice: Image Making for Cinematographers and Directors (4th ed.). London: Routledge.',
-        'Direktorat Sekolah Menengah Kejuruan. (2022). Dasar-Dasar Broadcasting dan Perfilman untuk SMK/MAK Kelas X. Jakarta: Pusat Perbukuan Kemendikbudristek.'
-      ];
-    } else if (isTipografi) {
-      refKeilmuan = [
-        'Lupton, E. (2014). Thinking with Type: A Critical Guide for Designers, Writers, Editors, & Students (2nd ed.). New York: Princeton Architectural Press.',
-        'Bringhurst, R. (2012). The Elements of Typographic Style (4th ed.). Seattle: Hartley & Marks Publishers.',
-        'World Wide Web Consortium (W3C). (2023). Cascading Style Sheets Fonts Module Level 4 & Web Typography Specification. https://www.w3.org/TR/css-fonts-4/',
-        'Direktorat Sekolah Menengah Kejuruan. (2022). Dasar-Dasar Desain Komunikasi Visual untuk SMK/MAK Kelas X. Jakarta: Pusat Perbukuan Kemendikbudristek.'
-      ];
-    } else if (isAnimasi) {
-      refKeilmuan = [
-        "Williams, R. (2020). The Animator's Survival Kit: A Manual of Methods, Principles and Formulas for Classical, Computer, Games, Stop Motion and Internet Animators. London: Faber & Faber.",
-        'Direktorat Sekolah Menengah Kejuruan. (2022). Dasar-Dasar Animasi untuk SMK/MAK. Jakarta: Pusat Perbukuan Kemendikbudristek.'
-      ];
-    } else if (isDKV) {
-      refKeilmuan = [
-        'Lupton, E., & Phillips, J. C. (2021). Graphic Design: The New Basics (2nd ed.). New York: Princeton Architectural Press.',
-        'Direktorat Sekolah Menengah Kejuruan. (2022). Dasar-Dasar Desain Komunikasi Visual. Jakarta: Pusat Perbukuan Kemendikbudristek.'
-      ];
-    } else if (isPemesinan) {
-      refKeilmuan = [
-        'Kalpakjian, S., & Schmid, S. R. (2020). Manufacturing Engineering and Technology (8th ed.). Upper Saddle River: Pearson Education.',
-        'Groover, M. P. (2020). Fundamentals of Modern Manufacturing: Materials, Processes, and Systems (6th ed.). Hoboken: John Wiley & Sons.',
-        'Wirawan, S. (2018). Teknik Pemesinan Bubut. Jakarta: Direktorat Pembinaan Sekolah Menengah Kejuruan, Kemendikbud.',
-        'Direktorat Sekolah Menengah Kejuruan. (2022). Dasar-Dasar Teknik Mesin untuk SMK/MAK Kelas X. Jakarta: Pusat Perbukuan Kemendikbudristek.'
-      ];
-    } else if (isIT) {
-      refKeilmuan = [
-        'Kurose, J. F., & Ross, K. W. (2021). Computer Networking: A Top-Down Approach (8th ed.). London: Pearson Education.',
-        'Internet Engineering Task Force (IETF). (2023). Official Internet Protocol Standards and Architectural Principles. https://www.ietf.org/',
-        'Direktorat Sekolah Menengah Kejuruan. (2022). Dasar-Dasar Teknik Jaringan Komputer dan Telekomunikasi. Jakarta: Pusat Perbukuan Kemendikbudristek.'
-      ];
-    } else if (isOtomotif) {
-      refKeilmuan = [
-        'Denton, T. (2020). Automobile Electrical and Electronic Systems (5th ed.). London: Routledge.',
-        'Direktorat Sekolah Menengah Kejuruan. (2022). Dasar-Dasar Teknik Otomotif. Jakarta: Pusat Perbukuan Kemendikbudristek.'
-      ];
-    } else if (isListrik) {
-      refKeilmuan = [
-        'Floyd, T. L. (2019). Electronic Devices: Conventional Current Version (10th ed.). Upper Saddle River: Pearson Education.',
-        'Direktorat Sekolah Menengah Kejuruan. (2022). Dasar-Dasar Teknik Elektronika untuk SMK/MAK. Jakarta: Pusat Perbukuan Kemendikbudristek.'
-      ];
-    } else if (isBisnis) {
-      refKeilmuan = [
-        'Horngren, C. T., Datar, S. M., & Rajan, M. V. (2021). Cost Accounting: A Managerial Emphasis (17th ed.). Upper Saddle River: Pearson Education.',
-        'Direktorat Sekolah Menengah Kejuruan. (2022). Dasar-Dasar Bisnis dan Manajemen untuk SMK/MAK. Jakarta: Pusat Perbukuan Kemendikbudristek.'
-      ];
-    } else if (isKuliner) {
-      refKeilmuan = [
-        'McGee, H. (2020). On Food and Cooking: The Science and Lore of the Kitchen. New York: Scribner.',
-        'Direktorat Sekolah Menengah Kejuruan. (2022). Dasar-Dasar Kuliner untuk SMK/MAK. Jakarta: Pusat Perbukuan Kemendikbudristek.'
-      ];
-    } else {
-      refKeilmuan = [
-        `Kementerian Pendidikan, Kebudayaan, Riset, dan Teknologi. (2023). Buku Panduan Pendidik dan Modul Ajar Mata Pelajaran ${mapel}. Jakarta: Pusat Kurikulum dan Pembelajaran Kemendikbudristek.`,
-        `Kementerian Ketenagakerjaan Republik Indonesia. (2023). Standar Kompetensi Kerja Nasional Indonesia (SKKNI) Bidang Keahlian ${mapel} — Materi ${topik}. Jakarta: Kemnaker RI.`
-      ];
-    }
+    const jenjang = d.jenjangSekolah || 'SMK';
+    const jurusan = d.jurusanSekolah ? ` Jurusan ${d.jurusanSekolah}` : '';
 
     list = [
-      refBSKAP,
-      refCP,
-      ...refKeilmuan
+      // Regulasi Kurikulum Merdeka
+      'Badan Standar, Kurikulum, dan Asesmen Pendidikan (BSKAP). (2024). Keputusan Kepala BSKAP No. 032/H/KR/2024 tentang Capaian Pembelajaran pada Pendidikan Anak Usia Dini, Jenjang Pendidikan Dasar, dan Jenjang Pendidikan Menengah pada Kurikulum Merdeka. Jakarta: Kemendikbudristek.',
+      'Badan Standar, Kurikulum, dan Asesmen Pendidikan (BSKAP). (2024). Panduan Pembelajaran dan Asesmen Pendidikan Anak Usia Dini, Pendidikan Dasar, dan Pendidikan Menengah. Jakarta: Kementerian Pendidikan, Kebudayaan, Riset, dan Teknologi.',
+      // Panduan Pengembangan Modul Ajar
+      'Kementerian Pendidikan, Kebudayaan, Riset, dan Teknologi. (2022). Panduan Pengembangan Modul Ajar Kurikulum Merdeka. Jakarta: Pusat Kurikulum dan Pembelajaran, Kemendikbudristek.',
+      // Teknologi Pendidikan & Desain Pembelajaran
+      'Dick, W., Carey, L., & Carey, J. O. (2015). The Systematic Design of Instruction (8th ed.). Upper Saddle River: Pearson Education.',
+      // Referensi buku siswa/guru sesuai mapel dari Kemendikbudristek
+      `Kementerian Pendidikan, Kebudayaan, Riset, dan Teknologi. (2023). Buku Panduan Guru: ${mapel}${jurusan} ${jenjang}. Jakarta: Pusat Perbukuan Kemendikbudristek.`,
     ];
   }
 

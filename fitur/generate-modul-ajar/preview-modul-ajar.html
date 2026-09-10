@@ -2275,28 +2275,7 @@ Pada tataran analisis lanjutan, penguasaan materi **${topik}** menuntut kemampua
         return !forbiddenTerms.some(fb => termLower.includes(fb));
       });
 
-      // Deteksi konteks subjek keilmuan dari Tahap 1 & 2 (Poin A-F)
-      // PRIORITAS: topikMateri > isiTopikMateri >> mataPelajaran (course name often too generic)
-      const d2 = data || {};
-      const topicCtx = [d2.topikMateri, d2.isiTopikMateri, d2.elemenCP, d2.tujuanPembelajaran, d2.materiTambahan]
-        .filter(Boolean).map(v => String(v)).join(' ').toLowerCase();
-      const courseCtx = [d2.mataPelajaran, d2.jurusanSekolah].filter(Boolean).map(v => String(v)).join(' ').toLowerCase();
-      // Use topic context first; only fall back to course name if topic context gives no signal
-      const primaryCtx = topicCtx || courseCtx;
-
-      const isTipografi = /\b(tipografi|typography|typeface|font|huruf|kerning|tracking|leading|glif|glyph)\b/i.test(primaryCtx);
-      const isDKV = isTipografi || /\b(dkv|desain\s*grafis|desain\s*komunikasi\s*visual|nirmana|vektor|vector|coreldraw|illustrator|photoshop|layout|branding|logo|poster|identitas\s*visual)\b/i.test(primaryCtx);
-      const isVideoKamera = !isTipografi && (
-        /\b(videografi|sinematografi|tata\s*kamera|kamera\s*video|camera\s*movement|camera\s*angle|shot\s*size|ukuran\s*bidik|sudut\s*pandang\s*kamera|aturan\s*180|180-degree|depth\s*of\s*field|\bdof\b|white\s*balance|broadcasting|penyiaran|perfilman|tata\s*artistik\s*film)\b/i.test(primaryCtx) ||
-        (/\b(fotografi|kamera)\b/i.test(primaryCtx) && !isDKV)
-      );
-      const isAnimasi = !isTipografi && /\b(animasi|animation|2d|3d|stopmotion|storyboard|motion\s*graphic|keyframe|rigging|tweening|blender|maya|render)\b/i.test(primaryCtx);
-      // isIT: only trigger if the TOPIC itself explicitly mentions IT/networking terms, not just the course/jurusan name
-      const isIT = !isTipografi && !isDKV && !isVideoKamera && !isAnimasi && /\b(jaringan|komputer|rpl|server|cisco|mikrotik|software|cyber|cloud|lan|wan|routing|switch|firewall|database|sql|pemrograman|coding|web)\b/i.test(topicCtx || '');
-      const isOtomotif = /\b(otomotif|motor|mobil|mesin|injeksi|ecu|transmisi|rem|suspensi|chassis|engine|tune\s*up)\b/i.test(primaryCtx);
-      const isListrik = /\b(listrik|elektronika|arus|tegangan|daya|plc|mikrokontroler|arduino|sensor|instalasi\s*motor|rangkaian)\b/i.test(primaryCtx);
-      const isBisnis = /\b(akuntansi|keuangan|bisnis|manajemen|pasar|uang|jurnal|neraca|laba|faktur|pajak|pemasaran|marketing)\b/i.test(primaryCtx);
-      const isKuliner = /\b(kuliner|boga|tata\s*boga|masak|makanan|minuman|food|resep|pastry|bakery|restoran)\b/i.test(primaryCtx);
+      // (Deteksi domain dilakukan AI dari konteks Tahap 1 & 2 — tidak ada hardcoded fallback domain)
 
 
       // Kamus Istilah Teknis Komprehensif Tipografi & Desain Grafis
@@ -2402,90 +2381,31 @@ Pada tataran analisis lanjutan, penguasaan materi **${topik}** menuntut kemampua
         }
       }
 
-      // 3. UNTUK KONTEKS BIDANG KEILMUAN LAINNYA:
+
+      // Jika AI tidak memberikan cukup glosarium, gunakan fallback berbasis topik dari konteks Tahap 1 & 2
+      // Tidak ada data domain hardcoded — semua dari konteks yang diinput guru
       if (list.length < 5) {
         const d = data || {};
         const topik = d.topikMateri || 'Materi Pokok';
         const mapel = d.mataPelajaran || 'Mata Pelajaran';
 
-        let domainFallback = [];
-        if (isAnimasi) {
-          domainFallback = [
-            { istilah: "Model Sheet / Turnaround", definisi: "Dokumen panduan visual standar yang menampilkan karakter dari berbagai sudut pandang (depan, samping, belakang, 3/4) beserta ekspresi dan proporsi baku untuk acuan animator." },
-            { istilah: "Storyboard Non-Linear", definisi: "Rangkaian visualisasi panel cerita yang memuat percabangan alur interaktif atau multi-skenario adegan sebelum diproduksi ke dalam format animasi utuh." },
-            { istilah: "Animatic", definisi: "Versi kasar gerak dari susunan storyboard yang diselaraskan dengan trek suara dan timing durasi untuk mengevaluasi ritme serta sinematografi adegan." },
-            { istilah: "Timeline Animasi & Keyframing", definisi: "Garis waktu operasional perangkat lunak tempat animator mengatur kemunculan adegan, perpindahan frame kunci (keyframes), dan tempo pergerakan karakter." },
-            { istilah: "Motion Graphic", definisi: "Teknik penggabungan grafis visual, tipografi kinetik, dan ilustrasi digital yang digerakkan untuk menyampaikan pesan komunikasi visual secara ringkas dan dinamis." },
-            { istilah: "Rigging & Weighting", definisi: "Proses penanaman struktur kerangka tulang digital (bones/skeleton) dan penentuan bobot pengaruh deformasi gerak pada mesh karakter animasi." }
-          ];
-        } else if (isIT) {
-          domainFallback = [
-            { istilah: "Topologi Jaringan", definisi: "Struktur geometris dan tata letak fisik maupun logis yang menghubungkan node-node komputer dalam satu kesatuan sistem komunikasi data." },
-            { istilah: "IP Addressing & Subnetting", definisi: "Metode pengalamatan numerik unik pada setiap perangkat jaringan serta teknik segmentasi jaringan untuk efisiensi rute dan isolasi keamanan." },
-            { istilah: "Routing Protocol", definisi: "Standar aturan dan algoritma yang digunakan router untuk menentukan jalur terbaik dan tercepat dalam meneruskan paket data antarnetwork." },
-            { istilah: "Bandwidth & Throughput", definisi: "Kapasitas maksimum transfer data pada kanal komunikasi (bandwidth) dan kecepatan transfer data aktual yang terukur pada waktu tertentu (throughput)." },
-            { istilah: "Firewall & Packet Filtering", definisi: "Sistem pertahanan keamanan yang memantau dan menyaring paket lalu lintas data masuk dan keluar berdasarkan aturan kebijakan keamanan." },
-            { istilah: "VLAN (Virtual Local Area Network)", definisi: "Pengelompokan logis perangkat jaringan pada segmen switch yang sama secara terisolasi tanpa bergantung pada lokasi fisik." }
-          ];
-        } else if (isDKV) {
-          domainFallback = [
-            { istilah: "Hierarki Visual", definisi: "Prinsip penataan urutan dan penekanan elemen desain berdasarkan skala prioritas agar pesan utama dapat dicerna audiens secara runtut dan efektif." },
-            { istilah: "Tipografi & Kerning", definisi: "Seni pemilihan, penataan gaya huruf, serta pengaturan jarak antar-karakter (kerning) guna menghasilkan keterbacaan (readability) dan keindahan estetika visual." },
-            { istilah: "Color Harmony (Harmoni Warna)", definisi: "Kaidah kombinasi warna (analog, komplementer, triadik) yang diaplikasikan untuk membangun nuansa psikologis dan daya tarik visual komposisi karya." },
-            { istilah: "Vector Graphic", definisi: "Citra grafis berbasis formula matematis titik dan kurva vektor yang tidak mengalami penurunan resolusi atau pecah saat diperbesar dalam skala apapun." },
-            { istilah: "Grid System & Whitespace", definisi: "Struktur garis panduan penataan layout serta pemanfaatan ruang kosong (negatif) untuk memberi ruang bernapas dan keseimbangan pada karya desain." },
-            { istilah: "Brand Identity & Guide", definisi: "Sistem identitas visual terpadu (logo, palet warna, tipografi, elemen grafis) yang mencerminkan karakter dan nilai sebuah jenama." }
-          ];
-        } else if (isOtomotif) {
-          domainFallback = [
-            { istilah: "Siklus Motor 4 Langkah", definisi: "Rangkaian empat tahapan kerja mesin pembakaran dalam (hisap, kompresi, usaha, dan buang) untuk menghasilkan satu siklus tenaga mekanik." },
-            { istilah: "Electronic Fuel Injection (EFI)", definisi: "Sistem pengabutan bahan bakar presisi yang dikontrol secara elektronik oleh Engine Control Unit (ECU) berdasarkan sensor-sensor mesin." },
-            { istilah: "Torsi & Daya Kuda (Horsepower)", definisi: "Besaran gaya putar yang dihasilkan mesin pada poros engkol (torsi) dan kemampuan akumulatif mesin dalam melakukan usaha per satuan waktu (daya)." },
-            { istilah: "Sistem Transmisi & Kopling", definisi: "Mekanisme pemindah daya dan pengatur rasio putaran mesin ke roda penggerak sesuai beban dan kecepatan kendaraan." },
-            { istilah: "Anti-lock Braking System (ABS)", definisi: "Sistem pengereman keselamatan aktif yang mencegah roda terkunci saat pengereman mendadak agar traksi dan kendali kemudi tetap terjaga." }
-          ];
-        } else if (isListrik) {
-          domainFallback = [
-            { istilah: "Hukum Ohm & Kirchhoff", definisi: "Prinsip fisika fundamental yang menghubungkan tegangan, kuat arus, hambatan, serta percabangan arus dan beda potensial dalam rangkaian listrik tertutup." },
-            { istilah: "Programmable Logic Controller (PLC)", definisi: "Komputer industri khusus yang dirancang untuk mengendalikan proses otomasi manufaktur melalui instruksi logika terprogram." },
-            { istilah: "Pulse Width Modulation (PWM)", definisi: "Metode modulasi sinyal digital dengan memvariasikan lebar pulsa aktif untuk mengatur daya rata-rata motor listrik atau intensitas beban." },
-            { istilah: "Sensor & Transduser", definisi: "Perangkat yang mendeteksi perubahan besaran fisis (suhu, tekanan, cahaya, gerak) dan mengonversinya menjadi sinyal listrik yang terukur." },
-            { istilah: "Faktor Daya (Cos Phi)", definisi: "Perbandingan antara daya aktif (watt) dan daya semu (volt-ampere) yang mengindikasikan efisiensi pemanfaatan energi listrik pada beban induktif." }
-          ];
-        } else if (isBisnis) {
-          domainFallback = [
-            { istilah: "Break Even Point (BEP)", definisi: "Titik impas operasional bisnis ketika total pendapatan yang diterima setara dengan total pengeluaran beban biaya produksi dan usaha." },
-            { istilah: "Cash Flow (Arus Kas)", definisi: "Laporan catatan pergerakan masuk dan keluarnya uang kas yang mencerminkan tingkat likuiditas dan stabilitas keuangan suatu entitas usaha." },
-            { istilah: "Digital Marketing Funnel", definisi: "Kerangka tahapan konversi perjalanan konsumen mulai dari pembentukan awareness (kesadaran), penimbangan (consideration), hingga transaksi pembelian." },
-            { istilah: "Jurnal Penyesuaian", definisi: "Pencatatan akuntansi pada akhir periode untuk menyesuaikan saldo akun-akun nominal dan riil agar mencerminkan kondisi riil berbasis akrual." },
-            { istilah: "Value Proposition", definisi: "Nilai keunggulan atau manfaat unik yang ditawarkan suatu produk/jasa sebagai solusi utama atas permasalahan atau kebutuhan target pasar." }
-          ];
-        } else if (isKuliner) {
-          domainFallback = [
-            { istilah: "Mise en Place", definisi: "Persiapan menyeluruh dan penataan seluruh bahan masakan serta peralatan kerja sebelum proses memasak dimulai demi efisiensi dapur profesional." },
-            { istilah: "HACCP (Hazard Analysis Critical Control Point)", definisi: "Sistem manajemen jaminan keamanan pangan preventif yang mengidentifikasi titik kritis bahaya biologis, kimia, dan fisik." },
-            { istilah: "Teknik Blanching & Braising", definisi: "Metode perebusan cepat diikuti pendinginan es (blanching) serta teknik memasak kombinasi panas basah bertutup lambat (braising)." },
-            { istilah: "Reaksi Maillard", definisi: "Reaksi kimia antara asam amino dan gula pereduksi akibat panas yang menghasilkan aroma khas dan warna kecokelatan lezat pada makanan matang." },
-            { istilah: "Food Costing & Yield Management", definisi: "Kalkulasi proporsi biaya bahan baku terhadap harga jual serta penghitungan persentase hasil bersih bahan makanan setelah dibersihkan." }
-          ];
-        } else {
-          domainFallback = [
-            { istilah: `Prinsip Operasional ${topik}`, definisi: `Kaidah dasar, struktur kerja, dan mekanisme fundamental yang mendasari pelaksanaan teknis materi ${topik} dalam mata pelajaran ${mapel}.` },
-            { istilah: `Parameter Teknis ${topik}`, definisi: `Spesifikasi, variabel terukur, dan tolok ukur presisi yang menjadi standar baku keberhasilan implementasi ${topik}.` },
-            { istilah: `Standar Operasional Prosedur (SOP)`, definisi: `Instruksi kerja baku yang sistematis untuk menjamin akurasi, efisiensi kerja, dan keselamatan kerja dalam materi ${topik}.` },
-            { istilah: `Instrumen & Media Kerja ${topik}`, definisi: `Perangkat keras, peranti lunak, atau instrumen khusus yang dikalibrasi guna mengeksekusi penugasan teknis materi ${topik}.` },
-            { istilah: `Kendali Mutu (Quality Control)`, definisi: `Rangkaian verifikasi dan pemeriksaan hasil kerja guna memastikan luaran ${topik} memenuhi standar spesifikasi tanpa kecacatan.` }
-          ];
-        }
+        const domainFallback = [
+          { istilah: `Konsep Dasar ${topik}`, definisi: `Pengertian, ruang lingkup, dan prinsip fundamental yang mendasari pemahaman materi ${topik} dalam mata pelajaran ${mapel}.` },
+          { istilah: `Prosedur Operasional ${topik}`, definisi: `Urutan langkah kerja sistematis dan standar yang harus ditempuh dalam melaksanakan atau menerapkan ${topik} secara benar dan efisien.` },
+          { istilah: `Parameter Teknis ${topik}`, definisi: `Variabel-variabel terukur, spesifikasi, dan tolok ukur keberhasilan yang menjadi standar baku implementasi ${topik}.` },
+          { istilah: 'Capaian Pembelajaran (CP)', definisi: 'Kompetensi minimum yang harus dikuasai peserta didik setelah menyelesaikan proses pembelajaran pada suatu fase berdasarkan Kurikulum Merdeka.' },
+          { istilah: 'Tujuan Pembelajaran (TP)', definisi: 'Jabaran spesifik kompetensi yang ingin dicapai peserta didik dalam satu sesi atau rangkaian pembelajaran, sebagai penjabaran dari Capaian Pembelajaran.' },
+          { istilah: 'Asesmen Formatif', definisi: 'Penilaian berkelanjutan yang dilaksanakan selama proses pembelajaran untuk memantau kemajuan belajar dan memberikan umpan balik peningkatan.' },
+          { istilah: 'Diferensiasi Pembelajaran', definisi: 'Strategi penyesuaian proses, konten, atau produk pembelajaran sesuai keragaman kebutuhan, gaya belajar, dan kesiapan masing-masing peserta didik.' },
+        ];
 
-        const merged = [...list];
         domainFallback.forEach(df => {
-          if (!merged.some(m => m.istilah.toLowerCase() === df.istilah.toLowerCase())) {
-            merged.push(df);
+          if (!list.some(m => m.istilah.toLowerCase() === df.istilah.toLowerCase())) {
+            list.push(df);
           }
         });
-        list = merged;
       }
+
 
       return list;
     }
@@ -2534,98 +2454,27 @@ Pada tataran analisis lanjutan, penguasaan materi **${topik}** menuntut kemampua
         return true;
       });
 
-      // Jika list kosong atau kurang dari 3 item, sediakan daftar pustaka resmi dokumen acuan, buku teks standar, dan standar web/industri
+      // Jika AI tidak menghasilkan referensi yang cukup, gunakan fallback standar
+      // Dokumen kurikulum resmi + referensi Teknologi Pendidikan — domain/materi dari konteks Tahap 1 & 2 sudah ditangani AI
       if (list.length < 3) {
         const d = data || {};
-        const topik = d.topikMateri || 'Materi Pokok';
         const mapel = d.mataPelajaran || 'Mata Pelajaran';
-        // PRIORITAS: topikMateri >> mataPelajaran agar konteks tidak salah domain
-        const topicCtxP = [d.topikMateri, d.isiTopikMateri, d.elemenCP, d.tujuanPembelajaran, d.materiTambahan]
-          .filter(Boolean).map(v => String(v)).join(' ').toLowerCase();
-        const primaryCtx = topicCtxP || [d.mataPelajaran, d.jurusanSekolah].filter(Boolean).map(v => String(v)).join(' ').toLowerCase();
-
-        const isTipografi = /\b(tipografi|typography|typeface|font|huruf|kerning|tracking|leading|glif|glyph)\b/i.test(primaryCtx);
-        const isDKV = isTipografi || /\b(dkv|desain\s*grafis|desain\s*komunikasi\s*visual|nirmana|vektor|vector|coreldraw|illustrator|photoshop|layout|branding|logo|poster|identitas\s*visual)\b/i.test(primaryCtx);
-        const isVideoKamera = !isTipografi && (
-          /\b(videografi|sinematografi|tata\s*kamera|kamera\s*video|camera\s*movement|camera\s*angle|shot\s*size|ukuran\s*bidik|sudut\s*pandang\s*kamera|aturan\s*180|180-degree|depth\s*of\s*field|\bdof\b|white\s*balance|broadcasting|penyiaran|perfilman|tata\s*artistik\s*film)\b/i.test(primaryCtx) ||
-          (/\b(fotografi|kamera)\b/i.test(primaryCtx) && !isDKV)
-        );
-
-        // 1. Dokumen Resmi Standar Kurikulum Merdeka (Kemendikbudristek)
-        const refBSKAP = 'Badan Standar, Kurikulum, dan Asesmen Pendidikan (BSKAP). (2024). Panduan Pembelajaran dan Asesmen Pendidikan Anak Usia Dini, Pendidikan Dasar, dan Pendidikan Menengah. Jakarta: Kementerian Pendidikan, Kebudayaan, Riset, dan Teknologi.';
-        const refCP = 'Badan Standar, Kurikulum, dan Asesmen Pendidikan (BSKAP). (2024). Keputusan Kepala BSKAP No. 032/H/KR/2024 tentang Capaian Pembelajaran pada Pendidikan Anak Usia Dini, Jenjang Pendidikan Dasar, dan Jenjang Pendidikan Menengah pada Kurikulum Merdeka. Jakarta: Kemendikbudristek.';
-
-        // 2. Buku Teks Klasik, Standar Industri, & Rujukan Keilmuan Otoritatif (Tidak dibatasi 5 tahun terakhir)
-        let refKeilmuan = [];
-        if (isVideoKamera) {
-          refKeilmuan = [
-            'Bowen, C. J., & Thompson, R. (2020). Grammar of the Shot (4th ed.). New York: Routledge / Focal Press.',
-            'Brown, B. (2021). Cinematography: Theory and Practice: Image Making for Cinematographers and Directors (4th ed.). London: Routledge.',
-            'Direktorat Sekolah Menengah Kejuruan. (2022). Dasar-Dasar Broadcasting dan Perfilman untuk SMK/MAK Kelas X. Jakarta: Pusat Perbukuan Kemendikbudristek.'
-          ];
-        } else if (isTipografi) {
-          refKeilmuan = [
-            'Lupton, E. (2014). Thinking with Type: A Critical Guide for Designers, Writers, Editors, & Students (2nd ed.). New York: Princeton Architectural Press.',
-            'Bringhurst, R. (2012). The Elements of Typographic Style (4th ed.). Seattle: Hartley & Marks Publishers.',
-            'World Wide Web Consortium (W3C). (2023). Cascading Style Sheets Fonts Module Level 4 & Web Typography Specification. https://www.w3.org/TR/css-fonts-4/',
-            'Direktorat Sekolah Menengah Kejuruan. (2022). Dasar-Dasar Desain Komunikasi Visual untuk SMK/MAK Kelas X. Jakarta: Pusat Perbukuan Kemendikbudristek.'
-          ];
-        } else if (/\b(animasi|animation|2d|3d|stopmotion|storyboard|motion\s*graphic|keyframe|rigging|tweening|blender|maya|render)\b/i.test(primaryCtx)) {
-          refKeilmuan = [
-            "Williams, R. (2020). The Animator's Survival Kit: A Manual of Methods, Principles and Formulas for Classical, Computer, Games, Stop Motion and Internet Animators. London: Faber & Faber.",
-            'Direktorat Sekolah Menengah Kejuruan. (2022). Dasar-Dasar Animasi untuk SMK/MAK. Jakarta: Pusat Perbukuan Kemendikbudristek.'
-          ];
-        } else if (isDKV) {
-          refKeilmuan = [
-            'Lupton, E., & Phillips, J. C. (2021). Graphic Design: The New Basics (2nd ed.). New York: Princeton Architectural Press.',
-            'Direktorat Sekolah Menengah Kejuruan. (2022). Dasar-Dasar Desain Komunikasi Visual. Jakarta: Pusat Perbukuan Kemendikbudristek.'
-          ];
-        } else if (/\b(bubut|pembubutan|frais|pemfraisan|las|pengelasan|gerinda|penggerindaan|pemesinan|mesin\s*cnc|cnc|turning|milling|welding|grinding|manufaktur|logam|metalurgi|permesinan|machining|lathe|drill|boring|shaping)\b/i.test(primaryCtx)) {
-          refKeilmuan = [
-            'Kalpakjian, S., & Schmid, S. R. (2020). Manufacturing Engineering and Technology (8th ed.). Upper Saddle River: Pearson Education.',
-            'Groover, M. P. (2020). Fundamentals of Modern Manufacturing: Materials, Processes, and Systems (6th ed.). Hoboken: John Wiley & Sons.',
-            'Wirawan, S. (2018). Teknik Pemesinan Bubut. Jakarta: Direktorat Pembinaan Sekolah Menengah Kejuruan, Kemendikbud.',
-            'Direktorat Sekolah Menengah Kejuruan. (2022). Dasar-Dasar Teknik Mesin untuk SMK/MAK Kelas X. Jakarta: Pusat Perbukuan Kemendikbudristek.'
-          ];
-        } else if (/\b(jaringan|komputer|rpl|server|cisco|mikrotik|software|cyber|cloud|lan|wan|routing|switch|firewall|database|sql|pemrograman|coding|web)\b/i.test(topicCtxP)) {
-          refKeilmuan = [
-            'Kurose, J. F., & Ross, K. W. (2021). Computer Networking: A Top-Down Approach (8th ed.). London: Pearson Education.',
-            'Internet Engineering Task Force (IETF). (2023). Official Internet Protocol Standards and Architectural Principles. https://www.ietf.org/',
-            'Direktorat Sekolah Menengah Kejuruan. (2022). Dasar-Dasar Teknik Jaringan Komputer dan Telekomunikasi. Jakarta: Pusat Perbukuan Kemendikbudristek.'
-          ];
-        } else if (/\b(otomotif|motor\s*bakar|injeksi|ecu|transmisi|rem|suspensi|chassis|tune\s*up|kendaraan)\b/i.test(primaryCtx)) {
-          refKeilmuan = [
-            'Denton, T. (2020). Automobile Electrical and Electronic Systems (5th ed.). London: Routledge.',
-            'Direktorat Sekolah Menengah Kejuruan. (2022). Dasar-Dasar Teknik Otomotif. Jakarta: Pusat Perbukuan Kemendikbudristek.'
-          ];
-        } else if (/\b(listrik|elektronika|arus|tegangan|daya|plc|mikrokontroler|arduino|sensor|instalasi\s*motor|rangkaian)\b/i.test(primaryCtx)) {
-          refKeilmuan = [
-            'Floyd, T. L. (2019). Electronic Devices: Conventional Current Version (10th ed.). Upper Saddle River: Pearson Education.',
-            'Direktorat Sekolah Menengah Kejuruan. (2022). Dasar-Dasar Teknik Elektronika untuk SMK/MAK. Jakarta: Pusat Perbukuan Kemendikbudristek.'
-          ];
-        } else if (/\b(akuntansi|keuangan|bisnis|manajemen|pasar|jurnal|neraca|laba|faktur|pajak|pemasaran|marketing)\b/i.test(primaryCtx)) {
-          refKeilmuan = [
-            'Horngren, C. T., Datar, S. M., & Rajan, M. V. (2021). Cost Accounting: A Managerial Emphasis (17th ed.). Upper Saddle River: Pearson Education.',
-            'Direktorat Sekolah Menengah Kejuruan. (2022). Dasar-Dasar Bisnis dan Manajemen untuk SMK/MAK. Jakarta: Pusat Perbukuan Kemendikbudristek.'
-          ];
-        } else if (/\b(kuliner|boga|tata\s*boga|masak|makanan|minuman|food|resep|pastry|bakery|restoran)\b/i.test(primaryCtx)) {
-          refKeilmuan = [
-            'McGee, H. (2020). On Food and Cooking: The Science and Lore of the Kitchen. New York: Scribner.',
-            'Direktorat Sekolah Menengah Kejuruan. (2022). Dasar-Dasar Kuliner untuk SMK/MAK. Jakarta: Pusat Perbukuan Kemendikbudristek.'
-          ];
-        } else {
-          refKeilmuan = [
-            `Kementerian Pendidikan, Kebudayaan, Riset, dan Teknologi. (2023). Buku Panduan Pendidik dan Modul Ajar Mata Pelajaran ${mapel}. Jakarta: Pusat Kurikulum dan Pembelajaran Kemendikbudristek.`,
-            `Kementerian Ketenagakerjaan Republik Indonesia. (2023). Standar Kompetensi Kerja Nasional Indonesia (SKKNI) Bidang Keahlian ${mapel} — Materi ${topik}. Jakarta: Kemnaker RI.`
-          ];
-        }
+        const jenjang = d.jenjangSekolah || 'SMK';
+        const jurusan = d.jurusanSekolah ? ` Jurusan ${d.jurusanSekolah}` : '';
 
         list = [
-          refBSKAP,
-          refCP,
-          ...refKeilmuan
+          // Regulasi Kurikulum Merdeka
+          'Badan Standar, Kurikulum, dan Asesmen Pendidikan (BSKAP). (2024). Keputusan Kepala BSKAP No. 032/H/KR/2024 tentang Capaian Pembelajaran pada Pendidikan Anak Usia Dini, Jenjang Pendidikan Dasar, dan Jenjang Pendidikan Menengah pada Kurikulum Merdeka. Jakarta: Kemendikbudristek.',
+          'Badan Standar, Kurikulum, dan Asesmen Pendidikan (BSKAP). (2024). Panduan Pembelajaran dan Asesmen Pendidikan Anak Usia Dini, Pendidikan Dasar, dan Pendidikan Menengah. Jakarta: Kementerian Pendidikan, Kebudayaan, Riset, dan Teknologi.',
+          // Panduan Pengembangan Modul Ajar
+          'Kementerian Pendidikan, Kebudayaan, Riset, dan Teknologi. (2022). Panduan Pengembangan Modul Ajar Kurikulum Merdeka. Jakarta: Pusat Kurikulum dan Pembelajaran, Kemendikbudristek.',
+          // Teknologi Pendidikan & Desain Pembelajaran
+          'Dick, W., Carey, L., & Carey, J. O. (2015). The Systematic Design of Instruction (8th ed.). Upper Saddle River: Pearson Education.',
+          // Referensi buku siswa/guru sesuai mapel dari Kemendikbudristek
+          `Kementerian Pendidikan, Kebudayaan, Riset, dan Teknologi. (2023). Buku Panduan Guru: ${mapel}${jurusan} ${jenjang}. Jakarta: Pusat Perbukuan Kemendikbudristek.`,
         ];
       }
+
 
       return list;
     }
