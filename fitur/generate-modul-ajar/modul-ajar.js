@@ -810,6 +810,20 @@ function getFallbackElemenCP(mapel, faseKelas) {
 }
 
 /**
+ * Helper: Menonaktifkan semua tombol navigasi antar-tahap saat proses generate AI berjalan.
+ * Mencegah pengguna berpindah tahap di tengah proses generate.
+ */
+function setStepNavDisabled(disabled) {
+  const stepBtns = document.querySelectorAll('.btn-step-next, .btn-step-prev');
+  stepBtns.forEach(btn => {
+    btn.disabled = disabled;
+    btn.style.opacity = disabled ? '0.45' : '';
+    btn.style.cursor = disabled ? 'not-allowed' : '';
+    btn.style.pointerEvents = disabled ? 'none' : '';
+  });
+}
+
+/**
  * GENERATOR AI: Elemen Capaian Pembelajaran (Tahap 1)
  * Menyusun daftar elemen CP resmi Kurikulum Merdeka sesuai Mata Pelajaran, Jenjang, Fase, dan Jurusan
  */
@@ -840,7 +854,7 @@ async function generateAIElemenCP() {
     btn.classList.add('loading');
     btn.innerHTML = `<span class="btn-spinner"></span> <span>Generate With AI</span>`;
   }
-
+  setStepNavDisabled(true);
   const prompt = `Anda adalah tim pakar perumus kurikulum nasional BSKAP Kemendikbudristek untuk Kurikulum Merdeka Indonesia.
 Berdasarkan data kurikulum akademik:
 - Mata Pelajaran: ${mapel}
@@ -892,6 +906,7 @@ ATURAN FORMAT OUTPUT SANGAT KETAT:
     btn.classList.remove('loading');
     btn.innerHTML = `<img src="../../Assets/icon/icon_generate.png" class="btn-ai-icon" alt=""> <span>Generate With AI</span>`;
   }
+  setStepNavDisabled(false);
 }
 
 /**
@@ -917,7 +932,7 @@ async function generateAITujuan() {
     btn.classList.add('loading');
     btn.innerHTML = `<span class="btn-spinner"></span> <span>Generate With AI</span>`;
   }
-
+  setStepNavDisabled(true);
   const prompt = `Anda adalah pakar pengembang kurikulum Kurikulum Merdeka Indonesia.
 Konteks Pembelajaran:
 - Mata Pelajaran: ${ctx.mapel}
@@ -951,6 +966,7 @@ ATURAN WAJIB SANGAT KETAT:
     btn.classList.remove('loading');
     btn.innerHTML = `<img src="../../Assets/icon/icon_generate.png" class="btn-ai-icon" alt=""> <span>Generate With AI</span>`;
   }
+  setStepNavDisabled(false);
 }
 
 /**
@@ -976,6 +992,7 @@ async function generateAIMateri() {
     btn.classList.add('loading');
     btn.innerHTML = `<span class="btn-spinner"></span> <span>Generate With AI</span>`;
   }
+  setStepNavDisabled(true);
 
   const prompt = `Anda adalah ahli kurikulum dan materi pembelajaran Kurikulum Merdeka.
 Konteks:
@@ -1009,11 +1026,10 @@ ATURAN WAJIB SANGAT KETAT:
     btn.classList.remove('loading');
     btn.innerHTML = `<img src="../../Assets/icon/icon_generate.png" class="btn-ai-icon" alt=""> <span>Generate With AI</span>`;
   }
+  setStepNavDisabled(false);
 }
 
-/**
- * GENERATOR AI: G. Capaian Pembelajaran (CP)
- */
+/** GENERATOR AI: G. Capaian Pembelajaran (CP) */
 async function generateAICP() {
   const ctx = getLearningContext();
   const btn = document.getElementById('btnGenCPAI');
@@ -1034,6 +1050,7 @@ async function generateAICP() {
     btn.classList.add('loading');
     btn.innerHTML = `<span class="btn-spinner"></span> <span>Generate With AI</span>`;
   }
+  setStepNavDisabled(true);
 
   const isRingkasCP = document.getElementById('ceklisRingkasCP')?.checked || false;
 
@@ -1076,11 +1093,10 @@ ATURAN WAJIB SANGAT KETAT:
     btn.classList.remove('loading');
     btn.innerHTML = `<img src="../../Assets/icon/icon_generate.png" class="btn-ai-icon" alt=""> <span>Generate With AI</span>`;
   }
+  setStepNavDisabled(false);
 }
 
-/**
- * GENERATOR AI: I. Identifikasi Awal
- */
+/** GENERATOR AI: I. Identifikasi Awal */
 async function generateAIIdentifikasi() {
   const ctx = getLearningContext();
   const btn = document.getElementById('btnGenIdentifikasiAI');
@@ -1102,6 +1118,7 @@ async function generateAIIdentifikasi() {
     btn.classList.add('loading');
     btn.innerHTML = `<span class="btn-spinner"></span> <span>Generate With AI</span>`;
   }
+  setStepNavDisabled(true);
 
   const prompt = `Anda adalah spesialis asesmen diagnostik Kurikulum Merdeka.
 Berdasarkan data perencanaan berikut:
@@ -1151,6 +1168,7 @@ ATURAN SANGAT KETAT:
     btn.classList.remove('loading');
     btn.innerHTML = `<img src="../../Assets/icon/icon_generate.png" class="btn-ai-icon" alt=""> <span>Generate With AI</span>`;
   }
+  setStepNavDisabled(false);
 }
 
 

@@ -305,7 +305,7 @@
     }
 
     .activity-points-list li::before {
-      content: counter(act-counter) ") ";
+      content: counter(act-counter) ". ";
       position: absolute;
       left: 0;
       top: 0;
@@ -598,7 +598,7 @@
         line-height: 1.45 !important;
       }
       .activity-points-list li::before {
-        content: counter(act-counter) ") " !important;
+        content: counter(act-counter) ". " !important;
         position: absolute;
         left: 0;
         top: 0;
@@ -1138,14 +1138,15 @@
         <p style="margin-bottom: 12px; text-align: justify; line-height: 1.68; color: #1e293b;">
           Materi tambahan ini dirancang sebagai pengayaan terstruktur guna memperdalam pemahaman konseptual dan kemahiran terapan peserta didik melampaui capaian pembelajaran dasar. Pembahasan difokuskan pada penguasaan materi lanjutan, prinsip kerja mendalam, serta standar penerapan profesional pada mata pelajaran <strong>${mapel}</strong> dengan materi pokok <strong>${topik}</strong>:
         </p>
-        <div class="materi-tambahan-subpoints" style="margin-left: 24px; margin-top: 10px; margin-bottom: 16px;">
+        <div class="materi-tambahan-subpoints" style="margin-left: 0; margin-top: 10px; margin-bottom: 16px;">
           ${parsedPoints.map((pt, i) => `
-            <div class="materi-tambahan-item" style="margin-bottom: 14px; text-align: justify; line-height: 1.65;">
-              <div class="materi-tambahan-item-title" style="font-weight: 700; color: #0f172a; margin-bottom: 4px; font-size: 0.95rem;">
-                ${String.fromCharCode(97 + i)}. ${sanitizeAsterisksKeepBold(pt.title)}
+            <div class="materi-tambahan-item" style="display: flex; align-items: flex-start; gap: 0; margin-bottom: 14px; text-align: justify; line-height: 1.65;">
+              <div class="materi-tambahan-item-label" style="flex-shrink: 0; font-weight: 700; color: #0f172a; font-size: 0.95rem; width: 24px; padding-top: 0;">
+                ${String.fromCharCode(97 + i)}.
               </div>
-              <div class="materi-tambahan-item-desc" style="margin-left: 12px; color: #334155; line-height: 1.65;">
-                ${sanitizeAsterisksKeepBold(pt.fullExplanation)}
+              <div class="materi-tambahan-item-body" style="flex: 1; color: #1e293b;">
+                <div style="font-weight: 700; color: #0f172a; margin-bottom: 4px; font-size: 0.95rem;">${sanitizeAsterisksKeepBold(pt.title)}</div>
+                <div style="color: #334155; line-height: 1.65;">${sanitizeAsterisksKeepBold(pt.fullExplanation)}</div>
               </div>
             </div>
           `).join('')}
@@ -1169,14 +1170,282 @@
     }
 
     /**
-     * Render Baris Kegiatan Inti Terpisah Per Sintaks Model Pembelajaran
+     * Parsing Total Durasi Menit Pertemuan dari String input
+     * Contoh: "4 JP x 45 Menit (4 Pertemuan)" -> 180 Menit
      */
-    function renderIntiRows(intiData, pendekatan, model) {
+    function parseMeetingDurationMinutes(durasiStr, totalMeetings = 4) {
+      if (!durasiStr || typeof durasiStr !== 'string') return 180;
+
+      const matchJpMenit = durasiStr.match(/(\d+)\s*JP\s*[*xX]\s*(\d+)\s*menit/i);
+      if (matchJpMenit) {
+        return parseInt(matchJpMenit[1], 10) * parseInt(matchJpMenit[2], 10);
+      }
+
+      const matchDirectMenit = durasiStr.match(/(\d+)\s*menit/i);
+      const matchOnlyJp = durasiStr.match(/(\d+)\s*JP/i);
+
+      if (matchOnlyJp) {
+        const totalJp = parseInt(matchOnlyJp[1], 10);
+        let jpPerMeeting = totalJp;
+        if (totalMeetings > 1 && totalJp >= totalMeetings * 2) {
+          jpPerMeeting = Math.round(totalJp / totalMeetings);
+        }
+        return jpPerMeeting * 45;
+      }
+
+      if (matchDirectMenit) {
+        return parseInt(matchDirectMenit[1], 10);
+      }
+
+      return 180;
+    }
+
+    /**
+     * Hitung Pembagian Waktu Pedagogis Baku (Awal, Inti, Penutup)
+     * Memastikan Total Akhir Tepat Sesuai Alokasi Durasi Pertemuan
+     */
+    function calculateStageMinutes(totalMinutes) {
+      const tot = Math.max(totalMinutes || 180, 40);
+      let awalMin = 15;
+      let penutupMin = 15;
+
+      if (tot < 80) {
+        awalMin = 10;
+        penutupMin = 10;
+      } else if (tot < 120) {
+        awalMin = 15;
+        penutupMin = 15;
+      }
+
+      const intiMin = Math.max(tot - awalMin - penutupMin, 20);
+      return { awalMin, penutupMin, intiMin, totalMinutes: tot };
+    }
+
+    /**
+     * Menghasilkan Daftar Sub-Topik Materi Murni untuk Setiap Pertemuan (1 s/d 16 Pertemuan)
+     * Bebas dari nama sintaks model dan bebas dari nama fasilitas/ruangan.
+     */
+    function generateMeetingTopicList(topikVal, mapelVal, countPertemuan = 4, p = {}) {
+      const t = (topikVal || 'Materi Pokok').trim();
+      const m = (mapelVal || '').trim();
+      const combined = `${t} ${m} ${p.jurusanSekolah || ''}`.toLowerCase();
+
+      const isTipografi = /tipografi|typography|typeface|font|lettering|tata\s*huruf/i.test(combined);
+      const isDKV = !isTipografi && /(dkv|desain\s*grafis|desain\s*komunikasi\s*visual|nirmana|vektor|vector|coreldraw|illustrator|photoshop|layout|branding|logo|identitas\s*visual)/i.test(combined);
+      const isVideo = /(videografi|sinematografi|tata\s*kamera|kamera\s*video|camera\s*movement|camera\s*angle|shot\s*size|aturan\s*180|depth\s*of\s*field|white\s*balance|broadcasting|penyiaran|perfilman)/i.test(combined);
+      const isAnimasi = /(animasi|animation|2d|3d|stopmotion|storyboard|motion\s*graphic|keyframe|rigging)/i.test(combined);
+      const isOtomotif = /(otomotif|motor|mobil|mesin|injeksi|efi|transmisi|rem|suspensi|chassis|engine|tune\s*up)/i.test(combined);
+      const isListrik = /(listrik|elektronika|arus|tegangan|daya|plc|mikrokontroler|arduino|sensor|instalasi)/i.test(combined);
+      const isKuliner = /(kuliner|boga|tata\s*boga|masak|makanan|minuman|food|resep|pastry|bakery|restoran)/i.test(combined);
+      const isBisnis = /(bisnis|manajemen|akuntansi|pemasaran|marketing|keuangan|jurnal|bep)/i.test(combined);
+
+      let pool = [];
+
+      if (isTipografi) {
+        pool = [
+          `Konsep Dasar, Fungsi, dan Anatomi Huruf (Type Anatomy)`,
+          `Klasifikasi dan Karakteristik Rumpun Huruf (Typeface Classification)`,
+          `Pengaturan Jarak Spasial (Kerning, Tracking, Leading) dan Hierarki Tipografi`,
+          `Penerapan Tipografi Responsif dan Tata Letak Desain Komunikasi Visual`,
+          `Harmoni Tipografi, Kontras Visual, dan Eksplorasi Grid System`,
+          `Lisensi Jenis Huruf Komersial dan Etika Hukum Tipografi Digital`,
+          `Perancangan Karakter Huruf Kustom (Custom Typeface dan Lettering)`,
+          `Evaluasi Keterbacaan (Legibility dan Readability) Karya Desain Tipografi`,
+          `Eksplorasi Tipografi Eksperimental dan Seni Huruf Ekspresif`,
+          `Tipografi Terapan pada Desain Kemasan dan Media Cetak`,
+          `Penerapan Tipografi pada Desain Antarmuka Digital (UI/UX Design)`,
+          `Standardisasi Lembar Spesifikasi Tipografi (Type Specimen Sheet)`,
+          `Desain Identitas Visual Jenama (Branding) Berbasis Karakter Tipografi`,
+          `Uji Efektivitas Tipografi pada Komposisi Visual Multichannel`,
+          `Kurasi Portofolio Karya Tipografi Standar Industri Grafis`,
+          `Evaluasi Kritis dan Refleksi Inovasi Tren Desain Tipografi Kontemporer`
+        ];
+      } else if (isDKV) {
+        pool = [
+          `Prinsip Dasar Tata Rupa, Nirmana, dan Komposisi Desain Visual`,
+          `Eksplorasi Unsur Rupa: Garis, Bentuk, Tekstur, dan Ruang Negatif`,
+          `Teori Warna, Psikologi Warna, dan Harmoni Palet Komposisi`,
+          `Hierarki Visual dan Peranan Tipografi dalam Komunikasi Grafis`,
+          `Desain Vektor Presisi dan Ilustrasi Grafis Digital`,
+          `Penerapan Grid System dan Penataan Tata Letak (Layout)`,
+          `Perancangan Identitas Visual: Desain Logo dan Panduan Jenama`,
+          `Desain Media Promosi Komersial: Poster, Iklan, dan Publikasi`,
+          `Desain Kemasan Produk (Packaging Design) dan Mockup Realistis`,
+          `Pembuatan Aset Grafis Antarmuka Digital dan Media Sosial`,
+          `Manajemen Warna Digital ke Cetak (CMYK) dan Teknik Pra-Cetak`,
+          `Finishing Cetak Grafis dan Kontrol Kualitas Luaran Produksi`,
+          `Presentasi Konsep Karya Desain dan Pembelaan Gagasan Visual`,
+          `Uji Validasi Desain dan Umpan Balik Kebutuhan Klien Industri`,
+          `Penyusunan Portofolio Profesional Desain Komunikasi Visual`,
+          `Evaluasi Standar Mutu Desain Grafis dan Refleksi Etika Profesi`
+        ];
+      } else if (isVideo) {
+        pool = [
+          `Konsep Sinematografi, Anatomi Kamera Video, dan Prinsip Eksposur`,
+          `Standar Ukuran Bidik (Shot Size) dan Komposisi Ruang Sinematik`,
+          `Sudut Pengambilan Gambar (Camera Angle) dan Makna Dramatik Visual`,
+          `Teknik Pergerakan Kamera (Camera Movement: Pan, Tilt, Dolly, Pedestal)`,
+          `Penerapan Aturan 180 Derajat dan Kontinuitas Pandangan Kamera`,
+          `Pengendalian Ruang Tajam (Depth of Field) dan Kalibrasi White Balance`,
+          `Tata Cahaya Sinematik Dasar: Sistem Pencahayaan Three-Point Lighting`,
+          `Perekaman Adegan Lapangan Otentik Berdasarkan Storyboard`,
+          `Manajemen Audio Kamera dan Perekaman Suara Sinkron Lapangan`,
+          `Teknik Pengambilan Gambar Multi-Kamera dan Penataan Blocking`,
+          `Manajemen Berkas Data Hasil Rekaman (Data Ingest dan Logging)`,
+          `Quality Control Teknis Video: Noise, Kliping Eksposur, dan Fokus`,
+          `Penyusunan Rough Cut Hasil Rekaman dan Evaluasi Urutan Adegan`,
+          `Simulasi Uji Siar dan Standar Kualitas Teknis Broadcasting`,
+          `Portofolio Hasil Karya Sinematografi dan Presentasi Visual`,
+          `Evaluasi Menyeluruh Kompetensi Pengoperasian Kamera dan Refleksi`
+        ];
+      } else if (isAnimasi) {
+        pool = [
+          `Prinsip Dasar Animasi dan Eksplorasi Sketsa Karakter Visual`,
+          `Pembuatan Lembar Model Karakter (Character Model Sheet)`,
+          `Penyusunan Papan Cerita (Storyboard) dan Desain Pose Kunci`,
+          `Penerapan Prinsip Timing, Spacing, dan Squash & Stretch`,
+          `Teknik Keyframing, In-betweening, dan Uji Gerak (Pencil Test)`,
+          `Digital Inking, Pewarnaan Karakter, dan Desain Latar Belakang`,
+          `Pengaturan Rigging Karakter dan Pengendalian Titik Sendi`,
+          `Animasi Gerak Berjalan (Walk Cycle) dan Gerak Aksi Karakter`,
+          `Sinkronisasi Gerak Bibir (Lip Sync) dengan Trek Audio Dialog`,
+          `Penerapan Efek Visual dan Tata Kamera Virtual 2D/3D`,
+          `Pengaturan Pencahayaan Ruang Animasi dan Nuansa Visual`,
+          `Proses Rendering Adegan dan Manajemen Format Luaran Video`,
+          `Compositing Akhir dan Penyelarasan Jalur Suara (Soundtrack)`,
+          `Uji Putar (Screening) Karya Animasi dan Evaluasi Kelancaran Gerak`,
+          `Kurasi Showreel Portofolio Animasi Standar Industri`,
+          `Evaluasi Komprehensif Karya Animasi dan Refleksi Proses Produksi`
+        ];
+      } else if (isOtomotif) {
+        pool = [
+          `Landasan Teoretis, Komponen Utama, dan Prinsip Kerja ${t}`,
+          `Prosedur Standar Operasional (SOP) Pembongkaran dan Pemeriksaan ${t}`,
+          `Pengukuran Presisi Komponen Menggunakan Alat Ukur Standar Industri`,
+          `Identifikasi Keausan dan Analisis Kerusakan Mekanikal/Elektrikal ${t}`,
+          `Prosedur Perbaikan, Penggantian Suku Cadang, dan Perakitan ${t}`,
+          `Penyetelan Parameter Kinerja dan Kalibrasi Sistem ${t}`,
+          `Pengujian Operasional Mesin dan Diagnosis Kendala Teknis`,
+          `Pengujian Emisi, Efisiensi Bahan Bakar, dan Standar Performa`,
+          `Pemeriksaan Keselamatan Kerja dan Kendali Kualitas (Quality Control)`,
+          `Simulasi Perawatan Berkala Sesuai Pedoman Servis Resmi`,
+          `Analisis Data Gangguan Menggunakan Instrumen Diagnostik Modern`,
+          `Pemecahan Masalah Kasus Lapangan (Troubleshooting Komprehensif) ${t}`,
+          `Dokumentasi Lembar Kerja (Job Sheet) dan Laporan Hasil Pemeriksaan`,
+          `Simulasi Uji Kompetensi Kejuruan Bidang Otomotif pada ${t}`,
+          `Evaluasi Mutu Kerja Servis dan Standardisasi Pelayanan Bengkel`,
+          `Refleksi Sikap Kerja Profesional, K3, dan Etika Teknisi Otomotif`
+        ];
+      } else if (isListrik) {
+        pool = [
+          `Konsep Fundamental, Simbol Kelistrikan, dan Karakteristik Komponen ${t}`,
+          `Pembacaan Skema Rangkaian dan Standar Keselamatan Instalasi Listrik`,
+          `Pengukuran Besaran Listrik (Tegangan, Arus, Resistansi, Daya) pada ${t}`,
+          `Pemilihan Komponen, Kabel Penghantar, dan Perangkat Pengaman Sistem`,
+          `Prosedur Perakitan dan Pengawatan (Wiring) Rangkaian Kontrol ${t}`,
+          `Pemrograman Logika Kontrol dan Pengaturan Parameter Operasional`,
+          `Pengujian Tanpa Beban dan Verifikasi Jalur Sirkuit Kontrol`,
+          `Pengujian Berbeban Penuh dan Kalibrasi Sensor/Instrumen Terkait`,
+          `Diagnosis Gangguan (Troubleshooting) Anomali Sistem dan Hubung Singkat`,
+          `Pencegahan Kebocoran Arus dan Pemeliharaan Sistem Pembumian`,
+          `Pengukuran Efisiensi Energi dan Analisis Faktor Daya Rangkaian`,
+          `Dokumentasi Single Line Diagram dan Penyusunan Berita Acara Uji Kelayakan`,
+          `Simulasi Penerapan Standar PUIL dan Kepatuhan K3 Industri`,
+          `Uji Keandalan Kinerja Sistem ${t} Secara Berkelanjutan`,
+          `Gelar Unjuk Kerja Praktik Instalasi Listrik dan Uji Sertifikasi`,
+          `Evaluasi Akhir Kepatuhan Mutu Instalasi dan Refleksi Pembelajaran`
+        ];
+      } else if (isKuliner) {
+        pool = [
+          `Identifikasi Karakteristik Bahan Baku dan Teknik Mise en Place ${t}`,
+          `Standar Sanitasi, Higiene Pangan, dan Kepatuhan Prinsip HACCP`,
+          `Penguasaan Peralatan Kerja Dapur Profesional dan Prosedur K3`,
+          `Teknik Dasar Pengolahan dan Penerapan Panas Terukur pada ${t}`,
+          `Penyusunan Formulasi Resep Baku dan Perhitungan Standar Porsi`,
+          `Pengendalian Suhu, Waktu Pematangan, dan Konsistensi Tekstur`,
+          `Teknik Bumbu Dasar, Ekstraksi Rasa, dan Harmoni Cita Rasa`,
+          `Seni Penataan Piring (Plating Technique) dan Estetika Visual Hidangan`,
+          `Uji Organoleptik: Evaluasi Aroma, Tekstur, Warna, dan Rasa ${t}`,
+          `Pengemasan Produk Makanan dan Standar Label Nutrisi Makanan`,
+          `Kalkulasi Food Costing dan Penetapan Harga Jual Menguntungkan`,
+          `Manajemen Penyimpanan Makanan (FIFO/LIFO) dan Pencegahan Food Waste`,
+          `Penyusunan Lembar Menu Standar dan Deskripsi Promosi Kuliner`,
+          `Simulasi Pelayanan Restoran dan Uji Kecepatan Penyajian (Order Time)`,
+          `Asesmen Uji Kinerja Memasak Mandiri dan Presentasi Hidangan`,
+          `Evaluasi Cita Rasa Profesional dan Refleksi Pengalaman Kuliner`
+        ];
+      } else if (isBisnis) {
+        pool = [
+          `Landasan Teoretis, Regulasi Terkait, dan Ruang Lingkup ${t}`,
+          `Analisis Kebutuhan Pasar dan Identifikasi Dokumen Transaksi`,
+          `Prosedur Pencatatan Sistematis dan Standar Operasional Akuntansi`,
+          `Pengolahan Data Finansial / Transaksi Berbantuan Perangkat Lunak`,
+          `Kalkulasi Biaya Operasional, Harga Pokok, dan Analisis Titik Impas (BEP)`,
+          `Penyusunan Draf Laporan Keuangan / Analisis Penjualan Berkala`,
+          `Pemeriksaan Kepatuhan Dokumen (Rekonsiliasi dan Validasi Data)`,
+          `Analisis Kinerja Keuangan dan Evaluasi Rasio Pertumbuhan Usaha`,
+          `Manajemen Arus Kas (Cash Flow Management) dan Pengendalian Risiko`,
+          `Strategi Pemasaran Digital dan Optimalisasi Saluran Distribusi`,
+          `Pengambilan Keputusan Bisnis Berbasis Data Analitis Empiris`,
+          `Penyusunan Rekomendasi Strategis dan Rencana Aksi Pemecahan Masalah`,
+          `Simulasi Negosiasi Bisnis dan Presentasi Laporan di Depan Pemangku Kepentingan`,
+          `Uji Kepatuhan Standar Industri dan Audit Internal Laporan`,
+          `Publikasi Laporan Kinerja Usaha dan Presentasi Portofolio Bisnis`,
+          `Evaluasi Keberlanjutan Usaha dan Refleksi Pengambilan Keputusan Manajerial`
+        ];
+      } else {
+        pool = [
+          `Landasan Konseptual, Prinsip Kerja, dan Karakteristik Dasar ${t}`,
+          `Struktur Komponen, Terminologi Teknis, dan Identifikasi Elemen ${t}`,
+          `Penerapan Parameter Kerja Standar dan Prosedur Operasional (SOP) ${t}`,
+          `Teknik Eksplorasi Praktik dan Penggunaan Instrumen Kerja ${t}`,
+          `Analisis Hubungan Antar-Elemen dan Formulasi Solusi Teknis ${t}`,
+          `Diagnosis Kendala Operasional, Troubleshooting, dan Kalibrasi Alat ${t}`,
+          `Integrasi Komprehensif dan Eksekusi Penugasan Mandiri/Tim ${t}`,
+          `Pengujian Mutu Hasil Kerja dan Verifikasi Standar Spesifikasi ${t}`,
+          `Evaluasi Presisi, Penyempurnaan Teknis, dan Optimasi Luaran ${t}`,
+          `Analisis Efisiensi Kerja, Keamanan Operasional, dan Pengendalian Kualitas ${t}`,
+          `Pengembangan Inovasi Terapan dan Modifikasi Kasus Baru ${t}`,
+          `Dokumentasi Teknis, Penulisan Lembar Laporan, dan Portofolio Hasil ${t}`,
+          `Simulasi Penerapan Standar Industri pada Materi ${t}`,
+          `Uji Verifikasi Kompetensi Mandiri Terhadap Standar Keberhasilan TP ${t}`,
+          `Gelar Luaran Kinerja, Uji Silang Kelayakan, dan Umpan Balik Ahli ${t}`,
+          `Refleksi Metakognitif dan Rencana Pengembangan Keahlian Lanjutan ${t}`
+        ];
+      }
+
+      return pool.slice(0, Math.max(countPertemuan, 1));
+    }
+
+    /**
+     * Memastikan Judul / Sub-Topik Tiap Pertemuan Murni Berupa Topik Materi
+     * Membersihkan nama sintaks model pembelajaran dan nama fasilitas/ruangan.
+     */
+    function sanitizeOrResolveSubTopik(subTopik, meetingIdx, totalMeetings, data) {
+      const t = data?.topikMateri || data?.isiTopikMateri || 'Materi Pokok';
+      const m = data?.mataPelajaran || '';
+
+      const noisePattern = /(timeline|jadwal|sarana\/bahan|sarana dan bahan|pertanyaan mendasar|desain proyek|eksekusi pengerjaan|monitoring|orientasi murid|perumusan fokus|pengorganisasian|pemberian rangsangan|identifikasi masalah|sintaks|job sheet|briefing k3|penyelidikan|di lab|di bengkel|di ruang|gelar karya|asistensi teknis|perumusan pertanyaan|hipotesis awal)/i;
+
+      if (!subTopik || subTopik.trim() === '-' || noisePattern.test(subTopik)) {
+        const list = generateMeetingTopicList(t, m, totalMeetings, data);
+        return list[meetingIdx] || `${t} Bagian ${meetingIdx + 1}`;
+      }
+
+      return subTopik.trim();
+    }
+
+    /**
+     * Render Baris Kegiatan Inti Terpisah Per Sintaks Model Pembelajaran
+     * Waktu sintaks dibagi proporsional dan presisi dari total alokasi waktu Inti
+     */
+    function renderIntiRows(intiData, pendekatan, model, totalIntiMinutes) {
+      const intiMin = totalIntiMinutes || 150;
       if (!intiData) {
         return `
           <tr>
-            <td style="vertical-align: top;"><strong>b. Kegiatan Inti</strong></td>
-            <td style="vertical-align: top;">60 Menit</td>
+            <td style="vertical-align: top;"><strong>Kegiatan Inti</strong></td>
+            <td style="vertical-align: top;">${intiMin} Menit</td>
             <td style="vertical-align: top;">-</td>
             <td style="vertical-align: top;">-</td>
           </tr>
@@ -1197,20 +1466,26 @@
       if (list.length === 0) {
         return `
           <tr>
-            <td style="vertical-align: top;"><strong>b. Kegiatan Inti</strong></td>
-            <td style="vertical-align: top;">60 Menit</td>
+            <td style="vertical-align: top;"><strong>Kegiatan Inti</strong></td>
+            <td style="vertical-align: top;">${intiMin} Menit</td>
             <td style="vertical-align: top;">-</td>
             <td style="vertical-align: top;">-</td>
           </tr>
         `;
       }
 
+      const count = list.length;
+      const baseTime = Math.floor(intiMin / count);
+      const rem = intiMin % count;
+
       return list.map((item, idx) => {
         let sintaksTitle = item.sintaks || item.namaSintaks || item.tahap || '';
         if (!sintaksTitle && list.length > 1) {
           sintaksTitle = `Sintaks Tahap ${idx + 1}`;
         }
-        const waktu = item.waktu || (list.length > 1 ? `${Math.round(60 / list.length)} Menit` : '60 Menit');
+        const sintaksMinutes = baseTime + (idx < rem ? 1 : 0);
+        const waktu = `${sintaksMinutes} Menit`;
+        item.waktu = waktu;
         const guru = formatActivityPoints(item.aktivitasGuru);
         const murid = formatActivityPoints(item.aktivitasMurid);
 
@@ -1225,7 +1500,7 @@
         return `
           ${sintaksHeader}
           <tr>
-            <td style="vertical-align: top;"><strong>b. Kegiatan Inti</strong></td>
+            <td style="vertical-align: top;"><strong>Kegiatan Inti</strong></td>
             <td style="vertical-align: top;">${waktu}</td>
             <td style="vertical-align: top;">${guru}</td>
             <td style="vertical-align: top;">${murid}</td>
@@ -1621,11 +1896,23 @@
       // C. PENGALAMAN BELAJAR (Hasil Generate AI)
       // ======================================================================
       const listMeetings = ai.pengalamanBelajar || [];
+      const totalMeetingsCount = listMeetings.length || 4;
+      const totalMeetingMinutes = parseMeetingDurationMinutes(durasi, totalMeetingsCount);
+      const stageTimes = calculateStageMinutes(totalMeetingMinutes);
+      const perMeetingDurasiLabel = durasi.split('(')[0].trim();
+
       const pengalamanContainer = document.getElementById('docPengalamanBelajarContainer');
-      pengalamanContainer.innerHTML = listMeetings.map((m, idx) => `
+      pengalamanContainer.innerHTML = listMeetings.map((m, idx) => {
+        const cleanSubTopik = sanitizeOrResolveSubTopik(m.subTopik, idx, totalMeetingsCount, data);
+        m.subTopik = cleanSubTopik;
+
+        if (m.awal) m.awal.waktu = `${stageTimes.awalMin} Menit`;
+        if (m.penutup) m.penutup.waktu = `${stageTimes.penutupMin} Menit`;
+
+        return `
         <div class="meeting-block">
           <div class="meeting-header-title">
-            ${idx + 1}. Pertemuan ${m.pertemuan}: ${m.subTopik ? m.subTopik.toUpperCase() : ''} (${durasi.split('(')[0].trim()})
+            ${idx + 1}. Pertemuan ${m.pertemuan}: ${cleanSubTopik.toUpperCase()} (${perMeetingDurasiLabel})
           </div>
 
           <table class="doc-table">
@@ -1639,24 +1926,25 @@
             </thead>
             <tbody>
               <tr>
-                <td style="vertical-align: top;"><strong>a. Kegiatan Awal</strong></td>
-                <td style="vertical-align: top;">${m.awal?.waktu || '15 Menit'}</td>
+                <td style="vertical-align: top;"><strong>Kegiatan Awal</strong></td>
+                <td style="vertical-align: top;">${stageTimes.awalMin} Menit</td>
                 <td style="vertical-align: top;">${formatActivityPoints(m.awal?.aktivitasGuru)}</td>
                 <td style="vertical-align: top;">${formatActivityPoints(m.awal?.aktivitasMurid)}</td>
               </tr>
 
-              ${renderIntiRows(m.inti, pendekatan, model)}
+              ${renderIntiRows(m.inti, pendekatan, model, stageTimes.intiMin)}
 
               <tr>
-                <td style="vertical-align: top;"><strong>c. Kegiatan Penutup</strong></td>
-                <td style="vertical-align: top;">${m.penutup?.waktu || '15 Menit'}</td>
+                <td style="vertical-align: top;"><strong>Kegiatan Penutup</strong></td>
+                <td style="vertical-align: top;">${stageTimes.penutupMin} Menit</td>
                 <td style="vertical-align: top;">${formatActivityPoints(m.penutup?.aktivitasGuru)}</td>
                 <td style="vertical-align: top;">${formatActivityPoints(m.penutup?.aktivitasMurid)}</td>
               </tr>
             </tbody>
           </table>
         </div>
-      `).join('');
+      `;
+      }).join('');
 
       // ======================================================================
       // D. MATERI AJAR DAN ASESMEN (Hasil Generate AI)
@@ -2005,7 +2293,13 @@ Pada tataran analisis lanjutan, penguasaan materi **${topik}** menuntut kemampua
       });
 
       // Deteksi konteks subjek keilmuan dari Tahap 1 & 2 (Poin A-F)
-      const primaryCtx = extractPrimarySubjectContext(data, ai);
+      // PRIORITAS: topikMateri > isiTopikMateri >> mataPelajaran (course name often too generic)
+      const d2 = data || {};
+      const topicCtx = [d2.topikMateri, d2.isiTopikMateri, d2.elemenCP, d2.tujuanPembelajaran, d2.materiTambahan]
+        .filter(Boolean).map(v => String(v)).join(' ').toLowerCase();
+      const courseCtx = [d2.mataPelajaran, d2.jurusanSekolah].filter(Boolean).map(v => String(v)).join(' ').toLowerCase();
+      // Use topic context first; only fall back to course name if topic context gives no signal
+      const primaryCtx = topicCtx || courseCtx;
 
       const isTipografi = /\b(tipografi|typography|typeface|font|huruf|kerning|tracking|leading|glif|glyph)\b/i.test(primaryCtx);
       const isDKV = isTipografi || /\b(dkv|desain\s*grafis|desain\s*komunikasi\s*visual|nirmana|vektor|vector|coreldraw|illustrator|photoshop|layout|branding|logo|poster|identitas\s*visual)\b/i.test(primaryCtx);
@@ -2014,11 +2308,13 @@ Pada tataran analisis lanjutan, penguasaan materi **${topik}** menuntut kemampua
         (/\b(fotografi|kamera)\b/i.test(primaryCtx) && !isDKV)
       );
       const isAnimasi = !isTipografi && /\b(animasi|animation|2d|3d|stopmotion|storyboard|motion\s*graphic|keyframe|rigging|tweening|blender|maya|render)\b/i.test(primaryCtx);
-      const isIT = !isTipografi && !isDKV && /\b(jaringan|komputer|rpl|tkj|server|cisco|mikrotik|software|cyber|cloud|lan|wan|routing|switch|firewall|database|sql|pemrograman|coding|web)\b/i.test(primaryCtx);
+      // isIT: only trigger if the TOPIC itself explicitly mentions IT/networking terms, not just the course/jurusan name
+      const isIT = !isTipografi && !isDKV && !isVideoKamera && !isAnimasi && /\b(jaringan|komputer|rpl|server|cisco|mikrotik|software|cyber|cloud|lan|wan|routing|switch|firewall|database|sql|pemrograman|coding|web)\b/i.test(topicCtx || '');
       const isOtomotif = /\b(otomotif|motor|mobil|mesin|injeksi|ecu|transmisi|rem|suspensi|chassis|engine|tune\s*up)\b/i.test(primaryCtx);
       const isListrik = /\b(listrik|elektronika|arus|tegangan|daya|plc|mikrokontroler|arduino|sensor|instalasi\s*motor|rangkaian)\b/i.test(primaryCtx);
       const isBisnis = /\b(akuntansi|keuangan|bisnis|manajemen|pasar|uang|jurnal|neraca|laba|faktur|pajak|pemasaran|marketing)\b/i.test(primaryCtx);
       const isKuliner = /\b(kuliner|boga|tata\s*boga|masak|makanan|minuman|food|resep|pastry|bakery|restoran)\b/i.test(primaryCtx);
+
 
       // Kamus Istilah Teknis Komprehensif Tipografi & Desain Grafis
       const kamusTipografiDKV = [
@@ -2260,7 +2556,10 @@ Pada tataran analisis lanjutan, penguasaan materi **${topik}** menuntut kemampua
         const d = data || {};
         const topik = d.topikMateri || 'Materi Pokok';
         const mapel = d.mataPelajaran || 'Mata Pelajaran';
-        const primaryCtx = extractPrimarySubjectContext(data, ai);
+        // PRIORITAS: topikMateri >> mataPelajaran agar konteks tidak salah domain
+        const topicCtxP = [d.topikMateri, d.isiTopikMateri, d.elemenCP, d.tujuanPembelajaran, d.materiTambahan]
+          .filter(Boolean).map(v => String(v)).join(' ').toLowerCase();
+        const primaryCtx = topicCtxP || [d.mataPelajaran, d.jurusanSekolah].filter(Boolean).map(v => String(v)).join(' ').toLowerCase();
 
         const isTipografi = /\b(tipografi|typography|typeface|font|huruf|kerning|tracking|leading|glif|glyph)\b/i.test(primaryCtx);
         const isDKV = isTipografi || /\b(dkv|desain\s*grafis|desain\s*komunikasi\s*visual|nirmana|vektor|vector|coreldraw|illustrator|photoshop|layout|branding|logo|poster|identitas\s*visual)\b/i.test(primaryCtx);
@@ -2298,7 +2597,7 @@ Pada tataran analisis lanjutan, penguasaan materi **${topik}** menuntut kemampua
             'Lupton, E., & Phillips, J. C. (2021). Graphic Design: The New Basics (2nd ed.). New York: Princeton Architectural Press.',
             'Direktorat Sekolah Menengah Kejuruan. (2022). Dasar-Dasar Desain Komunikasi Visual. Jakarta: Pusat Perbukuan Kemendikbudristek.'
           ];
-        } else if (/jaringan|komputer|it|server|rpl|software/i.test(primaryCtx)) {
+        } else if (/jaringan|komputer|server|rpl|software/i.test(topicCtxP)) {
           refKeilmuan = [
             'Kurose, J. F., & Ross, K. W. (2021). Computer Networking: A Top-Down Approach (8th ed.). London: Pearson Education.',
             'Internet Engineering Task Force (IETF). (2023). Official Internet Protocol Standards and Architectural Principles. https://www.ietf.org/',
@@ -2393,13 +2692,15 @@ Pada tataran analisis lanjutan, penguasaan materi **${topik}** menuntut kemampua
       const currentCount = aiData.pengalamanBelajar.length;
       if (currentCount >= targetCount || currentCount === 0) return;
 
+      const topicList = generateMeetingTopicList(p?.topikMateri || 'Materi Pokok', p?.mataPelajaran || '', targetCount, p);
       console.log(`[Pertemuan] Melengkapi pengalamanBelajar dari ${currentCount} pertemuan menjadi ${targetCount} pertemuan...`);
       for (let i = currentCount + 1; i <= targetCount; i++) {
         const baseItem = aiData.pengalamanBelajar[(i - 1) % currentCount];
         if (baseItem) {
           const copy = JSON.parse(JSON.stringify(baseItem));
           copy.pertemuan = i;
-          copy.tahap = `Pertemuan ${i} (Lanjutan Penerapan & Evaluasi)`;
+          copy.subTopik = topicList[i - 1] || `${p?.topikMateri || 'Materi Pokok'} Bagian ${i}`;
+          copy.tahap = `Pertemuan ${i}: ${copy.subTopik}`;
           aiData.pengalamanBelajar.push(copy);
         }
       }
@@ -2478,124 +2779,8 @@ Pada tataran analisis lanjutan, penguasaan materi **${topik}** menuntut kemampua
       const matchNum = (p.jumlahPertemuan || '4').match(/\d+/);
       if (matchNum) countPertemuan = Math.min(Math.max(parseInt(matchNum[0]), 1), 16);
 
-      // Sintesis Tema dan Alur Pertemuan Sesuai Model (Progressif hingga 16 Pertemuan)
-      let subThemes = [];
-      if (isPjBL) {
-        subThemes = [
-          `Penentuan Pertanyaan Mendasar (Essential Question) dan Perancangan Desain Proyek ${topik}`,
-          `Penyusunan Desain Teknis, Sketsa Rancangan Karya, dan Pembagian Peran Tim ${topik}`,
-          `Penyusunan Jadwal (Timeline) Produksi dan Penyiapan Sarana/Bahan di ${fasilitas}`,
-          `Eksekusi Pengerjaan Tahap Awal dan Pembuatan Purwarupa (Prototype) ${topik}`,
-          `Pengerjaan Lanjutan dan Integrasi Komponen Karya Proyek ${topik}`,
-          `Monitoring Kemajuan Proyek, Asistensi Teknis, dan Konsultasi Progres ${topik}`,
-          `Uji Coba Fungsi Mandiri dan Pemecahan Kendala Teknis Karya ${topik}`,
-          `Pengujian Standar Kualitas (Quality Testing) dan Kalibrasi Produk ${topik}`,
-          `Perbaikan Karya Berdasarkan Data Uji dan Penyempurnaan Estetika ${topik}`,
-          `Finishing Akhir Karya Proyek dan Penulisan Lembar Spesifikasi Teknis ${topik}`,
-          `Penyusunan Laporan Proyek Komprehensif dan Dokumentasi Portofolio ${topik}`,
-          `Penyiapan Media Tayang Presentasi dan Simulasi Demo Karya ${topik}`,
-          `Gelar Karya (Showcase) Tahap 1: Demonstrasi Produk antar-Kelompok ${topik}`,
-          `Gelar Karya (Showcase) Pleno: Presentasi Terbuka dan Uji Kelayakan ${topik}`,
-          `Penilaian Sumatif Unjuk Kerja Produk Proyek dan Peer-Review Antar-Siswa ${topik}`,
-          `Evaluasi Pengalaman Belajar Keseluruhan dan Rencana Tindak Lanjut Inovasi ${topik}`
-        ];
-      } else if (isInquiry) {
-        subThemes = [
-          `Orientasi Masalah Otentik, Perumusan Pertanyaan Eksploratif, dan Hipotesis Awal ${topik}`,
-          `Penyusunan Desain Penyelidikan dan Penentuan Variabel Penelitian ${topik}`,
-          `Eksplorasi Mandiri dan Studi Literatur Menggunakan Media ${media}`,
-          `Pengumpulan Data Empiris dan Investigasi Praktik di Fasilitas ${fasilitas}`,
-          `Verifikasi Validitas Data Temuan dan Pengelompokan Parameter Kunci ${topik}`,
-          `Pengolahan Data Kualitatif dan Kuantitatif Berbantuan Media Digital ${media}`,
-          `Pengujian Hipotesis Awal dan Analisis Pembuktian Ilmiah ${topik}`,
-          `Diskusi Kritis: Komparasi Hasil Penyelidikan antar-Kelompok ${topik}`,
-          `Perumusan Solusi Penyelidikan dan Pembahasan Anomali Hasil Data ${topik}`,
-          `Sintesis Temuan Ilmiah dan Rekonstruksi Pemahaman Konseptual ${topik}`,
-          `Penarikan Kesimpulan (Generalisasi Teoretis dan Praktis) Materi ${topik}`,
-          `Penyusunan Laporan Hasil Penyelidikan Ilmiah dan Pembahasan Kritis ${topik}`,
-          `Publikasi dan Presentasi Sidang Mini Penyelidikan Kelompok ${topik}`,
-          `Uji Silang Pemikiran dan Sesi Tanya-Jawab Kritis Pembuktian Kasus ${topik}`,
-          `Asesmen Sumatif Kemampuan Bernalar Kritis dan Literasi Penyelidikan ${topik}`,
-          `Refleksi Metakognitif Proses Penyelidikan dan Tindak Lanjut Eksplorasi ${topik}`
-        ];
-      } else if (isDiscovery) {
-        subThemes = [
-          `Pemberian Rangsangan (Stimulasi) dan Observasi Fenomena Awal Materi ${topik}`,
-          `Identifikasi Masalah Konseptual dan Perumusan Fokus Penemuan ${topik}`,
-          `Perumusan Hipotesis Penemuan dan Pemetaan Arah Eksplorasi ${topik}`,
-          `Pengumpulan Data Tahap 1: Eksplorasi Terbimbing Menggunakan ${media}`,
-          `Pengumpulan Data Tahap 2: Pengamatan dan Pencatatan Fakta di ${fasilitas}`,
-          `Klasifikasi dan Kodifikasi Data Temuan Penyelidikan Konsep ${topik}`,
-          `Pengolahan Data dan Analisis Hubungan Antar-Variabel Pembelajaran ${topik}`,
-          `Diskusi Terarah: Interpretasi Hasil Pengolahan Data Penemuan ${topik}`,
-          `Pembuktian (Verifikasi) Hipotesis Melalui Pengujian Kasus Nyata ${topik}`,
-          `Uji Silang Temuan Antar-Kelompok dan Klarifikasi Pemahaman Konseptual ${topik}`,
-          `Generalisasi (Menarik Kesimpulan Bersama) Terkait Prinsip Materi ${topik}`,
-          `Konsolidasi Konsep dan Pengaitan Simpulan dengan Konteks Nyata ${topik}`,
-          `Aplikasi Prinsip Temuan pada Skenario dan Tantangan Masalah Baru ${topik}`,
-          `Presentasi Pleno Hasil Temuan Belajar dan Gelar Portofolio Eksplorasi ${topik}`,
-          `Asesmen Sumatif Pemahaman Konsep Mandiri Berbasis Hasil Penemuan ${topik}`,
-          `Refleksi Pengalaman Belajar dan Penguatan Budaya Inkuiri Mandiri ${topik}`
-        ];
-      } else if (isTeFa) {
-        subThemes = [
-          `Analisis Lembar Kerja Order (Job Sheet) dan Spesifikasi Teknis Standar Industri ${topik}`,
-          `Briefing K3, Budaya Kerja 5R/5S, dan Pemeriksaan APD di Sarana ${fasilitas}`,
-          `Perencanaan Alur Produksi dan Pembagian Stasiun Kerja (Workstation) ${topik}`,
-          `Persiapan Bahan Baku, Kalibrasi Alat Ukur, dan Setup Mesin/Peralatan Kerja`,
-          `Eksekusi Tahap 1: Pembuatan Komponen Awal Sesuai Gambar Kerja ${topik}`,
-          `Pemeriksaan Dimensi dan Toleransi Mutu Tahap Awal (In-Process Inspection)`,
-          `Eksekusi Tahap 2: Perakitan dan Integrasi Sistem Komponen Materi ${topik}`,
-          `Uji Coba Fungsi Awal Produk dan Penanganan Kendala Teknis Perakitan`,
-          `Eksekusi Tahap 3: Finishing Produk dan Penyempurnaan Standar Estetika Industri`,
-          `Quality Assurance (QA) dan Verifikasi Standar Spesifikasi Mutu Akhir`,
-          `Pengujian Daya Tahan (Durability) dan Uji Keandalan Fungsi Produk ${topik}`,
-          `Perhitungan Efisiensi Waktu dan Analisis Biaya Produksi (Job Costing)`,
-          `Penyusunan Berita Acara Uji Kelayakan dan Dokumentasi Serah Terima Pekerjaan`,
-          `Simulasi Serah Terima Hasil Pekerjaan Produk kepada Klien/Konsumen ${topik}`,
-          `Asesmen Sumatif Praktik Kerja Industri dan Uji Sertifikasi Kompetensi Teknis`,
-          `Evaluasi Efisiensi Produksi, Refleksi Sikap Profesional, dan Rencana Kerja Berikutnya`
-        ];
-      } else if (isCooperative) {
-        subThemes = [
-          `Penyampaian Tujuan Pembelajaran dan Pembentukan Tim Kerja Heterogen Materi ${topik}`,
-          `Eksplorasi Konsep Dasar Bersama dan Pembagian Sub-Topik Peran Anggota`,
-          `Pendalaman Materi Kolaboratif (Tahap Diskusi Tim Ahli) Materi ${topik}`,
-          `Penyusunan Rangkuman Hasil Tim Ahli Berbantuan Media Digital ${media}`,
-          `Diskusi Silang Antar-Kelompok dan Transfer Wawasan Baru Materi ${topik}`,
-          `Penyusunan Peta Konsep Terpadu dan Klarifikasi Miskonsepsi Bersama Guru`,
-          `Investigasi Bersama Kasus Nyata di Fasilitas Belajar ${fasilitas}`,
-          `Sintesis Solusi Kelompok dan Perumusan Karya Analisis Bersama`,
-          `Latihan Kolaboratif Pemecahan Soal-Soal Terapan Tingkat Tinggi (HOTS)`,
-          `Peer-Tutoring (Bimbingan Teman Sebaya) dan Penguatan Pemahaman Tim`,
-          `Perancangan Media Presentasi Kelompok Menggunakan Alat Digital ${media}`,
-          `Gladi Presentasi dan Latihan Komunikasi Ilmiah Berkelompok`,
-          `Presentasi Pleno Kelompok di Hadapan Seluruh Murid dan Sesi Tanya Jawab`,
-          `Pemberian Umpan Balik Positif dan Tanggapan Kritis Antar-Kelompok`,
-          `Asesmen Sumatif Individual dan Penilaian Kinerja Kolaborasi Kelompok`,
-          `Pemberian Apresiasi / Reward Tim Terbaik dan Refleksi Kerja Sama Tim`
-        ];
-      } else {
-        // Problem Based Learning (PBL) atau Model Lainnya
-        subThemes = [
-          `Orientasi Murid pada Masalah Otentik dan Identifikasi Fenomena Riil ${topik}`,
-          `Perumusan Fokus Permasalahan dan Pembatasan Ruang Lingkup Analisis`,
-          `Pengorganisasian Kelompok Belajar dan Penetapan Tugas Investigasi Masalah`,
-          `Eksplorasi Data Awal dan Studi Pustaka Mandiri Menggunakan Media ${media}`,
-          `Pengumpulan Fakta dan Investigasi Lapangan Memanfaatkan Sarana ${fasilitas}`,
-          `Tabulasi dan Kodifikasi Temuan Data Permasalahan Terkait ${topik}`,
-          `Analisis Sebab-Akibat Fenomena Masalah Menggunakan Diagram Analitis`,
-          `Brainstorming Alternatif Solusi Pemecahan Masalah Bersama Tim`,
-          `Penilaian dan Pemilihan Solusi Paling Efektif Serta Aplikatif`,
-          `Perancangan Draf Desain Solutif dan Validasi Rencana Aksi Pemecahan Masalah`,
-          `Penyusunan Produk Karya Solutif / Prototipe Pemecahan Masalah ${topik}`,
-          `Pengujian dan Simulasi Penerapan Solusi pada Kasus Studi Permasalahan`,
-          `Penyempurnaan Karya Solutif Berdasarkan Feedback Awal dan Asistensi Guru`,
-          `Penyajian Hasil Karya Solutif di Forum Kelas dan Diskusi Pleno Uji Kasus`,
-          `Asesmen Sumatif Pemecahan Masalah dan Analisis Ketercapaian Tujuan Belajar`,
-          `Evaluasi Pengalaman Mengatasi Masalah dan Refleksi Pembelajaran Berkelanjutan`
-        ];
-      }
+      // Sub-Topik Murni Berupa Topik Materi untuk Setiap Pertemuan (Bebas dari Sintaks Model & Fasilitas)
+      const subThemes = generateMeetingTopicList(topik, mapel, countPertemuan, p);
 
       function generateMeetingSintaksList(modelName, pNum, totalP, topicVal, mediaVal, facilityVal, methodVal, approachVal) {
         const mL = (modelName || '').toLowerCase();
@@ -3452,7 +3637,7 @@ Pada tataran analisis lanjutan, penguasaan materi **${topik}** menuntut kemampua
               line-height: 1.45;
             }
             .activity-points-list li::before {
-              content: counter(act-counter) ") ";
+              content: counter(act-counter) ". ";
               position: absolute;
               left: 0;
               top: 0;
