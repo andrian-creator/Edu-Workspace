@@ -326,8 +326,8 @@ async function getAvailableGeminiModels(apiKey) {
             .filter(m => {
               if (!Array.isArray(m.supportedGenerationMethods) || !m.supportedGenerationMethods.includes('generateContent')) return false;
               const name = (m.name || '').toLowerCase();
-              // FILTER KETAT: DILARANG model audio/TTS, embedding, image, atau preview TTS!
-              if (name.includes('tts') || name.includes('audio') || name.includes('embed') || name.includes('imagen') || name.includes('realtime')) {
+              // FILTER KETAT: DILARANG model audio/TTS, embedding, image, realtime, atau versi 2.5 yang dilarang!
+              if (name.includes('tts') || name.includes('audio') || name.includes('embed') || name.includes('imagen') || name.includes('realtime') || name.includes('2.5') || name.includes('deprecated')) {
                 return false;
               }
               return true;
@@ -677,9 +677,10 @@ async function callGeminiWithAccountKey(promptText, customConfig) {
   let candidateEndpoints = [
     `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent`,
     `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent`,
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent`,
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent`,
     `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent`,
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-8b:generateContent`,
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent`
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-8b:generateContent`
   ];
 
   // 2. Tambahkan model yang terdaftar pada akun HANYA jika berupa model teks murni
@@ -687,16 +688,17 @@ async function callGeminiWithAccountKey(promptText, customConfig) {
   if (availableModels.length > 0) {
     for (const m of availableModels) {
       const name = (m.rawName || '').toLowerCase();
-      // JANGAN masukkan model audio/TTS/embedding, dan JANGAN masukkan model 2.5-flash yang dilarang untuk akun baru
-      if (name.includes('tts') || name.includes('audio') || name.includes('embed') || name.includes('imagen') || name.includes('realtime') || name.includes('2.5-flash')) continue;
+      // JANGAN masukkan model audio/TTS/embedding, dan JANGAN masukkan model 2.5 atau deprecated yang dilarang untuk akun baru
+      if (name.includes('tts') || name.includes('audio') || name.includes('embed') || name.includes('imagen') || name.includes('realtime') || name.includes('2.5') || name.includes('deprecated')) continue;
       if (name.includes('flash') || name.includes('pro')) {
         candidateEndpoints.push(`https://generativelanguage.googleapis.com/${m.version}/models/${m.rawName}:generateContent`);
       }
     }
   }
 
-  const uniqueEndpoints = Array.from(new Set(candidateEndpoints)).slice(0, 6);
+  const uniqueEndpoints = Array.from(new Set(candidateEndpoints)).slice(0, 8);
   let lastErrorMsg = '';
+  let hadRateLimit = false;
 
   const reqTimeoutMs = (customConfig && customConfig.timeoutMs) ? customConfig.timeoutMs : 35000;
   const isSilent = Boolean(customConfig && customConfig.silentError);
@@ -739,26 +741,34 @@ async function callGeminiWithAccountKey(promptText, customConfig) {
         }
       } else {
         const errData = await res.json().catch(() => ({}));
-        lastErrorMsg = errData?.error?.message || `HTTP ${res.status}`;
-        if (res.status === 401 || res.status === 403 || lastErrorMsg.includes('UNAUTHENTICATED') || lastErrorMsg.includes('API key not valid')) {
-          console.warn('[Gemini API] Google menolak kunci API (' + res.status + '):', lastErrorMsg);
+        const specificMsg = errData?.error?.message || `HTTP ${res.status}`;
+        if (res.status === 401 || res.status === 403 || specificMsg.includes('UNAUTHENTICATED') || specificMsg.includes('API key not valid')) {
+          console.warn('[Gemini API] Google menolak kunci API (' + res.status + '):', specificMsg);
           lastErrorMsg = 'Kunci API Google Gemini pada akun Anda tidak valid atau ditolak Google (HTTP 401). Silakan periksa kembali di menu Kunci API.';
           break;
         } else if (res.status === 429) {
+          hadRateLimit = true;
           console.warn(`[Gemini API] Endpoint ${baseEndpoint} terkena kuota/rate limit (HTTP 429). Mencoba model alternatif...`);
-          lastErrorMsg = 'Batas kuota Google Gemini API akun Anda tercapai (HTTP 429 - Rate Limit). Silakan tunggu beberapa menit.';
+          lastErrorMsg = 'Batas kuota harian/menit Google Gemini API (Rate Limit 429) akun Anda sedang tercapai. Silakan tunggu 1-2 menit sebelum mencoba kembali.';
           // JANGAN batalkan seluruh proses; beri jeda singkat lalu coba model alternatif berikutnya
           await new Promise(r => setTimeout(r, 1200));
           continue;
         } else {
           // Status 400 (seperti modalitas tidak didukung / parameter invalid) atau 404: coba model berikutnya!
-          console.warn(`[Gemini API] Endpoint ${baseEndpoint} gagal (${res.status}): ${lastErrorMsg}. Mencoba model alternatif...`);
+          console.warn(`[Gemini API] Endpoint ${baseEndpoint} gagal (${res.status}): ${specificMsg}. Mencoba model alternatif...`);
+          if (!hadRateLimit) {
+            lastErrorMsg = specificMsg;
+          }
           continue;
         }
       }
     } catch (e) {
       lastErrorMsg = e.name === 'AbortError' ? `Batas waktu koneksi Google Gemini (${Math.round(reqTimeoutMs / 1000)} detik) terlampaui` : (e.message || 'Koneksi ke Google Gemini terputus');
     }
+  }
+
+  if (hadRateLimit && !lastErrorMsg.includes('401')) {
+    lastErrorMsg = 'Batas kuota harian/menit Google Gemini API (Rate Limit 429) akun Anda sedang tercapai. Silakan tunggu 1-2 menit sebelum mencoba kembali.';
   }
 
   callGeminiWithAccountKey.lastError = lastErrorMsg;
