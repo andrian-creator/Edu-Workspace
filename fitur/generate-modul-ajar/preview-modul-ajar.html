@@ -2454,30 +2454,10 @@ Pada tataran analisis lanjutan, penguasaan materi **${topik}** menuntut kemampua
         return true;
       });
 
-      // Jika AI tidak menghasilkan referensi yang cukup, gunakan fallback standar
-      // Dokumen kurikulum resmi + referensi Teknologi Pendidikan — domain/materi dari konteks Tahap 1 & 2 sudah ditangani AI
-      if (list.length < 3) {
-        const d = data || {};
-        const mapel = d.mataPelajaran || 'Mata Pelajaran';
-        const jenjang = d.jenjangSekolah || 'SMK';
-        const jurusan = d.jurusanSekolah ? ` Jurusan ${d.jurusanSekolah}` : '';
-
-        list = [
-          // Regulasi Kurikulum Merdeka
-          'Badan Standar, Kurikulum, dan Asesmen Pendidikan (BSKAP). (2024). Keputusan Kepala BSKAP No. 032/H/KR/2024 tentang Capaian Pembelajaran pada Pendidikan Anak Usia Dini, Jenjang Pendidikan Dasar, dan Jenjang Pendidikan Menengah pada Kurikulum Merdeka. Jakarta: Kemendikbudristek.',
-          'Badan Standar, Kurikulum, dan Asesmen Pendidikan (BSKAP). (2024). Panduan Pembelajaran dan Asesmen Pendidikan Anak Usia Dini, Pendidikan Dasar, dan Pendidikan Menengah. Jakarta: Kementerian Pendidikan, Kebudayaan, Riset, dan Teknologi.',
-          // Panduan Pengembangan Modul Ajar
-          'Kementerian Pendidikan, Kebudayaan, Riset, dan Teknologi. (2022). Panduan Pengembangan Modul Ajar Kurikulum Merdeka. Jakarta: Pusat Kurikulum dan Pembelajaran, Kemendikbudristek.',
-          // Teknologi Pendidikan & Desain Pembelajaran
-          'Dick, W., Carey, L., & Carey, J. O. (2015). The Systematic Design of Instruction (8th ed.). Upper Saddle River: Pearson Education.',
-          // Referensi buku siswa/guru sesuai mapel dari Kemendikbudristek
-          `Kementerian Pendidikan, Kebudayaan, Riset, dan Teknologi. (2023). Buku Panduan Guru: ${mapel}${jurusan} ${jenjang}. Jakarta: Pusat Perbukuan Kemendikbudristek.`,
-        ];
-      }
-
-
+      // Semua referensi dari AI berdasarkan konteks Tahap 1 & 2 — tidak ada fallback hardcoded
       return list;
     }
+
 
     /**
      * Format Tanggal Bahasa Indonesia Otomatis (DD MMMM YYYY)

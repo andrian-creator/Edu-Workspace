@@ -2513,43 +2513,17 @@ ATURAN WAJIB DAN MENGIKAT — PELANGGARAN TIDAK DIIZINKAN:
    - DILARANG KERAS menggunakan kalimat pembuka, pengantar, atau penutup meta-pedagogis generik seperti: "Jika peserta didik mendalami materi ini akan...", "Peserta didik mendalami adopsi teknologi generasi terkini...", "Melalui penugasan proyek tingkat lanjut, peserta didik diarahkan...", "Kajian ini membekali peserta didik dengan perspektif...". Penjabaran HARUS langsung menguraikan konsep ilmiah, prinsip kerja, aturan teknis, atau prosedur operasional dari butir materi yang bersangkutan!
    - Format penulisan poin materi tambahan wajib mengikuti hierarki baku (Level A -> 1. -> a. -> 1)): gunakan huruf kecil bertitik ("a.", "b.", "c.") untuk setiap nama materi tambahan, diikuti paragraf penjabaran substansi materinya. Jika terdapat poin rincian di dalamnya, gunakan penomoran kurung tutup "1)", "2)", "3)". Tabel pengayaan/komparasi TIDAK WAJIB ADA; namun jika ada informasi komparatif yang lebih jelas disajikan dalam tabel, tabel Markdown dapat disertakan.
 
-9. GLOSARIUM (KAMUS ISTILAH TEKNIS KOMPREHENSIF SESUAI KONTEKS TAHAP 1-2):
-   - Minimal 5-8 istilah teknis yang KHUSUS, SPESIFIK, dan MURNI DARI MATERI "${topik}" serta relevan dengan konteks input Tahap 1 & 2 (Poin A-F).
-   - Konteks Glosarium HARUS SESUAI DENGAN SUBJEK KEILMUAN DARI POIN A-F (Mata Pelajaran: "${mapel}", Topik: "${topik}")!
-   - Khusus jika konteks input dari Tahap 1 & 2 MURNI berkaitan dengan Videografi, Sinematografi, Tata Kamera, Fotografi, atau Broadcasting Perfilman:
-     WAJIB sertakan kamus istilah teknis komprehensif mencakup:
-     1) Shot Size (Extreme Long Shot s.d. Extreme Close Up)
-     2) Camera Angle (Bird Eye, High Angle, Eye Level, Low Angle, Frog Eye, Dutch Angle)
-     3) Camera Movement (Pan, Tilt, Dolly, Pedestal, Truck, Crane, Arc, Zoom)
-     4) Aturan 180 Derajat (180-Degree Rule & Line of Action)
-     5) Depth of Field (DoF: Aperture, Focal Length, Jarak Fokus)
-     6) Rule of Thirds & Framing (Komposisi Sepertiga Bidang, Headroom, Lookspace)
-     7) White Balance (Kalibrasi Suhu Warna Kelvin)
-   - Khusus jika konteks input berkaitan dengan Tipografi, Desain Grafis, atau DKV:
-     WAJIB sertakan kamus istilah teknis tipografi dan desain grafis seperti:
-     1) Tipografi (Typography)
-     2) Typeface vs Font
-     3) Kerning & Tracking
-     4) Leading (Line Spacing)
-     5) Hierarki Tipografi (Typographic Hierarchy)
-     6) Legibility & Readability
-     7) Variable Font & Responsif
-     8) Grid System & Baseline Grid
-     DILARANG KERAS MEMASUKKAN ISTILAH KAMERA/VIDEOGRAFI KE DALAM MATERI TIPOGRAFI ATAU DESAIN GRAFIS!
-   - Begitu juga untuk bidang kejuruan lainnya (Animasi, IT/Jaringan, Otomotif, Listrik, Bisnis, Kuliner): wajib memuat istilah teknis operasional murni sesuai konteks input Tahap 1-2.
-   - DILARANG KERAS menggunakan istilah generik non-teknis atau istilah proses pedagogis seperti: "Sintesis Solutif", "Verifikasi Empiris", "Konseptualisasi", "Analisis Variabel", "Discovery Learning", "TPACK". Glosarium HARUS murni istilah materi ajar!
+9. GLOSARIUM (KAMUS ISTILAH TEKNIS — MINIMAL 6 ISTILAH):
+   - Wajib menghasilkan MINIMAL 6 istilah teknis yang spesifik, presisi, dan murni berasal dari substansi materi "${topik}" sesuai konteks Tahap 1 & 2.
+   - Setiap istilah HARUS disertai definisi teknis yang lengkap dan mendalam — bukan definisi pedagogis umum.
+   - DILARANG KERAS menggunakan istilah proses pedagogis generik seperti: "Sintesis Solutif", "Verifikasi Empiris", "Konseptualisasi", "Discovery Learning", "TPACK". Glosarium HARUS murni istilah teknis materi ajar!
 
-10. DAFTAR PUSTAKA (SUMBER RUJUKAN OTENTIK & KREDIBEL):
-    - Tuliskan daftar referensi kredibel yang secara nyata dan langsung dijadikan rujukan oleh AI dalam menyusun seluruh materi, modul ajar, dan lembar kerja peserta didik (LKPD) ini.
-    - DAFTAR PUSTAKA TIDAK DIBATASI PADA 5 TAHUN TERAKHIR. Buku teks klasik berbobot/standar industri, literatur otoritatif dunia, dokumentasi internet resmi/kredibel (misalnya standar W3C, ISO, IEEE, dokumentasi resmi vendor/industri), pedoman kurikulum resmi BSKAP Kemendikbudristek, serta artikel ilmiah kredibel dari tahun berapapun yang relevan dengan mata pelajaran "${mapel}" dan topik "${topik}" SANGAT DIPRIORITASKAN.
-    - Rujukan wajib otentik dan mencakup:
-      (a) Buku teks atau buku referensi standar industri/keilmuan yang relevan dengan materi ${topik} (contoh karya otoritatif standar dunia atau buku terbitan resmi Kemendikbudristek/Pusat Perbukuan).
-      (b) Sumber internet resmi/kredibel atau dokumentasi standar industri yang menjadi acuan penyusunan materi & LKPD.
-      (c) Dokumen resmi kurikulum/regulasi (misalnya BSKAP Kemendikbudristek No. 032/H/KR/2024 atau Panduan Pembelajaran dan Asesmen).
-      (d) Artikel ilmiah atau publikasi jurnal kredibel yang relevan dengan bidang keahlian.
-    - DILARANG mencantumkan nama model AI atau organisasi internal (seperti Gemini atau EduWorkspace) ke dalam daftar pustaka.
-    - DILARANG merekayasa atau membuat-buat nama jurnal palsu yang mencantumkan nama model pembelajaran (misal dilarang menulis "Penerapan Model PJBL dalam..." atau "Berbasis Pendekatan TPACK").
-    - Seluruh daftar pustaka yang dituliskan HARUS merupakan sumber yang sungguh-sungguh dipakai AI untuk menyusun materi dan LKPD ini.
+10. DAFTAR PUSTAKA (REFERENSI NYATA — MINIMAL 5 SUMBER):
+    - Tuliskan MINIMAL 5 referensi kredibel yang benar-benar digunakan AI untuk menyusun materi, LKPD, dan glosarium modul ini.
+    - Referensi boleh berupa: buku teks, artikel jurnal ilmiah, regulasi Kemendikbudristek, standar industri/internasional (ISO, IEEE, SNI), atau dokumentasi resmi kredibel yang relevan dengan "${topik}" dan "${mapel}".
+    - TIDAK ADA BATASAN TAHUN — buku klasik otoritatif dan standar yang telah mapan sangat diprioritaskan.
+    - DILARANG KERAS: mencantumkan nama AI/model (Gemini, EduWorkspace), nama jurnal palsu, atau referensi yang tidak benar-benar digunakan.
+    - Format penulisan: Penulis, A. A. (Tahun). Judul karya. Penerbit/Sumber.
 
 11. ASESMEN & RUBRIK:
     - Asesmen Diagnostik: "Pretest (Tes Diagnostik Kognitif Awal)" untuk mengukur kesiapan awal murid pada "${topik}".
@@ -2675,10 +2649,19 @@ FORMAT RESPONS — OUTPUT WAJIB JSON MURNI (VALID JSON TANPA TEKS PEMBUKA/PENUTU
   "pengayaan": "Kegiatan pengayaan kontekstual untuk murid yang telah tuntas melampaui tujuan pembelajaran.",
   "remedial": "Kegiatan bimbingan remedial bertahap bagi murid yang membutuhkan penguatan kompetensi esensial.",
   "glosarium": [
-    {"istilah": "Istilah teknis khusus ${topik}", "definisi": "Definisi teknis yang tepat dan spesifik"}
+    {"istilah": "Istilah teknis spesifik 1 dari materi ${topik}", "definisi": "Definisi teknis presisi dan lengkap — bukan definisi pedagogis umum"},
+    {"istilah": "Istilah teknis spesifik 2 dari materi ${topik}", "definisi": "Definisi teknis presisi dan lengkap"},
+    {"istilah": "Istilah teknis spesifik 3 dari materi ${topik}", "definisi": "Definisi teknis presisi dan lengkap"},
+    {"istilah": "Istilah teknis spesifik 4 dari materi ${topik}", "definisi": "Definisi teknis presisi dan lengkap"},
+    {"istilah": "Istilah teknis spesifik 5 dari materi ${topik}", "definisi": "Definisi teknis presisi dan lengkap"},
+    {"istilah": "Istilah teknis spesifik 6 dari materi ${topik}", "definisi": "Definisi teknis presisi dan lengkap"}
   ],
   "daftarPustaka": [
-    "Nama Penulis, A. (Tahun). Judul Buku Teks/Web Standar/Artikel Ilmiah Kredibel Rujukan ${topik}. Penerbit/Sumber Resmi."
+    "Penulis/Lembaga, A. (Tahun). Judul buku/artikel/regulasi nyata yang digunakan sebagai sumber materi ${topik}. Penerbit/Sumber.",
+    "Penulis/Lembaga, B. (Tahun). Judul referensi ke-2 yang relevan dan benar-benar digunakan. Penerbit/Sumber.",
+    "Penulis/Lembaga, C. (Tahun). Judul referensi ke-3 (boleh regulasi Kemendikbudristek, buku teks, jurnal ilmiah, atau standar industri). Penerbit/Sumber.",
+    "Penulis/Lembaga, D. (Tahun). Judul referensi ke-4 spesifik materi ${topik}. Penerbit/Sumber.",
+    "Penulis/Lembaga, E. (Tahun). Judul referensi ke-5 spesifik materi ${topik}. Penerbit/Sumber."
   ]
 }`;
 
@@ -2996,9 +2979,8 @@ function extractContextTahap1Dan2(data, rawOrAi) {
 }
 
 /**
- * Normalisasi dan Resolusi Glosarium Materi (Multi-Format & Contextual Fallback)
- * Hanya berisi materi/istilah teknis murni yang diambil, tidak memuat istilah pedagogis generik
- * Konteks diekstraksi tepat dari subjek keilmuan Tahap 1 & 2 (Poin A-F)
+ * Normalisasi dan Resolusi Glosarium Materi
+ * Hanya berisi materi/istilah teknis murni yang diambil dari AI
  */
 function resolveContextualGlosarium(raw, data) {
   let list = [];
@@ -3043,224 +3025,18 @@ function resolveContextualGlosarium(raw, data) {
     'discovery learning',
     'inquiry learning'
   ];
-  list = list.filter(item => {
+  return list.filter(item => {
     if (!item || !item.istilah) return false;
     const termLower = item.istilah.toLowerCase();
     return !forbiddenTerms.some(fb => termLower.includes(fb));
   });
-
-  // Deteksi konteks subjek keilmuan dari Tahap 1 & 2 (Poin A-F)
-  const primaryCtx = extractPrimarySubjectContext(data, raw);
-
-  const isTipografi = /\b(tipografi|typography|typeface|font|huruf|kerning|tracking|leading|glif|glyph)\b/i.test(primaryCtx);
-  const isDKV = isTipografi || /\b(dkv|desain\s*grafis|desain\s*komunikasi\s*visual|nirmana|vektor|vector|coreldraw|illustrator|photoshop|layout|branding|logo|poster|identitas\s*visual)\b/i.test(primaryCtx);
-  const isVideoKamera = !isTipografi && (
-    /\b(videografi|sinematografi|tata\s*kamera|kamera\s*video|camera\s*movement|camera\s*angle|shot\s*size|ukuran\s*bidik|sudut\s*pandang\s*kamera|aturan\s*180|180-degree|depth\s*of\s*field|\bdof\b|white\s*balance|broadcasting|penyiaran|perfilman|tata\s*artistik\s*film)\b/i.test(primaryCtx) ||
-    (/\b(fotografi|kamera)\b/i.test(primaryCtx) && !isDKV)
-  );
-  const isAnimasi = !isTipografi && /\b(animasi|animation|2d|3d|stopmotion|storyboard|motion\s*graphic|keyframe|rigging|tweening|blender|maya|render)\b/i.test(primaryCtx);
-  const isIT = !isTipografi && !isDKV && /\b(jaringan|komputer|rpl|tkj|server|cisco|mikrotik|software|cyber|cloud|lan|wan|routing|switch|firewall|database|sql|pemrograman|coding|web)\b/i.test(primaryCtx);
-  const isOtomotif = /\b(otomotif|motor|mobil|mesin|injeksi|ecu|transmisi|rem|suspensi|chassis|engine|tune\s*up)\b/i.test(primaryCtx);
-  const isListrik = /\b(listrik|elektronika|arus|tegangan|daya|plc|mikrokontroler|arduino|sensor|instalasi\s*motor|rangkaian)\b/i.test(primaryCtx);
-  const isBisnis = /\b(akuntansi|keuangan|bisnis|manajemen|pasar|uang|jurnal|neraca|laba|faktur|pajak|pemasaran|marketing)\b/i.test(primaryCtx);
-  const isKuliner = /\b(kuliner|boga|tata\s*boga|masak|makanan|minuman|food|resep|pastry|bakery|restoran)\b/i.test(primaryCtx);
-
-  // Kamus Istilah Teknis Komprehensif Tipografi & Desain Grafis
-  const kamusTipografiDKV = [
-    {
-      istilah: "Tipografi (Typography)",
-      definisi: "Seni dan teknik memilih, merancang, serta menyusun huruf (typeface/font) dengan pengaturan ruang bidang guna menciptakan keterbacaan (readability), kejelasan (legibility), dan estetika komunikasi visual yang optimal."
-    },
-    {
-      istilah: "Typeface vs Font",
-      definisi: "Perbedaan mendasar antara rumpun keluarga rancangan bentuk huruf (Typeface, contoh: Helvetica, Garamond, Futura) dengan berkas fisik/digital spesifik dalam ukuran, gaya, dan format bobot tertentu (Font, contoh: Helvetica Bold 14pt)."
-    },
-    {
-      istilah: "Kerning & Tracking",
-      definisi: "Kerning adalah pengaturan jarak spasial horizontal antar-dua karakter huruf spesifik agar seimbang dan proporsional, sedangkan Tracking adalah pengaturan jarak horizontal seragam di antara seluruh huruf dalam satu kata, baris, atau paragraf teks."
-    },
-    {
-      istilah: "Leading (Line Spacing)",
-      definisi: "Jarak vertikal antara baseline (garis dasar tempat huruf berpijak) satu baris teks ke baseline baris teks berikutnya untuk menjamin kenyamanan ritme mata saat membaca paragraf teks panjang."
-    },
-    {
-      istilah: "Hierarki Tipografi (Typographic Hierarchy)",
-      definisi: "Sistem penataan ukuran, bobot (weight), kontras gaya, dan posisi teks guna memandu alur pandang audiens mencerna informasi berdasarkan urutan prioritas kepentingan (Headline, Subheadline, Body Copy)."
-    },
-    {
-      istilah: "Legibility & Readability",
-      definisi: "Legibility merujuk pada tingkat kemudahan mata dalam mengenali dan membedakan bentuk fisik setiap karakter huruf secara individual, sedangkan Readability merujuk pada tingkat kenyamanan dan kelancaran membaca susunan teks dalam satu kesatuan desain."
-    },
-    {
-      istilah: "Variable Font & Responsif",
-      definisi: "Format font digital mutakhir yang mengintegrasikan berbagai variasi bobot (weight), lebar (width), dan kemiringan (slant) dalam satu berkas dinamis yang fleksibel dan adaptif untuk berbagai resolusi layar UI/UX media digital."
-    },
-    {
-      istilah: "Grid System & Baseline Grid",
-      definisi: "Struktur kisi garis panduan geometris kolom dan margin vertikal-horizontal yang menjadi landasan konsistensi penataan layout huruf dan elemen grafis dalam karya desain grafis profesional."
-    }
-  ];
-
-  // Kamus Istilah Teknis Komprehensif Videografi, Sinematografi, dan Tata Kamera
-  const kamusVideoSinematografi = [
-    {
-      istilah: "Shot Size (Ukuran Bidik Kamera)",
-      definisi: "Standar klasifikasi luas area bidang pandang kamera terhadap subjek dan latar belakang, mulai dari Extreme Long Shot (ELS) untuk establishing shot lingkungan, Long Shot (LS) untuk figur utuh dan orientasi aksi, Medium Shot (MS) dari pinggang ke atas untuk interaksi wajar, Medium Close-Up (MCU) dada ke atas untuk ekspresi vokal, Close-Up (CU) kepala dan bahu untuk intensitas emosional, hingga Big Close-Up (BCU) dan Extreme Close-Up (ECU) untuk detail dramatis mikro objek."
-    },
-    {
-      istilah: "Camera Angle (Sudut Pandang Kamera)",
-      definisi: "Variasi penempatan sudut elevasi dan perspektif sumbu vertikal kamera terhadap subjek, meliputi Bird Eye View (sudut pandang tegak lurus dari atas untuk memetakan ruang), High Angle (kamera menunduk ke bawah memberikan kesan subjek kecil/rentan), Eye Level (sudut pandang sejajar mata manusia yang netral dan objektif), Low Angle (kamera menengadah ke atas memberikan impresi subjek dominan, berwibawa, atau megah), Frog Eye (kamera sejajar permukaan tanah ekstrem), serta Dutch Angle / Canted Angle (posisi kamera miring untuk efek disorientasi psikologis atau ketegangan situasi)."
-    },
-    {
-      istilah: "Camera Movement (Pergerakan Kamera)",
-      definisi: "Dinamika manuver penggerakan kamera untuk membangun ritme visual dan mengarahkan fokus penonton, terdiri atas pergerakan pada poros tetap seperti Pan (menoleh horizontal ke kiri/kanan) dan Tilt (mendongak ke atas/menunduk ke bawah), maupun pergerakan fisik seluruh badan kamera meliputi Dolly/Track (bergerak mendekat atau menjauhi subjek), Pedestal (bergerak naik atau turun vertikal), Truck/Tracking (bergerak menyamping mengikuti aksi subjek), Crane/Jib (gerakan melayang dinamis multi-arah), Arc (bergerak melingkar mengitari subjek), serta Zoom (perubahan panjang fokus lensa secara optik)."
-    },
-    {
-      istilah: "Aturan 180 Derajat (180-Degree Rule)",
-      definisi: "Kaidah kontinuitas sinematografi fundamental yang menetapkan garis imajiner (line of action) 180 derajat antara dua karakter atau arah gerak adegan. Kamera wajib selalu berada di satu sisi garis yang sama agar orientasi spasial penonton, arah pandangan mata (eyeline match), dan kesinambungan posisi layar kiri-kanan antartokoh tidak terbalik saat perpindahan shot bergantian."
-    },
-    {
-      istilah: "Depth of Field (DoF - Kedalaman Ruang Fokus)",
-      definisi: "Rentang zona ketajaman fokus di depan dan di belakang subjek yang tampak tajam dalam bingkai gambar. Shallow Depth of Field (ruang tajam sempit) menghasilkan latar belakang buram (bokeh artistik) untuk mengisolasi subjek utama dari distraksi latar, sedangkan Deep Depth of Field (ruang tajam luas) mempertahankan ketajaman dari latar depan hingga latar belakang. Dipengaruhi oleh tiga parameter fisik utama: bukaan diafragma (aperture/f-stop), panjang fokus lensa (focal length), dan jarak fisik kamera ke subjek."
-    },
-    {
-      istilah: "Rule of Thirds & Framing (Komposisi Sepertiga Bidang & Pembingkaian)",
-      definisi: "Prinsip estetika komposisi visual dengan membagi bidang bidik secara proporsional menjadi kisi 3x3 (sembilan kotak simetris dengan empat titik persimpangan daya tarik visual). Menempatkan subjek utama pada titik temu (point of interest) atau sepanjang garis kisi, disertai pengaturan proporsi Headroom (ruang di atas kepala subjek), Look Space / Nose Room (ruang kosong ke arah pandangan mata subjek), Lead Room (ruang di depan arah gerak objek), serta teknik Frame within Frame untuk menambah kedalaman dimensional gambar."
-    },
-    {
-      istilah: "White Balance (WB - Kalibrasi Keseimbangan Putih)",
-      definisi: "Proses kalibrasi digital dan optik pada sensor kamera untuk menyesuaikan respons warna terhadap suhu warna sumber pencahayaan aktual (dinyatakan dalam skala Kelvin/K), sehingga objek berwarna putih murni terekam secara netral tanpa bias warna (color cast) yang tidak diinginkan, seperti rona kebiruan di bawah naungan awan/bayangan atau rona kekuningan di bawah lampu pijar (tungsten)."
-    }
-  ];
-
-  // 1. JIKA KONTEKS VIDEOGRAFI/SINEMATOGRAFI/TATA KAMERA TERDETEKSI:
-  if (isVideoKamera) {
-    if (list.length < 5) {
-      const merged = [...kamusVideoSinematografi];
-      list.forEach(item => {
-        if (!merged.some(m => m.istilah.toLowerCase() === item.istilah.toLowerCase())) {
-          merged.push(item);
-        }
-      });
-      return merged;
-    } else {
-      const existingLower = list.map(item => (item.istilah || '').toLowerCase());
-      const missingCore = kamusVideoSinematografi.filter(coreItem => {
-        const cName = coreItem.istilah.toLowerCase();
-        return !existingLower.some(ext => ext.includes(cName.split(' ')[0]));
-      });
-      return [...missingCore, ...list];
-    }
-  }
-
-  // 2. JIKA KONTEKS TIPOGRAFI TERDETEKSI:
-  if (isTipografi) {
-    if (list.length < 5) {
-      const merged = [...kamusTipografiDKV];
-      list.forEach(item => {
-        if (!merged.some(m => m.istilah.toLowerCase() === item.istilah.toLowerCase())) {
-          merged.push(item);
-        }
-      });
-      return merged;
-    } else {
-      return list;
-    }
-  }
-
-  // 3. UNTUK KONTEKS BIDANG KEILMUAN LAINNYA:
-  if (list.length < 5) {
-    const d = data || {};
-    const topik = d.topikMateri || 'Materi Pokok';
-    const mapel = d.mataPelajaran || 'Mata Pelajaran';
-
-    let domainFallback = [];
-    if (isAnimasi) {
-      domainFallback = [
-        { istilah: "Model Sheet / Turnaround", definisi: "Dokumen panduan visual standar yang menampilkan karakter dari berbagai sudut pandang (depan, samping, belakang, 3/4) beserta ekspresi dan proporsi baku untuk acuan animator." },
-        { istilah: "Storyboard Non-Linear", definisi: "Rangkaian visualisasi panel cerita yang memuat percabangan alur interaktif atau multi-skenario adegan sebelum diproduksi ke dalam format animasi utuh." },
-        { istilah: "Animatic", definisi: "Versi kasar gerak dari susunan storyboard yang diselaraskan dengan trek suara dan timing durasi untuk mengevaluasi ritme serta sinematografi adegan." },
-        { istilah: "Timeline Animasi & Keyframing", definisi: "Garis waktu operasional perangkat lunak tempat animator mengatur kemunculan adegan, perpindahan frame kunci (keyframes), dan tempo pergerakan karakter." },
-        { istilah: "Motion Graphic", definisi: "Teknik penggabungan grafis visual, tipografi kinetik, dan ilustrasi digital yang digerakkan untuk menyampaikan pesan komunikasi visual secara ringkas dan dinamis." },
-        { istilah: "Rigging & Weighting", definisi: "Proses penanaman struktur kerangka tulang digital (bones/skeleton) dan penentuan bobot pengaruh deformasi gerak pada mesh karakter animasi." }
-      ];
-    } else if (isIT) {
-      domainFallback = [
-        { istilah: "Topologi Jaringan", definisi: "Struktur geometris dan tata letak fisik maupun logis yang menghubungkan node-node komputer dalam satu kesatuan sistem komunikasi data." },
-        { istilah: "IP Addressing & Subnetting", definisi: "Metode pengalamatan numerik unik pada setiap perangkat jaringan serta teknik segmentasi jaringan untuk efisiensi rute dan isolasi keamanan." },
-        { istilah: "Routing Protocol", definisi: "Standar aturan dan algoritma yang digunakan router untuk menentukan jalur terbaik dan tercepat dalam meneruskan paket data antarnetwork." },
-        { istilah: "Bandwidth & Throughput", definisi: "Kapasitas maksimum transfer data pada kanal komunikasi (bandwidth) dan kecepatan transfer data aktual yang terukur pada waktu tertentu (throughput)." },
-        { istilah: "Firewall & Packet Filtering", definisi: "Sistem pertahanan keamanan yang memantau dan menyaring paket lalu lintas data masuk dan keluar berdasarkan aturan kebijakan keamanan." },
-        { istilah: "VLAN (Virtual Local Area Network)", definisi: "Pengelompokan logis perangkat jaringan pada segmen switch yang sama secara terisolasi tanpa bergantung pada lokasi fisik." }
-      ];
-    } else if (isDKV) {
-      domainFallback = [
-        { istilah: "Hierarki Visual", definisi: "Prinsip penataan urutan dan penekanan elemen desain berdasarkan skala prioritas agar pesan utama dapat dicerna audiens secara runtut dan efektif." },
-        { istilah: "Tipografi & Kerning", definisi: "Seni pemilihan, penataan gaya huruf, serta pengaturan jarak antar-karakter (kerning) guna menghasilkan keterbacaan (readability) dan keindahan estetika visual." },
-        { istilah: "Color Harmony (Harmoni Warna)", definisi: "Kaidah kombinasi warna (analog, komplementer, triadik) yang diaplikasikan untuk membangun nuansa psikologis dan daya tarik visual komposisi karya." },
-        { istilah: "Vector Graphic", definisi: "Citra grafis berbasis formula matematis titik dan kurva vektor yang tidak mengalami penurunan resolusi atau pecah saat diperbesar dalam skala apapun." },
-        { istilah: "Grid System & Whitespace", definisi: "Struktur garis panduan penataan layout serta pemanfaatan ruang kosong (negatif) untuk memberi ruang bernapas dan keseimbangan pada karya desain." },
-        { istilah: "Brand Identity & Guide", definisi: "Sistem identitas visual terpadu (logo, palet warna, tipografi, elemen grafis) yang mencerminkan karakter dan nilai sebuah jenama." }
-      ];
-    } else if (isOtomotif) {
-      domainFallback = [
-        { istilah: "Siklus Motor 4 Langkah", definisi: "Rangkaian empat tahapan kerja mesin pembakaran dalam (hisap, kompresi, usaha, dan buang) untuk menghasilkan satu siklus tenaga mekanik." },
-        { istilah: "Electronic Fuel Injection (EFI)", definisi: "Sistem pengabutan bahan bakar presisi yang dikontrol secara elektronik oleh Engine Control Unit (ECU) berdasarkan sensor-sensor mesin." },
-        { istilah: "Torsi & Daya Kuda (Horsepower)", definisi: "Besaran gaya putar yang dihasilkan mesin pada poros engkol (torsi) dan kemampuan akumulatif mesin dalam melakukan usaha per satuan waktu (daya)." },
-        { istilah: "Sistem Transmisi & Kopling", definisi: "Mekanisme pemindah daya dan pengatur rasio putaran mesin ke roda penggerak sesuai beban dan kecepatan kendaraan." },
-        { istilah: "Anti-lock Braking System (ABS)", definisi: "Sistem pengereman keselamatan aktif yang mencegah roda terkunci saat pengereman mendadak agar traksi dan kendali kemudi tetap terjaga." }
-      ];
-    } else if (isListrik) {
-      domainFallback = [
-        { istilah: "Hukum Ohm & Kirchhoff", definisi: "Prinsip fisika fundamental yang menghubungkan tegangan, kuat arus, hambatan, serta percabangan arus dan beda potensial dalam rangkaian listrik tertutup." },
-        { istilah: "Programmable Logic Controller (PLC)", definisi: "Komputer industri khusus yang dirancang untuk mengendalikan proses otomasi manufaktur melalui instruksi logika terprogram." },
-        { istilah: "Pulse Width Modulation (PWM)", definisi: "Metode modulasi sinyal digital dengan memvariasikan lebar pulsa aktif untuk mengatur daya rata-rata motor listrik atau intensitas beban." },
-        { istilah: "Sensor & Transduser", definisi: "Perangkat yang mendeteksi perubahan besaran fisis (suhu, tekanan, cahaya, gerak) dan mengonversinya menjadi sinyal listrik yang terukur." },
-        { istilah: "Faktor Daya (Cos Phi)", definisi: "Perbandingan antara daya aktif (watt) dan daya semu (volt-ampere) yang mengindikasikan efisiensi pemanfaatan energi listrik pada beban induktif." }
-      ];
-    } else if (isBisnis) {
-      domainFallback = [
-        { istilah: "Break Even Point (BEP)", definisi: "Titik impas operasional bisnis ketika total pendapatan yang diterima setara dengan total pengeluaran beban biaya produksi dan usaha." },
-        { istilah: "Cash Flow (Arus Kas)", definisi: "Laporan catatan pergerakan masuk dan keluarnya uang kas yang mencerminkan tingkat likuiditas dan stabilitas keuangan suatu entitas usaha." },
-        { istilah: "Digital Marketing Funnel", definisi: "Kerangka tahapan konversi perjalanan konsumen mulai dari pembentukan awareness (kesadaran), penimbangan (consideration), hingga transaksi pembelian." },
-        { istilah: "Jurnal Penyesuaian", definisi: "Pencatatan akuntansi pada akhir periode untuk menyesuaikan saldo akun-akun nominal dan riil agar mencerminkan kondisi riil berbasis akrual." },
-        { istilah: "Value Proposition", definisi: "Nilai keunggulan atau manfaat unik yang ditawarkan suatu produk/jasa sebagai solusi utama atas permasalahan atau kebutuhan target pasar." }
-      ];
-    } else if (isKuliner) {
-      domainFallback = [
-        { istilah: "Mise en Place", definisi: "Persiapan menyeluruh dan penataan seluruh bahan masakan serta peralatan kerja sebelum proses memasak dimulai demi efisiensi dapur profesional." },
-        { istilah: "HACCP (Hazard Analysis Critical Control Point)", definisi: "Sistem manajemen jaminan keamanan pangan preventif yang mengidentifikasi titik kritis bahaya biologis, kimia, dan fisik." },
-        { istilah: "Teknik Blanching & Braising", definisi: "Metode perebusan cepat diikuti pendinginan es (blanching) serta teknik memasak kombinasi panas basah bertutup lambat (braising)." },
-        { istilah: "Reaksi Maillard", definisi: "Reaksi kimia antara asam amino dan gula pereduksi akibat panas yang menghasilkan aroma khas dan warna kecokelatan lezat pada makanan matang." },
-        { istilah: "Food Costing & Yield Management", definisi: "Kalkulasi proporsi biaya bahan baku terhadap harga jual serta penghitungan persentase hasil bersih bahan makanan setelah dibersihkan." }
-      ];
-    } else {
-      domainFallback = [
-        { istilah: `Prinsip Operasional ${topik}`, definisi: `Kaidah dasar, struktur kerja, dan mekanisme fundamental yang mendasari pelaksanaan teknis materi ${topik} dalam mata pelajaran ${mapel}.` },
-        { istilah: `Parameter Teknis ${topik}`, definisi: `Spesifikasi, variabel terukur, dan tolok ukur presisi yang menjadi standar baku keberhasilan implementasi ${topik}.` },
-        { istilah: `Standar Operasional Prosedur (SOP)`, definisi: `Instruksi kerja baku yang sistematis untuk menjamin akurasi, efisiensi kerja, dan keselamatan kerja dalam materi ${topik}.` },
-        { istilah: `Instrumen & Media Kerja ${topik}`, definisi: `Perangkat keras, peranti lunak, atau instrumen khusus yang dikalibrasi guna mengeksekusi penugasan teknis materi ${topik}.` },
-        { istilah: `Kendali Mutu (Quality Control)`, definisi: `Rangkaian verifikasi dan pemeriksaan hasil kerja guna memastikan luaran ${topik} memenuhi standar spesifikasi tanpa kecacatan.` }
-      ];
-    }
-
-    const merged = [...list];
-    domainFallback.forEach(df => {
-      if (!merged.some(m => m.istilah.toLowerCase() === df.istilah.toLowerCase())) {
-        merged.push(df);
-      }
-    });
-    list = merged;
-  }
-
-  return list;
 }
 
 /**
- * Normalisasi dan Resolusi Daftar Pustaka Ilmiah & Bahan Acuan AI (Multi-Format & Contextual Fallback)
- * Menuliskan seluruh referensi resmi kurikulum, buku teks standar, dan bahan AI yang digunakan
+ * Normalisasi dan Resolusi Daftar Pustaka — Semua dari AI berdasarkan konteks Tahap 1 & 2
  */
 function resolveContextualDaftarPustaka(raw, data) {
+
   let list = [];
   if (Array.isArray(raw)) {
     raw.forEach(item => {
@@ -3285,43 +3061,21 @@ function resolveContextualDaftarPustaka(raw, data) {
     });
   }
 
-  // Filter ketat: Hapus referensi jurnal palsu dan referensi model AI internal
+  // Filter: Hapus referensi palsu / AI internal
   list = list.filter(item => {
     if (!item || typeof item !== 'string') return false;
     const iLower = item.toLowerCase();
-    if (iLower.includes('penerapan model pjbl') || iLower.includes('penerapan model pbl') || iLower.includes('berbasis pendekatan tpack') || iLower.includes('media interaktif berbasis studi kasus otentik')) {
-      return false;
-    }
-    if (iLower.includes('deepmind') || iLower.includes('gemini: a family') || iLower.includes('eduworkspace ai research')) {
-      return false;
-    }
+    if (iLower.includes('penerapan model pjbl') || iLower.includes('penerapan model pbl') ||
+        iLower.includes('berbasis pendekatan tpack') || iLower.includes('media interaktif berbasis studi kasus otentik')) return false;
+    if (iLower.includes('deepmind') || iLower.includes('gemini: a family') || iLower.includes('eduworkspace ai research')) return false;
     return true;
   });
 
-  // Jika AI tidak menghasilkan referensi yang cukup, gunakan fallback standar
-  // Dokumen kurikulum resmi + referensi Teknologi Pendidikan — domain/materi dari konteks Tahap 1 & 2 sudah ditangani AI
-  if (list.length < 3) {
-    const d = data || {};
-    const topik = d.topikMateri || 'Materi Pokok';
-    const mapel = d.mataPelajaran || 'Mata Pelajaran';
-    const jenjang = d.jenjangSekolah || 'SMK';
-    const jurusan = d.jurusanSekolah ? ` Jurusan ${d.jurusanSekolah}` : '';
-
-    list = [
-      // Regulasi Kurikulum Merdeka
-      'Badan Standar, Kurikulum, dan Asesmen Pendidikan (BSKAP). (2024). Keputusan Kepala BSKAP No. 032/H/KR/2024 tentang Capaian Pembelajaran pada Pendidikan Anak Usia Dini, Jenjang Pendidikan Dasar, dan Jenjang Pendidikan Menengah pada Kurikulum Merdeka. Jakarta: Kemendikbudristek.',
-      'Badan Standar, Kurikulum, dan Asesmen Pendidikan (BSKAP). (2024). Panduan Pembelajaran dan Asesmen Pendidikan Anak Usia Dini, Pendidikan Dasar, dan Pendidikan Menengah. Jakarta: Kementerian Pendidikan, Kebudayaan, Riset, dan Teknologi.',
-      // Panduan Pengembangan Modul Ajar
-      'Kementerian Pendidikan, Kebudayaan, Riset, dan Teknologi. (2022). Panduan Pengembangan Modul Ajar Kurikulum Merdeka. Jakarta: Pusat Kurikulum dan Pembelajaran, Kemendikbudristek.',
-      // Teknologi Pendidikan & Desain Pembelajaran
-      'Dick, W., Carey, L., & Carey, J. O. (2015). The Systematic Design of Instruction (8th ed.). Upper Saddle River: Pearson Education.',
-      // Referensi buku siswa/guru sesuai mapel dari Kemendikbudristek
-      `Kementerian Pendidikan, Kebudayaan, Riset, dan Teknologi. (2023). Buku Panduan Guru: ${mapel}${jurusan} ${jenjang}. Jakarta: Pusat Perbukuan Kemendikbudristek.`,
-    ];
-  }
-
+  // Semua referensi dari AI berdasarkan konteks Tahap 1 & 2 — tidak ada fallback hardcoded
   return list;
 }
+
+
 
 
 
