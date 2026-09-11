@@ -674,11 +674,9 @@ async function callGeminiWithAccountKey(promptText, customConfig) {
     return null;
   }
 
-  // 1. Prioritaskan endpoint resmi teks stabil Google Gemini (kompatibel untuk akun baru & lama)
   let candidateEndpoints = [
     `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent`,
     `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent`,
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent`,
     `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent`,
     `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-8b:generateContent`,
     `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent`
@@ -2098,6 +2096,150 @@ async function proceedGenerateModul() {
 }
 
 /**
+ * Algoritma Auto-Repair JSON Berkemampuan Mandiri (Self-Healing JSON Engine)
+ * Mampu mengatasi:
+ * 1. Tanda petik dua di dalam teks string (diubah ke petik tunggal ' agar tidak merusak format JSON)
+ * 2. Karakter baris baru literal (\n) dan kontrol di dalam string JSON
+ * 3. Output yang terpotong karena batas token (menutup string, array, dan kurung kurawal secara rekursif)
+ * 4. Trailing comma dan dangling key tanpa nilai
+ */
+function autoRepairTruncatedJson(str) {
+  if (!str || typeof str !== 'string') return null;
+  let s = str.trim();
+
+  // Bersihkan fence markdown pembuka & penutup jika ada
+  const mdMatch = s.match(/```(?:json)?\s*([\s\S]*?)(?:```|$)/i);
+  if (mdMatch && mdMatch[1]) {
+    s = mdMatch[1].trim();
+  }
+
+  const firstBrace = s.indexOf('{');
+  if (firstBrace === -1) return null;
+  s = s.slice(firstBrace);
+
+  const n = s.length;
+  let out = '';
+  let inStr = false;
+  let isEsc = false;
+
+  for (let i = 0; i < n; i++) {
+    const c = s[i];
+
+    if (isEsc) {
+      out += c;
+      isEsc = false;
+      continue;
+    }
+
+    if (c === '\\') {
+      out += c;
+      isEsc = true;
+      continue;
+    }
+
+    if (c === '"') {
+      if (!inStr) {
+        inStr = true;
+        out += c;
+      } else {
+        // Cek lookahead: apakah ini tanda petik penutup properti atau petik unescaped di dalam kalimat?
+        let nextChar = '';
+        for (let j = i + 1; j < n; j++) {
+          if (!/\s/.test(s[j])) {
+            nextChar = s[j];
+            break;
+          }
+        }
+        if (nextChar === ',' || nextChar === '}' || nextChar === ']' || nextChar === ':' || nextChar === '') {
+          inStr = false;
+          out += c;
+        } else {
+          // Petik dua unescaped di dalam teks: ganti dengan petik tunggal agar aman
+          out += "'";
+        }
+      }
+      continue;
+    }
+
+    if (inStr) {
+      if (c === '\n') {
+        out += '\\n';
+      } else if (c === '\r') {
+        // abaikan CR
+      } else if (c === '\t') {
+        out += '\\t';
+      } else if (c.charCodeAt(0) < 32) {
+        // abaikan karakter kontrol ilegal
+      } else {
+        out += c;
+      }
+      continue;
+    }
+
+    out += c;
+  }
+
+  // Jika teks terpotong saat masih di dalam string, tutup string
+  if (inStr) {
+    out += '"';
+  }
+
+  // Bersihkan komentar C-style dan trailing comma sebelum kurung tutup
+  out = out.replace(/\/\*[\s\S]*?\*\//g, '');
+  out = out.replace(/,\s*([}\]])/g, '$1');
+
+  // Bersihkan token menggantung di akhir JSON akibat pemotongan token
+  let modified = true;
+  while (modified) {
+    modified = false;
+    out = out.trim();
+    if (out.endsWith(',')) {
+      out = out.slice(0, -1).trim();
+      modified = true;
+    }
+    // Key yang memiliki colon tanpa nilai: e.g. , "materiAjarDeskriptif":
+    const colonMatch = out.match(/,?\s*"[^"]*"\s*:\s*$/);
+    if (colonMatch) {
+      out = out.slice(0, colonMatch.index).trim();
+      modified = true;
+    }
+    // Key menggantung tanpa colon dan tanpa nilai: e.g. , "pengayaan"
+    const keyMatch = out.match(/,\s*"[^"]*"\s*$/);
+    if (keyMatch) {
+      out = out.slice(0, keyMatch.index).trim();
+      modified = true;
+    }
+  }
+
+  // Seimbangkan seluruh kurung pembuka yang belum tertutup
+  const stack = [];
+  let inS2 = false;
+  let esc2 = false;
+  for (let i = 0; i < out.length; i++) {
+    const c = out[i];
+    if (esc2) { esc2 = false; continue; }
+    if (c === '\\') { esc2 = true; continue; }
+    if (c === '"') { inS2 = !inS2; continue; }
+    if (!inS2) {
+      if (c === '{') stack.push('}');
+      else if (c === '[') stack.push(']');
+      else if (c === '}') {
+        if (stack.length > 0 && stack[stack.length - 1] === '}') stack.pop();
+      } else if (c === ']') {
+        if (stack.length > 0 && stack[stack.length - 1] === ']') stack.pop();
+      }
+    }
+  }
+
+  while (stack.length > 0) {
+    out += stack.pop();
+  }
+
+  out = out.replace(/,\s*([}\]])/g, '$1');
+  return out;
+}
+
+/**
  * Ekstraktor Bagian JSON Secara Granular (Fallback jika JSON utuh mengalami cacat tanda baca lokal)
  */
 function extractSectionsManually(text) {
@@ -2130,25 +2272,46 @@ function extractSectionsManually(text) {
             try {
               return JSON.parse(rawChunk);
             } catch (e) {
-              const cleanChunk = rawChunk
-                .replace(/,\s*([\}\]])/g, '$1')
-                .replace(/\/\*[\s\S]*?\*\//g, '');
-              try {
-                return JSON.parse(cleanChunk);
-              } catch (e2) {}
+              const repairedChunk = autoRepairTruncatedJson(`{"dummy": ${rawChunk}}`);
+              if (repairedChunk) {
+                try {
+                  const parsedDummy = JSON.parse(repairedChunk);
+                  if (parsedDummy && parsedDummy.dummy !== undefined) return parsedDummy.dummy;
+                } catch (_) {}
+              }
             }
             break;
           }
         }
       }
     }
+
+    // Jika depth belum 0 (terpotong di tengah jalan): coba repair potongan parsial dari startIdx
+    try {
+      const partialRaw = text.slice(startIdx);
+      const repairedChunk = autoRepairTruncatedJson(`{"dummy": ${partialRaw}`);
+      if (repairedChunk) {
+        const parsedDummy = JSON.parse(repairedChunk);
+        if (parsedDummy && parsedDummy.dummy !== undefined) {
+          if (isArray && Array.isArray(parsedDummy.dummy) && parsedDummy.dummy.length > 0) {
+            return parsedDummy.dummy;
+          } else if (!isArray && typeof parsedDummy.dummy === 'object') {
+            return parsedDummy.dummy;
+          }
+        }
+      }
+    } catch (_) {}
+
     return null;
   }
 
   function extractStringChunk(keyName) {
-    const regex = new RegExp(`["']${keyName}["']\\s*:\\s*"([\\s\\S]*?)"(?=\\s*[,\\}])`);
+    const regex = new RegExp(`["']${keyName}["']\\s*:\\s*"([\\s\\S]*?)(?:"\\s*[,\\}]|$)`);
     const match = text.match(regex);
-    return match ? match[1] : '';
+    if (match && match[1]) {
+      return match[1].replace(/\\n/g, '\n').replace(/\\"/g, '"');
+    }
+    return '';
   }
 
   result.desainPembelajaran = extractChunk('desainPembelajaran', false);
@@ -2166,29 +2329,39 @@ function extractSectionsManually(text) {
   result.pengayaan = extractStringChunk('pengayaan') || '';
   result.remedial = extractStringChunk('remedial') || '';
 
-  if (result.desainPembelajaran && Array.isArray(result.pengalamanBelajar) && result.pengalamanBelajar.length > 0) {
+  // Kriteria penerimaan: JAUH LEBIH FLEKSIBEL
+  // Jika pengalamanBelajar memiliki setidaknya 1 pertemuan, ATAU jika terdapat setidaknya 2 bagian utama terisi
+  const hasPertemuan = Array.isArray(result.pengalamanBelajar) && result.pengalamanBelajar.length > 0;
+  const filledKeys = Object.keys(result).filter(k => {
+    const v = result[k];
+    if (Array.isArray(v)) return v.length > 0;
+    if (v && typeof v === 'object') return Object.keys(v).length > 0;
+    if (typeof v === 'string') return v.trim().length > 0;
+    return false;
+  });
+
+  if (hasPertemuan || filledKeys.length >= 2) {
     return result;
   }
   return null;
 }
 
 /**
- * Parser JSON AI Berketahanan Tinggi (Robust JSON Parser)
- * Mampu membersihkan markdown wrapper, komentar C-style, trailing comma, unescaped control chars,
- * serta secara cerdas memperbaiki penutupan kurung jika terpotong batas token.
+ * Parser JSON AI Berketahanan Tinggi (Multi-Tier Robust JSON Parser)
+ * Mampu memulihkan response JSON dari Google Gemini dalam segala kondisi formatting
  */
 function robustParseAiJson(rawText) {
   if (!rawText || typeof rawText !== 'string') return null;
 
   let text = rawText.trim();
 
-  // 1. Coba parse langsung jika output sudah JSON murni valid
+  // Tier 1: Coba parse langsung jika output sudah JSON murni valid
   try {
     return JSON.parse(text);
   } catch (e) {}
 
-  // 2. Bersihkan markdown code fence jika ada
-  const mdMatch = text.match(/```(?:json)?\s*([\s\S]*?)\s*```/i);
+  // Tier 2: Bersihkan markdown code fence jika ada
+  const mdMatch = text.match(/```(?:json)?\s*([\s\S]*?)(?:```|$)/i);
   if (mdMatch && mdMatch[1]) {
     try {
       return JSON.parse(mdMatch[1].trim());
@@ -2196,63 +2369,36 @@ function robustParseAiJson(rawText) {
     text = mdMatch[1].trim();
   }
 
-  // 3. Ekstrak substring dari kurung kurawal pertama hingga terakhir
+  // Tier 3: Auto-Repair tingkat tinggi untuk unclosed JSON, unescaped quotes, trailing commas, & truncated blocks
+  try {
+    const repairedText = autoRepairTruncatedJson(text);
+    if (repairedText) {
+      const parsedRepaired = JSON.parse(repairedText);
+      if (parsedRepaired && typeof parsedRepaired === 'object') {
+        console.log('[Robust JSON] Berhasil memulihkan JSON via autoRepairTruncatedJson.');
+        return parsedRepaired;
+      }
+    }
+  } catch (errRep) {
+    console.warn('[Robust JSON] Auto-repair warning:', errRep);
+  }
+
+  // Tier 4: Ekstraksi kurung kurawal pertama hingga terakhir dengan pembersihan standar
   const firstBrace = text.indexOf('{');
   const lastBrace = text.lastIndexOf('}');
   if (firstBrace !== -1 && lastBrace > firstBrace) {
     let sub = text.slice(firstBrace, lastBrace + 1);
-
     try {
       return JSON.parse(sub);
     } catch (e) {}
 
-    // Bersihkan komentar multi-baris /* ... */ (JANGAN hapus // karena bisa memotong URL https://)
-    let cleaned = sub.replace(/\/\*[\s\S]*?\*\//g, '');
-    // Bersihkan trailing comma sebelum } atau ]
-    cleaned = cleaned.replace(/,\s*([}\]])/g, '$1');
-
+    let cleaned = sub.replace(/\/\*[\s\S]*?\*\//g, '').replace(/,\s*([}\]])/g, '$1');
     try {
       return JSON.parse(cleaned);
     } catch (e) {}
-
-    // Perbaiki literal newlines dan karakter kontrol di dalam string JSON
-    let inStr = false;
-    let isEsc = false;
-    let fixed = '';
-    for (let i = 0; i < cleaned.length; i++) {
-      const c = cleaned[i];
-      if (isEsc) {
-        fixed += c;
-        isEsc = false;
-        continue;
-      }
-      if (c === '\\') {
-        fixed += c;
-        isEsc = true;
-        continue;
-      }
-      if (c === '"') {
-        inStr = !inStr;
-        fixed += c;
-        continue;
-      }
-      if (inStr) {
-        if (c === '\n') fixed += '\\n';
-        else if (c === '\r') {}
-        else if (c === '\t') fixed += '\\t';
-        else if (c.charCodeAt(0) < 32) {}
-        else fixed += c;
-      } else {
-        fixed += c;
-      }
-    }
-
-    try {
-      return JSON.parse(fixed);
-    } catch (e) {}
   }
 
-  // 4. Fallback: Ekstraksi independen per blok JSON modul
+  // Tier 5: Fallback granular: Ekstraksi independen per blok modul
   try {
     const sectionObj = extractSectionsManually(rawText);
     if (sectionObj) {
@@ -2518,7 +2664,18 @@ ATURAN WAJIB DAN MENGIKAT — PELANGGARAN TIDAK DIIZINKAN:
     - Rubrik Penilaian: WAJIB memuat 3 aspek penilaian lengkap dengan deskriptor kriteria Skor 1 (Kurang), Skor 2 (Cukup), Skor 3 (Baik), dan Skor 4 (Sangat Baik) yang spesifik untuk materi ${topik} dan model ${model}.
 
 =============================================================================
-FORMAT RESPONS — OUTPUT WAJIB JSON MURNI (VALID JSON TANPA TEKS PEMBUKA/PENUTUP):
+ATURAN FORMAT JSON (KRUSIAL — WAJIB DIIKUTI TANPA KECUALI AGAR VALID):
+=============================================================================
+1. OUTPUT HANYA TEKS JSON MURNI (dimulai karakter '{' dan diakhiri karakter '}'). JANGAN ada teks pengantar, penutup, atau blok markdown.
+2. DILARANG KERAS MENGGUNAKAN TANDA PETIK DUA (") DI DALAM TEKS NILAI STRING!
+   Jika Anda mengutip istilah teknis, nama konsep, atau judul karya di dalam kalimat, WAJIB MENGGUNAKAN TANDA PETIK TUNGGAL (')!
+   Contoh BENAR: 'seleksi alam', 'Rule of Thirds', 'survival of the fittest'.
+   Contoh SALAH & DILARANG: "seleksi alam", "Rule of Thirds".
+3. Seluruh baris baru di dalam nilai teks string harus ditulis berupa escape '\\n' yang valid.
+4. Tuliskan naskah materi, aktivitas pembelajaran, dan instrumen secara padat, substantif, mendalam, dan to-the-point tanpa narasi meta bertele-tele agar seluruh struktur JSON (seluruh ${targetPertemuanCount} pertemuan, LKPD, rubrik, glosarium, dan daftar pustaka) dapat terselesaikan tuntas dan valid sebelum batas token.
+
+=============================================================================
+FORMAT STRUKTUR JSON YANG WAJIB DIHASILKAN:
 =============================================================================
 {
   "identifikasiPesertaDidik": [
@@ -2692,13 +2849,14 @@ FORMAT RESPONS — OUTPUT WAJIB JSON MURNI (VALID JSON TANPA TEKS PEMBUKA/PENUTU
   if (!parsed.pengalamanBelajar && parsed.kegiatanPembelajaran) {
     parsed.pengalamanBelajar = parsed.kegiatanPembelajaran;
   }
+  if (!parsed.pengalamanBelajar && parsed.pertemuan) {
+    parsed.pengalamanBelajar = parsed.pertemuan;
+  }
   if (!parsed.desainPembelajaran && parsed.rancanganPembelajaran) {
     parsed.desainPembelajaran = parsed.rancanganPembelajaran;
   }
-
-  // Validasi: minimal memiliki pengalamanBelajar berbentuk array
-  if (!parsed.pengalamanBelajar || !Array.isArray(parsed.pengalamanBelajar) || parsed.pengalamanBelajar.length === 0) {
-    throw new Error('Struktur pengalaman belajar belum lengkap dari respon AI. Silakan klik tombol Generate kembali.');
+  if (parsed.pengalamanBelajar && !Array.isArray(parsed.pengalamanBelajar) && typeof parsed.pengalamanBelajar === 'object') {
+    parsed.pengalamanBelajar = Object.values(parsed.pengalamanBelajar);
   }
 
   if (!parsed.desainPembelajaran) {
@@ -2711,9 +2869,11 @@ FORMAT RESPONS — OUTPUT WAJIB JSON MURNI (VALID JSON TANPA TEKS PEMBUKA/PENUTU
     };
   }
 
-  console.log('[Generate] AI berhasil menghasilkan output JSON valid dari master prompt.');
+  // Lengkapi seluruh pertemuan dan bagian modul secara kontekstual
   ensureCompleteMeetings(parsed, targetPertemuanCount, modulPayload);
   ensureCompleteSections(parsed, modulPayload);
+
+  console.log('[Generate] AI berhasil menghasilkan output JSON valid dari master prompt.');
   return parsed;
 }
 
@@ -2725,8 +2885,83 @@ function ensureCompleteMeetings(aiData, targetCount, p) {
   if (!Array.isArray(aiData.pengalamanBelajar)) {
     aiData.pengalamanBelajar = [];
   }
-  const currentCount = aiData.pengalamanBelajar.length;
-  if (currentCount >= targetCount || currentCount === 0) return;
+  let currentCount = aiData.pengalamanBelajar.length;
+  const topik = p?.topikMateri || 'Materi Pokok';
+
+  // Jika AI sama sekali belum menyusun pertemuan (misal terpotong sebelum array pertemuan):
+  if (currentCount === 0) {
+    console.log('[Pertemuan] Menginisiasi pertemuan kontekstual pertama...');
+    const p1 = {
+      pertemuan: 1,
+      subTopik: `Konsep Dasar dan Prinsip Penerapan ${topik}`,
+      awal: {
+        waktu: "15 Menit",
+        aktivitasGuru: [
+          "Membuka sesi pembelajaran dengan salam hangat, memimpin doa bersama, dan memeriksa presensi kehadiran murid.",
+          `Mengaitkan apersepsi kontekstual fenomena nyata dengan materi ${topik}.`,
+          `Melaksanakan Pretest (Tes Diagnostik Kognitif Awal) singkat untuk mengukur kesiapan awal murid pada materi ${topik}.`,
+          "Menyampaikan tujuan pembelajaran, skenario aktivitas, dan kriteria penilaian."
+        ],
+        aktivitasMurid: [
+          "Menjawab salam guru, berdoa dengan khidmat, dan mempersiapkan kesiapan belajar.",
+          `Merespons pertanyaan apersepsi dan mengemukakan pengetahuan awal terkait materi ${topik}.`,
+          "Mengerjakan instrumen Pretest diagnostik awal secara mandiri dan jujur.",
+          "Menyimak tujuan pembelajaran serta alur aktivitas yang akan dilaksanakan."
+        ]
+      },
+      inti: [
+        {
+          sintaks: `Sintaks 1: Orientasi Terhadap Masalah & Analisis Prinsip ${topik}`,
+          waktu: "35 Menit",
+          aktivitasGuru: [
+            `Memfasilitasi murid mengidentifikasi persoalan konkret terkait materi ${topik}.`,
+            `Mengarahkan pengamatan kontekstual menggunakan media ${p?.mediaDigital || 'digital'} dan fasilitas ${p?.fasilitas || 'belajar'}.`,
+            "Membimbing diskusi kelompok awal untuk merumuskan hipotesis kerja."
+          ],
+          aktivitasMurid: [
+            `Mencermati studi kasus dan fenomena nyata materi ${topik} yang disajikan guru.`,
+            "Mengajukan pertanyaan kritis mengenai prinsip kerja dan implementasinya.",
+            "Mendiskusikan pemecahan masalah dalam kelompok secara kolaboratif."
+          ],
+          integrasiPendekatan: `Penerapan pendekatan ${p?.pendekatanPembelajaran || 'Saintifik'} dan metode ${p?.metodePembelajaran || 'Praktik'}`
+        },
+        {
+          sintaks: `Sintaks 2: Penyelidikan Kolaboratif & Praktik Kerja ${topik}`,
+          waktu: "35 Menit",
+          aktivitasGuru: [
+            `Mendampingi kelompok melakukan eksperimen/pengembangan karya nyata terkait ${topik}.`,
+            "Melaksanakan Asesmen Formatif (Lembar Observasi Proses & Kinerja Praktik) untuk memantau kemajuan.",
+            "Memberikan bimbingan terarah (scaffolding) bagi kelompok yang memerlukan bantuan teknis."
+          ],
+          aktivitasMurid: [
+            `Mengerjakan tugas praktikum materi ${topik} sesuai panduan LKPD secara terstruktur.`,
+            "Mencatat data observasi, menganalisis temuan, dan memvalidasi hasil kerja tim.",
+            "Menyusun simpulan teknis kelompok untuk bahan presentasi dan evaluasi."
+          ],
+          integrasiPendekatan: `Pemanfaatan media digital ${p?.mediaDigital || 'digital'} dan sarana ${p?.fasilitas || 'kerja'}`
+        }
+      ],
+      penutup: {
+        waktu: "15 Menit",
+        aktivitasGuru: [
+          `Memfasilitasi murid melakukan refleksi metakognitif terhadap pemahaman materi ${topik} hari ini.`,
+          "Bersama murid merangkum intisari simpulan konsep materi yang telah dipelajari.",
+          "Memberikan umpan balik penguatan serta menginformasikan agenda tindak lanjut pertemuan berikutnya.",
+          "Menutup sesi pembelajaran dengan doa bersama dan salam penutup."
+        ],
+        aktivitasMurid: [
+          "Menyampaikan refleksi diri terkait penguasaan materi, kendala yang dihadapi, dan kepuasan belajar.",
+          "Merumuskan poin-poin kesimpulan materi inti secara lisan maupun catatan ringkas.",
+          `Merapikan kembali sarana kerja dan fasilitas ${p?.fasilitas || 'belajar'} yang telah digunakan.`,
+          "Berdoa bersama guru dan menjawab salam penutup dengan tertib."
+        ]
+      }
+    };
+    aiData.pengalamanBelajar.push(p1);
+    currentCount = 1;
+  }
+
+  if (currentCount >= targetCount) return;
 
   console.log(`[Pertemuan] Melengkapi pengalamanBelajar dari ${currentCount} pertemuan menjadi ${targetCount} pertemuan...`);
   for (let i = currentCount + 1; i <= targetCount; i++) {
@@ -2734,7 +2969,7 @@ function ensureCompleteMeetings(aiData, targetCount, p) {
     if (baseItem) {
       const copy = JSON.parse(JSON.stringify(baseItem));
       copy.pertemuan = i;
-      copy.tahap = `Pertemuan ${i} (Lanjutan Penerapan & Evaluasi)`;
+      copy.subTopik = `Pertemuan ${i}: Aplikasi Lanjutan & Evaluasi Terapan ${topik}`;
       aiData.pengalamanBelajar.push(copy);
     }
   }
