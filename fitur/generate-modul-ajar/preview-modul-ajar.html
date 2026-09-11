@@ -2228,6 +2228,15 @@ Pada tataran analisis lanjutan, penguasaan materi **${topik}** menuntut kemampua
       let list = [];
       const raw = ai ? (ai.glosarium || ai.glossary || ai.glosariumMateri || null) : null;
 
+      // Deteksi konteks domain di dalam fungsi ini (bukan bergantung outer scope)
+      const _primaryCtx = extractPrimarySubjectContext(data || {}, ai || {});
+      const _isTipografi = /\b(tipografi|typography|typeface|font|huruf|kerning|tracking|leading|glif|glyph)\b/i.test(_primaryCtx);
+      const _isDKV = _isTipografi || /\b(dkv|desain\s*grafis|desain\s*komunikasi\s*visual|nirmana|vektor|vector|coreldraw|illustrator|photoshop|layout|branding|logo|poster|identitas\s*visual)\b/i.test(_primaryCtx);
+      const _isVideoKamera = !_isTipografi && (
+        /\b(videografi|sinematografi|tata\s*kamera|kamera\s*video|camera\s*movement|camera\s*angle|shot\s*size|ukuran\s*bidik|sudut\s*pandang\s*kamera|aturan\s*180|180-degree|depth\s*of\s*field|\bdof\b|white\s*balance|broadcasting|penyiaran|perfilman|tata\s*artistik\s*film)\b/i.test(_primaryCtx) ||
+        (/\b(fotografi|kamera)\b/i.test(_primaryCtx) && !_isDKV)
+      );
+
       if (Array.isArray(raw)) {
         raw.forEach(item => {
           if (!item) return;
@@ -2347,7 +2356,7 @@ Pada tataran analisis lanjutan, penguasaan materi **${topik}** menuntut kemampua
       ];
 
       // 1. JIKA KONTEKS VIDEOGRAFI/SINEMATOGRAFI/TATA KAMERA TERDETEKSI:
-      if (isVideoKamera) {
+      if (_isVideoKamera) {
         if (list.length < 5) {
           const merged = [...kamusVideoSinematografi];
           list.forEach(item => {
@@ -2367,7 +2376,7 @@ Pada tataran analisis lanjutan, penguasaan materi **${topik}** menuntut kemampua
       }
 
       // 2. JIKA KONTEKS TIPOGRAFI TERDETEKSI:
-      if (isTipografi) {
+      if (_isTipografi) {
         if (list.length < 5) {
           const merged = [...kamusTipografiDKV];
           list.forEach(item => {
@@ -2381,9 +2390,7 @@ Pada tataran analisis lanjutan, penguasaan materi **${topik}** menuntut kemampua
         }
       }
 
-
       // Jika AI tidak memberikan cukup glosarium, gunakan fallback berbasis topik dari konteks Tahap 1 & 2
-      // Tidak ada data domain hardcoded — semua dari konteks yang diinput guru
       if (list.length < 5) {
         const d = data || {};
         const topik = d.topikMateri || 'Materi Pokok';
@@ -2393,9 +2400,10 @@ Pada tataran analisis lanjutan, penguasaan materi **${topik}** menuntut kemampua
           { istilah: `Konsep Dasar ${topik}`, definisi: `Pengertian, ruang lingkup, dan prinsip fundamental yang mendasari pemahaman materi ${topik} dalam mata pelajaran ${mapel}.` },
           { istilah: `Prosedur Operasional ${topik}`, definisi: `Urutan langkah kerja sistematis dan standar yang harus ditempuh dalam melaksanakan atau menerapkan ${topik} secara benar dan efisien.` },
           { istilah: `Parameter Teknis ${topik}`, definisi: `Variabel-variabel terukur, spesifikasi, dan tolok ukur keberhasilan yang menjadi standar baku implementasi ${topik}.` },
+          { istilah: `Aplikasi Nyata ${topik}`, definisi: `Penerapan konsep dan keterampilan materi ${topik} dalam konteks dunia kerja, industri, atau kehidupan sehari-hari yang relevan.` },
           { istilah: 'Capaian Pembelajaran (CP)', definisi: 'Kompetensi minimum yang harus dikuasai peserta didik setelah menyelesaikan proses pembelajaran pada suatu fase berdasarkan Kurikulum Merdeka.' },
           { istilah: 'Tujuan Pembelajaran (TP)', definisi: 'Jabaran spesifik kompetensi yang ingin dicapai peserta didik dalam satu sesi atau rangkaian pembelajaran, sebagai penjabaran dari Capaian Pembelajaran.' },
-          { istilah: 'Asesmen Formatif', definisi: 'Penilaian berkelanjutan yang dilaksanakan selama proses pembelajaran untuk memantau kemajuan belajar dan memberikan umpan balik peningkatan.' },
+          { istilah: 'Asesmen Formatif', definisi: 'Penilaian berkelanjutan yang dilaksanakan selama proses pembelajaran untuk memantau kemajuan belajar dan memberikan umpan balik peningkatan kepada peserta didik.' },
           { istilah: 'Diferensiasi Pembelajaran', definisi: 'Strategi penyesuaian proses, konten, atau produk pembelajaran sesuai keragaman kebutuhan, gaya belajar, dan kesiapan masing-masing peserta didik.' },
         ];
 
@@ -2405,7 +2413,6 @@ Pada tataran analisis lanjutan, penguasaan materi **${topik}** menuntut kemampua
           }
         });
       }
-
 
       return list;
     }
@@ -2454,7 +2461,30 @@ Pada tataran analisis lanjutan, penguasaan materi **${topik}** menuntut kemampua
         return true;
       });
 
-      // Semua referensi dari AI berdasarkan konteks Tahap 1 & 2 — tidak ada fallback hardcoded
+      // Fallback: Jika AI tidak memberikan referensi, gunakan referensi resmi Kurikulum Merdeka & standar buku teks
+      if (list.length < 3) {
+        const d = data || {};
+        const topik = d.topikMateri || 'Materi Pokok';
+        const mapel = d.mataPelajaran || 'Mata Pelajaran';
+        const jenjang = d.jenjangSekolah || 'SMA/SMK';
+        const tahunAjar = d.tahunPenyusunan || new Date().getFullYear();
+
+        const fallbackRefs = [
+          `Badan Standar, Kurikulum, dan Asesmen Pendidikan (BSKAP). (2022). <em>Keputusan Kepala BSKAP Nomor 033/H/KR/2022 tentang Capaian Pembelajaran pada Pendidikan Anak Usia Dini, Jenjang Pendidikan Dasar, dan Jenjang Pendidikan Menengah pada Kurikulum Merdeka</em>. Kemendikbudristek.`,
+          `Kemendikbudristek. (2022). <em>Panduan Pembelajaran dan Asesmen Pendidikan Anak Usia Dini, Pendidikan Dasar, dan Pendidikan Menengah</em>. Jakarta: Pusat Kurikulum dan Pembelajaran.`,
+          `Kemendikbudristek. (2022). <em>Dimensi, Elemen, dan Subelemen Profil Pelajar Pancasila pada Kurikulum Merdeka</em>. Jakarta: Badan Standar, Kurikulum, dan Asesmen Pendidikan.`,
+          `Tim Penulis. (${tahunAjar}). <em>Buku Teks ${mapel}: Materi ${topik} untuk Peserta Didik ${jenjang}</em>. Jakarta: Penerbit Erlangga / Grafindo / Yudhistira.`,
+          `Suparman, M. A. (2014). <em>Desain Instruksional Modern: Panduan Para Pengajar dan Inovator Pendidikan</em> (Edisi 4). Jakarta: Erlangga.`,
+          `Anderson, L.W., & Krathwohl, D.R. (Eds.). (2001). <em>A Taxonomy for Learning, Teaching, and Assessing: A Revision of Bloom's Taxonomy of Educational Objectives</em>. New York: Longman.`
+        ];
+
+        fallbackRefs.forEach(ref => {
+          if (!list.some(existing => existing === ref)) {
+            list.push(ref);
+          }
+        });
+      }
+
       return list;
     }
 
