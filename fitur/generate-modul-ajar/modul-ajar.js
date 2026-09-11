@@ -1915,8 +1915,9 @@ async function proceedGenerateModul() {
     const progressSteps = [
       { p: 25, text: 'Menganalisis parameter pembelajaran dan menyusun master prompt...' },
       { p: 45, text: 'Google Gemini sedang merumuskan tujuan & sintaks pembelajaran...' },
-      { p: 70, text: 'Menyusun alur pengalaman belajar, materi deskriptif & LKPD per pertemuan...' },
-      { p: 88, text: 'Sedang memproses perumusan & verifikasi struktur dokumen...' }
+      { p: 65, text: 'Menyusun alur pengalaman belajar, materi deskriptif & LKPD per pertemuan...' },
+      { p: 80, text: 'Menyusun glosarium materi teknis & daftar pustaka referensi murni AI...' },
+      { p: 90, text: 'Sedang memproses perumusan & verifikasi struktur dokumen AI (proses mendalam, mohon ditunggu)...' }
     ];
     let stepIndex = 0;
     let currentPct = 15;
@@ -1935,50 +1936,35 @@ async function proceedGenerateModul() {
         if (barEl) barEl.style.width = currentPct + '%';
         if (percentEl) percentEl.textContent = currentPct + '%';
       }
-    }, 1500);
+    }, 2000);
 
     let aiContent = null;
     try {
-      // Panggil AI dengan batas waktu 60 detik (Promise.race)
-      const AI_MAX_TIMEOUT_MS = 60000;
+      // Izinkan AI memproses hingga tuntas tanpa dibatasi waktu sempit (hingga 5 menit)
+      const AI_MAX_TIMEOUT_MS = 300000;
       aiContent = await Promise.race([
         generateFullModulWithAI(modulPayload),
         new Promise((_, reject) =>
-          setTimeout(() => reject(new Error('Batas waktu koneksi Google Gemini (60 detik) terlampaui. Silakan coba klik Generate lagi.')), AI_MAX_TIMEOUT_MS)
+          setTimeout(() => reject(new Error('Waktu respon Google Gemini melampaui batas wajar (5 menit). Silakan periksa jaringan dan klik Generate lagi.')), AI_MAX_TIMEOUT_MS)
         )
       ]);
     } catch (e) {
       console.warn('[Generate] Google Gemini API error:', e);
       const errMsg = e?.message || '';
-      const isAuthError = errMsg.includes('401') || errMsg.includes('tidak valid') || errMsg.includes('Kunci API belum disimpan');
-
-      if (isAuthError) {
-        clearInterval(progressTimer);
-        if (progressContainer) progressContainer.style.display = 'none';
-        if (btnGenerate) btnGenerate.disabled = false;
-        if (btnUbahKonteks) {
-          btnUbahKonteks.disabled = false;
-          btnUbahKonteks.style.opacity = '1';
-          btnUbahKonteks.style.cursor = 'pointer';
-        }
-        showNotificationModal(
-          'Kunci API Diperlukan',
-          `Google Gemini belum berhasil menyusun Modul Ajar: <strong>${errMsg}</strong>.<br><br>Silakan periksa dan perbarui Kunci API Google Gemini Anda di menu Kunci API.`,
-          'error'
-        );
-        return;
+      clearInterval(progressTimer);
+      if (progressContainer) progressContainer.style.display = 'none';
+      if (btnGenerate) btnGenerate.disabled = false;
+      if (btnUbahKonteks) {
+        btnUbahKonteks.disabled = false;
+        btnUbahKonteks.style.opacity = '1';
+        btnUbahKonteks.style.cursor = 'pointer';
       }
-
-      // JIKA RATE LIMIT (HTTP 429) ATAU TIMEOUT:
-      // Aktifkan generator sintesis komprehensif berbasis seluruh data input Tahap 1 & 2!
-      // Pengguna tidak terhambat popup error, dokumen tetap selesai 100% utuh & kontekstual!
-      if (stepTextEl) stepTextEl.textContent = 'Menyusun dokumen Modul Ajar terintegrasi...';
-      const countMatch = (modulPayload.jumlahPertemuan || '4').match(/\d+/);
-      const targetCount = countMatch ? Math.min(Math.max(parseInt(countMatch[0]), 1), 16) : 4;
-      aiContent = buildComprehensiveAiModulContent(modulPayload);
-      ensureCompleteMeetings(aiContent, targetCount, modulPayload);
-      ensureCompleteSections(aiContent, modulPayload);
-      // Dokumen tetap selesai 100% utuh & kontekstual berbasis input guru
+      showNotificationModal(
+        'Generate AI Belum Berhasil',
+        `Google Gemini belum berhasil menyelesaikan modul ajar secara penuh: <strong>${errMsg}</strong>.<br><br>Sesuai preferensi, sistem tidak menggunakan template pengganti agar hasil 100% otentik dari AI. Silakan periksa koneksi/kunci API dan klik tombol <strong>Generate With AI</strong> kembali untuk mencoba lagi.`,
+        'error'
+      );
+      return;
     } finally {
       clearInterval(progressTimer);
     }
@@ -2514,15 +2500,15 @@ ATURAN WAJIB DAN MENGIKAT — PELANGGARAN TIDAK DIIZINKAN:
    - Format penulisan poin materi tambahan wajib mengikuti hierarki baku (Level A -> 1. -> a. -> 1)): gunakan huruf kecil bertitik ("a.", "b.", "c.") untuk setiap nama materi tambahan, diikuti paragraf penjabaran substansi materinya. Jika terdapat poin rincian di dalamnya, gunakan penomoran kurung tutup "1)", "2)", "3)". Tabel pengayaan/komparasi TIDAK WAJIB ADA; namun jika ada informasi komparatif yang lebih jelas disajikan dalam tabel, tabel Markdown dapat disertakan.
 
 9. GLOSARIUM (KAMUS ISTILAH TEKNIS — MINIMAL 6 ISTILAH):
-   - Wajib menghasilkan MINIMAL 6 istilah teknis yang spesifik, presisi, dan murni berasal dari substansi materi "${topik}" sesuai konteks Tahap 1 & 2.
-   - Setiap istilah HARUS disertai definisi teknis yang lengkap dan mendalam — bukan definisi pedagogis umum.
-   - DILARANG KERAS menggunakan istilah proses pedagogis generik seperti: "Sintesis Solutif", "Verifikasi Empiris", "Konseptualisasi", "Discovery Learning", "TPACK". Glosarium HARUS murni istilah teknis materi ajar!
+   - Wajib menghasilkan MINIMAL 6 istilah teknis yang spesifik, presisi, dan MURNI DARI SUBSTANSI MATERI "${topik}" pada bidang "${mapel}".
+   - Setiap istilah HARUS disertai definisi teknis/ilmiah yang mendalam mengenai konsep atau operasional materi "${topik}" itu sendiri.
+   - DILARANG KERAS memuat istilah proses kurikulum / pedagogis / asesmen generik seperti: "Capaian Pembelajaran (CP)", "Tujuan Pembelajaran (TP)", "Asesmen Formatif", "Asesmen Sumatif", "Diferensiasi Pembelajaran", "Sintesis Solutif", "Verifikasi Empiris", "Konseptualisasi", "Discovery Learning", "TPACK". Glosarium HARUS 100% MURNI ISTILAH MATERI AJAR!
 
-10. DAFTAR PUSTAKA (REFERENSI NYATA — MINIMAL 5 SUMBER):
-    - Tuliskan MINIMAL 5 referensi kredibel yang benar-benar digunakan AI untuk menyusun materi, LKPD, dan glosarium modul ini.
-    - Referensi boleh berupa: buku teks, artikel jurnal ilmiah, regulasi Kemendikbudristek, standar industri/internasional (ISO, IEEE, SNI), atau dokumentasi resmi kredibel yang relevan dengan "${topik}" dan "${mapel}".
-    - TIDAK ADA BATASAN TAHUN — buku klasik otoritatif dan standar yang telah mapan sangat diprioritaskan.
-    - DILARANG KERAS: mencantumkan nama AI/model (Gemini, EduWorkspace), nama jurnal palsu, atau referensi yang tidak benar-benar digunakan.
+10. DAFTAR PUSTAKA (REFERENSI SUMBER MATERI — MINIMAL 5 SUMBER):
+    - Tuliskan MINIMAL 5 referensi kredibel yang benar-benar relevan dengan substansi keilmuan "${topik}" dan "${mapel}".
+    - Referensi berupa buku teks mata pelajaran, artikel ilmiah/jurnal, literatur standar keilmuan, atau dokumen teknis terkait "${topik}".
+    - DILARANG KERAS mencantumkan dokumen regulasi kurikulum semata (seperti Keputusan BSKAP, Panduan Asesmen Kemendikbud) jika tidak relevan dengan keilmuan materi "${topik}".
+    - DILARANG KERAS: mencantumkan nama AI/model (Gemini, EduWorkspace) atau nama penerbit fiktif.
     - Format penulisan: Penulis, A. A. (Tahun). Judul karya. Penerbit/Sumber.
 
 11. ASESMEN & RUBRIK:
@@ -2677,7 +2663,7 @@ FORMAT RESPONS — OUTPUT WAJIB JSON MURNI (VALID JSON TANPA TEKS PEMBUKA/PENUTU
       temperature: 0.7,
       topP: 0.95,
       responseMimeType: "application/json",
-      timeoutMs: 60000,
+      timeoutMs: 300000,
       silentError: true
     });
   } catch (e) {
@@ -3001,7 +2987,7 @@ function resolveContextualGlosarium(raw, data) {
         const istilah = item.istilah || item.term || item.kata || item.judul || item.key || Object.keys(item)[0] || '';
         const definisi = item.definisi || item.definition || item.arti || item.makna || item.deskripsi || item.value || (istilah ? item[istilah] : '') || '';
         if (istilah && istilah !== 'undefined' && istilah !== '[object Object]') {
-          list.push({ istilah: String(istilah).trim(), definisi: String(definisi || 'Konsep operasional dalam materi ajar.').trim() });
+          list.push({ istilah: String(istilah).trim(), definisi: String(definisi || '').trim() });
         }
       }
     });
@@ -3013,8 +2999,15 @@ function resolveContextualGlosarium(raw, data) {
     });
   }
 
-  // Filter ketat: Hapus istilah non-teknis / istilah pedagogis generik
+  // Filter ketat: Hapus SEMUA istilah proses kurikulum / pedagogis / asesmen generik
+  // Glosarium HARUS murni tentang substansi materi ilmiah/teknis saja!
   const forbiddenTerms = [
+    'capaian pembelajaran',
+    'tujuan pembelajaran',
+    'asesmen formatif',
+    'asesmen sumatif',
+    'asesmen diagnostik',
+    'diferensiasi pembelajaran',
     'sintesis solutif',
     'verifikasi empiris',
     'konseptualisasi',
@@ -3023,46 +3016,42 @@ function resolveContextualGlosarium(raw, data) {
     'model pjbl',
     'model pbl',
     'discovery learning',
-    'inquiry learning'
+    'inquiry learning',
+    'konsep dasar',
+    'prosedur operasional',
+    'parameter teknis',
+    'aplikasi nyata'
   ];
+
   list = list.filter(item => {
     if (!item || !item.istilah) return false;
-    const termLower = item.istilah.toLowerCase();
-    return !forbiddenTerms.some(fb => termLower.includes(fb));
+    const termLower = item.istilah.toLowerCase().trim();
+    return !forbiddenTerms.some(fb => termLower === fb || termLower.startsWith(fb) || termLower.includes(fb));
   });
 
-  // Fallback: Jika AI tidak memberikan cukup glosarium, buat dari konteks topik/mapel
-  if (list.length < 5) {
-    const d = data || {};
-    const topik = d.topikMateri || 'Materi Pokok';
-    const mapel = d.mataPelajaran || 'Mata Pelajaran';
-
-    const domainFallback = [
-      { istilah: `Konsep Dasar ${topik}`, definisi: `Pengertian, ruang lingkup, dan prinsip fundamental yang mendasari pemahaman materi ${topik} dalam mata pelajaran ${mapel}.` },
-      { istilah: `Prosedur Operasional ${topik}`, definisi: `Urutan langkah kerja sistematis dan standar yang harus ditempuh dalam melaksanakan atau menerapkan ${topik} secara benar dan efisien.` },
-      { istilah: `Parameter Teknis ${topik}`, definisi: `Variabel-variabel terukur, spesifikasi, dan tolok ukur keberhasilan yang menjadi standar baku implementasi ${topik}.` },
-      { istilah: `Aplikasi Nyata ${topik}`, definisi: `Penerapan konsep dan keterampilan materi ${topik} dalam konteks dunia kerja, industri, atau kehidupan sehari-hari yang relevan.` },
-      { istilah: 'Capaian Pembelajaran (CP)', definisi: 'Kompetensi minimum yang harus dikuasai peserta didik setelah menyelesaikan proses pembelajaran pada suatu fase berdasarkan Kurikulum Merdeka.' },
-      { istilah: 'Tujuan Pembelajaran (TP)', definisi: 'Jabaran spesifik kompetensi yang ingin dicapai peserta didik dalam satu sesi atau rangkaian pembelajaran, sebagai penjabaran dari Capaian Pembelajaran.' },
-      { istilah: 'Asesmen Formatif', definisi: 'Penilaian berkelanjutan yang dilaksanakan selama proses pembelajaran untuk memantau kemajuan belajar dan memberikan umpan balik peningkatan kepada peserta didik.' },
-      { istilah: 'Diferensiasi Pembelajaran', definisi: 'Strategi penyesuaian proses, konten, atau produk pembelajaran sesuai keragaman kebutuhan, gaya belajar, dan kesiapan masing-masing peserta didik.' },
-    ];
-
-    domainFallback.forEach(df => {
-      if (!list.some(m => m.istilah.toLowerCase() === df.istilah.toLowerCase())) {
-        list.push(df);
+  // Jika AI belum menyertakan list glosarium terpisah tetapi materiAjarDeskriptif ada, gali istilah teknis materi langsung dari teks AI
+  if (list.length === 0 && data && data.materiAjarDeskriptif && typeof data.materiAjarDeskriptif === 'string') {
+    const lines = data.materiAjarDeskriptif.split('\n');
+    for (const line of lines) {
+      const m = line.match(/^[a-z]\.\s*\*\*?([^*:\n]+)\*\*?\s*[:–-]?\s*(.*)/i);
+      if (m && m[1]) {
+        const term = m[1].trim();
+        const def = m[2].trim() || 'Konsep dan prinsip materi yang diuraikan dalam materi pembelajaran.';
+        if (term.length > 2 && term.length < 60 && !forbiddenTerms.some(fb => term.toLowerCase().includes(fb))) {
+          list.push({ istilah: term, definisi: def });
+        }
       }
-    });
+      if (list.length >= 6) break;
+    }
   }
 
   return list;
 }
 
 /**
- * Normalisasi dan Resolusi Daftar Pustaka — Semua dari AI berdasarkan konteks Tahap 1 & 2
+ * Normalisasi dan Resolusi Daftar Pustaka — Murni dari hasil AI berdasarkan materi ajar
  */
 function resolveContextualDaftarPustaka(raw, data) {
-
   let list = [];
   if (Array.isArray(raw)) {
     raw.forEach(item => {
@@ -3087,39 +3076,21 @@ function resolveContextualDaftarPustaka(raw, data) {
     });
   }
 
-  // Filter: Hapus referensi palsu / AI internal
+  // Filter ketat: Hapus referensi palsu, AI internal, dan template acuan kurikulum generik
   list = list.filter(item => {
     if (!item || typeof item !== 'string') return false;
     const iLower = item.toLowerCase();
     if (iLower.includes('penerapan model pjbl') || iLower.includes('penerapan model pbl') ||
         iLower.includes('berbasis pendekatan tpack') || iLower.includes('media interaktif berbasis studi kasus otentik')) return false;
     if (iLower.includes('deepmind') || iLower.includes('gemini: a family') || iLower.includes('eduworkspace ai research')) return false;
+    if (iLower.includes('keputusan kepala bskap nomor 033') ||
+        iLower.includes('panduan pembelajaran dan asesmen') ||
+        iLower.includes('dimensi, elemen, dan subelemen profil pelajar pancasila') ||
+        iLower.includes('suparman, m. a.') ||
+        iLower.includes("bloom's taxonomy of educational objectives") ||
+        iLower.includes('penerbit erlangga / grafindo / yudhistira')) return false;
     return true;
   });
-
-  // Fallback: Jika AI tidak memberikan referensi, gunakan referensi resmi Kurikulum Merdeka & standar buku teks
-  if (list.length < 3) {
-    const d = data || {};
-    const topik = d.topikMateri || 'Materi Pokok';
-    const mapel = d.mataPelajaran || 'Mata Pelajaran';
-    const jenjang = d.jenjangSekolah || 'SMA/SMK';
-    const tahunAjar = d.tahunPenyusunan || new Date().getFullYear();
-
-    const fallbackRefs = [
-      `Badan Standar, Kurikulum, dan Asesmen Pendidikan (BSKAP). (2022). Keputusan Kepala BSKAP Nomor 033/H/KR/2022 tentang Capaian Pembelajaran pada Kurikulum Merdeka. Kemendikbudristek.`,
-      `Kemendikbudristek. (2022). Panduan Pembelajaran dan Asesmen Pendidikan Anak Usia Dini, Pendidikan Dasar, dan Pendidikan Menengah. Jakarta: Pusat Kurikulum dan Pembelajaran.`,
-      `Kemendikbudristek. (2022). Dimensi, Elemen, dan Subelemen Profil Pelajar Pancasila pada Kurikulum Merdeka. Jakarta: Badan Standar, Kurikulum, dan Asesmen Pendidikan.`,
-      `Tim Penulis. (${tahunAjar}). Buku Teks ${mapel}: Materi ${topik} untuk Peserta Didik ${jenjang}. Jakarta: Penerbit Erlangga / Grafindo / Yudhistira.`,
-      `Suparman, M. A. (2014). Desain Instruksional Modern: Panduan Para Pengajar dan Inovator Pendidikan (Edisi 4). Jakarta: Erlangga.`,
-      `Anderson, L.W., & Krathwohl, D.R. (Eds.). (2001). A Taxonomy for Learning, Teaching, and Assessing: A Revision of Bloom's Taxonomy of Educational Objectives. New York: Longman.`
-    ];
-
-    fallbackRefs.forEach(ref => {
-      if (!list.some(existing => existing === ref)) {
-        list.push(ref);
-      }
-    });
-  }
 
   return list;
 }

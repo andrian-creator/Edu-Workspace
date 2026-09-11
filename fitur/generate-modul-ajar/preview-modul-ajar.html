@@ -2041,26 +2041,30 @@ Pada tataran analisis lanjutan, penguasaan materi **${topik}** menuntut kemampua
       document.getElementById('docPengayaanText').innerHTML = ai.pengayaan || `Murid ditantang menyusun kajian komparatif mandiri atau proyek inovasi digital tingkat lanjut seputar implikasi mutakhir materi <em>${topik}</em> pada sektor industri/profesional.`;
       document.getElementById('docRemedialText').innerHTML = ai.remedial || `Murid mengerjakan lembar kerja terbimbing (scaffolding) dengan panduan langkah bertahap, telaah ulang konsep kunci <em>${topik}</em>, dan sesi pendampingan tutor sebaya.`;
 
-      // 4. Glosarium Materi (Khusus istilah teknis materi pokok, bukan istilah umum pedagogis/asesmen)
+      // 4. Glosarium Materi (Murni istilah teknis materi pokok dari AI, tanpa istilah kurikulum/pedagogis/asesmen)
       const glosarium = resolveGlosariumList(ai, data);
-      document.getElementById('docGlosariumList').innerHTML = glosarium.map(g => `<li><strong>${g.istilah}:</strong> ${g.definisi}</li>`).join('');
+      document.getElementById('docGlosariumList').innerHTML = glosarium.length > 0
+        ? glosarium.map(g => `<li><strong>${g.istilah}:</strong> ${g.definisi}</li>`).join('')
+        : '<li><em>Glosarium teknis materi ajar disusun langsung oleh pendidik atau melalui hasil AI.</em></li>';
 
-      // 5. Daftar Pustaka (Artikel Ilmiah & Dokumen Acuan Kurikulum Merdeka)
+      // 5. Daftar Pustaka (Murni referensi ilmiah & sumber materi dari AI)
       const pustaka = resolveDaftarPustakaList(ai, data);
-      document.getElementById('docDaftarPustaka').innerHTML = pustaka.map(p => `<li>${p}</li>`).join('');
+      document.getElementById('docDaftarPustaka').innerHTML = pustaka.length > 0
+        ? pustaka.map(p => `<li>${p}</li>`).join('')
+        : '<li><em>Daftar pustaka materi ajar disusun langsung oleh pendidik atau melalui hasil AI.</em></li>';
 
-      // Perbarui objek data sesi jika glosarium, daftar pustaka, atau rubrik sebelumnya belum lengkap di memori
-      if (!ai.glosarium || !Array.isArray(ai.glosarium) || ai.glosarium.length === 0 || !ai.daftarPustaka || !Array.isArray(ai.daftarPustaka) || ai.daftarPustaka.length === 0 || !ai.rubrikPenilaian || !Array.isArray(ai.rubrikPenilaian) || ai.rubrikPenilaian.length === 0) {
-        ai.glosarium = glosarium;
-        ai.daftarPustaka = pustaka;
+      // Selalu sinkronkan hasil pembersihan glosarium dan daftar pustaka ke memori sesi
+      ai.glosarium = glosarium;
+      ai.daftarPustaka = pustaka;
+      if (!ai.rubrikPenilaian || !Array.isArray(ai.rubrikPenilaian) || ai.rubrikPenilaian.length === 0) {
         ai.rubrikPenilaian = rubrikItems;
-        data.aiGeneratedContent = ai;
-        try {
-          localStorage.setItem('edu_current_generated_modul', JSON.stringify(data));
-          localStorage.setItem('edu_last_modul_payload', JSON.stringify(data));
-          syncUpdatedModulToList(data);
-        } catch (eSync) {}
       }
+      data.aiGeneratedContent = ai;
+      try {
+        localStorage.setItem('edu_current_generated_modul', JSON.stringify(data));
+        localStorage.setItem('edu_last_modul_payload', JSON.stringify(data));
+        syncUpdatedModulToList(data);
+      } catch (eSync) {}
 
       // Lembar Pengesahan: Tanggal dan Bulan Otomatis Saat di-Generate
       const knownCities = ['Jakarta', 'Surabaya', 'Bandung', 'Semarang', 'Yogyakarta', 'Malang', 'Medan', 'Makassar', 'Palembang', 'Denpasar', 'Surakarta', 'Solo', 'Bogor', 'Depok', 'Tangerang', 'Bekasi', 'Cirebon', 'Banda Aceh', 'Padang', 'Banjarmasin', 'Samarinda', 'Manado', 'Pontianak'];
@@ -2228,15 +2232,6 @@ Pada tataran analisis lanjutan, penguasaan materi **${topik}** menuntut kemampua
       let list = [];
       const raw = ai ? (ai.glosarium || ai.glossary || ai.glosariumMateri || null) : null;
 
-      // Deteksi konteks domain di dalam fungsi ini (bukan bergantung outer scope)
-      const _primaryCtx = extractPrimarySubjectContext(data || {}, ai || {});
-      const _isTipografi = /\b(tipografi|typography|typeface|font|huruf|kerning|tracking|leading|glif|glyph)\b/i.test(_primaryCtx);
-      const _isDKV = _isTipografi || /\b(dkv|desain\s*grafis|desain\s*komunikasi\s*visual|nirmana|vektor|vector|coreldraw|illustrator|photoshop|layout|branding|logo|poster|identitas\s*visual)\b/i.test(_primaryCtx);
-      const _isVideoKamera = !_isTipografi && (
-        /\b(videografi|sinematografi|tata\s*kamera|kamera\s*video|camera\s*movement|camera\s*angle|shot\s*size|ukuran\s*bidik|sudut\s*pandang\s*kamera|aturan\s*180|180-degree|depth\s*of\s*field|\bdof\b|white\s*balance|broadcasting|penyiaran|perfilman|tata\s*artistik\s*film)\b/i.test(_primaryCtx) ||
-        (/\b(fotografi|kamera)\b/i.test(_primaryCtx) && !_isDKV)
-      );
-
       if (Array.isArray(raw)) {
         raw.forEach(item => {
           if (!item) return;
@@ -2254,7 +2249,7 @@ Pada tataran analisis lanjutan, penguasaan materi **${topik}** menuntut kemampua
             const istilah = item.istilah || item.term || item.kata || item.judul || item.key || Object.keys(item)[0] || '';
             const definisi = item.definisi || item.definition || item.arti || item.makna || item.deskripsi || item.value || (istilah ? item[istilah] : '') || '';
             if (istilah && istilah !== 'undefined' && istilah !== '[object Object]') {
-              list.push({ istilah: String(istilah).trim(), definisi: String(definisi || 'Konsep operasional dalam materi ajar.').trim() });
+              list.push({ istilah: String(istilah).trim(), definisi: String(definisi || '').trim() });
             }
           }
         });
@@ -2266,8 +2261,15 @@ Pada tataran analisis lanjutan, penguasaan materi **${topik}** menuntut kemampua
         });
       }
 
-      // Filter ketat: Hapus istilah non-teknis / istilah pedagogis generik
+      // Filter ketat: Hapus SEMUA istilah proses kurikulum / pedagogis / asesmen generik
+      // Glosarium HARUS murni tentang substansi materi ilmiah/teknis saja!
       const forbiddenTerms = [
+        'capaian pembelajaran',
+        'tujuan pembelajaran',
+        'asesmen formatif',
+        'asesmen sumatif',
+        'asesmen diagnostik',
+        'diferensiasi pembelajaran',
         'sintesis solutif',
         'verifikasi empiris',
         'konseptualisasi',
@@ -2276,150 +2278,41 @@ Pada tataran analisis lanjutan, penguasaan materi **${topik}** menuntut kemampua
         'model pjbl',
         'model pbl',
         'discovery learning',
-        'inquiry learning'
+        'inquiry learning',
+        'konsep dasar',
+        'prosedur operasional',
+        'parameter teknis',
+        'aplikasi nyata'
       ];
+
       list = list.filter(item => {
         if (!item || !item.istilah) return false;
-        const termLower = item.istilah.toLowerCase();
-        return !forbiddenTerms.some(fb => termLower.includes(fb));
+        const termLower = item.istilah.toLowerCase().trim();
+        return !forbiddenTerms.some(fb => termLower === fb || termLower.startsWith(fb) || termLower.includes(fb));
       });
 
-      // (Deteksi domain dilakukan AI dari konteks Tahap 1 & 2 — tidak ada hardcoded fallback domain)
-
-
-      // Kamus Istilah Teknis Komprehensif Tipografi & Desain Grafis
-      const kamusTipografiDKV = [
-        {
-          istilah: "Tipografi (Typography)",
-          definisi: "Seni dan teknik memilih, merancang, serta menyusun huruf (typeface/font) dengan pengaturan ruang bidang guna menciptakan keterbacaan (readability), kejelasan (legibility), dan estetika komunikasi visual yang optimal."
-        },
-        {
-          istilah: "Typeface vs Font",
-          definisi: "Perbedaan mendasar antara rumpun keluarga rancangan bentuk huruf (Typeface, contoh: Helvetica, Garamond, Futura) dengan berkas fisik/digital spesifik dalam ukuran, gaya, dan format bobot tertentu (Font, contoh: Helvetica Bold 14pt)."
-        },
-        {
-          istilah: "Kerning & Tracking",
-          definisi: "Kerning adalah pengaturan jarak spasial horizontal antar-dua karakter huruf spesifik agar seimbang dan proporsional, sedangkan Tracking adalah pengaturan jarak horizontal seragam di antara seluruh huruf dalam satu kata, baris, atau paragraf teks."
-        },
-        {
-          istilah: "Leading (Line Spacing)",
-          definisi: "Jarak vertikal antara baseline (garis dasar tempat huruf berpijak) satu baris teks ke baseline baris teks berikutnya untuk menjamin kenyamanan ritme mata saat membaca paragraf teks panjang."
-        },
-        {
-          istilah: "Hierarki Tipografi (Typographic Hierarchy)",
-          definisi: "Sistem penataan ukuran, bobot (weight), kontras gaya, dan posisi teks guna memandu alur pandang audiens mencerna informasi berdasarkan urutan prioritas kepentingan (Headline, Subheadline, Body Copy)."
-        },
-        {
-          istilah: "Legibility & Readability",
-          definisi: "Legibility merujuk pada tingkat kemudahan mata dalam mengenali dan membedakan bentuk fisik setiap karakter huruf secara individual, sedangkan Readability merujuk pada tingkat kenyamanan dan kelancaran membaca susunan teks dalam satu kesatuan desain."
-        },
-        {
-          istilah: "Variable Font & Responsif",
-          definisi: "Format font digital mutakhir yang mengintegrasikan berbagai variasi bobot (weight), lebar (width), dan kemiringan (slant) dalam satu berkas dinamis yang fleksibel dan adaptif untuk berbagai resolusi layar UI/UX media digital."
-        },
-        {
-          istilah: "Grid System & Baseline Grid",
-          definisi: "Struktur kisi garis panduan geometris kolom dan margin vertikal-horizontal yang menjadi landasan konsistensi penataan layout huruf dan elemen grafis dalam karya desain grafis profesional."
-        }
-      ];
-
-      // Kamus Istilah Teknis Komprehensif Videografi, Sinematografi, dan Tata Kamera
-      const kamusVideoSinematografi = [
-        {
-          istilah: "Shot Size (Ukuran Bidik Kamera)",
-          definisi: "Standar klasifikasi luas area bidang pandang kamera terhadap subjek dan latar belakang, mulai dari Extreme Long Shot (ELS) untuk establishing shot lingkungan, Long Shot (LS) untuk figur utuh dan orientasi aksi, Medium Shot (MS) dari pinggang ke atas untuk interaksi wajar, Medium Close-Up (MCU) dada ke atas untuk ekspresi vokal, Close-Up (CU) kepala dan bahu untuk intensitas emosional, hingga Big Close-Up (BCU) dan Extreme Close-Up (ECU) untuk detail dramatis mikro objek."
-        },
-        {
-          istilah: "Camera Angle (Sudut Pandang Kamera)",
-          definisi: "Variasi penempatan sudut elevasi dan perspektif sumbu vertikal kamera terhadap subjek, meliputi Bird Eye View (sudut pandang tegak lurus dari atas untuk memetakan ruang), High Angle (kamera menunduk ke bawah memberikan kesan subjek kecil/rentan), Eye Level (sudut pandang sejajar mata manusia yang netral dan objektif), Low Angle (kamera menengadah ke atas memberikan impresi subjek dominan, berwibawa, atau megah), Frog Eye (kamera sejajar permukaan tanah ekstrem), serta Dutch Angle / Canted Angle (posisi kamera miring untuk efek disorientasi psikologis atau ketegangan situasi)."
-        },
-        {
-          istilah: "Camera Movement (Pergerakan Kamera)",
-          definisi: "Dinamika manuver penggerakan kamera untuk membangun ritme visual dan mengarahkan fokus penonton, terdiri atas pergerakan pada poros tetap seperti Pan (menoleh horizontal ke kiri/kanan) dan Tilt (mendongak ke atas/menunduk ke bawah), maupun pergerakan fisik seluruh badan kamera meliputi Dolly/Track (bergerak mendekat atau menjauhi subjek), Pedestal (bergerak naik atau turun vertikal), Truck/Tracking (bergerak menyamping mengikuti aksi subjek), Crane/Jib (gerakan melayang dinamis multi-arah), Arc (bergerak melingkar mengitari subjek), serta Zoom (perubahan panjang fokus lensa secara optik)."
-        },
-        {
-          istilah: "Aturan 180 Derajat (180-Degree Rule)",
-          definisi: "Kaidah kontinuitas sinematografi fundamental yang menetapkan garis imajiner (line of action) 180 derajat antara dua karakter atau arah gerak adegan. Kamera wajib selalu berada di satu sisi garis yang sama agar orientasi spasial penonton, arah pandangan mata (eyeline match), dan kesinambungan posisi layar kiri-kanan antartokoh tidak terbalik saat perpindahan shot bergantian."
-        },
-        {
-          istilah: "Depth of Field (DoF - Kedalaman Ruang Fokus)",
-          definisi: "Rentang zona ketajaman fokus di depan dan di belakang subjek yang tampak tajam dalam bingkai gambar. Shallow Depth of Field (ruang tajam sempit) menghasilkan latar belakang buram (bokeh artistik) untuk mengisolasi subjek utama dari distraksi latar, sedangkan Deep Depth of Field (ruang tajam luas) mempertahankan ketajaman dari latar depan hingga latar belakang. Dipengaruhi oleh tiga parameter fisik utama: bukaan diafragma (aperture/f-stop), panjang fokus lensa (focal length), dan jarak fisik kamera ke subjek."
-        },
-        {
-          istilah: "Rule of Thirds & Framing (Komposisi Sepertiga Bidang & Pembingkaian)",
-          definisi: "Prinsip estetika komposisi visual dengan membagi bidang bidik secara proporsional menjadi kisi 3x3 (sembilan kotak simetris dengan empat titik persimpangan daya tarik visual). Menempatkan subjek utama pada titik temu (point of interest) atau sepanjang garis kisi, disertai pengaturan proporsi Headroom (ruang di atas kepala subjek), Look Space / Nose Room (ruang kosong ke arah pandangan mata subjek), Lead Room (ruang di depan arah gerak objek), serta teknik Frame within Frame untuk menambah kedalaman dimensional gambar."
-        },
-        {
-          istilah: "White Balance (WB - Kalibrasi Keseimbangan Putih)",
-          definisi: "Proses kalibrasi digital dan optik pada sensor kamera untuk menyesuaikan respons warna terhadap suhu warna sumber pencahayaan aktual (dinyatakan dalam skala Kelvin/K), sehingga objek berwarna putih murni terekam secara netral tanpa bias warna (color cast) yang tidak diinginkan, seperti rona kebiruan di bawah naungan awan/bayangan atau rona kekuningan di bawah lampu pijar (tungsten)."
-        }
-      ];
-
-      // 1. JIKA KONTEKS VIDEOGRAFI/SINEMATOGRAFI/TATA KAMERA TERDETEKSI:
-      if (_isVideoKamera) {
-        if (list.length < 5) {
-          const merged = [...kamusVideoSinematografi];
-          list.forEach(item => {
-            if (!merged.some(m => m.istilah.toLowerCase() === item.istilah.toLowerCase())) {
-              merged.push(item);
+      // Jika list kosong dan terdapat naskah materiAjarDeskriptif dari AI, ekstrak istilah teknis langsung dari teks AI tersebut
+      if (list.length === 0 && ai && typeof ai.materiAjarDeskriptif === 'string' && ai.materiAjarDeskriptif.trim()) {
+        const lines = ai.materiAjarDeskriptif.split('\n');
+        for (const line of lines) {
+          const m = line.match(/^[a-z]\.\s*\*\*?([^*:\n]+)\*\*?\s*[:–-]?\s*(.*)/i);
+          if (m && m[1]) {
+            const term = m[1].trim();
+            const def = m[2].trim() || 'Konsep dan prinsip materi yang diuraikan dalam materi pembelajaran.';
+            if (term.length > 2 && term.length < 60 && !forbiddenTerms.some(fb => term.toLowerCase().includes(fb))) {
+              list.push({ istilah: term, definisi: def });
             }
-          });
-          return merged;
-        } else {
-          const existingLower = list.map(item => (item.istilah || '').toLowerCase());
-          const missingCore = kamusVideoSinematografi.filter(coreItem => {
-            const cName = coreItem.istilah.toLowerCase();
-            return !existingLower.some(ext => ext.includes(cName.split(' ')[0]));
-          });
-          return [...missingCore, ...list];
-        }
-      }
-
-      // 2. JIKA KONTEKS TIPOGRAFI TERDETEKSI:
-      if (_isTipografi) {
-        if (list.length < 5) {
-          const merged = [...kamusTipografiDKV];
-          list.forEach(item => {
-            if (!merged.some(m => m.istilah.toLowerCase() === item.istilah.toLowerCase())) {
-              merged.push(item);
-            }
-          });
-          return merged;
-        } else {
-          return list;
-        }
-      }
-
-      // Jika AI tidak memberikan cukup glosarium, gunakan fallback berbasis topik dari konteks Tahap 1 & 2
-      if (list.length < 5) {
-        const d = data || {};
-        const topik = d.topikMateri || 'Materi Pokok';
-        const mapel = d.mataPelajaran || 'Mata Pelajaran';
-
-        const domainFallback = [
-          { istilah: `Konsep Dasar ${topik}`, definisi: `Pengertian, ruang lingkup, dan prinsip fundamental yang mendasari pemahaman materi ${topik} dalam mata pelajaran ${mapel}.` },
-          { istilah: `Prosedur Operasional ${topik}`, definisi: `Urutan langkah kerja sistematis dan standar yang harus ditempuh dalam melaksanakan atau menerapkan ${topik} secara benar dan efisien.` },
-          { istilah: `Parameter Teknis ${topik}`, definisi: `Variabel-variabel terukur, spesifikasi, dan tolok ukur keberhasilan yang menjadi standar baku implementasi ${topik}.` },
-          { istilah: `Aplikasi Nyata ${topik}`, definisi: `Penerapan konsep dan keterampilan materi ${topik} dalam konteks dunia kerja, industri, atau kehidupan sehari-hari yang relevan.` },
-          { istilah: 'Capaian Pembelajaran (CP)', definisi: 'Kompetensi minimum yang harus dikuasai peserta didik setelah menyelesaikan proses pembelajaran pada suatu fase berdasarkan Kurikulum Merdeka.' },
-          { istilah: 'Tujuan Pembelajaran (TP)', definisi: 'Jabaran spesifik kompetensi yang ingin dicapai peserta didik dalam satu sesi atau rangkaian pembelajaran, sebagai penjabaran dari Capaian Pembelajaran.' },
-          { istilah: 'Asesmen Formatif', definisi: 'Penilaian berkelanjutan yang dilaksanakan selama proses pembelajaran untuk memantau kemajuan belajar dan memberikan umpan balik peningkatan kepada peserta didik.' },
-          { istilah: 'Diferensiasi Pembelajaran', definisi: 'Strategi penyesuaian proses, konten, atau produk pembelajaran sesuai keragaman kebutuhan, gaya belajar, dan kesiapan masing-masing peserta didik.' },
-        ];
-
-        domainFallback.forEach(df => {
-          if (!list.some(m => m.istilah.toLowerCase() === df.istilah.toLowerCase())) {
-            list.push(df);
           }
-        });
+          if (list.length >= 6) break;
+        }
       }
 
       return list;
     }
 
     /**
-     * Resolusi Daftar Pustaka Ilmiah & Bahan Acuan AI (Multi-Format & Contextual Fallback)
-     * Menuliskan seluruh referensi resmi kurikulum, buku teks standar, dan bahan AI yang digunakan
+     * Resolusi Daftar Pustaka Ilmiah & Bahan Acuan AI
+     * Murni dari hasil AI, tanpa template acuan generik (BSKAP, Suparman, Anderson)
      */
     function resolveDaftarPustakaList(ai, data) {
       let list = [];
@@ -2448,7 +2341,7 @@ Pada tataran analisis lanjutan, penguasaan materi **${topik}** menuntut kemampua
         });
       }
 
-      // Filter ketat: Hapus referensi jurnal palsu dan referensi model AI internal
+      // Filter ketat: Hapus referensi palsu, AI internal, dan template acuan kurikulum generik
       list = list.filter(item => {
         if (!item || typeof item !== 'string') return false;
         const iLower = item.toLowerCase();
@@ -2458,32 +2351,16 @@ Pada tataran analisis lanjutan, penguasaan materi **${topik}** menuntut kemampua
         if (iLower.includes('deepmind') || iLower.includes('gemini: a family') || iLower.includes('eduworkspace ai research')) {
           return false;
         }
+        if (iLower.includes('keputusan kepala bskap nomor 033') ||
+            iLower.includes('panduan pembelajaran dan asesmen') ||
+            iLower.includes('dimensi, elemen, dan subelemen profil pelajar pancasila') ||
+            iLower.includes('suparman, m. a.') ||
+            iLower.includes("bloom's taxonomy of educational objectives") ||
+            iLower.includes('penerbit erlangga / grafindo / yudhistira')) {
+          return false;
+        }
         return true;
       });
-
-      // Fallback: Jika AI tidak memberikan referensi, gunakan referensi resmi Kurikulum Merdeka & standar buku teks
-      if (list.length < 3) {
-        const d = data || {};
-        const topik = d.topikMateri || 'Materi Pokok';
-        const mapel = d.mataPelajaran || 'Mata Pelajaran';
-        const jenjang = d.jenjangSekolah || 'SMA/SMK';
-        const tahunAjar = d.tahunPenyusunan || new Date().getFullYear();
-
-        const fallbackRefs = [
-          `Badan Standar, Kurikulum, dan Asesmen Pendidikan (BSKAP). (2022). <em>Keputusan Kepala BSKAP Nomor 033/H/KR/2022 tentang Capaian Pembelajaran pada Pendidikan Anak Usia Dini, Jenjang Pendidikan Dasar, dan Jenjang Pendidikan Menengah pada Kurikulum Merdeka</em>. Kemendikbudristek.`,
-          `Kemendikbudristek. (2022). <em>Panduan Pembelajaran dan Asesmen Pendidikan Anak Usia Dini, Pendidikan Dasar, dan Pendidikan Menengah</em>. Jakarta: Pusat Kurikulum dan Pembelajaran.`,
-          `Kemendikbudristek. (2022). <em>Dimensi, Elemen, dan Subelemen Profil Pelajar Pancasila pada Kurikulum Merdeka</em>. Jakarta: Badan Standar, Kurikulum, dan Asesmen Pendidikan.`,
-          `Tim Penulis. (${tahunAjar}). <em>Buku Teks ${mapel}: Materi ${topik} untuk Peserta Didik ${jenjang}</em>. Jakarta: Penerbit Erlangga / Grafindo / Yudhistira.`,
-          `Suparman, M. A. (2014). <em>Desain Instruksional Modern: Panduan Para Pengajar dan Inovator Pendidikan</em> (Edisi 4). Jakarta: Erlangga.`,
-          `Anderson, L.W., & Krathwohl, D.R. (Eds.). (2001). <em>A Taxonomy for Learning, Teaching, and Assessing: A Revision of Bloom's Taxonomy of Educational Objectives</em>. New York: Longman.`
-        ];
-
-        fallbackRefs.forEach(ref => {
-          if (!list.some(existing => existing === ref)) {
-            list.push(ref);
-          }
-        });
-      }
 
       return list;
     }
