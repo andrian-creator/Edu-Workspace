@@ -38,7 +38,7 @@ async function initDaftarModulPage() {
   // Jika akun telah dihapus atau dinonaktifkan oleh Admin, langsung alihkan ke halaman Profil (Akun Dihapus / Dinonaktifkan)
   const isExpired = typeof isSubscriptionExpired === 'function' && isSubscriptionExpired(user);
   const isDeleted = user.status === 'Dihapus' || user.isDeleted === true;
-  const isDeactivated = user.status === 'Nonaktif' || user.status === 'Dinonaktifkan' || user.status === 'Ditolak' || user.isApproved === false || isExpired;
+  const isDeactivated = user.status === 'Nonaktif' || user.status === 'Dinonaktifkan' || user.status === 'Ditolak' || isExpired;
 
   if (isDeleted || isDeactivated) {
     window.location.replace("profil.html");
@@ -852,7 +852,7 @@ try {
 
         const isDeleted = cur.status === 'Dihapus' || cur.isDeleted === true;
         const isExpired = typeof isSubscriptionExpired === 'function' && isSubscriptionExpired(cur);
-        const isDeactivated = cur.status === 'Nonaktif' || cur.status === 'Dinonaktifkan' || cur.status === 'Ditolak' || cur.isApproved === false || isExpired;
+        const isDeactivated = cur.status === 'Nonaktif' || cur.status === 'Dinonaktifkan' || cur.status === 'Ditolak' || isExpired;
 
         if (isDeleted || isDeactivated) {
           window.location.replace("profil.html");

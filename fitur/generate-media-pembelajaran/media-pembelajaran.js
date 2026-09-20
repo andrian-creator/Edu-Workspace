@@ -61,7 +61,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   // 2. Periksa Hak Akses Fitur untuk Pendidik
   if (!isAdm && currentUser) {
     const isExpired = typeof isSubscriptionExpired === 'function' && isSubscriptionExpired(currentUser);
-    const isDeactivated = currentUser.status === 'Nonaktif' || currentUser.status === 'Dinonaktifkan' || currentUser.status === 'Ditolak' || currentUser.isApproved === false || isExpired;
+    const isDeactivated = currentUser.status === 'Nonaktif' || currentUser.status === 'Dinonaktifkan' || currentUser.status === 'Ditolak' || isExpired;
     const activeFeatures = Array.isArray(currentUser.features) ? currentUser.features : [];
 
     if (isDeactivated || !activeFeatures.includes('generate_media_pembelajaran')) {

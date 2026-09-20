@@ -120,7 +120,7 @@ function initApiKeyPage() {
   if (!isAdm) {
     const isDeleted = user.status === 'Dihapus' || user.isDeleted === true;
     const isExpired = typeof isSubscriptionExpired === 'function' && isSubscriptionExpired(user);
-    const isDeactivated = user.status === 'Nonaktif' || user.status === 'Dinonaktifkan' || user.status === 'Ditolak' || user.isApproved === false || isExpired;
+    const isDeactivated = user.status === 'Nonaktif' || user.status === 'Dinonaktifkan' || user.status === 'Ditolak' || isExpired;
 
     if (isDeleted || isDeactivated) {
       window.location.replace("profil.html");
@@ -1191,7 +1191,7 @@ try {
 
         const isDeleted = curUser.status === 'Dihapus' || curUser.isDeleted === true;
         const isExpired = typeof isSubscriptionExpired === 'function' && isSubscriptionExpired(curUser);
-        const isDeactivated = curUser.status === 'Nonaktif' || curUser.status === 'Dinonaktifkan' || curUser.status === 'Ditolak' || curUser.isApproved === false || isExpired;
+        const isDeactivated = curUser.status === 'Nonaktif' || curUser.status === 'Dinonaktifkan' || curUser.status === 'Ditolak' || isExpired;
 
         if (isDeleted || isDeactivated) {
           window.location.replace("profil.html");

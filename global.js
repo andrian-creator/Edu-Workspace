@@ -53,26 +53,31 @@ async function supabaseRequest(path, options = {}) {
  */
 function mapDbToUser(row) {
   if (!row) return null;
+  const isBlocked = row.status === 'Nonaktif' || row.status === 'Dinonaktifkan' || row.status === 'Ditolak';
+  const isDel = row.is_deleted === true || row.status === 'Dihapus';
   return {
     id: row.id,
     name: row.name,
     email: row.email,
     avatar: row.avatar || '',
     role: row.role || 'Guru',
-    institution: row.institution || '',
-    subject: row.subject || '',
-    gradeLevel: row.grade_level || '',
+    institution: row.institution || 'Pendidik',
+    subject: row.subject || 'Guru',
+    gradeLevel: row.grade_level || 'SMA/MA',
     registeredAt: row.registered_at || '',
     provider: row.provider || 'Google Account (@gmail.com)',
-    status: row.status || 'Belum Lengkap',
-    isApproved: row.is_approved || false,
-    isProfileCompleted: row.is_profile_completed || false,
-    features: row.features || [],
+    // Akun baru dan seluruh akun pengajar otomatis aktif & disetujui (kecuali secara eksplisit dinonaktifkan/ditolak/dihapus oleh admin)
+    status: isDel ? 'Dihapus' : (isBlocked ? row.status : 'Aktif'),
+    isApproved: !isBlocked && !isDel,
+    isProfileCompleted: true,
+    features: (Array.isArray(row.features) && row.features.length > 0)
+      ? row.features
+      : (isBlocked || isDel ? [] : ['generate_modul_ajar', 'generate_media_pembelajaran']),
     subscriptionStart: row.subscription_start || null,
     subscriptionEnd: row.subscription_end || null,
     rejectReason: row.reject_reason || '',
     geminiApiKey: row.gemini_api_key || '',
-    isDeleted: row.is_deleted || false,
+    isDeleted: isDel,
     adminNote: row.admin_note || row.adminNote || ''
   };
 }
@@ -82,26 +87,31 @@ function mapDbToUser(row) {
  */
 function mapUserToDb(user) {
   if (!user) return null;
+  const isBlocked = user.status === 'Nonaktif' || user.status === 'Dinonaktifkan' || user.status === 'Ditolak';
+  const isDel = user.isDeleted === true || user.status === 'Dihapus';
+  const allFeatures = ['generate_modul_ajar', 'generate_media_pembelajaran'];
   const db = {
     id: user.id,
     name: user.name,
     email: user.email,
     avatar: user.avatar || null,
     role: user.role || 'Guru',
-    institution: user.institution || '',
-    subject: user.subject || '',
-    grade_level: user.gradeLevel || '',
+    institution: user.institution || 'Pendidik',
+    subject: user.subject || 'Guru',
+    grade_level: user.gradeLevel || 'SMA/MA',
     registered_at: user.registeredAt || null,
     provider: user.provider || 'Google Account (@gmail.com)',
-    status: user.status || 'Belum Lengkap',
-    is_approved: user.isApproved || false,
-    is_profile_completed: user.isProfileCompleted || false,
-    features: user.features || [],
+    status: isDel ? 'Dihapus' : (isBlocked ? user.status : 'Aktif'),
+    is_approved: !isBlocked && !isDel,
+    is_profile_completed: true,
+    features: (Array.isArray(user.features) && user.features.length > 0)
+      ? user.features
+      : (isBlocked || isDel ? [] : allFeatures),
     subscription_start: user.subscriptionStart || null,
     subscription_end: user.subscriptionEnd || null,
     reject_reason: user.rejectReason || null,
     gemini_api_key: user.geminiApiKey || '',
-    is_deleted: user.isDeleted || false,
+    is_deleted: isDel,
     admin_note: user.adminNote || null
   };
   // Hapus key null/undefined agar tidak overwrite yang sudah ada di DB,
@@ -1670,7 +1680,6 @@ function initAccessTimeSync() {
     const isLocalDeactivated = user.status === 'Nonaktif' || 
                                user.status === 'Dinonaktifkan' || 
                                user.status === 'Ditolak' || 
-                               user.isApproved === false || 
                                isLocalExpired;
 
     if (isLocalDeleted || isLocalDeactivated) {
@@ -1701,7 +1710,6 @@ function initAccessTimeSync() {
       const isDeactivated = dbUser.status === 'Nonaktif' || 
                             dbUser.status === 'Dinonaktifkan' || 
                             dbUser.status === 'Ditolak' || 
-                            dbUser.isApproved === false || 
                             isExpired;
 
       if (isDeactivated) {
@@ -1722,7 +1730,9 @@ function initAccessTimeSync() {
         ...dbUser,
         status: 'Aktif',
         isApproved: true,
-        isDeleted: false
+        isProfileCompleted: true,
+        isDeleted: false,
+        features: (Array.isArray(dbUser.features) && dbUser.features.length > 0) ? dbUser.features : ['generate_modul_ajar', 'generate_media_pembelajaran']
       };
       localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user));
     } catch (err) {

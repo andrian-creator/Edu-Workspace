@@ -62,25 +62,23 @@ async function initPage() {
         user.isDeleted = true;
         user.isApproved = false;
       } else if (!isReRegistering) {
-        // Jangan timpa data lokal jika lokal baru saja submit profil (Menunggu Persetujuan)
-        // sedangkan Supabase belum sempat menyelesaikan sinkronisasi
-        const localIsSubmitted = user.isProfileCompleted === true && user.institution && (user.status === 'Menunggu Persetujuan' || user.status === 'Pending');
-        const dbIsUncompleted = dbUser.status === 'Belum Lengkap' || !dbUser.isProfileCompleted;
-
-        if (localIsSubmitted && dbIsUncompleted) {
-          console.log('[Profil] Melakukan sinkronisasi ulang pengajuan profil ke Supabase...');
-          SupabaseDB.upsertUser(user).catch(() => {});
-        } else {
-          user = { ...user, ...dbUser };
-        }
+        const isBlocked = dbUser.status === 'Nonaktif' || dbUser.status === 'Dinonaktifkan' || dbUser.status === 'Ditolak';
+        user = {
+          ...user,
+          ...dbUser,
+          status: isBlocked ? dbUser.status : 'Aktif',
+          isApproved: !isBlocked,
+          isProfileCompleted: true,
+          institution: dbUser.institution || user.institution || 'Pendidik',
+          gradeLevel: dbUser.gradeLevel || user.gradeLevel || 'SMA/MA',
+          subject: dbUser.subject || user.subject || 'Guru'
+        };
       }
     } else {
-      // Akun tidak ditemukan di Supabase -> Jadikan akun baru (Belum Lengkap) jika belum mengajukan profil
-      if (user.status !== 'Menunggu Persetujuan' && !user.isProfileCompleted) {
-        user.status = 'Belum Lengkap';
-        user.isDeleted = false;
-        user.isApproved = false;
-      }
+      user.status = 'Aktif';
+      user.isApproved = true;
+      user.isProfileCompleted = true;
+      user.isDeleted = false;
     }
     localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user));
 
@@ -268,8 +266,8 @@ function renderPageState(user) {
     stopLiveStatusPolling();
     form.style.display = 'none';
     statusContainer.style.display = 'block';
-    pendingBox.style.display = 'none';
-    approvedBox.style.display = 'none';
+    if (pendingBox) pendingBox.style.display = 'none';
+    if (approvedBox) approvedBox.style.display = 'none';
     rejectedBox.style.display = 'none';
     deletedBox.style.display = 'block';
 
@@ -279,8 +277,8 @@ function renderPageState(user) {
     stopLiveStatusPolling();
     form.style.display = 'none';
     statusContainer.style.display = 'block';
-    pendingBox.style.display = 'none';
-    approvedBox.style.display = 'none';
+    if (pendingBox) pendingBox.style.display = 'none';
+    if (approvedBox) approvedBox.style.display = 'none';
     deletedBox.style.display = 'none';
     rejectedBox.style.display = 'block';
 

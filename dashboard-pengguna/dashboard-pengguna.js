@@ -53,7 +53,18 @@ async function initUserDashboard() {
         window.location.replace("profil.html");
         return;
       }
-      user = { ...user, ...dbUser };
+      const isBlocked = dbUser.status === 'Nonaktif' || dbUser.status === 'Dinonaktifkan' || dbUser.status === 'Ditolak';
+      user = {
+        ...user,
+        ...dbUser,
+        status: isBlocked ? dbUser.status : 'Aktif',
+        isApproved: !isBlocked,
+        isProfileCompleted: true,
+        institution: dbUser.institution || user.institution || 'Pendidik',
+        gradeLevel: dbUser.gradeLevel || user.gradeLevel || 'SMA/MA',
+        subject: dbUser.subject || user.subject || 'Guru',
+        features: isBlocked ? [] : ((Array.isArray(dbUser.features) && dbUser.features.length > 0) ? dbUser.features : ['generate_modul_ajar', 'generate_media_pembelajaran'])
+      };
       localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user));
       try {
         const allUsers = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
@@ -122,7 +133,7 @@ function renderUserFeatures(user) {
   if (!container) return;
 
   const isExpired = typeof isSubscriptionExpired === 'function' && isSubscriptionExpired(user);
-  const isDeactivated = user.status === 'Nonaktif' || user.status === 'Dinonaktifkan' || user.status === 'Ditolak' || user.isApproved === false || isExpired;
+  const isDeactivated = user.status === 'Nonaktif' || user.status === 'Dinonaktifkan' || user.status === 'Ditolak' || isExpired;
 
   const allSystemFeatures = ['generate_modul_ajar', 'generate_media_pembelajaran'];
 

@@ -929,25 +929,18 @@ function renderTable() {
       u.features = [];
     }
 
-    const isProfileComplete = u.isProfileCompleted === true && u.institution && u.institution.trim() !== '' && u.institution !== 'Sekolah / Instansi Guru';
-    const isPending = !isAdm && isProfileComplete && !isExpired && (u.status === 'Menunggu Persetujuan' || (!u.isApproved && u.status !== 'Ditolak' && u.status !== 'Nonaktif'));
     const isRejected = !isAdm && (u.status === 'Ditolak' || u.status === 'Nonaktif' || isExpired);
-    const isDraft = !isAdm && !isProfileComplete;
     const safeEmail = escapeHtml(u.email || '');
 
     let statusBadgeHtml = '';
     if (isAdm) {
       statusBadgeHtml = `<span class="status-badge">Aktif</span>`;
-    } else if (isDraft) {
-      statusBadgeHtml = `<span class="status-badge" style="background: #f1f5f9; color: #64748b; border-color: #cbd5e1;">Belum Mengisi</span>`;
-    } else if (isPending) {
-      statusBadgeHtml = `<span class="status-badge status-badge-pending">Menunggu</span>`;
     } else if (u.status === 'Nonaktif' || isExpired) {
       statusBadgeHtml = `<span class="status-badge status-badge-rejected" title="${escapeHtml(u.rejectReason || 'Masa Langganan Habis')}">Nonaktif</span>`;
     } else if (isRejected) {
       statusBadgeHtml = `<span class="status-badge status-badge-rejected" title="${escapeHtml(u.rejectReason || 'Pengajuan Ditolak')}">Ditolak</span>`;
     } else {
-      statusBadgeHtml = `<span class="status-badge">${escapeHtml(u.status || 'Aktif')}</span>`;
+      statusBadgeHtml = `<span class="status-badge">Aktif</span>`;
     }
 
     // Tentukan teks keterangan peran (Admin / Dosen / Guru)
@@ -1023,33 +1016,6 @@ function renderTable() {
     let actionHtml = '';
     if (isAdm) {
       actionHtml = `<span style="font-size: 0.8rem; color: #854d0e; font-weight: 700;">Super Admin</span>`;
-    } else if (isPending) {
-      actionHtml = `
-        <div class="action-menu-cell">
-          <button type="button" class="btn-action-more" onclick="toggleRowActionMenu(event, 'actionMenu-${i}')" title="Pilihan Aksi">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" style="color: #64748b;">
-              <circle cx="12" cy="5" r="2.2"></circle>
-              <circle cx="12" cy="12" r="2.2"></circle>
-              <circle cx="12" cy="19" r="2.2"></circle>
-            </svg>
-          </button>
-          <div class="action-popup-menu" id="actionMenu-${i}">
-            <button type="button" class="btn-action-approve" onclick="approveUserByEmail('${safeEmail}')">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                <polyline points="20 6 9 17 4 12"></polyline>
-              </svg>
-              <span>Setujui</span>
-            </button>
-            <button type="button" class="btn-action-reject" onclick="openRejectModal('${safeEmail}')">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                <line x1="18" y1="6" x2="6" y2="18"></line>
-                <line x1="6" y1="6" x2="18" y2="18"></line>
-              </svg>
-              <span>Tolak</span>
-            </button>
-          </div>
-        </div>
-      `;
     } else if (isRejected) {
       const approveButtonMarkup = isExpired
         ? `

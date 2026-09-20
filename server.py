@@ -182,14 +182,17 @@ class EduWorkspaceHandler(http.server.SimpleHTTPRequestHandler):
 
             if idx is not None:
                 # Update existing user data
-                if body.get('status') in ['Belum Lengkap', 'Menunggu Persetujuan', 'Pending'] or body.get('isApproved') is False:
-                    if 'subscriptionEnd' not in body or body.get('subscriptionEnd') is None:
-                        users[idx]['subscriptionStart'] = None
-                        users[idx]['subscriptionEnd'] = None
-                        users[idx].pop('subscriptionDays', None)
                 users[idx].update(body)
-                if users[idx].get('status') in ['Nonaktif', 'Dinonaktifkan', 'Ditolak'] and 'features' not in body:
-                    users[idx]['features'] = []
+                if users[idx].get('role') != 'Admin':
+                    if users[idx].get('status') in ['Nonaktif', 'Dinonaktifkan', 'Ditolak']:
+                        if 'features' not in body:
+                            users[idx]['features'] = []
+                    elif users[idx].get('status') != 'Dihapus':
+                        users[idx]['status'] = 'Aktif'
+                        users[idx]['isApproved'] = True
+                        users[idx]['isProfileCompleted'] = True
+                        if not users[idx].get('features'):
+                            users[idx]['features'] = ['generate_modul_ajar', 'generate_media_pembelajaran']
                 updated_user = users[idx]
             else:
                 # Add new user
