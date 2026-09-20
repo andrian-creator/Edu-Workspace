@@ -195,6 +195,13 @@ class EduWorkspaceHandler(http.server.SimpleHTTPRequestHandler):
                 # Add new user
                 new_id = body.get('id') or (f"USR-{str(len(users) + 1).zfill(3)}" if body.get('role') != 'Admin' else 'ADM-001')
                 body['id'] = new_id
+                if body.get('role') != 'Admin':
+                    body.setdefault('status', 'Aktif')
+                    body.setdefault('isApproved', True)
+                    body.setdefault('isProfileCompleted', True)
+                    body.setdefault('features', ['generate_modul_ajar', 'generate_media_pembelajaran'])
+                    body.setdefault('institution', 'Pendidik')
+                    body.setdefault('gradeLevel', 'SMA/MA')
                 users.append(body)
                 updated_user = body
 

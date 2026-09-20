@@ -18,12 +18,10 @@ function showUserToast(msg) {
 
 function isProfileComplete(user) {
   if (!user) return false;
-  if (isSubscriptionExpired(user)) return false;
-  return user.isProfileCompleted === true &&
-    user.institution &&
-    user.institution !== 'Sekolah / Instansi Guru' &&
-    user.gradeLevel &&
-    (user.isApproved === true || user.status === 'Aktif');
+  if (user.isDeleted || user.status === 'Dihapus') return false;
+  if (user.status === 'Nonaktif' || user.status === 'Dinonaktifkan' || user.status === 'Ditolak') return false;
+  if (typeof isSubscriptionExpired === 'function' && isSubscriptionExpired(user)) return false;
+  return true;
 }
 
 async function initUserDashboard() {
@@ -126,10 +124,20 @@ function renderUserFeatures(user) {
   const isExpired = typeof isSubscriptionExpired === 'function' && isSubscriptionExpired(user);
   const isDeactivated = user.status === 'Nonaktif' || user.status === 'Dinonaktifkan' || user.status === 'Ditolak' || user.isApproved === false || isExpired;
 
-  // 1. Ambil hak akses fitur persis seperti yang diatur oleh Admin
+  const allSystemFeatures = ['generate_modul_ajar', 'generate_media_pembelajaran'];
+
+  // 1. Ambil hak akses fitur: untuk guru aktif, seluruh fitur terbuka secara otomatis
   let activeFeatures = [];
-  if (!isDeactivated && user && Array.isArray(user.features)) {
-    activeFeatures = user.features;
+  if (!isDeactivated && user) {
+    if (Array.isArray(user.features) && user.features.length > 0) {
+      activeFeatures = user.features;
+    } else {
+      activeFeatures = allSystemFeatures;
+      user.features = allSystemFeatures;
+      try {
+        localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user));
+      } catch (e) {}
+    }
   }
 
   const hasModulAjar = activeFeatures.includes('generate_modul_ajar');

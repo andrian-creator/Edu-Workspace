@@ -323,7 +323,7 @@ function approveUserByEmail(email) {
   targetUser.approvedAt = new Date().toISOString();
 
   // Aktifkan seluruh fitur modul pembelajaran untuk akun yang telah disetujui / diaktifkan
-  targetUser.features = ['generate_modul_ajar'];
+  targetUser.features = ['generate_modul_ajar', 'generate_media_pembelajaran'];
 
   saveUsers(users);
 
@@ -333,7 +333,7 @@ function approveUserByEmail(email) {
     isApproved: true,
     isProfileCompleted: true,
     rejectReason: '',
-    features: ['generate_modul_ajar'],
+    features: ['generate_modul_ajar', 'generate_media_pembelajaran'],
     subscriptionStart: targetUser.subscriptionStart,
     subscriptionEnd: targetUser.subscriptionEnd
   }).catch((err) => {

@@ -35,10 +35,10 @@ function initSmartDashboardRedirect() {
         if (isAdmin) {
           targetHref = 'dashboard-admin/dashboard-admin.html';
         } else {
-          if (user.isProfileCompleted === true && user.institution && user.institution !== 'Sekolah / Instansi Guru') {
-            targetHref = 'dashboard-pengguna/dashboard-pengguna.html';
-          } else {
+          if (user.status === 'Dihapus' || user.isDeleted === true) {
             targetHref = 'dashboard-pengguna/profil.html';
+          } else {
+            targetHref = 'dashboard-pengguna/dashboard-pengguna.html';
           }
         }
         ctaButtons.forEach(btn => {

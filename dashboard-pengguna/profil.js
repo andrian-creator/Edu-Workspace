@@ -129,16 +129,16 @@ async function reRegisterUser() {
   localStorage.removeItem('edu_last_modul_payload');
   localStorage.removeItem('edu_gemini_api_key');
 
-  // Reset status akun kembali ke Akun Baru (Belum Lengkap) agar dapat input profil baru
-  user.status = 'Belum Lengkap';
+  // Reset status akun kembali ke Aktif & buka semua fitur
+  user.status = 'Aktif';
   user.isDeleted = false;
   user.is_deleted = false;
-  user.isApproved = false;
-  user.isProfileCompleted = false;
-  user.institution = '';
-  user.gradeLevel = '';
-  user.subject = '';
-  user.features = [];
+  user.isApproved = true;
+  user.isProfileCompleted = true;
+  user.institution = 'Pendidik';
+  user.gradeLevel = 'SMA/MA';
+  user.subject = 'Guru';
+  user.features = ['generate_modul_ajar', 'generate_media_pembelajaran'];
   user.subscriptionStart = null;
   user.subscriptionEnd = null;
   user.subscriptionDays = null;
@@ -147,8 +147,8 @@ async function reRegisterUser() {
   delete user.subscriptionDays;
   delete user.rejectReason;
 
-  lastKnownStatus = 'Belum Lengkap';
-  lastKnownApproved = false;
+  lastKnownStatus = 'Aktif';
+  lastKnownApproved = true;
   lastKnownRejectReason = null;
 
   localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user));
@@ -165,18 +165,18 @@ async function reRegisterUser() {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(allUsers));
   } catch (e) {}
 
-  // Update langsung ke Supabase: un-delete, ubah status menjadi Belum Lengkap, dan kosongkan masa langganan
+  // Update langsung ke Supabase: un-delete, ubah status menjadi Aktif, dan buka fitur
   if (typeof SupabaseDB !== 'undefined' && SupabaseDB.updateUserByEmail) {
     SupabaseDB.updateUserByEmail(email, {
       isDeleted: false,
-      status: 'Belum Lengkap',
-      isApproved: false,
-      isProfileCompleted: false,
-      institution: '',
-      gradeLevel: '',
-      subject: '',
+      status: 'Aktif',
+      isApproved: true,
+      isProfileCompleted: true,
+      institution: 'Pendidik',
+      gradeLevel: 'SMA/MA',
+      subject: 'Guru',
       rejectReason: '',
-      features: [],
+      features: ['generate_modul_ajar', 'generate_media_pembelajaran'],
       subscriptionStart: null,
       subscriptionEnd: null
     }).catch(err => console.warn("Gagal reset status di Supabase:", err));
@@ -261,10 +261,8 @@ function renderPageState(user) {
     user.institution !== 'Sekolah / Instansi Guru' &&
     user.status !== 'Belum Lengkap';
 
-  const isApproved = (user.isApproved === true || user.status === 'Aktif') && isProfileSubmitted && !isDeleted && !hasExpiredSub;
   const isDeactivated = (user.status === 'Nonaktif' || user.status === 'Dinonaktifkan' || hasExpiredSub) && !isDeleted;
   const isRejected = (user.status === 'Ditolak' || isDeactivated) && !isDeleted;
-  const isPending = isProfileSubmitted && !isDeleted && (user.status === 'Menunggu Persetujuan' || user.status === 'Pending' || (!isApproved && !isRejected));
 
   if (isDeleted) {
     stopLiveStatusPolling();
@@ -277,10 +275,6 @@ function renderPageState(user) {
 
     document.getElementById('profileTitleText').textContent = user.name || 'Akun Dihapus';
     document.getElementById('profileDescText').textContent = user.email || '';
-  } else if (isApproved) {
-    stopLiveStatusPolling();
-    window.location.replace("dashboard-pengguna.html");
-    return;
   } else if (isRejected) {
     stopLiveStatusPolling();
     form.style.display = 'none';
@@ -306,24 +300,18 @@ function renderPageState(user) {
 
     document.getElementById('profileTitleText').textContent = user.name || 'Profil Guru';
     document.getElementById('profileDescText').textContent = user.email || '';
-  } else if (isPending) {
-    startLiveStatusPolling();
-    form.style.display = 'none';
-    statusContainer.style.display = 'block';
-    pendingBox.style.display = 'block';
-    approvedBox.style.display = 'none';
-    rejectedBox.style.display = 'none';
-    deletedBox.style.display = 'none';
-
-    document.getElementById('profileTitleText').textContent = user.name || 'Profil Guru';
-    document.getElementById('profileDescText').textContent = user.email || '';
   } else {
+    // Akun Guru Normal / Baru: Otomatis Aktif & Semua Fitur Terbuka, Langsung ke Dashboard
     stopLiveStatusPolling();
-    // Akun Baru / Belum Mengisi Profil -> Tampilkan Form Pengajuan
-    form.style.display = 'block';
-    statusContainer.style.display = 'none';
-    document.getElementById('profileTitleText').textContent = 'Profil Guru';
-    document.getElementById('profileDescText').textContent = 'Lengkapi dan kelola informasi instansi dan jenjang pendidikan Anda untuk mengaktifkan seluruh fitur Edu Workspace.';
+    user.status = 'Aktif';
+    user.isApproved = true;
+    user.isProfileCompleted = true;
+    if (!Array.isArray(user.features) || user.features.length === 0) {
+      user.features = ['generate_modul_ajar', 'generate_media_pembelajaran'];
+    }
+    localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user));
+    window.location.replace("dashboard-pengguna.html");
+    return;
   }
 }
 
@@ -423,22 +411,17 @@ async function saveProfile(event) {
   user.role = role;
   user.isProfileCompleted = true;
 
-  // Status reset menjadi Menunggu Persetujuan
-  user.status = 'Menunggu Persetujuan';
-  user.isApproved = false;
+  // Akun guru otomatis Aktif dan disetujui
+  user.status = 'Aktif';
+  user.isApproved = true;
   user.isDeleted = false;
   user.is_deleted = false;
   user.rejectReason = '';
   delete user.rejectReason;
   isReRegistering = false;
-
-  // Akun baru atau pengajuan profil ulang WAJIB bersih dari masa langganan lama
-  user.subscriptionStart = null;
-  user.subscriptionEnd = null;
-  user.subscriptionDays = null;
-  delete user.subscriptionStart;
-  delete user.subscriptionEnd;
-  delete user.subscriptionDays;
+  if (!Array.isArray(user.features) || user.features.length === 0) {
+    user.features = ['generate_modul_ajar', 'generate_media_pembelajaran'];
+  }
 
   const now = new Date();
   user.registeredAt = now.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' }) + ', ' +
@@ -465,11 +448,11 @@ async function saveProfile(event) {
   }
 
   showCustomAlert(
-    "Pengajuan Berhasil Dikirim!",
-    "Tim Edu Workspace akan segera meninjau pengajuan kamu",
+    "Profil Berhasil Disimpan!",
+    "Data identitas mengajar Anda telah disimpan. Semua fitur pembelajaran siap digunakan.",
     "success",
     () => {
-      renderPageState(user);
+      window.location.replace("dashboard-pengguna.html");
     }
   );
   renderPageState(user);

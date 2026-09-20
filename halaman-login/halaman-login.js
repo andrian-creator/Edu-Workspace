@@ -18,11 +18,8 @@
             window.location.replace("../dashboard-pengguna/profil.html");
             return;
           }
-          if (user.isProfileCompleted === true && user.institution && user.institution !== 'Sekolah / Instansi Guru') {
-            window.location.replace("../dashboard-pengguna/dashboard-pengguna.html");
-          } else {
-            window.location.replace("../dashboard-pengguna/profil.html");
-          }
+          // Guru langsung diarahkan ke Dashboard Pengguna
+          window.location.replace("../dashboard-pengguna/dashboard-pengguna.html");
         }
       }
     } catch (e) {
@@ -62,6 +59,7 @@ function processLogin(payload) {
 
   const isAdmin = email === ADMIN_EMAIL.toLowerCase();
   const role = isAdmin ? 'Admin' : 'Guru';
+  const allFeatures = ['generate_modul_ajar', 'generate_media_pembelajaran'];
 
   let users = [];
   try {
@@ -92,15 +90,15 @@ function processLogin(payload) {
       email: email,
       avatar: picture,
       role: role,
-      institution: isAdmin ? 'Edu Workspace' : '',
-      subject: isAdmin ? 'Super Admin' : '',
-      gradeLevel: '',
+      institution: isAdmin ? 'Edu Workspace' : 'Pendidik',
+      subject: isAdmin ? 'Super Admin' : 'Guru',
+      gradeLevel: 'SMA/MA',
       registeredAt: dateStr,
       provider: 'Google Account (@gmail.com)',
-      status: isAdmin ? 'Aktif' : 'Belum Lengkap',
-      isApproved: isAdmin ? true : false,
-      isProfileCompleted: isAdmin ? true : false,
-      features: isAdmin ? ['generate_modul_ajar'] : [],
+      status: 'Aktif',
+      isApproved: true,
+      isProfileCompleted: true,
+      features: isAdmin ? ['generate_modul_ajar'] : allFeatures,
       geminiApiKey: '',
       subscriptionStart: null,
       subscriptionEnd: null
@@ -114,6 +112,22 @@ function processLogin(payload) {
       matchedUser.status = 'Aktif';
       matchedUser.isApproved = true;
       matchedUser.isProfileCompleted = true;
+    } else {
+      // Guru yang login langsung dipastikan aktif dan semua fitur terbuka jika tidak diblokir/dihapus
+      if (matchedUser.status !== 'Nonaktif' && matchedUser.status !== 'Dinonaktifkan' && matchedUser.status !== 'Ditolak' && matchedUser.status !== 'Dihapus' && !matchedUser.isDeleted) {
+        matchedUser.status = 'Aktif';
+        matchedUser.isApproved = true;
+        matchedUser.isProfileCompleted = true;
+        if (!matchedUser.institution || matchedUser.institution === 'Sekolah / Instansi Guru') {
+          matchedUser.institution = 'Pendidik';
+        }
+        if (!matchedUser.gradeLevel) {
+          matchedUser.gradeLevel = 'SMA/MA';
+        }
+        if (!Array.isArray(matchedUser.features) || matchedUser.features.length === 0) {
+          matchedUser.features = allFeatures;
+        }
+      }
     }
   }
 
@@ -129,49 +143,54 @@ function processLogin(payload) {
     if (dbUser) {
       finalUser.id = dbUser.id; // Gunakan ID Supabase yang sah
       if (dbUser.isDeleted || dbUser.status === 'Dihapus') {
-        // Akun sebelumnya pernah dihapus, sekarang login kembali untuk mendaftar profil baru
-        finalUser.status = 'Belum Lengkap';
+        // Akun sebelumnya pernah dihapus, sekarang mendaftar ulang -> Langsung Aktif & semua fitur terbuka
+        finalUser.status = 'Aktif';
         finalUser.isDeleted = false;
-        finalUser.isApproved = false;
-        finalUser.isProfileCompleted = false;
-        finalUser.institution = '';
-        finalUser.gradeLevel = '';
-        finalUser.features = [];
+        finalUser.isApproved = true;
+        finalUser.isProfileCompleted = true;
+        finalUser.institution = 'Pendidik';
+        finalUser.gradeLevel = 'SMA/MA';
+        finalUser.features = allFeatures;
         finalUser.subscriptionStart = null;
         finalUser.subscriptionEnd = null;
         delete finalUser.subscriptionDays;
         delete finalUser.rejectReason;
 
-        // Un-delete langsung di Supabase via PATCH dan pastikan subscriptionStart & subscriptionEnd tereset null
+        // Un-delete langsung di Supabase via PATCH
         SupabaseDB.updateUserByEmail(email, {
           isDeleted: false,
-          status: 'Belum Lengkap',
-          isApproved: false,
-          isProfileCompleted: false,
-          institution: '',
-          gradeLevel: '',
-          subject: '',
+          status: 'Aktif',
+          isApproved: true,
+          isProfileCompleted: true,
+          institution: 'Pendidik',
+          gradeLevel: 'SMA/MA',
+          subject: 'Guru',
           rejectReason: '',
-          features: [],
+          features: allFeatures,
           subscriptionStart: null,
           subscriptionEnd: null
         }).catch(() => {});
       } else {
-        // Merge: prioritaskan data Supabase untuk field yang dikelola admin
+        const isDeactivatedOrRejected = dbUser.status === 'Nonaktif' || dbUser.status === 'Dinonaktifkan' || dbUser.status === 'Ditolak';
+        
         finalUser = {
           ...matchedUser,
           id: dbUser.id,
-          features: Array.isArray(dbUser.features) ? dbUser.features : (matchedUser.features || []),
+          name: name,
+          avatar: picture,
+          institution: dbUser.institution || matchedUser.institution || 'Pendidik',
+          subject: dbUser.subject || matchedUser.subject || 'Guru',
+          gradeLevel: dbUser.gradeLevel || matchedUser.gradeLevel || 'SMA/MA',
           subscriptionStart: dbUser.subscriptionStart || matchedUser.subscriptionStart || null,
           subscriptionEnd: dbUser.subscriptionEnd || matchedUser.subscriptionEnd || null,
-          status: dbUser.status !== 'Belum Lengkap' ? dbUser.status : matchedUser.status,
-          isApproved: dbUser.isApproved !== undefined ? dbUser.isApproved : matchedUser.isApproved,
-          isProfileCompleted: dbUser.isProfileCompleted !== undefined ? dbUser.isProfileCompleted : matchedUser.isProfileCompleted,
-          institution: dbUser.institution || matchedUser.institution,
-          subject: dbUser.subject || matchedUser.subject,
-          gradeLevel: dbUser.gradeLevel || matchedUser.gradeLevel,
-          name: name,
-          avatar: picture
+          // Jika tidak berstatus nonaktif/ditolak oleh admin, otomatis aktif dan disetujui
+          status: isDeactivatedOrRejected ? dbUser.status : 'Aktif',
+          isApproved: isDeactivatedOrRejected ? false : true,
+          isProfileCompleted: true,
+          // Buka semua fitur secara otomatis jika belum diatur khusus
+          features: isDeactivatedOrRejected 
+            ? [] 
+            : ((Array.isArray(dbUser.features) && dbUser.features.length > 0) ? dbUser.features : allFeatures)
         };
       }
     }
@@ -211,16 +230,12 @@ function processLogin(payload) {
   if (isAdmin) {
     roleDesc.textContent = "Masuk sebagai Super Administrator. Mengalihkan ke Portal Admin...";
   } else {
-    if (matchedUser.isProfileCompleted && matchedUser.institution) {
-      roleDesc.textContent = "Masuk sebagai Pendidik. Mengalihkan ke Workspace Guru...";
-    } else {
-      roleDesc.textContent = "Login berhasil! Mengalihkan ke formulir profil...";
-    }
+    roleDesc.textContent = "Masuk sebagai Pendidik. Mengalihkan ke Workspace Guru...";
   }
 
   popup.classList.add('active');
 
-  // Pengalihan Otomatis Berdasarkan Role dan Status Profil
+  // Pengalihan Otomatis Berdasarkan Role dan Status Akun
   setTimeout(() => {
     const curRaw = localStorage.getItem(CURRENT_USER_KEY);
     const u = curRaw ? JSON.parse(curRaw) : matchedUser;
@@ -228,17 +243,14 @@ function processLogin(payload) {
     if (isAdmin) {
       window.location.href = "../dashboard-admin/dashboard-admin.html";
     } else {
-      const isAktif = (u.status === 'Aktif' || u.isApproved === true) && 
-                      u.isProfileCompleted === true && 
-                      u.institution && 
-                      u.institution !== 'Sekolah / Instansi Guru' &&
-                      !u.isDeleted &&
-                      u.status !== 'Nonaktif' &&
-                      u.status !== 'Dinonaktifkan' &&
-                      u.status !== 'Ditolak' &&
-                      !isSubscriptionExpired(u);
+      const isBlocked = u.isDeleted === true || 
+                        u.status === 'Dihapus' || 
+                        u.status === 'Nonaktif' || 
+                        u.status === 'Dinonaktifkan' || 
+                        u.status === 'Ditolak' || 
+                        isSubscriptionExpired(u);
 
-      if (isAktif) {
+      if (!isBlocked) {
         window.location.href = "../dashboard-pengguna/dashboard-pengguna.html";
       } else {
         window.location.href = "../dashboard-pengguna/profil.html";
