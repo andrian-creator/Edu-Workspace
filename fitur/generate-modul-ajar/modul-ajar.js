@@ -2714,153 +2714,127 @@ Therefore, the ENTIRE teaching module document (all text values in the JSON, inc
 Do NOT use Indonesian in the content text (only retain standard JSON keys).
 ` : '';
 
-  const masterPrompt = `[SESI GENERATE BARU: ${generateTimestamp} | INPUT: ${inputFingerprint}]
-${masterLanguageMandate}
-Anda adalah Dewan Pakar Pengembang Kurikulum Merdeka Terkemuka (BSKAP Kemendikbudristek).
-Tugas Anda: Susun DOKUMEN MODUL AJAR KURIKULUM MERDEKA secara SANGAT LENGKAP, MENDALAM, dan 100% KONTEKSTUAL KHUSUS UNTUK KOMBINASI DATA INPUT BERIKUT.
-
-PENTING: SELURUH output yang Anda hasilkan HARUS berbeda secara substantif dari output sebelumnya karena data input ini UNIK. Jangan mengulang pola kalimat yang sama.
-
-=============================================================================
-SELURUH DATA INPUT GURU (FORM 3 TAHAPAN — KONSOLIDASI TUNGGAL):
-=============================================================================
-
-TAHAP 1 — IDENTITAS & MODEL PEMBELAJARAN:
-- Satuan Pendidikan / Institusi : ${institusi}
-- Nama Pendidik                 : ${penyusun}
-- Tahun Penyusunan              : ${tahun}
-- Jenjang Sekolah               : ${jenjang}
-- Jurusan / Program Keahlian    : ${jurusan}
-- Fase & Kelas                  : ${fase}
-- Mata Pelajaran                : ${mapel}
-- Elemen Capaian Pembelajaran   : ${elemenCP}
-- Jenis Input Konteks           : ${jenisInput}
-- ${jenisInput} / Materi Pokok  : ${topik}
-- Model Pembelajaran            : ${model}
-- Pendekatan Pembelajaran        : ${pendekatan}
-- Metode Pembelajaran           : ${metode}
-- Alokasi Waktu                 : ${totalJP} (${targetPertemuanCount} Pertemuan)
-- Media Digital yang Digunakan  : ${media}
-- Gaya Belajar Mayoritas Murid  : ${gayaBelajar}
-- Sarana / Fasilitas Belajar    : ${fasilitas}
-
-TAHAP 2 — KONTEKS & IDENTIFIKASI AWAL:
-- Capaian Pembelajaran (CP)     : ${capaianPembelajaran}
-- Tujuan Pembelajaran (TP)      : 
-${tujuanPembelajaran}
-- Materi Tambahan / Pengayaan   : ${materiTambahan}
-- Dimensi Profil Lulusan Target : ${dimensi}
-- Identifikasi Peserta Didik    : ${idPeserta}
-- Identifikasi Materi Pembelajaran: ${idMateri}
-- Identifikasi Profil Lulusan   : ${idProfil}
-
-=============================================================================
-INSTRUKSI MODEL & PENDEKATAN PEMBELAJARAN (WAJIB DITERAPKAN SECARA KETAT):
-=============================================================================
-${modelKlasifikasi}
-${pendekatanPetunjuk}
-METODE PEMBELAJARAN: "${metode}". Seluruh skenario aktivitas pembelajaran di kelas HARUS mencerminkan penerapan metode "${metode}".
-
-=============================================================================
-ATURAN WAJIB DAN MENGIKAT — PELANGGARAN TIDAK DIIZINKAN:
-=============================================================================
-1. LARANGAN KERAS TEMPLATE GENERIK:
-   - DILARANG SAMA SEKALI menggunakan kalimat template statis atau placeholder umum.
-   - Setiap kalimat, skenario, sub-topik, tugas LKPD, instrumen asesmen, refleksi, glosarium, dan referensi pustaka HARUS spesifik, konkret, dan kontekstual KHUSUS untuk kombinasi:
-     * ${jenisInput}: "${topik}"
-     * Mata Pelajaran: "${mapel}"
-     * Jenjang: "${jenjang}" / Jurusan: "${jurusan}"
-     * Model: "${model}"
-     * Pendekatan: "${pendekatan}"
-     * Metode: "${metode}"
-
-2. KESESUAIAN TUJUAN PEMBELAJARAN:
-   - Seluruh aktivitas guru, aktivitas murid, penugasan LKPD, dan asesmen WAJIB secara langsung mengacu dan menjabarkan Tujuan Pembelajaran (TP) yang telah diisi oleh guru di atas.
-   - Jika TP memuat kompetensi spesifik (misalnya: analisis desain karakter, pengujian produk, penghitungan BEP, dsb.), maka SELURUH penugasan dalam modul HARUS mengarah ke penguasaan kompetensi tersebut.
-
-3. DISTRIBUSI PERTEMUAN DAN SINTAKS PEMBELAJARAN (SANGAT PENTING):
-   - WAJIB hasilkan pengalaman belajar sejumlah TEPAT ${targetPertemuanCount} PERTEMUAN (Pertemuan 1 sampai Pertemuan ${targetPertemuanCount}) pada array "pengalamanBelajar".
-   - Alokasi waktu setiap pertemuan mengacu pada: ${totalJP}.
-   - SINTAKS MODEL PEMBELAJARAN HANYA BERADA DI KEGIATAN INTI!
-   - DILARANG KERAS menempatkan sintaks model pada Tahap Awal atau Tahap Penutup!
-   - Distribusi Sintaks Model "${model}":
-     * Jika 1 pertemuan: Seluruh tahapan sintaks model dilaksanakan secara berurutan dan tuntas di Kegiatan Inti Pertemuan 1.
-     * Jika multi-pertemuan (${targetPertemuanCount} pertemuan): Distribusikan tahapan sintaks model secara progresif dan proporsional antar-pertemuan. Setiap pertemuan memuat sintaks yang relevan (misal P1 untuk perumusan masalah/perancangan, P2 untuk eksekusi/produksi, P3 untuk pengujian kualitas, P4 untuk gelar karya/evaluasi).
-   - Di Kegiatan Inti, SETIAP TAHAP SINTAKS DIBUAT TERPISAH dalam array "inti". Setiap sintaks WAJIB memiliki:
-     1. "sintaks": Nama tahap/sintaks model yang jelas (contoh: "Sintaks 1: Penentuan Pertanyaan Mendasar (Start with Essential Question)").
-     2. "waktu": Alokasi waktu spesifik sintaks tersebut (contoh: "30 Menit").
-     3. "aktivitasGuru": Array poin aksi guru khusus untuk sintaks tersebut.
-     4. "aktivitasMurid": Array poin aksi murid khusus untuk sintaks tersebut.
-     5. "integrasiPendekatan": Catatan integrasi pendekatan "${pendekatan}" dan metode "${metode}" pada sintaks ini.
-
-4. FORMAT AKTIVITAS GURU & MURID — BAHASA TEKNOLOGI PENDIDIKAN & PEDAGOGI BAKU:
-   - Tahap Awal: HANYA berisi pembukaan (salam, doa, presensi), apersepsi kontekstual, pelaksanaan "Pretest" (tes diagnostik kognitif awal), dan penyampaian tujuan pembelajaran & skenario belajar. DILARANG ada sintaks model di Awal!
-   - Tahap Penutup: HANYA berisi refleksi metakognitif murid, perumusan simpulan materi, asesmen formatif akhir/tindak lanjut, informasi agenda pertemuan berikutnya, dan doa/salam penutup. DILARANG KERAS ada sintaks model di Penutup!
-   - WAJIB MENGGUNAKAN BAHASA TEKNOLOGI PENDIDIKAN DAN PEDAGOGI BAKU:
-     * Kuis Diagnostik Awal -> "Pretest (Tes Diagnostik Kognitif Awal)"
-     * Observasi / Pengamatan -> "Asesmen Formatif (Lembar Observasi Proses & Kinerja Praktik)"
-     * Uji Kompetensi / Produk Proyek -> "Post-test / Asesmen Sumatif (Uji Kinerja Praktik & Portofolio)"
-     * Gunakan terminologi pedagogis: Pretest, Post-test, Scaffolding, Diferensiasi Pembelajaran, Refleksi Metakognitif.
-   - aktivitasGuru dan aktivitasMurid WAJIB berupa Array of string berisi poin aksi pendek dimulai dengan KATA KERJA aktif. DILARANG menuliskan paragraf naratif.
-
-5. LKPD (LEMBAR KERJA PESERTA DIDIK):
-   - Judul LKPD HARUS mencerminkan model "${model}" dan topik "${topik}".
-   - 5 butir tugas LKPD HARUS berupa langkah-langkah konkret bertahap (Langkah 1 s.d. 5) yang langsung menuntun murid menghasilkan capaian sesuai TP.
-   - Setiap tugas HARUS berbeda dan mencerminkan fase pengerjaan yang berbeda (rancangan → eksekusi → evaluasi → presentasi → refleksi).
-
-6. KONTEKS FASILITAS DAN MEDIA:
-   - Seluruh aktivitas pembelajaran WAJIB menyebutkan dan memanfaatkan fasilitas yang tersedia: ${fasilitas}.
-   - Media digital "${media}" HARUS disebutkan secara spesifik di dalam aktivitas, bukan hanya disebutkan di heading.
-
-7. MATERI AJAR DESKRIPTIF (FOKUS MATERI TEKNIS, SUB-JUDUL RAPI):
-   - WAJIB FOKUS PENUH PADA SUBSTANSI MATERI DAN KONTEN ILMIAH/TEKNIS dari "${topik}" pada mata pelajaran "${mapel}".
-   - Khusus jika konteks input dari Tahap 1 & 2 berkaitan dengan Videografi, Sinematografi, Tata Kamera, Fotografi, atau Broadcasting Perfilman:
-     Pembahasan materi teknis WAJIB mencakup pemahaman operasional komprehensif tentang Shot Size, Camera Angle, Camera Movement, Aturan 180 Derajat, Depth of Field (DoF), Rule of Thirds & Framing, serta White Balance (WB).
-   - Khusus jika konteks input berkaitan dengan Tipografi, Desain Grafis, atau Desain Komunikasi Visual (DKV):
-     Pembahasan materi teknis WAJIB mencakup pemahaman mendalam tentang Anatomi Huruf, Klasifikasi Typeface, Kerning, Tracking, Leading, Hierarki Tipografi, Legibility & Readability, Variable Font & Responsif, serta Grid System tata letak.
-     DILARANG KERAS MEMASUKKAN ISTILAH KAMERA/TATA KAMERA KE DALAM MATERI TIPOGRAFI ATAU DESAIN GRAFIS!
-   - DILARANG KERAS MENULIS NARASI META SEPERTI: "Dalam konteks pembelajaran di SMK...", "Penerapan model Project Based Learning berbasis pendekatan TPACK terbukti...", "Melalui sintaks PjBL peserta didik dilatih...". Naskah materi ajar adalah bahan ajar teknis/keilmuan murni untuk penguasaan materi "${topik}"!
-   - Tuliskan dengan format teks terstruktur yang rapi mengikuti hierarki baku (Level A -> 1. -> a. -> 1)): gunakan sub-judul dengan huruf kecil bertitik (contoh: "a. Konsep Dasar ...", "b. Karakteristik & Prinsip Kerja ...", "c. Standar Operasional ..."), serta paragraf penjelasan ilmiah yang mendalam dan tuntas. Jika terdapat rincian poin di bawahnya, gunakan penomoran kurung tutup "1)", "2)", "3)". Tabel ringkasan/parameter teknis TIDAK WAJIB ADA; namun jika dibutuhkan data komparasi atau spesifikasi teknis terstruktur, tabel Markdown dapat disertakan.
-   - DILARANG menggunakan unescaped control character atau literal '\\n' yang tidak valid di dalam JSON string.
-
-8. MATERI TAMBAHAN (PENGAYAAN MATERI DESKRIPTIF SUBSTANTIF):
-   - Jika materi tambahan diisi ("${materiTambahan}"), jabarkan setiap butir poin materi tambahan secara komprehensif, terperinci, dan mendalam dengan FOKUS PENUH PADA PENJABARAN SUBSTANSI MATERI TEKNIS YANG DISEBUTKAN.
-   - DILARANG KERAS menggunakan kalimat pembuka, pengantar, atau penutup meta-pedagogis generik seperti: "Jika peserta didik mendalami materi ini akan...", "Peserta didik mendalami adopsi teknologi generasi terkini...", "Melalui penugasan proyek tingkat lanjut, peserta didik diarahkan...", "Kajian ini membekali peserta didik dengan perspektif...". Penjabaran HARUS langsung menguraikan konsep ilmiah, prinsip kerja, aturan teknis, atau prosedur operasional dari butir materi yang bersangkutan!
-   - Format penulisan poin materi tambahan wajib mengikuti hierarki baku (Level A -> 1. -> a. -> 1)): gunakan huruf kecil bertitik ("a.", "b.", "c.") untuk setiap nama materi tambahan, diikuti paragraf penjabaran substansi materinya. Jika terdapat poin rincian di dalamnya, gunakan penomoran kurung tutup "1)", "2)", "3)". Tabel pengayaan/komparasi TIDAK WAJIB ADA; namun jika ada informasi komparatif yang lebih jelas disajikan dalam tabel, tabel Markdown dapat disertakan.
-
-9. GLOSARIUM (KAMUS ISTILAH TEKNIS — MINIMAL 6 ISTILAH):
-   - Wajib menghasilkan MINIMAL 6 istilah teknis yang spesifik, presisi, dan MURNI DARI SUBSTANSI MATERI "${topik}" pada bidang "${mapel}".
-   - Setiap istilah HARUS disertai definisi teknis/ilmiah yang mendalam mengenai konsep atau operasional materi "${topik}" itu sendiri.
-   - DILARANG KERAS memuat istilah proses kurikulum / pedagogis / asesmen generik seperti: "Capaian Pembelajaran (CP)", "Tujuan Pembelajaran (TP)", "Asesmen Formatif", "Asesmen Sumatif", "Diferensiasi Pembelajaran", "Sintesis Solutif", "Verifikasi Empiris", "Konseptualisasi", "Discovery Learning", "TPACK". Glosarium HARUS 100% MURNI ISTILAH MATERI AJAR!
-
-10. DAFTAR PUSTAKA (REFERENSI SUMBER MATERI — MINIMAL 5 SUMBER):
-    - Tuliskan MINIMAL 5 referensi kredibel yang benar-benar relevan dengan substansi keilmuan "${topik}" dan "${mapel}".
-    - Referensi berupa buku teks mata pelajaran, artikel ilmiah/jurnal, literatur standar keilmuan, atau dokumen teknis terkait "${topik}".
-    - DILARANG KERAS mencantumkan dokumen regulasi kurikulum semata (seperti Keputusan BSKAP, Panduan Asesmen Kemendikbud) jika tidak relevan dengan keilmuan materi "${topik}".
-    - DILARANG KERAS: mencantumkan nama AI/model (Gemini, EduWorkspace) atau nama penerbit fiktif.
-    - Format penulisan: Penulis, A. A. (Tahun). Judul karya. Penerbit/Sumber.
-
-11. ASESMEN & RUBRIK:
-    - Asesmen Diagnostik: "Pretest (Tes Diagnostik Kognitif Awal)" untuk mengukur kesiapan awal murid pada "${topik}".
-    - Asesmen Formatif: "Asesmen Formatif (Lembar Observasi Proses & Kinerja Praktik)" relevan dengan metode "${metode}".
-    - Asesmen Sumatif: "Post-test / Asesmen Sumatif (Uji Kinerja Praktik & Portofolio)" mengukur pencapaian TP.
-    - Rubrik Penilaian: WAJIB memuat 3 aspek penilaian lengkap dengan deskriptor kriteria Skor 1 (Kurang), Skor 2 (Cukup), Skor 3 (Baik), dan Skor 4 (Sangat Baik) yang spesifik untuk materi ${topik} dan model ${model}.
-
-=============================================================================
-ATURAN FORMAT JSON (KRUSIAL — WAJIB DIIKUTI TANPA KECUALI AGAR VALID):
-=============================================================================
-1. OUTPUT HANYA TEKS JSON MURNI (dimulai karakter '{' dan diakhiri karakter '}'). JANGAN ada teks pengantar, penutup, atau blok markdown.
-2. DILARANG KERAS MENGGUNAKAN TANDA PETIK DUA (") DI DALAM TEKS NILAI STRING!
-   Jika Anda mengutip istilah teknis, nama konsep, atau judul karya di dalam kalimat, WAJIB MENGGUNAKAN TANDA PETIK TUNGGAL (')!
-   Contoh BENAR: 'seleksi alam', 'Rule of Thirds', 'survival of the fittest'.
-   Contoh SALAH & DILARANG: "seleksi alam", "Rule of Thirds".
-3. Seluruh baris baru di dalam nilai teks string harus ditulis berupa escape '\\n' yang valid.
-4. Tuliskan naskah materi, aktivitas pembelajaran, dan instrumen secara padat, substantif, mendalam, dan to-the-point tanpa narasi meta bertele-tele agar seluruh struktur JSON (seluruh ${targetPertemuanCount} pertemuan, LKPD, rubrik, glosarium, dan daftar pustaka) dapat terselesaikan tuntas dan valid sebelum batas token.
-
-=============================================================================
-FORMAT STRUKTUR JSON YANG WAJIB DIHASILKAN:
-=============================================================================
-{
+  const schemaTemplate = isEn ? `{
+  "identifikasiPesertaDidik": [
+    {"kategori": "Prior Knowledge", "identifikasi": "Detailed assessment of student baseline knowledge and prerequisites on ${topik}...", "tindakLanjut": "Structured scaffolding and differentiated learning strategy..."},
+    {"kategori": "Interests and Learning Styles", "identifikasi": "Student learning style preferences (visual, auditory, kinesthetic/multimodal)...", "tindakLanjut": "Providing diverse contextual learning media and active simulations..."},
+    {"kategori": "Social and Cultural Background", "identifikasi": "Contextual student community and socio-cultural environment...", "tindakLanjut": "Incorporating inclusive real-world relevance into learning tasks..."},
+    {"kategori": "Learning Needs & Readiness", "identifikasi": "Tiered student cognitive readiness and accommodation needs...", "tindakLanjut": "Guided step-by-step exercises and peer collaboration..."},
+    {"kategori": "Work Ethics and Attitudes", "identifikasi": "Work discipline, responsibility, and collaboration attitudes...", "tindakLanjut": "Reinforcing collaborative team culture and safety standards..."}
+  ],
+  "identifikasiMateri": [
+    {"kategori": "Knowledge Type", "deskripsi": "Conceptual and practical procedural knowledge of ${topik}..."},
+    {"kategori": "Real-World Relevance", "deskripsi": "Direct authentic industry and everyday applications of ${topik}..."},
+    {"kategori": "Difficulty Level", "deskripsi": "Structured and progressive learning difficulty tier..."}
+  ],
+  "dimensiProfil": [
+    {"dimensi": "Critical Reasoning", "deskripsi": "Students analyze, evaluate, and solve authentic problems concerning ${topik}..."}
+  ],
+  "desainPembelajaran": {
+    "pemahamanBermakna": "Students realize that mastering ${topik} equips them with essential skills for real-world problem solving...",
+    "pertanyaanPemantik": ["Essential Question 1 on ${topik}", "Essential Question 2", "Essential Question 3"],
+    "lintasDisiplin": "Cross-disciplinary connections between ${mapel} and related vocational/academic disciplines...",
+    "praktikPedagogis": "Pedagogical implementation using active, student-centered learning and scaffolding...",
+    "kemitraan": "Learning partnerships with industry practitioners or digital communities...",
+    "lingkungan": "Conducive, inclusive classroom or laboratory environment leveraging ${fasilitas}..."
+  },
+  "pengalamanBelajar": [
+    {
+      "pertemuan": 1,
+      "subTopik": "Specific sub-topic for meeting 1",
+      "awal": {
+        "waktu": "15 Minutes",
+        "aktivitasGuru": [
+          "Opens the learning session warmly, leads prayer, and checks student attendance.",
+          "Presents contextual real-world phenomena related to ${topik}.",
+          "Conducts a brief diagnostic pretest to evaluate prior student knowledge.",
+          "Outlines learning objectives, activity flow, and assessment criteria."
+        ],
+        "aktivitasMurid": [
+          "Responds to greetings, participates reverently in prayer, and prepares learning readiness.",
+          "Engages with introductory questions and shares initial understanding of ${topik}.",
+          "Completes the initial diagnostic assessment independently and diligently.",
+          "Listens attentively to learning objectives and planned activity sequence."
+        ]
+      },
+      "inti": [
+        {
+          "sintaks": "Syntax 1: [Syntax Stage Name]",
+          "waktu": "30 Minutes",
+          "aktivitasGuru": [
+            "Teacher action point 1 specific to this syntax — short sentence starting with active verb.",
+            "Teacher action point 2 specific to this syntax.",
+            "Teacher action point 3 specific to this syntax."
+          ],
+          "aktivitasMurid": [
+            "Student action point 1 specific to this syntax — short sentence starting with active verb.",
+            "Student action point 2 specific to this syntax.",
+            "Student action point 3 specific to this syntax."
+          ],
+          "integrasiPendekatan": "Application of ${pendekatan}: [Concrete integration of digital media ${media} / method ${metode}]."
+        }
+      ],
+      "penutup": {
+        "waktu": "15 Minutes",
+        "aktivitasGuru": [
+          "Facilitates student metacognitive reflection on today's learning outcomes.",
+          "Synthesizes core concepts and summaries collaboratively with students.",
+          "Provides constructive feedback and announces follow-up agenda for the next session.",
+          "Closes session with a group prayer and farewell."
+        ],
+        "aktivitasMurid": [
+          "Shares individual reflections regarding competency mastery and challenges encountered.",
+          "Formulates summary takeaways of the essential topic in concise notes.",
+          "Cleans and organizes facilities ${fasilitas} used during the session.",
+          "Prays and responds to the closing farewell respectfully."
+        ]
+      }
+    }
+  ],
+  "materiAjarDeskriptif": "Comprehensive scientific explanation and structured instructional material written entirely in English about ${topik}...\n\n| Technical Parameter / Aspect | Operational Principles | Industry Application Standards |\n|---|---|---|\n| ... | ... | ... |\n\nAdvanced analytical paragraphs and troubleshooting procedures for ${topik}.",
+  "asesmen": [
+    {"jenis": "Diagnostic", "bentuk": "Pre-test (Diagnostic Initial Cognitive Test)", "keterangan": "Identifying initial cognitive readiness on ${topik}"},
+    {"jenis": "Formative", "bentuk": "Formative Assessment (Observation Sheet & Performance Review)", "keterangan": "Continuous observation and process evaluation during group activities"},
+    {"jenis": "Summative", "bentuk": "Post-test / Summative Assessment (Practical Performance & Portfolio)", "keterangan": "Comprehensive project evaluation and competency testing"}
+  ],
+  "refleksi": {
+    "guru": ["Teacher reflection 1 on student engagement", "Teacher reflection 2", "Teacher reflection 3", "Teacher reflection 4", "Teacher reflection 5"],
+    "murid": ["Student reflection 1 on concept mastery", "Student reflection 2", "Student reflection 3", "Student reflection 4", "Student reflection 5"]
+  },
+  "lkpd": {
+    "judul": "Student Worksheet: Application of ${topik}",
+    "tujuan": "Students are able to apply essential principles of ${topik} collaboratively.",
+    "tugas": [
+      "Step 1: Problem Identification & Research",
+      "Step 2: Technical Design & Planning",
+      "Step 3: Practical Implementation",
+      "Step 4: Quality Testing & Review",
+      "Step 5: Reflection & Reporting"
+    ]
+  },
+  "rubrikPenilaian": [
+    {"aspek": "Technical Concepts & Practical Competence (${topik})", "skor1": "Descriptor Score 1", "skor2": "Descriptor Score 2", "skor3": "Descriptor Score 3", "skor4": "Descriptor Score 4"},
+    {"aspek": "Procedural Workflow & Safety Compliance", "skor1": "Descriptor Score 1", "skor2": "Descriptor Score 2", "skor3": "Descriptor Score 3", "skor4": "Descriptor Score 4"},
+    {"aspek": "Collaboration, Communication & Presentation", "skor1": "Descriptor Score 1", "skor2": "Descriptor Score 2", "skor3": "Descriptor Score 3", "skor4": "Descriptor Score 4"}
+  ],
+  "pengayaan": "Contextual enrichment activity for students who exceed mastery standards in ${topik}.",
+  "remedial": "Step-by-step guided remedial assistance for students needing essential reinforcement.",
+  "glosarium": [
+    {"istilah": "Technical Term 1 from ${topik}", "definisi": "Precise scientific/technical definition in English."},
+    {"istilah": "Technical Term 2 from ${topik}", "definisi": "Precise scientific/technical definition in English."},
+    {"istilah": "Technical Term 3 from ${topik}", "definisi": "Precise scientific/technical definition in English."},
+    {"istilah": "Technical Term 4 from ${topik}", "definisi": "Precise scientific/technical definition in English."},
+    {"istilah": "Technical Term 5 from ${topik}", "definisi": "Precise scientific/technical definition in English."},
+    {"istilah": "Technical Term 6 from ${topik}", "definisi": "Precise scientific/technical definition in English."}
+  ],
+  "daftarPustaka": [
+    "Author, A. (2025). Standard Technical Reference in ${mapel}. Academic Publishing.",
+    "Author, B. (2024). Practical Guide to ${topik}. Professional Press.",
+    "Author, C. (2025). Industry Handbook and Specifications. Technical Institute.",
+    "Author, D. (2023). Core Principles of ${mapel}. Educational Media.",
+    "Author, E. (2024). Modern Applied Methods. Science Publishers."
+  ]
+}` : `{
   "identifikasiPesertaDidik": [
     {"kategori": "Pengetahuan Awal", "identifikasi": "...", "tindakLanjut": "..."},
     {"kategori": "Minat dan Gaya Belajar", "identifikasi": "...", "tindakLanjut": "..."},
@@ -2952,7 +2926,7 @@ FORMAT STRUKTUR JSON YANG WAJIB DIHASILKAN:
       }
     }
   ],
-  "materiAjarDeskriptif": "Naskah materi ajar ilmiah dan teknis mendalam tentang ${topik} (fokus murni pada konsep, prinsip kerja, dan SOP tanpa kalimat meta 'dalam konteks pembelajaran...').\n\n| Parameter / Dimensi Teknis | Deskripsi & Prinsip Operasional | Standar Penerapan Industri |\n|---|---|---|\n| ... | ... | ... |\n\nParagraf analisis lanjutan dan prosedur pemecahan masalah teknis materi ${topik} di dunia nyata.",
+  "materiAjarDeskriptif": "Naskah materi ajar ilmiah dan teknis mendalam tentang ${topik} (fokus murni pada konsep, prinsip kerja, dan SOP tanpa kalimat meta 'dalam konteks pembelajaran...').\\n\\n| Parameter / Dimensi Teknis | Deskripsi & Prinsip Operasional | Standar Penerapan Industri |\\n|---|---|---|\\n| ... | ... | ... |\\n\\nParagraf analisis lanjutan dan prosedur pemecahan masalah teknis materi ${topik} di dunia nyata.",
   "asesmen": [
     {"jenis": "Diagnostik", "bentuk": "Pretest (Tes Diagnostik Kognitif Awal)", "keterangan": "Mengidentifikasi kesiapan kognitif dan pengetahuan prasyarat murid terhadap materi ${topik}"},
     {"jenis": "Formatif", "bentuk": "Asesmen Formatif (Lembar Observasi Proses & Kinerja Praktik)", "keterangan": "Memantau keterlibatan aktif, daya nalar kritis, dan keterampilan proses kolaboratif murid selama pembelajaran"},
@@ -2990,6 +2964,67 @@ FORMAT STRUKTUR JSON YANG WAJIB DIHASILKAN:
     "Penulis/Lembaga, E. (Tahun). Judul referensi ke-5 spesifik materi ${topik}. Penerbit/Sumber."
   ]
 }`;
+
+  const masterPrompt = `[SESI GENERATE BARU: ${generateTimestamp} | INPUT: ${inputFingerprint}]
+${masterLanguageMandate}
+${isEn ? 'You are an Elite Curriculum Development Specialist & Instructional Designer for the Indonesian Kurikulum Merdeka (Merdeka Curriculum).' : 'Anda adalah Dewan Pakar Pengembang Kurikulum Merdeka Terkemuka (BSKAP Kemendikbudristek).'}
+${isEn ? 'Your Task: Formulate a COMPLETE, SCHOLARLY, DEEP, and 100% CONTEXTUAL TEACHING MODULE (MODUL AJAR) DOCUMENT IN ENGLISH based strictly on the following academic inputs.' : 'Tugas Anda: Susun DOKUMEN MODUL AJAR KURIKULUM MERDEKA secara SANGAT LENGKAP, MENDALAM, dan 100% KONTEKSTUAL KHUSUS UNTUK KOMBINASI DATA INPUT BERIKUT.'}
+
+${isEn ? 'CRITICAL MANDATE: ALL generated narrative and text values inside the JSON MUST be in ENGLISH. Do not use Indonesian in text values.' : 'PENTING: SELURUH output yang Anda hasilkan HARUS berbeda secara substantif dari output sebelumnya karena data input ini UNIK. Jangan mengulang pola kalimat yang sama.'}
+
+=============================================================================
+${isEn ? 'TEACHER ACADEMIC INPUT DATA (SINGLE CONSOLIDATED STAGE):' : 'SELURUH DATA INPUT GURU (FORM 3 TAHAPAN — KONSOLIDASI TUNGGAL):'}
+=============================================================================
+
+${isEn ? 'STAGE 1 — IDENTITY & INSTRUCTIONAL MODEL:' : 'TAHAP 1 — IDENTITAS & MODEL PEMBELAJARAN:'}
+- ${isEn ? 'Educational Institution' : 'Satuan Pendidikan / Institusi'} : ${institusi}
+- ${isEn ? 'Author / Teacher' : 'Nama Pendidik'}                 : ${penyusun}
+- ${isEn ? 'Academic Year' : 'Tahun Penyusunan'}              : ${tahun}
+- ${isEn ? 'Grade Level' : 'Jenjang Sekolah'}               : ${jenjang}
+- ${isEn ? 'Vocational Major' : 'Jurusan / Program Keahlian'}    : ${jurusan}
+- ${isEn ? 'Phase & Grade' : 'Fase & Kelas'}                  : ${fase}
+- ${isEn ? 'Subject' : 'Mata Pelajaran'}                : ${mapel}
+- ${isEn ? 'Learning Outcome Element' : 'Elemen Capaian Pembelajaran'}   : ${elemenCP}
+- ${isEn ? 'Context Type' : 'Jenis Input Konteks'}           : ${jenisInput}
+- ${jenisInput} / ${isEn ? 'Core Topic' : 'Materi Pokok'}  : ${topik}
+- ${isEn ? 'Instructional Model' : 'Model Pembelajaran'}            : ${model}
+- ${isEn ? 'Pedagogical Approach' : 'Pendekatan Pembelajaran'}        : ${pendekatan}
+- ${isEn ? 'Teaching Methods' : 'Metode Pembelajaran'}           : ${metode}
+- ${isEn ? 'Time Allocation' : 'Alokasi Waktu'}                 : ${totalJP} (${targetPertemuanCount} ${isEn ? 'Sessions' : 'Pertemuan'})
+- ${isEn ? 'Digital Media' : 'Media Digital yang Digunakan'}  : ${media}
+- ${isEn ? 'Majority Student Learning Style' : 'Gaya Belajar Mayoritas Murid'}  : ${gayaBelajar}
+- ${isEn ? 'Learning Facilities' : 'Sarana / Fasilitas Belajar'}    : ${fasilitas}
+
+${isEn ? 'STAGE 2 — CONTEXT & INITIAL IDENTIFICATION:' : 'TAHAP 2 — KONTEKS & IDENTIFIKASI AWAL:'}
+- ${isEn ? 'Learning Outcomes (CP)' : 'Capaian Pembelajaran (CP)'}     : ${capaianPembelajaran}
+- ${isEn ? 'Learning Objectives (TP)' : 'Tujuan Pembelajaran (TP)'}      : 
+${tujuanPembelajaran}
+- ${isEn ? 'Supplementary Materials (Optional)' : 'Materi Tambahan / Pengayaan'}   : ${materiTambahan}
+- ${isEn ? 'Target Graduate Profile Dimensions' : 'Dimensi Profil Lulusan Target'} : ${dimensi}
+- ${isEn ? 'Student Identification' : 'Identifikasi Peserta Didik'}    : ${idPeserta}
+- ${isEn ? 'Learning Material Identification' : 'Identifikasi Materi Pembelajaran'}: ${idMateri}
+- ${isEn ? 'Graduate Profile Identification' : 'Identifikasi Profil Lulusan'}   : ${idProfil}
+
+=============================================================================
+${isEn ? 'INSTRUCTIONAL MODEL & APPROACH GUIDELINES (STRICTLY REQUIRED):' : 'INSTRUKSI MODEL & PENDEKATAN PEMBELAJARAN (WAJIB DITERAPKAN SECARA KETAT):'}
+=============================================================================
+${modelKlasifikasi}
+${pendekatanPetunjuk}
+${isEn ? `TEACHING METHODS: "${metode}". All classroom learning activities MUST explicitly reflect the application of "${metode}".` : `METODE PEMBELAJARAN: "${metode}". Seluruh skenario aktivitas pembelajaran di kelas HARUS mencerminkan penerapan metode "${metode}".`}
+
+=============================================================================
+${isEn ? 'MANDATORY RULES & JSON FORMAT INSTRUCTIONS:' : 'ATURAN WAJIB DAN MENGIKAT — PELANGGARAN TIDAK DIIZINKAN:'}
+=============================================================================
+1. ${isEn ? 'OUTPUT STRICTLY PURE JSON without preamble or markdown code blocks (must start with { and end with }).' : 'OUTPUT HANYA TEKS JSON MURNI (dimulai karakter { dan diakhiri karakter }). JANGAN ada teks pengantar, penutup, atau blok markdown.'}
+2. ${isEn ? 'DO NOT use double quotes inside string values! Use single quotes for any quoted terms.' : 'DILARANG KERAS MENGGUNAKAN TANDA PETIK DUA (") DI DALAM TEKS NILAI STRING! Gunakan tanda petik tunggal (\').'}
+3. ${isEn ? 'All newlines inside strings must be valid escaped \\n.' : 'Seluruh baris baru di dalam nilai teks string harus ditulis berupa escape \\\\n yang valid.'}
+4. ${isEn ? 'Generate exactly ' + targetPertemuanCount + ' meetings in pengalamanBelajar array.' : 'WAJIB hasilkan pengalaman belajar sejumlah TEPAT ' + targetPertemuanCount + ' PERTEMUAN.'}
+${isEn ? '5. ALL CONTENT TEXT VALUES MUST BE 100% IN NATURAL, HIGH-QUALITY ENGLISH.' : ''}
+
+=============================================================================
+${isEn ? 'REQUIRED JSON STRUCTURE SCHEMA:' : 'FORMAT STRUKTUR JSON YANG WAJIB DIHASILKAN:'}
+=============================================================================
+${schemaTemplate}`;
 
   // ========================================================================
   // STEP 3: KIRIM MASTER PROMPT KE AI — SATU REQUEST, SATU RESPONSE

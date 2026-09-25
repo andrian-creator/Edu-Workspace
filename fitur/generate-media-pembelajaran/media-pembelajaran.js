@@ -432,7 +432,37 @@ async function handleGenerateOutline() {
   if (loadingEl) loadingEl.style.display = 'flex';
   if (contentEl) contentEl.style.display = 'none';
 
-  const promptText = `
+  const isEn = typeof getAppLanguage === 'function' && getAppLanguage() === 'en';
+
+  const promptText = isEn ? `
+You are an Expert Instructional Presentation Media Designer.
+Your task is to design a structured, engaging, and classroom-ready OUTLINE for a ${targetSlideCount}-slide presentation for:
+
+- Subject: ${mapel}
+- Grade Level: ${kelas}
+- Topic / Learning Content:
+${materi}
+
+Outline Structure Specifications:
+- Slide 1: Engaging Presentation Title & Core Topic Subtitle.
+- Slide 2 to ${targetSlideCount - 1}: Essential concepts, real-world examples, interactive engagement, and visual understanding.
+- Slide ${targetSlideCount}: Conclusion & Key Takeaway Reflection / Quick Check Quiz.
+
+CRITICAL MANDATE: Output MUST be 100% in natural, high-quality ENGLISH.
+Output format MUST strictly be a pure JSON ARRAY without any introductory text or markdown code fences (only [ ... ]):
+[
+  {
+    "slideNumber": 1,
+    "title": "Short & Engaging Slide Title",
+    "points": [
+      "Key definition / core concept explanation",
+      "Real-world application / illustrative example",
+      "Key visual or interactive activity note"
+    ],
+    "visualIdea": "Description of the slide graphic, infographic, or conceptual visual"
+  }
+]
+`.trim() : `
 Anda adalah Pakar Desain Media Presentasi Pembelajaran Edukatif Kurikulum Merdeka.
 Tugas Anda adalah merancang OUTLINE ${targetSlideCount} slide presentasi pembelajaran yang terstruktur, menarik, dan siap diajarkan untuk:
 
@@ -466,7 +496,7 @@ Format Keluaran WAJIB berupa JSON ARRAY murni tanpa teks pembuka atau penutup ma
     let slidesData = parseSlideJsonResponse(aiResponse);
 
     if (!slidesData || slidesData.length === 0) {
-      throw new Error("Google Gemini AI belum berhasil merumuskan outline slide. Silakan coba klik tombol Generate Outline Slide kembali.");
+      throw new Error(isEn ? "Google Gemini AI has not yet generated the slide outline. Please try clicking Generate Slide Outline again." : "Google Gemini AI belum berhasil merumuskan outline slide. Silakan coba klik tombol Generate Outline Slide kembali.");
     }
 
     currentOutlineSlides = slidesData;

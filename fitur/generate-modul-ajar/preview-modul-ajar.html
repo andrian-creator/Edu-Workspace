@@ -940,10 +940,96 @@
       }
     }
 
+    function translateCategoryName(cat, isEn) {
+      if (!isEn || !cat) return cat || '';
+      const map = {
+        'Pengetahuan Awal': 'Prior Knowledge',
+        'Minat dan Gaya Belajar': 'Interests and Learning Styles',
+        'Latar Belakang Sosial': 'Social and Cultural Background',
+        'Latar Belakang Sosial Budaya': 'Social and Cultural Background',
+        'Kebutuhan Belajar': 'Learning Needs & Readiness',
+        'Etika dan Sikap Kerja': 'Work Ethics and Attitudes',
+        'Jenis Pengetahuan': 'Knowledge Type',
+        'Relevansi Kehidupan': 'Real-World Relevance',
+        'Tingkat Kesulitan': 'Difficulty Level'
+      };
+      return map[cat] || cat;
+    }
+
+    function translateDimensionName(dim, isEn) {
+      if (!isEn || !dim) return dim || '';
+      const map = {
+        'Penalaran Kritis': 'Critical Reasoning',
+        'Kreativitas': 'Creativity',
+        'Kolaborasi': 'Collaboration',
+        'Kemandirian': 'Independence',
+        'Kebhinekaan Global': 'Global Diversity',
+        'Beriman, Bertakwa kepada Tuhan YME, dan Berakhlak Mulia': 'Faith, Piety, and Noble Character',
+        'Gotong Royong': 'Mutual Cooperation'
+      };
+      return map[dim] || dim;
+    }
+
+    function translateSintaksTitle(title, isEn) {
+      if (!isEn || !title) return title || '';
+      let t = String(title).trim();
+      const map = {
+        'Penentuan Pertanyaan Mendasar (Start with Essential Question)': 'Essential Question Formulation (Start with Essential Question)',
+        'Mendesain Perencanaan Proyek (Design a Plan for the Project)': 'Designing Project Plan (Design a Plan for the Project)',
+        'Menyusun Jadwal Pembuatan (Create a Schedule)': 'Creating Project Schedule (Create a Schedule)',
+        'Memonitor Keaktifan dan Perkembangan Proyek (Monitor Students and Progress)': 'Monitoring Progress and Engagement (Monitor Students and Progress)',
+        'Menguji Hasil / Uji Kualitas (Assess the Outcome & Quality Control)': 'Assessing the Outcome & Quality Control',
+        'Mengevaluasi Pengalaman Belajar (Evaluate the Experience)': 'Evaluating Learning Experience (Evaluate the Experience)',
+        'Orientasi Masalah dan Merumuskan Pertanyaan Penyelidikan': 'Problem Orientation & Inquiry Question Formulation',
+        'Merumuskan Hipotesis Penyelidikan': 'Formulating Inquiry Hypotheses',
+        'Pengumpulan Data dan Eksplorasi Eksperimen': 'Data Collection & Experimental Exploration',
+        'Pengujian Hipotesis dan Analisis Data': 'Hypothesis Testing & Data Analysis',
+        'Penarikan Kesimpulan (Generalisasi Ilmiah)': 'Drawing Scientific Conclusions (Generalization)',
+        'Orientasi Masalah': 'Problem Orientation',
+        'Mengorganisasi Murid untuk Belajar': 'Organizing Students for Learning',
+        'Membimbing Penyelidikan': 'Guiding Investigation',
+        'Mengembangkan Karya Solutif': 'Developing Solutions & Artifacts',
+        'Mengembangkan dan Menyajikan Hasil Karya': 'Developing & Presenting Work Artifacts',
+        'Menganalisis & Mengevaluasi': 'Analyzing & Evaluating Problem Solving',
+        'Menganalisis dan Mengevaluasi Proses Pemecahan Masalah': 'Analyzing and Evaluating Problem-Solving Process',
+        'Pemberian Rangsangan (Stimulasi)': 'Stimulation',
+        'Identifikasi Masalah': 'Problem Statement / Identification',
+        'Pengumpulan Data': 'Data Collection',
+        'Pengolahan Data': 'Data Processing',
+        'Pembuktian (Verifikasi)': 'Verification',
+        'Menarik Simpulan (Generalisasi)': 'Drawing Conclusions (Generalization)'
+      };
+      for (const [k, v] of Object.entries(map)) {
+        if (t.includes(k)) {
+          t = t.replace(k, v);
+        }
+      }
+      return t.replace(/\bSintaks\b/g, 'Syntax Stage');
+    }
+
+    function translateRubrikAspect(aspect, isEn) {
+      if (!isEn || !aspect) return aspect || '';
+      let a = String(aspect).trim();
+      const map = {
+        'Penguasaan Konsep & Keterampilan Teknis': 'Technical Concepts & Practical Competence',
+        'Prosedur Kerja, Kepatuhan SOP & Keselamatan Fasilitas': 'Work Procedures, SOP Compliance & Safety',
+        'Kolaborasi Tim, Komunikasi & Gelar Karya': 'Team Collaboration, Communication & Presentation',
+        'Penguasaan Konseptual & Analisis Masalah': 'Conceptual Mastery & Problem Analysis',
+        'Keterampilan Penugasan Prosedural & Akurasi Hasil': 'Procedural Task Skills & Result Accuracy',
+        'Komunikasi Ilmiah, Penalaran Kritis & Kolaborasi': 'Scientific Communication, Critical Reasoning & Collaboration'
+      };
+      for (const [k, v] of Object.entries(map)) {
+        if (a.includes(k)) {
+          a = a.replace(k, v);
+        }
+      }
+      return a;
+    }
+
     /**
      * Format aktivitas guru dan murid menjadi daftar terstruktur per poin (1., 2., dst.)
      */
-    function formatActivityPoints(raw) {
+    function formatActivityPoints(raw, isEn) {
       if (!raw || (typeof raw === 'string' && !raw.trim())) return '-';
 
       let items = [];
@@ -989,7 +1075,7 @@
       }
 
       // Bersihkan penomoran awal dan rapikan tanda baca
-      const cleaned = items.map(item => {
+      let cleaned = items.map(item => {
         let str = item
           .replace(/^(\d+[\.\)]|\-|\*|•)\s*/, '')
           .replace(/^serta\s+/i, '')
@@ -1004,6 +1090,31 @@
         }
         return str;
       }).filter(Boolean);
+
+      if (isEn) {
+        cleaned = cleaned.map(item => {
+          let s = item;
+          // Pembukaan umum
+          s = s.replace(/Membuka sesi pembelajaran dengan salam hangat, memimpin doa bersama, dan memeriksa presensi kehadiran murid\./i, 'Opens the learning session warmly, leads prayer, and checks student attendance.');
+          s = s.replace(/Mengaitkan apersepsi kontekstual fenomena nyata dengan materi/i, 'Connects contextual real-world phenomena with the lesson topic');
+          s = s.replace(/Melaksanakan Pretest singkat untuk mengidentifikasi pengetahuan awal dan kesiapan belajar murid\./i, 'Conducts a brief diagnostic pretest to evaluate students\' prior knowledge and learning readiness.');
+          s = s.replace(/Menyampaikan tujuan pembelajaran, skenario aktivitas, dan kriteria penilaian\./i, 'Presents learning objectives, activity flow, and assessment criteria.');
+          s = s.replace(/Menjawab salam guru, berdoa dengan khidmat, dan mempersiapkan kesiapan belajar\./i, 'Responds to greetings, participates reverently in prayer, and prepares learning readiness.');
+          s = s.replace(/Merespons pertanyaan apersepsi dan mengemukakan pengetahuan awal terkait materi/i, 'Engages with introductory questions and shares initial understanding of');
+          s = s.replace(/Mengerjakan instrumen Pretest diagnostik awal secara mandiri dan jujur\./i, 'Completes the initial diagnostic assessment independently and diligently.');
+          s = s.replace(/Menyimak tujuan pembelajaran serta alur aktivitas yang akan dilaksanakan\./i, 'Listens attentively to learning objectives and planned activity sequence.');
+          // Penutup umum
+          s = s.replace(/Memfasilitasi murid melakukan refleksi metakognitif terhadap pemahaman materi/i, 'Facilitates student metacognitive reflection on understanding of');
+          s = s.replace(/Bersama murid merangkum intisari simpulan konsep materi yang telah dipelajari\./i, 'Synthesizes core concepts and summaries collaboratively with students.');
+          s = s.replace(/Memberikan umpan balik penguatan serta menginformasikan agenda tindak lanjut pertemuan berikutnya\./i, 'Provides constructive feedback and announces follow-up agenda for the next session.');
+          s = s.replace(/Menutup sesi pembelajaran dengan doa bersama dan salam penutup\./i, 'Closes session with a group prayer and farewell.');
+          s = s.replace(/Menyampaikan refleksi diri terkait penguasaan materi, kendala yang dihadapi, dan kepuasan belajar\./i, 'Shares individual reflections regarding competency mastery and challenges encountered.');
+          s = s.replace(/Merumuskan poin-poin kesimpulan materi inti secara lisan maupun catatan ringkas\./i, 'Formulates summary takeaways of the essential topic in concise notes.');
+          s = s.replace(/Merapikan kembali sarana kerja dan fasilitas/i, 'Cleans and organizes the equipment and facilities');
+          s = s.replace(/Berdoa bersama guru dan menjawab salam penutup dengan tertib\./i, 'Prays and responds to the closing farewell respectfully.');
+          return s;
+        });
+      }
 
       if (cleaned.length === 0) return '-';
 
@@ -1474,14 +1585,16 @@
 
       return list.map((item, idx) => {
         let sintaksTitle = item.sintaks || item.namaSintaks || item.tahap || '';
-        if (!sintaksTitle && list.length > 1) {
+        if (sintaksTitle) {
+          sintaksTitle = translateSintaksTitle(sintaksTitle, isEn);
+        } else if (list.length > 1) {
           sintaksTitle = isEn ? `Syntax Stage ${idx + 1}` : `Sintaks Tahap ${idx + 1}`;
         }
         const sintaksMinutes = baseTime + (idx < rem ? 1 : 0);
         const waktu = `${sintaksMinutes} ${minWord}`;
         item.waktu = waktu;
-        const guru = formatActivityPoints(item.aktivitasGuru);
-        const murid = formatActivityPoints(item.aktivitasMurid);
+        const guru = formatActivityPoints(item.aktivitasGuru, isEn);
+        const murid = formatActivityPoints(item.aktivitasMurid, isEn);
 
         const sintaksHeader = sintaksTitle ? `
           <tr style="background-color: #f8fafc;">
@@ -1844,7 +1957,7 @@
       const pesertaItems = ai.identifikasiPesertaDidik || [];
       tablePesertaBody.innerHTML = pesertaItems.map(item => `
         <tr>
-          <td><strong>${item.kategori}</strong></td>
+          <td><strong>${translateCategoryName(item.kategori, isEn)}</strong></td>
           <td>${item.identifikasi}</td>
           <td>${item.tindakLanjut}</td>
         </tr>
@@ -1854,7 +1967,7 @@
       const materiItems = ai.identifikasiMateri || [];
       tableMateriBody.innerHTML = materiItems.map(item => `
         <tr>
-          <td><strong>${item.kategori}</strong></td>
+          <td><strong>${translateCategoryName(item.kategori, isEn)}</strong></td>
           <td>${item.deskripsi}</td>
         </tr>
       `).join('');
@@ -1863,7 +1976,7 @@
       const profilItems = ai.dimensiProfil || [];
       tableProfilBody.innerHTML = profilItems.map(item => `
         <tr>
-          <td><strong>${item.dimensi}</strong></td>
+          <td><strong>${translateDimensionName(item.dimensi, isEn)}</strong></td>
           <td>${item.deskripsi}</td>
         </tr>
       `).join('');
@@ -1878,7 +1991,14 @@
         const tpLines = tp.split('\n').map(l => l.trim()).filter(Boolean);
         tpContainer.innerHTML = `<ol class="doc-list doc-list-alpha">${tpLines.map(line => `<li>${line.replace(/^[0-9]+[.\-)]\s*|^[a-zA-Z][.\-)]\s*/, '')}</li>`).join('')}</ol>`;
       } else {
-        tpContainer.innerHTML = `
+        tpContainer.innerHTML = isEn ? `
+          <ol class="doc-list doc-list-alpha">
+            <li>Students are able to identify and explain fundamental concepts, core principles, and operational frameworks of <em>${topik}</em> comprehensively.</li>
+            <li>Students are able to analyze contextual problems and test problem-solving alternatives related to <em>${topik}</em> through authentic case studies.</li>
+            <li>Students are able to develop innovative solutions, design projects or analytical reports on <em>${topik}</em>, and present them collaboratively and systematically.</li>
+            <li>Students are able to reflect on the meaning of learning <em>${topik}</em> and apply insights to authentic real-world situations responsibly.</li>
+          </ol>
+        ` : `
           <ol class="doc-list doc-list-alpha">
             <li>Murid mampu mengidentifikasi dan menjelaskan konsep dasar, prinsip inti, serta kerangka kerja materi <em>${topik}</em> secara komprehensif.</li>
             <li>Murid mampu menganalisis permasalahan kontekstual dan menguji berbagai alternatif pemecahan masalah terkait <em>${topik}</em> melalui studi kasus nyata.</li>
@@ -1946,8 +2066,8 @@
               <tr>
                 <td style="vertical-align: top;"><strong>${awalTitle}</strong></td>
                 <td style="vertical-align: top;">${awalMinWord}</td>
-                <td style="vertical-align: top;">${formatActivityPoints(m.awal?.aktivitasGuru)}</td>
-                <td style="vertical-align: top;">${formatActivityPoints(m.awal?.aktivitasMurid)}</td>
+                <td style="vertical-align: top;">${formatActivityPoints(m.awal?.aktivitasGuru, isEn)}</td>
+                <td style="vertical-align: top;">${formatActivityPoints(m.awal?.aktivitasMurid, isEn)}</td>
               </tr>
 
               ${renderIntiRows(m.inti, pendekatan, model, stageTimes.intiMin)}
@@ -1955,8 +2075,8 @@
               <tr>
                 <td style="vertical-align: top;"><strong>${penutupTitle}</strong></td>
                 <td style="vertical-align: top;">${penutupMinWord}</td>
-                <td style="vertical-align: top;">${formatActivityPoints(m.penutup?.aktivitasGuru)}</td>
-                <td style="vertical-align: top;">${formatActivityPoints(m.penutup?.aktivitasMurid)}</td>
+                <td style="vertical-align: top;">${formatActivityPoints(m.penutup?.aktivitasGuru, isEn)}</td>
+                <td style="vertical-align: top;">${formatActivityPoints(m.penutup?.aktivitasMurid, isEn)}</td>
               </tr>
             </tbody>
           </table>
@@ -1982,7 +2102,13 @@
         );
 
         if (isVideoKamera) {
-          materiDeskriptif = renderFormattedContentWithTables(`
+          materiDeskriptif = renderFormattedContentWithTables(isEn ? `
+The core subject matter **${topik}** within **${mapel}** investigates a comprehensive framework of professional camera operations, visual staging, and cinematic language. The study begins with mastering fundamental concepts of visual framing, shot size selection, and camera angle elevation variations that serve as visual storytelling instruments and establish audience psychological impact.
+
+In scene recording practice, students operate camera equipment adhering to cinematic continuity rules such as the **180-Degree Rule** to ensure eyeline consistency between characters. In addition, focus sharpness and depth of field (**Depth of Field / DoF**) parameters are precisely controlled through combinations of aperture, lens focal length, and physical subject distance, complemented by **White Balance (WB)** color calibration under appropriate Kelvin temperatures.
+
+Mastering these technical parameters demands solid production team coordination between the Camera Operator, 1st Assistant Camera (Focus Puller), and Director of Photography (DoP) to produce broadcast-quality visual footage free of technical distortion and exposure flaws.
+          ` : `
 Materi pokok **${topik}** pada mata pelajaran **${mapel}** mengkaji kerangka kerja komprehensif penataan kamera, tata visual, dan bahasa sinematografi profesional. Pembahasan diawali dengan penguasaan konsep dasar pembingkaian visual (visual framing), pemilihan skala bidik gambar (shot size), serta variasi sudut elevasi kamera (camera angle) yang berfungsi sebagai instrumen bercerita (visual storytelling) dan pembangun dampak psikologis penonton.
 
 Dalam praktik perekaman adegan, peserta didik mengoperasikan instrumen kamera dengan memperhatikan kaidah kontinuitas sinematik seperti **Aturan 180 Derajat (180-Degree Rule)** guna menjamin konsistensi arah pandang (eyeline match) antarkarakter. Selain itu, parameter ketajaman fokus dan kedalaman ruang (**Depth of Field / DoF**) dikendalikan secara presisi melalui kombinasi bukaan diafragma (aperture), panjang fokus lensa (focal length), dan jarak fisik ke subjek, serta disempurnakan dengan kalibrasi warna **White Balance (WB)** di bawah suhu pencahayaan Kelvin yang tepat.
@@ -1990,7 +2116,13 @@ Dalam praktik perekaman adegan, peserta didik mengoperasikan instrumen kamera de
 Penguasaan parameter teknis tersebut menuntut koordinasi tim produksi yang solid antara Penata Kamera (Camera Operator), Asisten Kamera (Focus Puller), dan Pengarah Sinematografi (Director of Photography) guna menghasilkan rekaman visual berkualitas broadcast bebas dari distorsi teknis dan cacat eksposur.
           `);
         } else if (isTipografi) {
-          materiDeskriptif = renderFormattedContentWithTables(`
+          materiDeskriptif = renderFormattedContentWithTables(isEn ? `
+The core subject matter **${topik}** within **${mapel}** investigates the art, science, and methodologies of visual communication design through professional letterform design. The study begins with in-depth understanding of type anatomy, baseline structures (baseline, x-height, cap height, ascender, descender), and major typeface classifications such as Serif, Sans Serif, Script, and Display with distinct visual characteristics and communicative functions.
+
+In applied graphic design, students master micro-typography and macro-typography parameters including spatial adjustments (kerning, tracking, leading), visual hierarchy establishment (headline, subheadline, body copy), and visual contrast ratios ensuring readability and legibility. Typographic layout composition integrates grid systems and negative space utilization to achieve balanced visual harmony.
+
+Alongside contemporary digital design ecosystems, students explore responsive variable font technologies and commercial font licensing compliance, equipping learners with professional competencies for editorial publication layout, brand visual identity, and modern digital interfaces (UI/UX).
+          ` : `
 Materi pokok **${topik}** pada mata pelajaran **${mapel}** mengkaji seni, sains, dan metodologi perancangan komunikasi visual melalui penataan huruf secara profesional. Pembahasan diawali dengan pemahaman mendalam mengenai anatomi huruf (type anatomy), struktur garis dasar (baseline, x-height, cap height, ascender, descender), serta klasifikasi rumpun huruf utama seperti Serif, Sans Serif, Script, dan Display yang memiliki karakteristik visual dan fungsi komunikasi yang berbeda.
 
 Dalam tataran penerapan grafis terapan, peserta didik menguasai parameter mikro-tipografi dan makro-tipografi meliputi pengaturan jarak spasial (kerning, tracking, leading), penetapan hierarki visual (headline, subheadline, body copy), serta pertimbangan rasio kontras visual guna menjamin keterbacaan (readability) dan kejelasan karakter (legibility). Penguasaan tata letak tipografi diintegrasikan dengan sistem kisi (grid system) dan pemanfaatan ruang negatif (negative space) agar komposisi karya memiliki keseimbangan ritmis yang prima.
@@ -1998,7 +2130,13 @@ Dalam tataran penerapan grafis terapan, peserta didik menguasai parameter mikro-
 Seiring perkembangan ekosistem desain digital modern, peserta didik juga mengeksplorasi penggunaan teknologi variable font responsif dan kepatuhan terhadap lisensi font komersial. Keterampilan ini membekali peserta didik dengan kecakapan profesional untuk merancang tata letak publikasi, identitas visual jenama (branding), dan antarmuka digital (UI/UX) berstandar industri grafis kontemporer.
           `);
         } else {
-          materiDeskriptif = renderFormattedContentWithTables(`
+          materiDeskriptif = renderFormattedContentWithTables(isEn ? `
+The core subject matter **${topik}** within **${mapel}** explores fundamental concepts, systematic workflows, and operational frameworks established in the related field. The study begins with theoretical insights into the nature, core characteristics, and operating principles underlying **${topik}**. Students identify core components, understand causal relationships between elements, and master technical terminology standard to academic and vocational competencies.
+
+Functionally and procedurally, implementing this material involves precision operating parameters and standard operating procedures (SOP) to ensure workplace efficiency and quality output. Equipment handling, instrument calibration, and adherence to occupational safety regulations serve as key pillars in executing every stage of practical work.
+
+At an advanced analytical level, mastering **${topik}** requires critical reasoning in technical problem-solving and troubleshooting when facing real-world challenges. Continuous evaluation and empirical verification ensure every solution or artifact produced achieves high accuracy, optimal usability, and industry relevance.
+          ` : `
 Materi pokok **${topik}** pada mata pelajaran **${mapel}** mengkaji konsep fundamental, struktur sistematis, dan kerangka operasional yang berlaku dalam bidang keilmuan terkait. Pembahasan diawali dengan pemahaman teoretis mengenai hakikat, karakteristik dasar, dan prinsip kerja yang mendasari fenomena **${topik}**. Peserta didik mengidentifikasi komponen-komponen inti, memahami hubungan kausalitas antarelemen, serta menguasai terminologi teknis yang menjadi standar kompetensi kejuruan/akademik.
 
 Secara fungsional dan prosedural, implementasi materi ini melibatkan parameter kerja presisi dan standar operasional prosedur (SOP) baku guna menjamin efisiensi dan kualitas luaran kerja. Penguasaan instrumen, kalibrasi peralatan kerja, serta kepatuhan terhadap regulasi keselamatan kerja menjadi pilar utama dalam mengeksekusi setiap tahapan pekerjaan.
@@ -2017,10 +2155,10 @@ Pada tataran analisis lanjutan, penguasaan materi **${topik}** menuntut kemampua
       if (materiTambahanVal && materiTambahanVal.trim() && materiTambahanVal.trim() !== '-') {
         wrapperMateriTambahan.style.display = 'block';
         document.getElementById('docMateriTambahan').innerHTML = renderMateriTambahanDeskriptif(materiTambahanVal, data, ai);
-        headingAsesmen.textContent = '3. Asesmen';
+        headingAsesmen.textContent = isEn ? '3. Assessment' : '3. Asesmen';
       } else {
         wrapperMateriTambahan.style.display = 'none';
-        headingAsesmen.textContent = '2. Asesmen';
+        headingAsesmen.textContent = isEn ? '2. Assessment' : '2. Asesmen';
       }
 
       const asesmenItems = ai.asesmen || [];
@@ -2069,8 +2207,10 @@ Pada tataran analisis lanjutan, penguasaan materi **${topik}** menuntut kemampua
       // F. LAMPIRAN (Hasil Generate AI)
       // ======================================================================
       const lkpd = ai.lkpd || {};
-      document.getElementById('lkpdJudul').textContent = lkpd.judul || (isPjBL ? `Lembar Kerja Proyek (PjBL): Perancangan dan Pembuatan Karya ${topik}` : `Lembar Kerja Peserta Didik: Penerapan Konsep ${topik}`);
-      document.getElementById('lkpdTujuan').textContent = lkpd.tujuan || (isPjBL ? `Peserta didik mampu merancang, memproduksi karya nyata ${topik}, dan menyajikan hasil gelar karya secara kolaboratif sesuai tujuan pembelajaran.` : `Peserta didik mampu menelaah materi ${topik} dan menyelesaikan penugasan pembelajaran secara kontekstual.`);
+      const defLkpdJudul = isEn ? (isPjBL ? `Project Worksheet (PjBL): Planning and Execution of ${topik}` : `Student Worksheet: Practical Application of ${topik}`) : (isPjBL ? `Lembar Kerja Proyek (PjBL): Perancangan dan Pembuatan Karya ${topik}` : `Lembar Kerja Peserta Didik: Penerapan Konsep ${topik}`);
+      const defLkpdTujuan = isEn ? (isPjBL ? `Students are able to design, produce, and collaboratively present practical artifacts of ${topik} in accordance with established learning objectives.` : `Students are able to examine ${topik} concepts and complete authentic contextual assignments.`) : (isPjBL ? `Peserta didik mampu merancang, memproduksi karya nyata ${topik}, dan menyajikan hasil gelar karya secara kolaboratif sesuai tujuan pembelajaran.` : `Peserta didik mampu menelaah materi ${topik} dan menyelesaikan penugasan pembelajaran secara kontekstual.`);
+      document.getElementById('lkpdJudul').textContent = lkpd.judul || defLkpdJudul;
+      document.getElementById('lkpdTujuan').textContent = lkpd.tujuan || defLkpdTujuan;
       document.getElementById('lkpdTugasList').innerHTML = (lkpd.tugas || []).map(t => {
         const cleanT = String(t).replace(/^(\d+[\.\)]|Langkah\s*\d+:?|Tahap\s*\d+:?)\s*/i, '').trim();
         return `<li>${cleanT}</li>`;
@@ -2088,8 +2228,10 @@ Pada tataran analisis lanjutan, penguasaan materi **${topik}** menuntut kemampua
       `).join('');
 
       // Rekomendasi Tugas Pengayaan & Remedial
-      document.getElementById('docPengayaanText').innerHTML = ai.pengayaan || `Murid ditantang menyusun kajian komparatif mandiri atau proyek inovasi digital tingkat lanjut seputar implikasi mutakhir materi <em>${topik}</em> pada sektor industri/profesional.`;
-      document.getElementById('docRemedialText').innerHTML = ai.remedial || `Murid mengerjakan lembar kerja terbimbing (scaffolding) dengan panduan langkah bertahap, telaah ulang konsep kunci <em>${topik}</em>, dan sesi pendampingan tutor sebaya.`;
+      const defPengayaan = isEn ? `Students are challenged to conduct independent comparative analysis or advanced digital innovation projects regarding contemporary developments in <em>${topik}</em>.` : `Murid ditantang menyusun kajian komparatif mandiri atau proyek inovasi digital tingkat lanjut seputar implikasi mutakhir materi <em>${topik}</em> pada sektor industri/profesional.`;
+      const defRemedial = isEn ? `Students complete guided scaffolding worksheets with step-by-step guidance, core concept review of <em>${topik}</em>, and peer tutoring sessions.` : `Murid mengerjakan lembar kerja terbimbing (scaffolding) dengan panduan langkah bertahap, telaah ulang konsep kunci <em>${topik}</em>, dan sesi pendampingan tutor sebaya.`;
+      document.getElementById('docPengayaanText').innerHTML = ai.pengayaan || defPengayaan;
+      document.getElementById('docRemedialText').innerHTML = ai.remedial || defRemedial;
 
       // 4. Glosarium Materi (Murni istilah teknis materi pokok dari AI, tanpa istilah kurikulum/pedagogis/asesmen)
       const glosarium = resolveGlosariumList(ai, data);
@@ -2143,12 +2285,16 @@ Pada tataran analisis lanjutan, penguasaan materi **${topik}** menuntut kemampua
      * Menjamin rubrik tidak pernah kosong dan memuat 3 kriteria komprehensif (Skor 1-4)
      */
     function resolveRubrikList(ai, data) {
+      const isEn = typeof getAppLanguage === 'function' && getAppLanguage() === 'en';
       let list = [];
       const raw = ai ? (ai.rubrikPenilaian || ai.rubrik || null) : null;
       if (Array.isArray(raw) && raw.length > 0) {
         raw.forEach(item => {
           if (!item) return;
-          const aspek = item.aspek || item.kriteria || item.dimensi || '';
+          let aspek = item.aspek || item.kriteria || item.dimensi || '';
+          if (isEn) {
+            aspek = translateRubrikAspect(aspek, isEn);
+          }
           const s1 = item.skor1 || item.kurang || item.skor_1 || '';
           const s2 = item.skor2 || item.cukup || item.skor_2 || '';
           const s3 = item.skor3 || item.baik || item.skor_3 || '';
@@ -2161,11 +2307,33 @@ Pada tataran analisis lanjutan, penguasaan materi **${topik}** menuntut kemampua
 
       if (list.length < 3) {
         const d = data || {};
-        const topik = d.topikMateri || 'Materi Pokok';
+        const topik = d.topikMateri || (isEn ? 'Core Subject' : 'Materi Pokok');
         const isPjBL = String(d.modelPembelajaran || '').toLowerCase().includes('project') || String(d.modelPembelajaran || '').toLowerCase().includes('pjbl');
 
         if (isPjBL) {
-          list = [
+          list = isEn ? [
+            {
+              aspek: `Concept Mastery & Technical Skills (${topik})`,
+              skor1: `Project artifact has not applied technical parameters of ${topik}; project outcome incomplete with fundamental errors.`,
+              skor2: `Project artifact applies basic concepts of ${topik}, but technical parameters lack precision and require intensive guidance.`,
+              skor3: `Project artifact demonstrates correct, structured, and optimal application of ${topik} technical parameters according to criteria.`,
+              skor4: `Project artifact demonstrates advanced mastery of ${topik}, exceptional aesthetics, originality, and publication-ready innovation.`
+            },
+            {
+              aspek: "Work Procedures, SOP Compliance & Facility Safety",
+              skor1: "Unsystematic workflow, neglects facility safety SOPs, and exceeds time management thresholds.",
+              skor2: "Follows basic workflow, but SOP compliance remains inconsistent and stage completions face delays.",
+              skor3: "Executes all project stages systematically in compliance with SOPs, safety standards, and on-time completion.",
+              skor4: "Exhibits flawless independent discipline, strict SOP compliance, high time efficiency, and mature risk management."
+            },
+            {
+              aspek: "Team Collaboration, Communication & Project Exhibition",
+              skor1: "Passive within team; exhibition presentation is unstructured and unable to address audience questions.",
+              skor2: "Limited team participation; presentation is reasonably clear but technical argumentation lacks support.",
+              skor3: "Collaborates actively and communicatively in team; presentation is coherent and supported by valid evidence.",
+              skor4: "Drives team collaboration; delivers highly persuasive, interactive presentation that engages the audience with comprehensive reflection."
+            }
+          ] : [
             {
               aspek: `Penguasaan Konsep & Keterampilan Teknis (${topik})`,
               skor1: `Hasil karya proyek belum menerapkan parameter teknis ${topik}; luaran kerja belum tuntas dan terdapat banyak kekeliruan mendasar.`,
@@ -2189,7 +2357,29 @@ Pada tataran analisis lanjutan, penguasaan materi **${topik}** menuntut kemampua
             }
           ];
         } else {
-          list = [
+          list = isEn ? [
+            {
+              aspek: `Conceptual Mastery & Problem Analysis (${topik})`,
+              skor1: `Unable to identify the core of ${topik}; analysis remains superficial without establishing concept connections.`,
+              skor2: `Identifies core concepts of ${topik}, but analytical reasoning is limited and lacks depth.`,
+              skor3: `Analyzes concepts of ${topik} accurately, logically, systematically, and demonstrates clear causal relationships.`,
+              skor4: `Critically analyzes ${topik} with profound depth, originality, and incorporates robust contextual solutions.`
+            },
+            {
+              aspek: "Procedural Task Skills & Result Accuracy",
+              skor1: "Unstructured task execution steps, frequent data/practical errors, and incomplete documentation.",
+              skor2: "Completes procedural tasks satisfactorily, but has minor inaccuracies in operating parameters.",
+              skor3: "Completes all task stages systematically, compliant with SOPs, delivering verified and accurate results.",
+              skor4: "Executes tasks with exceptional precision and accuracy, methodical neatness, and rigorous independent critique."
+            },
+            {
+              aspek: "Scientific Communication, Critical Reasoning & Collaboration",
+              skor1: "Passive during discussions; idea presentation is disorganized and unsupported by valid evidence.",
+              skor2: "Shares basic opinions, but critical reasoning exhibits bias and responses to peer feedback are suboptimal.",
+              skor3: "Collaborates actively in team; presents arguments objectively, clearly, coherently, and backed by credible sources.",
+              skor4: "Exhibits outstanding discussion leadership, high-order critical reasoning, and articulates elegant collaborative syntheses."
+            }
+          ] : [
             {
               aspek: `Penguasaan Konseptual & Analisis Masalah (${topik})`,
               skor1: `Belum mampu mengidentifikasi esensi materi ${topik}; analisis masih sangat dangkal dan belum menunjukkan keterkaitan konsep.`,
@@ -3395,9 +3585,11 @@ Pada tataran analisis lanjutan, penguasaan materi **${topik}** menuntut kemampua
       if (!content) return;
 
       const data = currentModulData || {};
+      const isEn = typeof getAppLanguage === 'function' && getAppLanguage() === 'en';
       const mapel = (data.mataPelajaran || 'Mata_Pelajaran').replace(/[^a-zA-Z0-9]/g, '_');
       const topik = (data.topikMateri || 'Topik').replace(/[^a-zA-Z0-9]/g, '_');
-      const filename = `Modul_Ajar_${mapel}_${topik}.docx`;
+      const filePrefix = isEn ? 'Teaching_Module' : 'Modul_Ajar';
+      const filename = `${filePrefix}_${mapel}_${topik}.docx`;
 
       const clone = content.cloneNode(true);
 
@@ -3412,8 +3604,9 @@ Pada tataran analisis lanjutan, penguasaan materi **${topik}** menuntut kemampua
       if (sigGrid) {
         const sigDateEl = document.getElementById('sigDateLocation');
         const sigTeacherEl = document.getElementById('sigTeacherName');
-        const sigDateHtml = sigDateEl ? sigDateEl.innerHTML : 'Kota/Kabupaten, .................... 2026<br>Guru Mata Pelajaran';
-        const sigTeacherHtml = sigTeacherEl ? sigTeacherEl.innerHTML : 'Nama Penyusun<br><span style="font-size: 9pt; font-weight: normal; color: #64748b;">( .................................... )</span>';
+        const sigDateHtml = sigDateEl ? sigDateEl.innerHTML : (isEn ? 'City/District, .................... 2026<br>Subject Teacher' : 'Kota/Kabupaten, .................... 2026<br>Guru Mata Pelajaran');
+        const sigTeacherHtml = sigTeacherEl ? sigTeacherEl.innerHTML : (isEn ? 'Teacher Name<br><span style="font-size: 9pt; font-weight: normal; color: #64748b;">( .................................... )</span>' : 'Nama Penyusun<br><span style="font-size: 9pt; font-weight: normal; color: #64748b;">( .................................... )</span>');
+        const principalLabel = isEn ? 'Acknowledged by,<br>School Principal' : 'Mengetahui,<br>Kepala Sekolah';
 
         const sigWrapper = document.createElement('div');
         sigWrapper.className = 'doc-signature-wrapper';
@@ -3422,7 +3615,7 @@ Pada tataran analisis lanjutan, penguasaan materi **${topik}** menuntut kemampua
           <table class="doc-signature-word-table" width="100%" border="0" cellspacing="0" cellpadding="0" style="width: 100% !important; border: none !important; border-collapse: collapse !important; margin-bottom: 24pt !important;">
             <tr>
               <td width="50%" align="center" style="width: 50%; text-align: center; vertical-align: top; border: none; padding: 0 12pt;">
-                <p style="margin: 0; font-size: 10.5pt; font-weight: bold; text-align: center; line-height: 1.4;">Mengetahui,<br>Kepala Sekolah</p>
+                <p style="margin: 0; font-size: 10.5pt; font-weight: bold; text-align: center; line-height: 1.4;">${principalLabel}</p>
                 <p style="margin: 55pt 0 0 0; font-size: 10.5pt; font-weight: bold; text-align: center;">___________________________</p>
                 <p style="margin: 3pt 0 0 0; font-size: 9pt; color: #64748b; text-align: center;">( .................................... )</p>
               </td>
@@ -3630,14 +3823,14 @@ Pada tataran analisis lanjutan, penguasaan materi **${topik}** menuntut kemampua
                 <td>
                   <div style='mso-element:header' id='h1'>
                     <p class='MsoHeader' style='text-align: center; border-bottom: 0.5pt solid #cbd5e1; padding-bottom: 3pt;'>
-                      Dokumen ini dibuat menggunakan <strong>Edu Workspace</strong>
+                      ${isEn ? 'This document was created using <strong>Edu Workspace</strong>' : 'Dokumen ini dibuat menggunakan <strong>Edu Workspace</strong>'}
                     </p>
                   </div>
                 </td>
                 <td>
                   <div style='mso-element:footer' id='f1'>
                     <p class='MsoFooter' style='text-align: center; border-top: 0.5pt solid #cbd5e1; padding-top: 4pt;'>
-                      Dokumen ini dibuat menggunakan <strong>Edu Workspace</strong>
+                      ${isEn ? 'This document was created using <strong>Edu Workspace</strong>' : 'Dokumen ini dibuat menggunakan <strong>Edu Workspace</strong>'}
                     </p>
                   </div>
                 </td>
@@ -3685,16 +3878,18 @@ Pada tataran analisis lanjutan, penguasaan materi **${topik}** menuntut kemampua
       if (!content) return;
 
       const btn = document.getElementById('btnDownloadPDF');
+      const isEn = typeof getAppLanguage === 'function' && getAppLanguage() === 'en';
       const originalHtml = btn ? btn.innerHTML : '';
       if (btn) {
         btn.disabled = true;
-        btn.innerHTML = `<span class="btn-spinner"></span> <span>Mengonversi PDF...</span>`;
+        btn.innerHTML = `<span class="btn-spinner"></span> <span>${isEn ? 'Converting PDF...' : 'Mengonversi PDF...'}</span>`;
       }
 
       const data = currentModulData || {};
       const mapel = (data.mataPelajaran || 'Mata_Pelajaran').replace(/[^a-zA-Z0-9]/g, '_');
       const topik = (data.topikMateri || 'Topik').replace(/[^a-zA-Z0-9]/g, '_');
-      const filename = `Modul_Ajar_${mapel}_${topik}.pdf`;
+      const filePrefix = isEn ? 'Teaching_Module' : 'Modul_Ajar';
+      const filename = `${filePrefix}_${mapel}_${topik}.pdf`;
 
       // Margin seimbang: Atas 14mm, Kiri 12mm, Bawah 14mm, Kanan 12mm
       // Area konten = Lebar A4 (210mm) - margin kiri (12mm) - margin kanan (12mm) = 186mm
@@ -4104,10 +4299,11 @@ Pada tataran analisis lanjutan, penguasaan materi **${topik}** menuntut kemampua
             pdf.setPage(i);
             
             // Header PDF di tengah atas setiap halaman (x: 105mm tengah A4)
+            const watermarkText = isEn ? 'This document was created using Edu Workspace' : 'Dokumen ini dibuat menggunakan Edu Workspace';
             pdf.setFont('helvetica', 'normal');
             pdf.setFontSize(8);
             pdf.setTextColor(100, 116, 139); // #64748b
-            pdf.text('Dokumen ini dibuat menggunakan Edu Workspace', 105, 7.5, { align: 'center' });
+            pdf.text(watermarkText, 105, 7.5, { align: 'center' });
             
             // Garis halus di bawah header simetris dari 12mm sampai 198mm (panjang 186mm tepat di tengah)
             pdf.setDrawColor(226, 232, 240); // #e2e8f0
@@ -4118,7 +4314,7 @@ Pada tataran analisis lanjutan, penguasaan materi **${topik}** menuntut kemampua
             pdf.line(12, 287.5, 198, 287.5);
             
             // Footer PDF di tengah bawah setiap halaman (x: 105mm tengah A4)
-            pdf.text('Dokumen ini dibuat menggunakan Edu Workspace', 105, 291.5, { align: 'center' });
+            pdf.text(watermarkText, 105, 291.5, { align: 'center' });
           }
         }).save().then(() => {
           cleanup();
