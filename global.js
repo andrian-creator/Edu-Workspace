@@ -1513,16 +1513,16 @@ function renderEduNavbar(options = {}) {
         ` : ''}
 
         ${showDaftarModul ? `
-          <a href="${daftarModulUrl}" class="btn-back-home" title="Daftar Modul Ajar">
+          <a href="${daftarModulUrl}" class="btn-back-home" title="${t('nav_modul_list', 'Daftar Modul Ajar')}">
             <img data-icon="file" src="${iconFileUrl}" alt="Daftar Modul Ajar" class="nav-btn-icon">
-            <span data-i18n="modul_list_title">${t('modul_list_title', 'Daftar Modul Ajar')}</span>
+            <span data-i18n="nav_modul_list">${t('nav_modul_list', 'Daftar Modul Ajar')}</span>
           </a>
         ` : ''}
 
         ${showApiKey ? `
-          <a href="${apiKeyUrl}" class="btn-back-home" title="Kelola Kunci API AI">
+          <a href="${apiKeyUrl}" class="btn-back-home" title="${t('nav_api_key', 'Kelola Kunci API AI')}">
             <img data-icon="key" src="${iconKeyUrl}" alt="API Key" class="nav-btn-icon">
-            <span data-i18n="api_key_title">API Key</span>
+            <span data-i18n="nav_api_key">${t('nav_api_key', 'API Key')}</span>
           </a>
         ` : ''}
 

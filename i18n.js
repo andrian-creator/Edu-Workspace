@@ -118,7 +118,9 @@ const TRANSLATIONS = {
     dash_card_profile_title: "Profil & Informasi Akun",
     dash_card_profile_desc: "Perbarui informasi pendidik, mata pelajaran, instansi sekolah, dan masa aktif langganan Anda.",
 
-    // Daftar Modul Ajar
+    // Daftar Modul Ajar & Navigasi
+    nav_modul_list: "Daftar Modul Ajar",
+    nav_api_key: "API Key",
     modul_list_title: "Daftar <span class=\"text-yellow\">Modul Ajar.</span>",
     modul_list_subtitle: "Kelola, pratinjau, dan edit seluruh rancangan Modul Ajar Kurikulum Merdeka yang tersimpan pada akun Anda.",
     modul_list_search_placeholder: "Cari nama modul, topik, mata pelajaran...",
@@ -425,7 +427,9 @@ const TRANSLATIONS = {
     dash_card_profile_title: "Profile & Account Info",
     dash_card_profile_desc: "Update your educator profile, subject specialties, institution, and subscription validity.",
 
-    // Daftar Modul Ajar
+    // Daftar Modul Ajar & Navigasi
+    nav_modul_list: "My Modules",
+    nav_api_key: "API Key",
     modul_list_title: "My <span class=\"text-yellow\">Teaching Modules.</span>",
     modul_list_subtitle: "Manage, preview, and edit all curriculum lesson plans saved under your account.",
     modul_list_search_placeholder: "Search by module title, topic, subject...",
@@ -912,7 +916,15 @@ function applyTranslations(root = document) {
   root.querySelectorAll('[data-i18n]').forEach(el => {
     const key = el.getAttribute('data-i18n');
     if (dict[key] !== undefined) {
-      el.textContent = dict[key];
+      let val = dict[key];
+      // Jika string mengandung tag HTML, hilangkan tag-nya agar tidak bocor raw HTML ke textContent
+      if (typeof val === 'string' && val.includes('<') && val.includes('>')) {
+        const tmp = document.createElement('div');
+        tmp.innerHTML = val;
+        el.textContent = (tmp.textContent || tmp.innerText || val).trim();
+      } else {
+        el.textContent = val;
+      }
     }
   });
 
