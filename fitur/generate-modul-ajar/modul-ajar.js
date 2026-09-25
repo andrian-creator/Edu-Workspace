@@ -703,6 +703,17 @@ async function callGeminiWithAccountKey(promptText, customConfig) {
   const reqTimeoutMs = (customConfig && customConfig.timeoutMs) ? customConfig.timeoutMs : 35000;
   const isSilent = Boolean(customConfig && customConfig.silentError);
 
+  // Periksa bahasa aplikasi aktif: Jika bahasa Inggris, instruksikan AI menghasilkan respon dalam bahasa Inggris
+  const curLang = (typeof getAppLanguage === 'function') ? getAppLanguage() : (localStorage.getItem('edu_current_language') || 'id');
+  let finalPrompt = promptText;
+  if (curLang === 'en') {
+    if (!finalPrompt.includes('CRITICAL LANGUAGE REQUIREMENT') && !finalPrompt.includes('CRITICAL MANDATE - LANGUAGE REQUIREMENT: ENGLISH')) {
+      finalPrompt = `[CRITICAL MANDATE - LANGUAGE REQUIREMENT: ENGLISH]\n` +
+                    `The application language is set to ENGLISH. ALL outputs, responses, titles, sections, explanations, questions, activities, assessments, rubrics, worksheets, glossaries, and text MUST be strictly generated in natural, professional, grammatically correct ENGLISH.\n` +
+                    `Do NOT respond in Indonesian.\n\n` + finalPrompt;
+    }
+  }
+
   // Hanya sertakan parameter resmi Google Gemini generationConfig
   const genConfig = {
     temperature: typeof customConfig?.temperature === 'number' ? customConfig.temperature : 0.7,
@@ -725,7 +736,7 @@ async function callGeminiWithAccountKey(promptText, customConfig) {
           'x-goog-api-key': apiKey
         },
         body: JSON.stringify({
-          contents: [{ parts: [{ text: promptText }] }],
+          contents: [{ parts: [{ text: finalPrompt }] }],
           generationConfig: genConfig
         }),
         signal: controller.signal
@@ -2541,8 +2552,20 @@ async function generateFullModulWithAI(modulPayload) {
     .join('|').replace(/\s+/g, '_').slice(0, 120);
   const generateTimestamp = new Date().toISOString();
 
-  const masterPrompt = `[SESI GENERATE BARU: ${generateTimestamp} | INPUT: ${inputFingerprint}]
+  const curLang = (typeof getAppLanguage === 'function') ? getAppLanguage() : (localStorage.getItem('edu_current_language') || 'id');
+  const isEn = curLang === 'en';
 
+  const masterLanguageMandate = isEn ? `
+=============================================================================
+CRITICAL LANGUAGE MANDATE (ENGLISH LANGUAGE OUTPUT):
+=============================================================================
+The user has configured Edu Workspace language to ENGLISH.
+Therefore, the ENTIRE teaching module document (all text values in the JSON, including student identification, learning objectives, instructional designs, teacher activities, student activities, diagnostic/formative/summative assessments, rubrics, student worksheets, reflections, glossaries, and citations) MUST BE GENERATED 100% IN NATURAL, SCHOLARLY, PROFESSIONAL ENGLISH.
+Do NOT use Indonesian in the content text (only retain standard JSON keys).
+` : '';
+
+  const masterPrompt = `[SESI GENERATE BARU: ${generateTimestamp} | INPUT: ${inputFingerprint}]
+${masterLanguageMandate}
 Anda adalah Dewan Pakar Pengembang Kurikulum Merdeka Terkemuka (BSKAP Kemendikbudristek).
 Tugas Anda: Susun DOKUMEN MODUL AJAR KURIKULUM MERDEKA secara SANGAT LENGKAP, MENDALAM, dan 100% KONTEKSTUAL KHUSUS UNTUK KOMBINASI DATA INPUT BERIKUT.
 

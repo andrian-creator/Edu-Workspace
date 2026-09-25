@@ -853,6 +853,8 @@ function executeLogout() {
 function injectLogoutModal() {
   if (document.getElementById('logoutConfirmModal')) return;
   const iconExitUrl = getEduIconUrl('logout');
+  const curLang = (typeof getAppLanguage === 'function') ? getAppLanguage() : 'id';
+  const isEn = curLang === 'en';
 
   const modalHtml = `
     <div class="confirm-modal-overlay" id="logoutConfirmModal">
@@ -860,11 +862,11 @@ function injectLogoutModal() {
         <div class="confirm-icon-box">
           <img data-icon="logout" src="${iconExitUrl}" alt="Exit" class="confirm-icon-img">
         </div>
-        <h3 class="confirm-modal-title">Konfirmasi Keluar</h3>
-        <p class="confirm-modal-desc">Apakah Anda yakin ingin keluar dari sesi Edu Workspace?</p>
+        <h3 class="confirm-modal-title" data-i18n="logout_modal_title">${isEn ? 'Confirm Logout' : 'Konfirmasi Keluar'}</h3>
+        <p class="confirm-modal-desc" data-i18n="logout_modal_desc">${isEn ? 'Are you sure you want to sign out of your current Edu Workspace session?' : 'Apakah Anda yakin ingin keluar dari sesi Edu Workspace?'}</p>
         <div class="confirm-btn-group">
-          <button type="button" class="btn-cancel-modal" onclick="closeLogoutModal()">Batal</button>
-          <button type="button" class="btn-confirm-logout" onclick="executeLogout()">Ya, Keluar</button>
+          <button type="button" class="btn-cancel-modal" onclick="closeLogoutModal()" data-i18n="logout_btn_cancel">${isEn ? 'Cancel' : 'Batal'}</button>
+          <button type="button" class="btn-confirm-logout" onclick="executeLogout()" data-i18n="logout_btn_confirm">${isEn ? 'Yes, Sign Out' : 'Ya, Keluar'}</button>
         </div>
       </div>
     </div>
@@ -1208,11 +1210,45 @@ if (typeof window !== 'undefined') {
 }
 
 /**
+ * Helper i18n global untuk Navbar & Interface
+ */
+function getAppLanguage() {
+  if (typeof window !== 'undefined' && window.EduI18n && typeof window.EduI18n.getAppLanguage === 'function') {
+    return window.EduI18n.getAppLanguage();
+  }
+  try {
+    const s = localStorage.getItem('edu_current_language');
+    if (s === 'en' || s === 'id') return s;
+  } catch (e) {}
+  return 'id';
+}
+
+function setAppLanguage(lang) {
+  if (typeof window !== 'undefined' && window.EduI18n && typeof window.EduI18n.setAppLanguage === 'function') {
+    return window.EduI18n.setAppLanguage(lang);
+  }
+  try {
+    localStorage.setItem('edu_current_language', lang);
+  } catch (e) {}
+  if (typeof renderEduNavbar === 'function') renderEduNavbar();
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent('edu_language_changed', { detail: { lang } }));
+  }
+}
+
+function t(key, fallback = '') {
+  if (typeof window !== 'undefined' && window.EduI18n && typeof window.EduI18n.t === 'function') {
+    return window.EduI18n.t(key, fallback);
+  }
+  return fallback || key;
+}
+
+/**
  * Render Header / Navbar Global Edu Workspace Terpusat
  * Mendukung 3 mode:
- * 1. Landing (index.html) -> Logo + Hamburger + Nav Links (Home, Benefit, Fitur)
- * 2. Login (halaman-login.html) -> Logo + Tombol Kembali
- * 3. Dashboard / Portal (Default) -> Logo + Api Key + Kembali + Profil Dropdown + Mobile Logout
+ * 1. Landing (index.html) -> Logo + Hamburger + Nav Links (Home, Benefit, Fitur) + Language Switcher
+ * 2. Login (halaman-login.html) -> Logo + Language Switcher + Tombol Kembali
+ * 3. Dashboard / Portal (Default) -> Logo + Api Key + Kembali + Language Switcher + Profil Dropdown + Mobile Logout
  * @param {Object} options
  */
 function renderEduNavbar(options = {}) {
@@ -1232,6 +1268,8 @@ function renderEduNavbar(options = {}) {
     p = (window.location.pathname || '').toLowerCase();
   }
 
+  const curLang = getAppLanguage();
+
   // 1. Mode Landing Page (index.html)
   const isLanding = options.type === 'landing' || p === '/' || p.endsWith('/index.html') || p.endsWith('07.%20eduworkspace/') || p.endsWith('07. eduworkspace/');
   if (isLanding) {
@@ -1242,30 +1280,43 @@ function renderEduNavbar(options = {}) {
           <span class="brand-bold">Edu</span> <span class="brand-thin">Workspace</span>
         </a>
 
-        <!-- Hamburger Menu Button (Mobile Only) -->
-        <button class="hamburger-btn" id="hamburgerBtn" aria-label="Toggle navigation menu" aria-expanded="false" onclick="toggleGlobalMobileNav()">
-          <span class="hamburger-bar"></span>
-          <span class="hamburger-bar"></span>
-          <span class="hamburger-bar"></span>
-        </button>
-
         <!-- Navigation Links Landing Page -->
         <nav class="nav-links" id="navMenu">
           <a href="#hero" class="nav-link nav-home active" aria-label="Home">
             <img data-icon="home" src="${getEduIconUrl('home')}" alt="Home" class="nav-btn-icon">
-            <span class="nav-home-text">Home</span>
+            <span class="nav-home-text" data-i18n="nav_home">${t('nav_home', 'Home')}</span>
           </a>
           <a href="#benefit" class="nav-link">
             <img data-icon="benefit" src="${getEduIconUrl('benefit')}" alt="Benefit" class="nav-btn-icon">
-            <span>Benefit</span>
+            <span data-i18n="nav_benefit">${t('nav_benefit', 'Benefit')}</span>
           </a>
           <a href="#fitur" class="nav-link">
             <img data-icon="feature" src="${getEduIconUrl('feature')}" alt="Fitur" class="nav-btn-icon">
-            <span>Fitur</span>
+            <span data-i18n="nav_feature">${t('nav_feature', 'Fitur')}</span>
           </a>
         </nav>
+
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <!-- Language Switcher in Header -->
+          <div class="edu-lang-switcher" id="eduGlobalLangSwitcher" title="${curLang === 'id' ? 'Ganti Bahasa' : 'Switch Language'}">
+            <button type="button" class="edu-lang-btn ${curLang === 'id' ? 'active' : ''}" data-lang="id" onclick="setAppLanguage('id')" aria-label="Bahasa Indonesia">
+              <span class="flag-icon">🇮🇩</span> <span>ID</span>
+            </button>
+            <button type="button" class="edu-lang-btn ${curLang === 'en' ? 'active' : ''}" data-lang="en" onclick="setAppLanguage('en')" aria-label="English">
+              <span class="flag-icon">🇬🇧</span> <span>EN</span>
+            </button>
+          </div>
+
+          <!-- Hamburger Menu Button (Mobile Only) -->
+          <button class="hamburger-btn" id="hamburgerBtn" aria-label="Toggle navigation menu" aria-expanded="false" onclick="toggleGlobalMobileNav()">
+            <span class="hamburger-bar"></span>
+            <span class="hamburger-bar"></span>
+            <span class="hamburger-bar"></span>
+          </button>
+        </div>
       </div>
     `;
+    if (typeof applyTranslations === 'function') applyTranslations(headerEl);
     return;
   }
 
@@ -1273,7 +1324,7 @@ function renderEduNavbar(options = {}) {
   const isLogin = options.type === 'login' || options.showProfile === false || p.includes('/halaman-login/') || p.includes('/halaman-login/');
   if (isLogin) {
     const backHref = options.backUrl || (subPrefix ? subPrefix + 'index.html' : '../index.html');
-    const backText = options.backText || 'Kembali';
+    const backText = options.backText || t('btn_back', 'Kembali');
     headerEl.className = 'edu-navbar login-header';
     headerEl.innerHTML = `
       <div class="header-container">
@@ -1281,12 +1332,25 @@ function renderEduNavbar(options = {}) {
           <span class="brand-bold">Edu</span> <span class="brand-thin">Workspace</span>
         </a>
 
-        <a href="${backHref}" class="btn-back-home" title="${backText}">
-          <img data-icon="back" src="${getEduIconUrl('back')}" alt="Kembali" class="nav-btn-icon">
-          <span>${backText}</span>
-        </a>
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <!-- Language Switcher in Login Header -->
+          <div class="edu-lang-switcher" title="${curLang === 'id' ? 'Ganti Bahasa' : 'Switch Language'}">
+            <button type="button" class="edu-lang-btn ${curLang === 'id' ? 'active' : ''}" data-lang="id" onclick="setAppLanguage('id')" aria-label="Bahasa Indonesia">
+              <span class="flag-icon">🇮🇩</span> <span>ID</span>
+            </button>
+            <button type="button" class="edu-lang-btn ${curLang === 'en' ? 'active' : ''}" data-lang="en" onclick="setAppLanguage('en')" aria-label="English">
+              <span class="flag-icon">🇬🇧</span> <span>EN</span>
+            </button>
+          </div>
+
+          <a href="${backHref}" class="btn-back-home" title="${backText}">
+            <img data-icon="back" src="${getEduIconUrl('back')}" alt="Kembali" class="nav-btn-icon">
+            <span data-i18n="btn_back">${backText}</span>
+          </a>
+        </div>
       </div>
     `;
+    if (typeof applyTranslations === 'function') applyTranslations(headerEl);
     return;
   }
 
@@ -1436,25 +1500,35 @@ function renderEduNavbar(options = {}) {
         ${showDaftarModul ? `
           <a href="${daftarModulUrl}" class="btn-back-home" title="Daftar Modul Ajar">
             <img data-icon="file" src="${iconFileUrl}" alt="Daftar Modul Ajar" class="nav-btn-icon">
-            <span>Daftar Modul Ajar</span>
+            <span data-i18n="modul_list_title">${t('modul_list_title', 'Daftar Modul Ajar')}</span>
           </a>
         ` : ''}
 
         ${showApiKey ? `
           <a href="${apiKeyUrl}" class="btn-back-home" title="Kelola Kunci API AI">
             <img data-icon="key" src="${iconKeyUrl}" alt="API Key" class="nav-btn-icon">
-            <span>API Key</span>
+            <span data-i18n="api_key_title">API Key</span>
           </a>
         ` : ''}
 
         ${showBack ? `
           <a href="${backUrl}" class="btn-back-home" title="${backText}">
             <img data-icon="back" src="${iconBackUrl}" alt="Kembali" class="nav-btn-icon">
-            <span>${backText}</span>
+            <span data-i18n="btn_back">${t('btn_back', backText)}</span>
           </a>
         ` : ''}
 
-        ${(showDaftarModul || showApiKey || showBack || options.customActionsHtml || (showAccessTime && accessInfo)) ? '<div class="nav-divider"></div>' : ''}
+        <!-- Language Switcher in Portal Header -->
+        <div class="edu-lang-switcher" title="${curLang === 'id' ? 'Ganti Bahasa' : 'Switch Language'}">
+          <button type="button" class="edu-lang-btn ${curLang === 'id' ? 'active' : ''}" data-lang="id" onclick="setAppLanguage('id')" aria-label="Bahasa Indonesia">
+            <span class="flag-icon">🇮🇩</span> <span>ID</span>
+          </button>
+          <button type="button" class="edu-lang-btn ${curLang === 'en' ? 'active' : ''}" data-lang="en" onclick="setAppLanguage('en')" aria-label="English">
+            <span class="flag-icon">🇬🇧</span> <span>EN</span>
+          </button>
+        </div>
+
+        <div class="nav-divider"></div>
 
         <!-- Profile dengan Teks Kiri dan Avatar Kanan -->
         <div class="profile-dropdown-wrapper" id="profileDropdownWrapper">
@@ -1469,7 +1543,7 @@ function renderEduNavbar(options = {}) {
           <div class="profile-dropdown-menu" id="profileDropdown">
             <button type="button" class="btn-dropdown-item dropdown-logout-item" onclick="openLogoutModal()">
               <img data-icon="logout" src="${iconLogoutUrl}" alt="Exit" class="dropdown-item-icon dropdown-logout-icon" width="18" height="18">
-              <span>Log Out</span>
+              <span data-i18n="btn_logout">${t('btn_logout', 'Log Out')}</span>
             </button>
           </div>
         </div>
@@ -1477,11 +1551,15 @@ function renderEduNavbar(options = {}) {
         <!-- Tombol Log Out Khusus Mobile Menu -->
         <button type="button" class="mobile-logout-btn" onclick="openLogoutModal()">
           <img data-icon="logout" src="${iconLogoutUrl}" alt="Exit" class="nav-btn-icon">
-          <span>Log Out</span>
+          <span data-i18n="btn_logout">${t('btn_logout', 'Log Out')}</span>
         </button>
       </div>
     </div>
   `;
+
+  if (typeof applyTranslations === 'function') {
+    applyTranslations(headerEl);
+  }
 
   if (showAccessTime) {
     initAccessTimeSync();

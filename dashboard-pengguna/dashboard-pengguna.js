@@ -154,6 +154,15 @@ function renderUserFeatures(user) {
   const hasModulAjar = activeFeatures.includes('generate_modul_ajar');
   const hasMediaPembelajaran = activeFeatures.includes('generate_media_pembelajaran');
 
+  const curLang = (typeof getAppLanguage === 'function') ? getAppLanguage() : 'id';
+  const isEn = curLang === 'en';
+  const badgeActiveText = isEn ? 'Active' : 'Aktif';
+  const openLinkText = isEn ? 'Open Generator &rarr;' : 'Buka Generator &rarr;';
+  const modulTitle = (typeof t === 'function') ? t('dash_card_modul_title', 'Generate Modul Ajar') : 'Generate Modul Ajar';
+  const modulDesc = (typeof t === 'function') ? t('dash_card_modul_desc', 'Buat rancangan pembelajaran Kurikulum Merdeka lengkap dengan capaian dan asesmen secara instan.') : 'Buat rancangan pembelajaran Kurikulum Merdeka lengkap dengan capaian dan asesmen secara instan.';
+  const mediaTitle = (typeof t === 'function') ? t('dash_card_media_title', 'Generate Media Pembelajaran') : 'Generate Media Pembelajaran';
+  const mediaDesc = (typeof t === 'function') ? t('dash_card_media_desc', 'Generator media visual, presentasi materi, dan bahan pembelajaran interaktif bertenaga AI.') : 'Generator media visual, presentasi materi, dan bahan pembelajaran interaktif bertenaga AI.';
+
   let cardsHtml = '';
 
   if (hasModulAjar) {
@@ -162,16 +171,16 @@ function renderUserFeatures(user) {
       <div class="user-action-card active-card" onclick="handleFeatureClick('Generate Modul Ajar')">
         <div class="action-card-header">
           <div class="action-card-icon-box">
-            <img data-icon="modul_ajar" src="${getEduIconUrl('modul_ajar')}" alt="Generate Modul Ajar" class="action-card-icon-img">
+            <img data-icon="modul_ajar" src="${getEduIconUrl('modul_ajar')}" alt="${modulTitle}" class="action-card-icon-img">
           </div>
-          <span class="action-badge-active">Aktif</span>
+          <span class="action-badge-active">${badgeActiveText}</span>
         </div>
         <div class="action-card-body">
-          <h3 class="action-card-title">Generate Modul Ajar</h3>
-          <p class="action-card-desc">Buat rancangan pembelajaran Kurikulum Merdeka / K13 lengkap dengan capaian dan asesmen secara instan.</p>
+          <h3 class="action-card-title">${modulTitle}</h3>
+          <p class="action-card-desc">${modulDesc}</p>
         </div>
         <div class="action-card-footer">
-          <span class="action-card-link">Buka Generator &rarr;</span>
+          <span class="action-card-link">${openLinkText}</span>
         </div>
       </div>
     `;
@@ -183,16 +192,16 @@ function renderUserFeatures(user) {
       <div class="user-action-card active-card" onclick="handleFeatureClick('Generate Media Pembelajaran')">
         <div class="action-card-header">
           <div class="action-card-icon-box">
-            <img data-icon="feature" src="${getEduIconUrl('feature')}" alt="Generate Media Pembelajaran" class="action-card-icon-img">
+            <img data-icon="feature" src="${getEduIconUrl('feature')}" alt="${mediaTitle}" class="action-card-icon-img">
           </div>
-          <span class="action-badge-active">Aktif</span>
+          <span class="action-badge-active">${badgeActiveText}</span>
         </div>
         <div class="action-card-body">
-          <h3 class="action-card-title">Generate Media Pembelajaran</h3>
-          <p class="action-card-desc">Generator media visual, presentasi materi, dan bahan pembelajaran interaktif bertenaga AI.</p>
+          <h3 class="action-card-title">${mediaTitle}</h3>
+          <p class="action-card-desc">${mediaDesc}</p>
         </div>
         <div class="action-card-footer">
-          <span class="action-card-link">Buka Generator &rarr;</span>
+          <span class="action-card-link">${openLinkText}</span>
         </div>
       </div>
     `;
@@ -302,3 +311,8 @@ try {
     initUserDashboard();
   };
 } catch (e) { }
+
+window.addEventListener('edu_language_changed', () => {
+  initUserDashboard();
+  if (typeof applyTranslations === 'function') applyTranslations();
+});

@@ -643,19 +643,28 @@
       </button>
 
       <div class="nav-actions">
-        <!-- Tombol Download Word, PDF & Tutup Sesuai Style Gambar 1 (.btn-back-home) -->
+        <!-- Tombol Download Word, PDF, Bahasa & Tutup -->
         <div class="header-download-group">
+          <!-- Language Switcher in Preview Header -->
+          <div class="edu-lang-switcher" style="margin-right: 4px;" title="Ganti Bahasa / Switch Language">
+            <button type="button" class="edu-lang-btn active" data-lang="id" onclick="setAppLanguage('id')" aria-label="Bahasa Indonesia">
+              <span class="flag-icon">🇮🇩</span> <span>ID</span>
+            </button>
+            <button type="button" class="edu-lang-btn" data-lang="en" onclick="setAppLanguage('en')" aria-label="English">
+              <span class="flag-icon">🇬🇧</span> <span>EN</span>
+            </button>
+          </div>
           <button type="button" id="btnDownloadWord" class="btn-doc-download" onclick="downloadModulWord(); if (typeof closeGlobalMobileNav === 'function') closeGlobalMobileNav();" title="Download Word">
             <img src="../../Assets/icon/icon_word.png" alt="Word" class="nav-btn-icon">
-            <span>Download Word</span>
+            <span data-i18n="btn_download_word">Download Word</span>
           </button>
           <button type="button" id="btnDownloadPDF" class="btn-doc-download" onclick="downloadModulPDF(); if (typeof closeGlobalMobileNav === 'function') closeGlobalMobileNav();" title="Download PDF">
             <img src="../../Assets/icon/icon_pdf.png" alt="PDF" class="nav-btn-icon">
-            <span>Download PDF</span>
+            <span data-i18n="btn_download_pdf">Download PDF</span>
           </button>
           <button type="button" id="btnCloseTab" class="btn-doc-download" onclick="closeCurrentTab()" title="Tutup">
             <img src="../../Assets/icon/icon_close.png" alt="Tutup" class="nav-btn-icon">
-            <span>Tutup</span>
+            <span data-i18n="btn_close">Tutup</span>
           </button>
         </div>
       </div>
@@ -890,12 +899,18 @@
   <!-- Library HTML to DOCX (Microsoft Word .docx) Lokal -->
   <script src="../../Assets/js/html-docx.js"></script>
 
-  <!-- Global JS Edu Workspace -->
-  <script src="../../global.js?v=300"></script>
+  <!-- i18n Engine & Global JS Edu Workspace -->
+  <script src="../../i18n.js?v=303"></script>
+  <script src="../../global.js?v=303"></script>
 
   <!-- Logika Dokumen Modul Ajar Sesuai contoh modul.pdf -->
   <script>
     let currentModulData = null;
+
+    window.addEventListener('edu_language_changed', () => {
+      if (typeof renderModulDocument === 'function') renderModulDocument();
+      if (typeof applyTranslations === 'function') applyTranslations();
+    });
 
     /**
      * Menutup Tab Halaman Pratinjau Modul Ajar
@@ -913,12 +928,26 @@
      * Label dinamis untuk heading sintaks & pendekatan (tidak memaksakan Deep Learning jika user memilih pendekatan lain)
      */
     function getPendekatanModelLabel(pendekatan, model) {
+      const isEn = (typeof getAppLanguage === 'function' ? getAppLanguage() : 'id') === 'en';
       const pLower = (pendekatan || '').toLowerCase();
       if (pLower.includes('deep learning')) {
-        return 'Penerapan Prinsip Deep Learning & Sintaks Model:';
+        return isEn ? 'Application of Deep Learning Principles & Model Syntax:' : 'Penerapan Prinsip Deep Learning & Sintaks Model:';
       } else if (pLower.includes('tpack')) {
-        return 'Integrasi Pendekatan TPACK & Sintaks Model:';
+        return isEn ? 'Integration of TPACK Approach & Model Syntax:' : 'Integrasi Pendekatan TPACK & Sintaks Model:';
       } else if (pLower.includes('saintifik') || pLower.includes('scientific')) {
+        return isEn ? 'Application of Scientific Approach & Model Syntax:' : 'Penerapan Pendekatan Saintifik & Sintaks Model:';
+      } else if (pLower.includes('kontekstual') || pLower.includes('ctl')) {
+        return isEn ? 'Application of Contextual Approach & Model Syntax:' : 'Penerapan Pendekatan Kontekstual & Sintaks Model:';
+      } else if (pLower.includes('steam') || pLower.includes('stem')) {
+        return isEn ? 'Application of STEAM Approach & Model Syntax:' : 'Penerapan Pendekatan STEAM & Sintaks Model:';
+      } else if (pLower.includes('konstruktivisme')) {
+        return isEn ? 'Application of Constructivism & Model Syntax:' : 'Penerapan Pendekatan Konstruktivisme & Sintaks Model:';
+      } else if (pendekatan && pendekatan !== '-' && !pLower.includes('reguler')) {
+        return isEn ? `Application of ${pendekatan} Approach & Model Syntax:` : `Penerapan Pendekatan ${pendekatan} & Sintaks Model:`;
+      } else {
+        return isEn ? 'Application of Model Syntax & Teaching Method:' : 'Penerapan Sintaks Model & Metode Pembelajaran:';
+      }
+    }
         return 'Penerapan Pendekatan Saintifik & Sintaks Model:';
       } else if (pLower.includes('kontekstual') || pLower.includes('ctl')) {
         return 'Penerapan Pendekatan Kontekstual & Sintaks Model:';

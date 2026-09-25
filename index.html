@@ -30,18 +30,38 @@
 
       <!-- Left Column: Typography & Action -->
       <div class="hero-left">
-        <h1 class="hero-title">
+        <!-- Language Switcher Bar di Awal Landing Page -->
+        <div class="hero-lang-bar" id="heroLangBar">
+          <div class="hero-lang-label">
+            <svg class="hero-lang-globe" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="2" y1="12" x2="22" y2="12"></line>
+              <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+            </svg>
+            <span data-i18n="lang_selector_label">Pilih Bahasa:</span>
+          </div>
+          <div class="hero-lang-pills">
+            <button type="button" class="hero-lang-pill active" data-lang="id" onclick="setAppLanguage('id')" aria-label="Bahasa Indonesia">
+              <span class="flag-icon">🇮🇩</span> Bahasa Indonesia
+            </button>
+            <button type="button" class="hero-lang-pill" data-lang="en" onclick="setAppLanguage('en')" aria-label="English">
+              <span class="flag-icon">🇬🇧</span> English
+            </button>
+          </div>
+        </div>
+
+        <h1 class="hero-title" data-i18n-html="hero_title">
           Kurangi Beban <span class="text-yellow">Administrasi,</span> Maksimalkan Waktu <span
             class="text-yellow">Mengajar.</span>
         </h1>
 
-        <p class="hero-description">
+        <p class="hero-description" data-i18n="hero_desc">
           Kita bukan untuk menghabiskan waktu mengurus administrasi. Kita ada untuk mengajar, menginspirasi, dan memberi
           dampak.
         </p>
 
         <div class="hero-action">
-          <a href="halaman-login/halaman-login.html" class="btn-see-more">Dapatkan Sekarang</a>
+          <a href="halaman-login/halaman-login.html" class="btn-see-more" data-i18n="hero_cta">Dapatkan Sekarang</a>
         </div>
       </div>
 
@@ -68,10 +88,10 @@
 
         <!-- Right Column: Judul, Sub Judul, dan Informasi Statistik -->
         <div class="trust-content">
-          <h2 class="section-title">
+          <h2 class="section-title" data-i18n-html="trust_title">
             Kepercayaan Institusi Pendidikan Terhadap <span class="text-yellow">Edu Workspace</span>
           </h2>
-          <p class="section-subtitle">
+          <p class="section-subtitle" data-i18n="trust_desc">
             Kami hadir untuk mendampingi ribuan guru dan dosen di seluruh Indonesia dengan teknologi AI yang praktis dan mudah digunakan. Dengan mengurangi beban administratif dan pekerjaan yang menyita waktu, kami membantu para pendidik kembali fokus pada hal yang paling penting: mengajar, membimbing, dan memberikan dampak bagi generasi masa depan.
           </p>
 
@@ -83,7 +103,7 @@
               </div>
               <div class="stat-info">
                 <div class="stat-number stat-yellow" id="statPenggunaAktif">-</div>
-                <div class="stat-label">Pengguna Aktif</div>
+                <div class="stat-label" data-i18n="stat_active_users">Pengguna Aktif</div>
               </div>
             </div>
             <div class="stat-card">
@@ -92,7 +112,7 @@
               </div>
               <div class="stat-info">
                 <div class="stat-number stat-yellow" id="statTotalModul">-</div>
-                <div class="stat-label">Total Modul Dibuat</div>
+                <div class="stat-label" data-i18n="stat_total_modules">Total Modul Dibuat</div>
               </div>
             </div>
           </div>
@@ -107,7 +127,7 @@
   <section class="benefits-section" id="benefit">
     <div class="site-container">
       <div class="section-header text-center">
-        <h2 class="section-title">
+        <h2 class="section-title" data-i18n-html="benefit_title">
           Benefit Nyata untuk <span class="text-yellow">Kualitas Mengajar</span> Kamu
         </h2>
       </div>
@@ -119,11 +139,11 @@
           <div class="benefit-icon-wrapper">
             <img src="Assets/icon/icon_generate.png" alt="Hemat Waktu" class="benefit-icon">
           </div>
-          <h3 class="benefit-title">Hemat Waktu 98%</h3>
-          <p class="benefit-desc">
+          <h3 class="benefit-title" data-i18n="benefit_1_title">Hemat Waktu 98%</h3>
+          <p class="benefit-desc" data-i18n="benefit_1_desc">
             Ubah proses pembuatan modul ajar dari yang biasanya memakan waktu berhari-hari menjadi hitungan menit. Cukup tentukan topik, dan biarkan AI menyusun kerangka lengkapnya.
           </p>
-          <div class="benefit-highlight-tag">Efisiensi Tinggi</div>
+          <div class="benefit-highlight-tag" data-i18n="benefit_1_tag">Efisiensi Tinggi</div>
         </div>
 
         <!-- Benefit Card 2 -->
@@ -131,11 +151,11 @@
           <div class="benefit-icon-wrapper">
             <img src="Assets/icon/icon_approved.png" alt="Kurikulum Merdeka" class="benefit-icon">
           </div>
-          <h3 class="benefit-title">Selaras Kurikulum Merdeka</h3>
-          <p class="benefit-desc">
+          <h3 class="benefit-title" data-i18n="benefit_2_title">Selaras Kurikulum Merdeka</h3>
+          <p class="benefit-desc" data-i18n="benefit_2_desc">
             Struktur format standar nasional: mulai dari Capaian Pembelajaran (CP), Alur Tujuan Pembelajaran (ATP), hingga integrasi Profil Pelajar Pancasila yang valid dan siap supervisi.
           </p>
-          <div class="benefit-highlight-tag">Terstandarisasi</div>
+          <div class="benefit-highlight-tag" data-i18n="benefit_2_tag">Terstandarisasi</div>
         </div>
 
         <!-- Benefit Card 3 -->
@@ -143,11 +163,11 @@
           <div class="benefit-icon-wrapper">
             <img src="Assets/icon/icon_benefit.png" alt="AI Edukasi Khusus" class="benefit-icon">
           </div>
-          <h3 class="benefit-title">AI Khusus Konteks Edukasi</h3>
-          <p class="benefit-desc">
+          <h3 class="benefit-title" data-i18n="benefit_3_title">AI Khusus Konteks Edukasi</h3>
+          <p class="benefit-desc" data-i18n="benefit_3_desc">
             Bukan AI umum yang generik. Sistem Edu Workspace diformulasikan dengan taksonomi Bloom, diferensiasi belajar, dan gaya pendekatan pedagogik ruang kelas di Indonesia.
           </p>
-          <div class="benefit-highlight-tag">Pedagogik Akurat</div>
+          <div class="benefit-highlight-tag" data-i18n="benefit_3_tag">Pedagogik Akurat</div>
         </div>
 
         <!-- Benefit Card 4 -->
@@ -155,11 +175,11 @@
           <div class="benefit-icon-wrapper">
             <img src="Assets/icon/icon_file.png" alt="Ekspor Instan" class="benefit-icon">
           </div>
-          <h3 class="benefit-title">Ekspor Instan Word & PDF</h3>
-          <p class="benefit-desc">
+          <h3 class="benefit-title" data-i18n="benefit_4_title">Ekspor Instan Word & PDF</h3>
+          <p class="benefit-desc" data-i18n="benefit_4_desc">
             Unduh modul yang telah dibuat dalam format Microsoft Word (.docx) yang dapat disunting bebas atau PDF bersih siap cetak tanpa khawatir tata letak (formatting) berantakan.
           </p>
-          <div class="benefit-highlight-tag">Format Fleksibel</div>
+          <div class="benefit-highlight-tag" data-i18n="benefit_4_tag">Format Fleksibel</div>
         </div>
       </div>
     </div>
@@ -171,7 +191,7 @@
   <section class="features-section" id="fitur">
     <div class="site-container">
       <div class="section-header text-center">
-        <h2 class="section-title">
+        <h2 class="section-title" data-i18n-html="features_title">
           Fitur Komprehensif untuk <span class="text-yellow">Setiap Kebutuhan Mengajar</span>
         </h2>
       </div>
@@ -187,26 +207,26 @@
         <div class="features-content-wrapper">
           <!-- Role 1: Fitur Guru -->
           <div class="feature-role-block">
-            <h3 class="feature-role-heading">Fitur Guru</h3>
+            <h3 class="feature-role-heading" data-i18n="role_teacher">Fitur Guru</h3>
             <div class="feature-buttons-row">
               <div class="feature-pill-btn">
                 <img src="Assets/icon/icon_generate.png" alt="AI Generate Modul Ajar" class="pill-btn-icon">
-                <span class="pill-btn-text">AI Generate Modul Ajar</span>
+                <span class="pill-btn-text" data-i18n="feat_modul_ajar">AI Generate Modul Ajar</span>
               </div>
               <div class="feature-pill-btn pill-ongoing">
                 <img src="Assets/icon/icon_generate.png" alt="Fitur Baru, On Going" class="pill-btn-icon">
-                <span class="pill-btn-text">Fitur Baru, On Going</span>
+                <span class="pill-btn-text" data-i18n="feat_ongoing">Fitur Baru, On Going</span>
               </div>
             </div>
           </div>
 
           <!-- Role 2: Fitur Dosen -->
           <div class="feature-role-block">
-            <h3 class="feature-role-heading">Fitur Dosen</h3>
+            <h3 class="feature-role-heading" data-i18n="role_lecturer">Fitur Dosen</h3>
             <div class="feature-buttons-row">
               <div class="feature-pill-btn pill-ongoing">
                 <img src="Assets/icon/icon_generate.png" alt="Fitur Baru, On Going" class="pill-btn-icon">
-                <span class="pill-btn-text">Fitur Baru, On Going</span>
+                <span class="pill-btn-text" data-i18n="feat_ongoing">Fitur Baru, On Going</span>
               </div>
             </div>
           </div>
@@ -218,8 +238,9 @@
 
 
   <!-- Scripts -->
-  <script src="global.js?v=302"></script>
-  <script src="app.js?v=302"></script>
+  <script src="i18n.js?v=303"></script>
+  <script src="global.js?v=303"></script>
+  <script src="app.js?v=303"></script>
 </body>
 
 </html>

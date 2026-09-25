@@ -1447,6 +1447,15 @@ async function callGeminiApi(apiKey, promptText) {
 
   let lastError = null;
 
+  const curLang = (typeof getAppLanguage === 'function') ? getAppLanguage() : (localStorage.getItem('edu_current_language') || 'id');
+  let finalPrompt = promptText;
+  if (curLang === 'en') {
+    if (!finalPrompt.includes('CRITICAL LANGUAGE REQUIREMENT') && !finalPrompt.includes('CRITICAL MANDATE - LANGUAGE REQUIREMENT: ENGLISH')) {
+      finalPrompt = `[CRITICAL MANDATE - LANGUAGE REQUIREMENT: ENGLISH]\n` +
+                    `The application language is set to ENGLISH. ALL generated slide titles, slide bullet points, content, and visual descriptions MUST be written in natural, engaging ENGLISH. Do not use Indonesian.\n\n` + finalPrompt;
+    }
+  }
+
   for (const model of models) {
     try {
       updateSub(`Menghubungkan ke Gemini AI (${model})...`);
@@ -1462,7 +1471,7 @@ async function callGeminiApi(apiKey, promptText) {
           'x-goog-api-key': apiKey
         },
         body: JSON.stringify({
-          contents: [{ parts: [{ text: promptText }] }],
+          contents: [{ parts: [{ text: finalPrompt }] }],
           generationConfig: {
             temperature: 0.7,
             maxOutputTokens: 8192
