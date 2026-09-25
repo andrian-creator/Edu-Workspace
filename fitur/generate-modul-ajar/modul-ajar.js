@@ -5014,3 +5014,7 @@ try {
 // Explicit Global Window Bindings
 window.generateAIElemenCP = generateAIElemenCP;
 
+window.addEventListener('edu_language_changed', () => {
+  if (typeof applyTranslations === 'function') applyTranslations();
+});
+

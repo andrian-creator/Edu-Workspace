@@ -47,8 +47,8 @@
           </div>
         </div>
 
-        <h1 class="profile-title" id="profileTitleText">Profil Guru</h1>
-        <p class="profile-desc" id="profileDescText">Lengkapi dan kelola informasi instansi dan mata pelajaran Anda untuk
+        <h1 class="profile-title" id="profileTitleText" data-i18n="profile_title">Profil Guru</h1>
+        <p class="profile-desc" id="profileDescText" data-i18n="profile_desc">Lengkapi dan kelola informasi instansi dan mata pelajaran Anda untuk
           mengaktifkan seluruh fitur Edu Workspace.</p>
       </div>
 
@@ -56,27 +56,27 @@
       <form id="profileForm" onsubmit="saveProfile(event)">
 
         <div class="form-group">
-          <label class="form-label" for="inputName">Nama Lengkap & Gelar <span class="required-star">*</span></label>
-          <input type="text" class="form-input" id="inputName" required placeholder="Contoh: Rico Eko Andrianto, S.Pd">
+          <label class="form-label" for="inputName"><span data-i18n="profile_name_label">Nama Lengkap & Gelar</span> <span class="required-star">*</span></label>
+          <input type="text" class="form-input" id="inputName" required placeholder="Contoh: Rico Eko Andrianto, S.Pd" data-i18n-placeholder="profile_name_placeholder">
         </div>
 
         <div class="form-group">
-          <label class="form-label" for="inputEmail">Email Google (@gmail.com)</label>
+          <label class="form-label" for="inputEmail" data-i18n="profile_email_label">Email Google (@gmail.com)</label>
           <input type="email" class="form-input" id="inputEmail" disabled>
         </div>
 
         <div class="form-group">
-          <label class="form-label" for="inputInstitution">Asal Sekolah / Instansi Pendidikan <span
+          <label class="form-label" for="inputInstitution"><span data-i18n="profile_instansi_label">Asal Sekolah / Instansi Pendidikan</span> <span
               class="required-star">*</span></label>
           <input type="text" class="form-input" id="inputInstitution" required
-            placeholder="Contoh: SMAN 1 Jakarta / SMP Negeri 5 Bandung">
+            placeholder="Contoh: SMAN 1 Jakarta / SMP Negeri 5 Bandung" data-i18n-placeholder="profile_instansi_placeholder">
         </div>
 
         <div class="form-group">
-          <label class="form-label" for="inputGrade">Jenjang Pendidikan Mengajar <span
+          <label class="form-label" for="inputGrade"><span data-i18n="profile_grade_label">Jenjang Pendidikan Mengajar</span> <span
               class="required-star">*</span></label>
           <select class="form-select" id="inputGrade" required>
-            <option value="" disabled selected>Pilih Jenjang Sekolah</option>
+            <option value="" disabled selected data-i18n="profile_grade_select">Pilih Jenjang Sekolah</option>
             <option value="SD / MI">SD / MI</option>
             <option value="SMP / MTs">SMP / MTs</option>
             <option value="SMA / MA">SMA / MA</option>
@@ -87,7 +87,7 @@
 
         <div style="display: flex; gap: 12px; margin-top: 24px; flex-wrap: wrap;">
           <button type="submit" class="btn-submit-profile" id="btnSubmitProfile" style="flex: 1.5; margin-top: 0;">
-            <span>Simpan Data Profil</span>
+            <span data-i18n="profile_btn_save">Simpan Data Profil</span>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
               stroke-linecap="round" stroke-linejoin="round">
               <line x1="5" y1="12" x2="19" y2="12"></line>
@@ -95,7 +95,7 @@
             </svg>
           </button>
           <a href="dashboard-pengguna.html" class="btn-action-primary btn-green" style="flex: 1; margin: 0; padding: 13px 18px; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; border-radius: 8px; font-weight: 600;">
-            <span>Ke Dashboard &rarr;</span>
+            <span data-i18n="profile_btn_dashboard">Ke Dashboard &rarr;</span>
           </a>
         </div>
 
@@ -194,8 +194,9 @@
   <!-- Modal logout diinjek otomatis oleh global.js -->
 
   <!-- Scripts -->
-  <script src="../global.js?v=300"></script>
-  <script src="profil.js?v=300"></script>
+  <script src="../i18n.js?v=305"></script>
+  <script src="../global.js?v=305"></script>
+  <script src="profil.js?v=305"></script>
 </body>
 
 </html>

@@ -1602,3 +1602,7 @@ function escapeHtml(str) {
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#039;');
 }
+
+window.addEventListener('edu_language_changed', () => {
+  if (typeof applyTranslations === 'function') applyTranslations();
+});

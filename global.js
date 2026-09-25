@@ -1197,8 +1197,12 @@ if (typeof window !== 'undefined') {
  */
 function autoInitEduNavbar() {
   const headerEl = document.getElementById('eduGlobalNavbar');
-  if (!headerEl || headerEl.children.length > 0) return;
-  renderEduNavbar();
+  if (headerEl && headerEl.children.length === 0) {
+    renderEduNavbar();
+  }
+  if (typeof applyTranslations === 'function') {
+    applyTranslations(document);
+  }
 }
 
 if (typeof window !== 'undefined') {
@@ -1207,6 +1211,12 @@ if (typeof window !== 'undefined') {
   } else {
     autoInitEduNavbar();
   }
+
+  window.addEventListener('edu_language_changed', () => {
+    if (typeof applyTranslations === 'function') {
+      applyTranslations(document);
+    }
+  });
 }
 
 /**
@@ -1316,7 +1326,7 @@ function renderEduNavbar(options = {}) {
         </div>
       </div>
     `;
-    if (typeof applyTranslations === 'function') applyTranslations(headerEl);
+    if (typeof applyTranslations === 'function') applyTranslations(document);
     return;
   }
 
@@ -1350,7 +1360,7 @@ function renderEduNavbar(options = {}) {
         </div>
       </div>
     `;
-    if (typeof applyTranslations === 'function') applyTranslations(headerEl);
+    if (typeof applyTranslations === 'function') applyTranslations(document);
     return;
   }
 
@@ -1558,7 +1568,7 @@ function renderEduNavbar(options = {}) {
   `;
 
   if (typeof applyTranslations === 'function') {
-    applyTranslations(headerEl);
+    applyTranslations(document);
   }
 
   if (showAccessTime) {

@@ -883,6 +883,11 @@ window.addEventListener('storage', (e) => {
   }
 });
 
+window.addEventListener('edu_language_changed', () => {
+  renderModulTable();
+  if (typeof applyTranslations === 'function') applyTranslations();
+});
+
 // Explicit Global Window Bindings
 window.editModulItem = editModulItem;
 window.previewModulItem = previewModulItem;

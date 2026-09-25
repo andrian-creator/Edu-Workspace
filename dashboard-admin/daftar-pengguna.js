@@ -1201,3 +1201,8 @@ try {
     fetchUsersFromBackend();
   };
 } catch (e) { }
+
+window.addEventListener('edu_language_changed', () => {
+  renderTable();
+  if (typeof applyTranslations === 'function') applyTranslations();
+});

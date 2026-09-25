@@ -578,3 +578,8 @@ window.addEventListener('storage', (e) => {
     renderFeatureTable();
   }
 });
+
+window.addEventListener('edu_language_changed', () => {
+  renderFeatureTable();
+  if (typeof applyTranslations === 'function') applyTranslations();
+});

@@ -71,3 +71,7 @@ document.addEventListener('click', (e) => {
     wrapper.classList.remove('open');
   }
 });
+
+window.addEventListener('edu_language_changed', () => {
+  if (typeof applyTranslations === 'function') applyTranslations();
+});
