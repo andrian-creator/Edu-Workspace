@@ -359,6 +359,8 @@ function goToSession(sessionNum, silent = false) {
 
   // 3. Scroll Halus ke Atas
   window.scrollTo({ top: 0, behavior: 'smooth' });
+
+  if (typeof applyTranslations === 'function') applyTranslations();
 }
 
 /**

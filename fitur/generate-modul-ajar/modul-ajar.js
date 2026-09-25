@@ -163,31 +163,38 @@ function handleJenjangChange() {
 
   if (!jenjangSelect) return;
   const jenjang = jenjangSelect.value;
+  const isEn = typeof getAppLanguage === 'function' ? getAppLanguage() === 'en' : false;
 
-  // Atur Jurusan: Selain SMK isi Reguler
+  // Atur Jurusan: Selain SMK isi Reguler / Regular
   if (jurusanInput) {
     if (jenjang === 'SMK / MAK') {
-      if (jurusanInput.value === 'Reguler') {
+      if (jurusanInput.value === 'Reguler' || jurusanInput.value === 'Regular') {
         jurusanInput.value = '';
       }
-      jurusanInput.placeholder = 'Contoh: Rekayasa Perangkat Lunak, TKJ, Akuntansi';
+      jurusanInput.placeholder = isEn ? 'Example: Software Engineering, Networking, Accounting' : 'Contoh: Rekayasa Perangkat Lunak, TKJ, Akuntansi';
     } else {
-      jurusanInput.value = 'Reguler';
-      jurusanInput.placeholder = 'Reguler';
+      jurusanInput.value = isEn ? 'Regular' : 'Reguler';
+      jurusanInput.placeholder = isEn ? 'Regular' : 'Reguler';
     }
   }
 
   // Isi Opsi Kelas / Fase Sesuai Jenjang
   if (faseSelect) {
     const prevVal = faseSelect.value;
-    faseSelect.innerHTML = '<option value="" disabled selected>Pilih Kelas / Fase...</option>';
+    faseSelect.innerHTML = isEn 
+      ? '<option value="" disabled selected>Select Grade / Phase...</option>' 
+      : '<option value="" disabled selected>Pilih Kelas / Fase...</option>';
     const options = FASE_KELAS_OPTIONS[jenjang] || [];
     let matchFound = false;
 
     options.forEach(opt => {
       const el = document.createElement('option');
       el.value = opt.value;
-      el.textContent = opt.text;
+      let text = opt.text;
+      if (isEn) {
+        text = text.replace(/^Fase\s+/, 'Phase ').replace(/Kelas\s+/, 'Grade ');
+      }
+      el.textContent = text;
       if (opt.value === prevVal) {
         el.selected = true;
         matchFound = true;
@@ -1592,6 +1599,7 @@ function goToStep(targetStep) {
   }
 
   currentStep = targetStep;
+  if (typeof applyTranslations === 'function') applyTranslations();
 
   // Scroll halus ke arah form agar pengguna tetap fokus
   const card = document.querySelector('.modul-card');
@@ -5015,6 +5023,7 @@ try {
 window.generateAIElemenCP = generateAIElemenCP;
 
 window.addEventListener('edu_language_changed', () => {
+  if (typeof handleJenjangChange === 'function') handleJenjangChange();
   if (typeof applyTranslations === 'function') applyTranslations();
 });
 

@@ -670,26 +670,125 @@ const PHRASE_PAIRS = [
   ['Informasi Akademik', 'Academic Information'],
   ['Tahun Penyusunan', 'Academic Year'],
   ['Jenjang Sekolah', 'School Level'],
+  ['Jurusan', 'Major / Stream'],
+  ['Kelas / Fase', 'Grade / Phase'],
   ['Fase & Kelas', 'Phase & Grade'],
+  ['Fase / Kelas', 'Phase / Grade'],
   ['Mata Pelajaran', 'Subject'],
   ['Topik / Materi Pokok', 'Main Topic / Learning Material'],
+  ['Elemen Capaian Pembelajaran', 'Learning Outcome Elements'],
   ['Model Pembelajaran', 'Instructional Model'],
   ['Pendekatan Pembelajaran', 'Instructional Approach'],
-  ['Metode Pembelajaran', 'Teaching Method'],
+  ['Pendekatan', 'Instructional Approach'],
+  ['Metode Pembelajaran', 'Teaching Methods'],
+  ['Metode', 'Methods'],
   ['Alokasi Waktu (JP)', 'Time Allocation (Hours)'],
   ['Alokasi Waktu', 'Time Allocation'],
+  ['Alokasi Waktu Pembelajaran', 'Instructional Time Allocation'],
   ['Jumlah Pertemuan', 'Number of Sessions'],
+  ['Total JP & Durasi', 'Total Hours & Duration'],
+  ['2. Konteks Pembelajaran', '2. Learning Context'],
+  ['Konteks Pembelajaran', 'Learning Context'],
   ['2. Konteks & Capaian Pembelajaran', '2. Context & Learning Outcomes'],
+  ['Tentukan rancang model, pendekatan, target capaian, profil lulusan, dan analisis kebutuhan belajar.', 'Define instructional models, approaches, target outcomes, graduate profiles, and learning needs.'],
   ['Tentukan capaian, tujuan pembelajaran, dan karakteristik peserta didik.', 'Define learning outcomes, objectives, and student characteristics.'],
-  ['Capaian Pembelajaran (CP)', 'Learning Outcomes (CP)'],
-  ['Tujuan Pembelajaran (TP)', 'Learning Objectives (TP)'],
+  ['Jenis Input', 'Input Type'],
+  ['Isi Topik', 'Topic Details'],
+  ['Isi Materi', 'Material Details'],
+  ['Topik', 'Topic'],
+  ['Materi', 'Material'],
+  ['Tujuan Pembelajaran', 'Learning Objectives'],
+  ['Deskripsi Tujuan Pembelajaran', 'Learning Objectives Description'],
+  ['Materi Tambahan', 'Additional Material'],
+  ['Ringkasan Materi Tambahan', 'Additional Material Summary'],
   ['Materi Tambahan / Pengayaan', 'Enrichment / Additional Material'],
+  ['Analisis Kebutuhan', 'Needs Analysis'],
+  ['Mayoritas Gaya Belajar Murid', 'Student Learning Styles'],
+  ['Media Digital', 'Digital Media'],
+  ['Fasilitas', 'Facilities'],
+  ['Target Capaian & Profil Pelajar', 'Target Outcomes & Student Profiles'],
+  ['Capaian Pembelajaran (CP)', 'Learning Outcomes (CP)'],
+  ['Capaian Pembelajaran', 'Learning Outcomes'],
+  ['Deskripsi Capaian Pembelajaran', 'Learning Outcomes Description'],
+  ['Pilihan Dimensi Target', 'Target Dimensions Selection'],
+  ['Dimensi Profil Lulusan', 'Graduate Profile Dimensions'],
+  ['Identifikasi Awal', 'Initial Identification'],
+  ['Identifikasi Peserta Didik', 'Student Identification'],
+  ['Identifikasi Materi Pembelajaran', 'Learning Material Identification'],
+  ['3. Review & Siap Generate', '3. Review & Ready to Generate'],
   ['3. Review & Konfirmasi Generator', '3. Review & Generator Confirmation'],
+  ['Periksa kembali seluruh parameter modul ajar yang telah diatur sebelum proses generate dokumen AI dimulai.', 'Review all teaching module parameters before starting the AI document generation process.'],
   ['Periksa kembali parameter yang telah dimasukkan sebelum AI menyusun modul ajar.', 'Review the entered parameters before AI compiles the teaching module.'],
+  ['Konfirmasi Penyusunan Modul Ajar', 'Teaching Module Generation Confirmation'],
+  ['Apakah Anda yakin seluruh data yang dimasukkan sudah benar? Data ini akan digunakan oleh AI untuk menyusun dokumen lengkap Modul Ajar.', 'Are you sure all entered information is correct? This data will be used by AI to compile the complete teaching module document.'],
+  ['Sedang Menyusun Modul Ajar...', 'Compiling Teaching Module...'],
+  ['AI sedang merumuskan kegiatan inti pembelajaran & materi...', 'AI is formulating core learning activities & materials...'],
+  ['✦ AI Generator Aktif', '✦ AI Generator Active'],
+  ['Proses perumusan otomatis oleh Gemini AI', 'Automated compilation process by Gemini AI'],
+  ['Yey, Modul Ajar Berhasil Disusun!', 'Yay, Teaching Module Successfully Created!'],
+  ['Modul ajar siap untuk direview, dan diterapkan pada pembelajaran.', 'Teaching module is ready for review and implementation in class.'],
+
+  // Hints
+  ['Selain SMK isi: Reguler', 'For non-vocational, enter: Regular'],
+  ['Ketik elemen CP, pisahkan dengan titik koma (;)', 'Type learning outcome elements, separate with semicolons (;)'],
+  ['Pilih minimal satu metode', 'Select at least one method'],
+  ['Bisa isi sendiri atau tombol Generate With AI', 'Fill manually or use Generate With AI button'],
+  ['Pilih fasilitas pembelajaran (opsional)', 'Select learning facilities (optional)'],
+  ['Pilih minimal satu dimensi', 'Select at least one dimension'],
+
+  // Steppers & Navigation Buttons
+  ['Kembali ke Dashboard', 'Back to Dashboard'],
+  ['Lanjut ke Konteks', 'Continue to Context'],
+  ['Kembali ke Info Dasar', 'Back to Basic Info'],
+  ['Lanjut ke Review & Generate', 'Proceed to Review & Generate'],
+  ['Ubah Konteks', 'Modify Context'],
+  ['Generate Modul Ajar', 'Generate Teaching Module'],
   ['Lanjut ke Tahap Berikutnya', 'Proceed to Next Step'],
   ['Kembali ke Tahap Sebelumnya', 'Back to Previous Step'],
   ['Generate Modul Ajar Sekarang', 'Generate Teaching Module Now'],
   ['Mulai Generate Modul Ajar', 'Generate Teaching Module Now'],
+  ['Periksa Kembali', 'Review Again'],
+  ['Ya, Generate', 'Yes, Generate'],
+  ['Buka Modul Ajar', 'Open Teaching Module'],
+  ['Generate With AI', 'Generate With AI'],
+
+  // Review Table
+  ['Nama', 'Name'],
+  ['Jenjang/Fase', 'Level/Phase'],
+  ['Pertemuan', 'Sessions'],
+  ['Elemen yang Dipilih:', 'Selected Elements:'],
+  ['Topik/Materi:', 'Topic/Material:'],
+  ['Model & Pendekatan:', 'Model & Approach:'],
+  ['Metode:', 'Methods:'],
+
+  // Options & Dropdowns
+  ['Pilih Jenjang Sekolah...', 'Select School Level...'],
+  ['Pilih Kelas / Fase...', 'Select Grade / Phase...'],
+  ['Input Manual', 'Manual Input'],
+  ['Diskusi', 'Discussion'],
+  ['Tanya Jawab', 'Question & Answer'],
+  ['Demonstrasi', 'Demonstration'],
+  ['Eksperimen / Praktik', 'Experiment / Hands-on Practice'],
+  ['Ceramah Interaktif', 'Interactive Lecture'],
+  ['Penugasan Proyek', 'Project Assignment'],
+  ['Visual', 'Visual'],
+  ['Auditori', 'Auditory'],
+  ['Kinestetik', 'Kinesthetic'],
+  ['Campuran (Variatif)', 'Mixed (Varied)'],
+  ['Proyektor / LCD', 'Projector / LCD'],
+  ['Laboratorium', 'Laboratory'],
+  ['Internet / Wi-Fi', 'Internet / Wi-Fi'],
+  ['Perpustakaan', 'Library'],
+  ['Laptop / Gadget Siswa', "Student's Laptop / Device"],
+  ['Tatap Muka', 'Face to Face'],
+  ['Daring (Online)', 'Online / Remote'],
+  ['Blended Learning', 'Blended Learning'],
+  ['Beriman, Bertakwa Kepada Tuhan YME, dan Berakhlak Mulia', 'Faith, Piety to God Almighty, and Noble Character'],
+  ['Berkebhinekaan Global', 'Global Diversity'],
+  ['Bergotong Royong', 'Mutual Cooperation / Teamwork'],
+  ['Mandiri', 'Independent'],
+  ['Bernalar Kritis', 'Critical Reasoning'],
+  ['Kreatif', 'Creative'],
 
   // Media Pembelajaran Form
   ['1. Informasi Materi Presentasi', '1. Presentation Material Information'],
@@ -831,7 +930,22 @@ const PLACEHOLDER_PAIRS = [
   ['Tempelkan API Key Google Gemini di sini (AIzaSy... atau AQ...)', 'Paste your Google Gemini API Key here (AIzaSy... or AQ...)'],
   ['Contoh: 2026', 'Example: 2026'],
   ['nama@sekolah.sch.id atau gmail.com', 'name@school.edu or gmail.com'],
-  ['Masukkan kata sandi akun Anda', 'Enter your account password']
+  ['Masukkan kata sandi akun Anda', 'Enter your account password'],
+  ['Contoh: Ilmu Pengetahuan Alam dan Sosial, Matematika, Biologi', 'e.g.: Natural & Social Sciences, Mathematics, Biology'],
+  ['Contoh: Makhluk Hidup dan Lingkungannya; Zat dan Perubahannya; Energi dan Perubahannya; Keterampilan Proses', 'e.g.: Living Things and Environment; Matter and its Changes; Energy and its Changes; Process Skills'],
+  ['Ketik topik pembelajaran...', 'Type learning topic...'],
+  ['Ketik materi pembelajaran...', 'Type learning material...'],
+  ['Ketik model pembelajaran kustom...', 'Type custom instructional model...'],
+  ['Ketik pendekatan kustom...', 'Type custom approach...'],
+  ['Contoh: 2', 'Example: 2'],
+  ['Contoh: 4 JP @ 45 Menit (Total 180 Menit)', 'Example: 4 Hours @ 45 Mins (Total 180 Mins)'],
+  ['Contoh: Peserta didik mampu menganalisis keterkaitan antara struktur organ dan fungsi pada sistem pernapasan manusia.', 'Example: Students are able to analyze the relationship between organ structures and functions in human respiratory system.'],
+  ['Tuliskan poin-poin materi esensial atau klik Generate With AI...', 'Write essential material points or click Generate With AI...'],
+  ['Contoh: Peserta didik memiliki minat tinggi pada kegiatan observasi, namun memerlukan bimbingan dalam analisis data.', 'Example: Students show high interest in observational activities, but require guidance in data analysis.'],
+  ['Contoh: Materi memerlukan pemahaman konsep dasar sebelum eksperimen dan melibatkan istilah teknis.', 'Example: Material requires basic concept understanding prior to experiments and involves technical terms.'],
+  ['Contoh: Penalaran kritis saat merancang eksperimen dan kolaborasi gotong royong dalam kelompok.', 'Example: Critical reasoning when designing experiments and collaborative teamwork.'],
+  ['Contoh: Rekayasa Perangkat Lunak, TKJ, Akuntansi', 'Example: Software Engineering, Networking, Accounting'],
+  ['Reguler', 'Regular']
 ];
 
 /**
@@ -982,15 +1096,75 @@ function applyTranslations(root = document) {
 function autoTranslateCommonPhrases(root, lang) {
   const isEn = lang === 'en';
 
-  // 1. Text Replacements berdasarkan PHRASE_PAIRS
-  const targetSelectors = 'h1, h2, h3, h4, h5, p, span, a, button, label, th, td, option';
+  // 1. Text Replacements khusus Form Label Titles & Key Values (menjaga asterisk <span class="required">*</span> dan child icon)
+  root.querySelectorAll('.form-label-title, .form-label-inline, label.form-label, .meta-label, .review-key, .cell-label').forEach(el => {
+    if (el.hasAttribute('data-i18n') || el.hasAttribute('data-i18n-html')) return;
+    if (el.tagName.toLowerCase() === 'label' && el.querySelector('.form-label-title')) return;
+
+    el.childNodes.forEach(node => {
+      if (node.nodeType === Node.TEXT_NODE) {
+        const fullRaw = node.textContent;
+        const trimmed = fullRaw.trim();
+        if (!trimmed) return;
+        const clean = trimmed.endsWith(':') ? trimmed.slice(0, -1).trim() : trimmed;
+
+        for (const [idText, enText] of PHRASE_PAIRS) {
+          if (isEn && clean === idText) {
+            node.textContent = fullRaw.replace(clean, enText);
+            break;
+          } else if (!isEn && clean === enText) {
+            node.textContent = fullRaw.replace(clean, idText);
+            break;
+          }
+        }
+      }
+    });
+  });
+
+  // 2. Dropdown Options & Dinamis Fase / Kelas
+  root.querySelectorAll('option').forEach(opt => {
+    const raw = opt.textContent.trim();
+    if (!raw) return;
+
+    let matched = false;
+    for (const [idText, enText] of PHRASE_PAIRS) {
+      if (isEn && raw === idText) {
+        opt.textContent = enText;
+        matched = true;
+        break;
+      } else if (!isEn && raw === enText) {
+        opt.textContent = idText;
+        matched = true;
+        break;
+      }
+    }
+    if (!matched) {
+      if (isEn) {
+        if (raw.startsWith('Fase ')) {
+          opt.textContent = raw.replace(/^Fase\s+/, 'Phase ').replace(/Kelas\s+/, 'Grade ');
+        } else if (raw === 'Pilih Kelas / Fase...') {
+          opt.textContent = 'Select Grade / Phase...';
+        }
+      } else {
+        if (raw.startsWith('Phase ')) {
+          opt.textContent = raw.replace(/^Phase\s+/, 'Fase ').replace(/Grade\s+/, 'Kelas ');
+        } else if (raw === 'Select Grade / Phase...') {
+          opt.textContent = 'Pilih Kelas / Fase...';
+        }
+      }
+    }
+  });
+
+  // 3. Text Replacements berdasarkan PHRASE_PAIRS untuk elemen umum
+  const targetSelectors = 'h1, h2, h3, h4, h5, p, span, a, button, label, th, td';
   const elements = root.querySelectorAll(targetSelectors);
 
   elements.forEach(el => {
-    // Jangan overwrite jika elemen sudah diproses data-i18n
+    // Jangan overwrite jika elemen sudah diproses data-i18n atau merupakan form-label-title
     if (el.hasAttribute('data-i18n') || el.hasAttribute('data-i18n-html')) return;
-    // Jangan ubah container dengan banyak child tags complex kecuali span murni
-    if (el.children.length > 0 && !el.classList.contains('step-name') && !el.classList.contains('btn-create-modul')) return;
+    if (el.classList.contains('form-label-title')) return;
+    // Jangan ubah container dengan banyak child tags complex kecuali span murni / button span / step
+    if (el.children.length > 0 && !el.classList.contains('step-name') && !el.classList.contains('btn-create-modul') && !el.classList.contains('btn-step-prev') && !el.classList.contains('btn-step-next')) return;
 
     const rawText = el.textContent.trim();
     if (!rawText) return;
@@ -1006,7 +1180,7 @@ function autoTranslateCommonPhrases(root, lang) {
     }
   });
 
-  // 2. Placeholder Replacements
+  // 4. Placeholder Replacements
   root.querySelectorAll('input, textarea').forEach(input => {
     if (input.hasAttribute('data-i18n-placeholder')) return;
     const currentPh = input.placeholder ? input.placeholder.trim() : '';
@@ -1022,6 +1196,16 @@ function autoTranslateCommonPhrases(root, lang) {
       }
     }
   });
+
+  // 5. Default Jurusan Input Value ('Reguler' <-> 'Regular')
+  const jurusanInput = root.querySelector('#jurusanSekolah');
+  if (jurusanInput) {
+    if (isEn && jurusanInput.value === 'Reguler') {
+      jurusanInput.value = 'Regular';
+    } else if (!isEn && jurusanInput.value === 'Regular') {
+      jurusanInput.value = 'Reguler';
+    }
+  }
 
   // 3. Khusus Preview Modul Ajar
   const docHeading = root.querySelector('.doc-main-heading');
