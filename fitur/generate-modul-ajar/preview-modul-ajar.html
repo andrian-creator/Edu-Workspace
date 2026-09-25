@@ -869,7 +869,7 @@
       <!-- Lembar Pengesahan -->
       <div class="signature-grid">
         <div class="sig-block">
-          <div class="sig-role">Mengetahui,<br>Kepala Sekolah</div>
+          <div class="sig-role" id="sigPrincipalRole">Mengetahui,<br>Kepala Sekolah</div>
           <div class="sig-name">___________________________<br><span style="font-size: 0.82rem; font-weight: normal; color: #64748b;">( .................................... )</span></div>
         </div>
         <div class="sig-block">
@@ -1443,12 +1443,16 @@
      * Waktu sintaks dibagi proporsional dan presisi dari total alokasi waktu Inti
      */
     function renderIntiRows(intiData, pendekatan, model, totalIntiMinutes) {
+      const isEn = typeof getAppLanguage === 'function' && getAppLanguage() === 'en';
       const intiMin = totalIntiMinutes || 150;
+      const coreLabel = isEn ? 'Core Activities' : 'Kegiatan Inti';
+      const minWord = isEn ? 'Minutes' : 'Menit';
+
       if (!intiData) {
         return `
           <tr>
-            <td style="vertical-align: top;"><strong>Kegiatan Inti</strong></td>
-            <td style="vertical-align: top;">${intiMin} Menit</td>
+            <td style="vertical-align: top;"><strong>${coreLabel}</strong></td>
+            <td style="vertical-align: top;">${intiMin} ${minWord}</td>
             <td style="vertical-align: top;">-</td>
             <td style="vertical-align: top;">-</td>
           </tr>
@@ -1469,8 +1473,8 @@
       if (list.length === 0) {
         return `
           <tr>
-            <td style="vertical-align: top;"><strong>Kegiatan Inti</strong></td>
-            <td style="vertical-align: top;">${intiMin} Menit</td>
+            <td style="vertical-align: top;"><strong>${coreLabel}</strong></td>
+            <td style="vertical-align: top;">${intiMin} ${minWord}</td>
             <td style="vertical-align: top;">-</td>
             <td style="vertical-align: top;">-</td>
           </tr>
@@ -1484,10 +1488,10 @@
       return list.map((item, idx) => {
         let sintaksTitle = item.sintaks || item.namaSintaks || item.tahap || '';
         if (!sintaksTitle && list.length > 1) {
-          sintaksTitle = `Sintaks Tahap ${idx + 1}`;
+          sintaksTitle = isEn ? `Syntax Stage ${idx + 1}` : `Sintaks Tahap ${idx + 1}`;
         }
         const sintaksMinutes = baseTime + (idx < rem ? 1 : 0);
-        const waktu = `${sintaksMinutes} Menit`;
+        const waktu = `${sintaksMinutes} ${minWord}`;
         item.waktu = waktu;
         const guru = formatActivityPoints(item.aktivitasGuru);
         const murid = formatActivityPoints(item.aktivitasMurid);
@@ -1503,7 +1507,7 @@
         return `
           ${sintaksHeader}
           <tr>
-            <td style="vertical-align: top;"><strong>Kegiatan Inti</strong></td>
+            <td style="vertical-align: top;"><strong>${coreLabel}</strong></td>
             <td style="vertical-align: top;">${waktu}</td>
             <td style="vertical-align: top;">${guru}</td>
             <td style="vertical-align: top;">${murid}</td>
@@ -1723,17 +1727,27 @@
       const profilList = data.dimensiProfilLulusan || ['Penalaran Kritis', 'Kreativitas', 'Kolaborasi', 'Kemandirian'];
       const idAwal = data.identifikasiAwal || {};
 
-      document.title = `Modul Ajar - ${institusi} - ${mapel}`;
+      const isEn = typeof getAppLanguage === 'function' && getAppLanguage() === 'en';
+      document.title = isEn ? `Teaching Module - ${institusi} - ${mapel}` : `Modul Ajar - ${institusi} - ${mapel}`;
 
       // 1. KOP DOKUMEN: Baris ke-2 adalah Nama Sekolah (Institusi), Tanpa "EFEVV • RVRV"
       document.getElementById('docSchoolName').textContent = institusi.toUpperCase();
 
+      let cleanFase = `${fase} (${jenjang} - ${jurusan})`;
+      let cleanDurasi = durasi;
+      let cleanPertemuan = pertemuan;
+      if (isEn) {
+        if (jurusan === 'Reguler') cleanFase = `${fase} (${jenjang} - Regular)`;
+        cleanDurasi = cleanDurasi.replace(/\bJP\b/g, 'Hours').replace(/Menit/gi, 'Minutes');
+        cleanPertemuan = cleanPertemuan.replace(/Pertemuan/gi, 'Sessions');
+      }
+
       document.getElementById('metaNama').textContent = nama;
       document.getElementById('metaMapel').textContent = mapel;
       document.getElementById('metaElemen').textContent = elemen;
-      document.getElementById('metaFase').textContent = `${fase} (${jenjang} - ${jurusan})`;
+      document.getElementById('metaFase').textContent = cleanFase;
       document.getElementById('metaTopik').textContent = topik;
-      document.getElementById('metaAlokasi').textContent = `${durasi} (${pertemuan})`;
+      document.getElementById('metaAlokasi').textContent = `${cleanDurasi} (${cleanPertemuan})`;
       document.getElementById('metaModel').textContent = model;
       document.getElementById('metaPendekatan').textContent = pendekatan;
 
@@ -1902,35 +1916,49 @@
       const totalMeetingsCount = listMeetings.length || 4;
       const totalMeetingMinutes = parseMeetingDurationMinutes(durasi, totalMeetingsCount);
       const stageTimes = calculateStageMinutes(totalMeetingMinutes);
-      const perMeetingDurasiLabel = durasi.split('(')[0].trim();
+      let perMeetingDurasiLabel = durasi.split('(')[0].trim();
+      if (isEn) {
+        perMeetingDurasiLabel = perMeetingDurasiLabel.replace(/\bJP\b/g, 'Hours').replace(/Menit/gi, 'Minutes');
+      }
 
       const pengalamanContainer = document.getElementById('docPengalamanBelajarContainer');
       pengalamanContainer.innerHTML = listMeetings.map((m, idx) => {
         const cleanSubTopik = sanitizeOrResolveSubTopik(m.subTopik, idx, totalMeetingsCount, data);
         m.subTopik = cleanSubTopik;
 
-        if (m.awal) m.awal.waktu = `${stageTimes.awalMin} Menit`;
-        if (m.penutup) m.penutup.waktu = `${stageTimes.penutupMin} Menit`;
+        const awalMinWord = isEn ? `${stageTimes.awalMin} Minutes` : `${stageTimes.awalMin} Menit`;
+        const penutupMinWord = isEn ? `${stageTimes.penutupMin} Minutes` : `${stageTimes.penutupMin} Menit`;
+
+        if (m.awal) m.awal.waktu = awalMinWord;
+        if (m.penutup) m.penutup.waktu = penutupMinWord;
+
+        const sessionLabel = isEn ? `Session ${m.pertemuan}` : `Pertemuan ${m.pertemuan}`;
+        const tahapHead = isEn ? 'Stage' : 'Tahap';
+        const waktuHead = isEn ? 'Duration' : 'Waktu';
+        const guruHead = isEn ? 'Teacher Activities' : 'Aktivitas Guru';
+        const muridHead = isEn ? 'Student Activities' : 'Aktivitas Murid';
+        const awalTitle = isEn ? 'Introductory Activities' : 'Kegiatan Awal';
+        const penutupTitle = isEn ? 'Closing Activities' : 'Kegiatan Penutup';
 
         return `
         <div class="meeting-block">
           <div class="meeting-header-title">
-            ${idx + 1}. Pertemuan ${m.pertemuan}: ${cleanSubTopik.toUpperCase()} (${perMeetingDurasiLabel})
+            ${idx + 1}. ${sessionLabel}: ${cleanSubTopik.toUpperCase()} (${perMeetingDurasiLabel})
           </div>
 
           <table class="doc-table">
             <thead>
               <tr>
-                <th style="width: 14%;">Tahap</th>
-                <th style="width: 12%;">Waktu</th>
-                <th style="width: 37%;">Aktivitas Guru</th>
-                <th style="width: 37%;">Aktivitas Murid</th>
+                <th style="width: 14%;">${tahapHead}</th>
+                <th style="width: 12%;">${waktuHead}</th>
+                <th style="width: 37%;">${guruHead}</th>
+                <th style="width: 37%;">${muridHead}</th>
               </tr>
             </thead>
             <tbody>
               <tr>
-                <td style="vertical-align: top;"><strong>Kegiatan Awal</strong></td>
-                <td style="vertical-align: top;">${stageTimes.awalMin} Menit</td>
+                <td style="vertical-align: top;"><strong>${awalTitle}</strong></td>
+                <td style="vertical-align: top;">${awalMinWord}</td>
                 <td style="vertical-align: top;">${formatActivityPoints(m.awal?.aktivitasGuru)}</td>
                 <td style="vertical-align: top;">${formatActivityPoints(m.awal?.aktivitasMurid)}</td>
               </tr>
@@ -1938,8 +1966,8 @@
               ${renderIntiRows(m.inti, pendekatan, model, stageTimes.intiMin)}
 
               <tr>
-                <td style="vertical-align: top;"><strong>Kegiatan Penutup</strong></td>
-                <td style="vertical-align: top;">${stageTimes.penutupMin} Menit</td>
+                <td style="vertical-align: top;"><strong>${penutupTitle}</strong></td>
+                <td style="vertical-align: top;">${penutupMinWord}</td>
                 <td style="vertical-align: top;">${formatActivityPoints(m.penutup?.aktivitasGuru)}</td>
                 <td style="vertical-align: top;">${formatActivityPoints(m.penutup?.aktivitasMurid)}</td>
               </tr>
@@ -2011,16 +2039,31 @@ Pada tataran analisis lanjutan, penguasaan materi **${topik}** menuntut kemampua
       const asesmenItems = ai.asesmen || [];
       document.getElementById('tableAsesmenDinamisBody').innerHTML = asesmenItems.map(row => {
         let bentuk = row.bentuk || '-';
-        if (row.jenis === 'Diagnostik' || /kuis\s+diagnostik/i.test(bentuk)) {
-          bentuk = 'Pretest (Tes Diagnostik Kognitif Awal)';
-        } else if (row.jenis === 'Formatif' && (/observasi/i.test(bentuk) || bentuk === '-')) {
-          bentuk = 'Asesmen Formatif (Lembar Observasi Proses & Kinerja Praktik)';
-        } else if (row.jenis === 'Sumatif' && (/uji|produk|kuis/i.test(bentuk) || bentuk === '-')) {
-          bentuk = 'Post-test / Asesmen Sumatif (Uji Kinerja Praktik & Portofolio)';
+        let jenis = row.jenis || '-';
+        if (isEn) {
+          if (jenis === 'Diagnostik') jenis = 'Diagnostic';
+          else if (jenis === 'Formatif') jenis = 'Formative';
+          else if (jenis === 'Sumatif') jenis = 'Summative';
+
+          if (/kuis\s+diagnostik|pretest/i.test(bentuk) || jenis === 'Diagnostic') {
+            bentuk = 'Pre-test (Diagnostic Initial Cognitive Test)';
+          } else if (/observasi/i.test(bentuk) || bentuk === '-' || jenis === 'Formative') {
+            bentuk = 'Formative Assessment (Observation Sheet & Performance)';
+          } else if (/uji|produk|kuis|post/i.test(bentuk) || jenis === 'Summative') {
+            bentuk = 'Post-test / Summative Assessment (Practice & Portfolio)';
+          }
+        } else {
+          if (jenis === 'Diagnostik' || /kuis\s+diagnostik/i.test(bentuk)) {
+            bentuk = 'Pretest (Tes Diagnostik Kognitif Awal)';
+          } else if (jenis === 'Formatif' && (/observasi/i.test(bentuk) || bentuk === '-')) {
+            bentuk = 'Asesmen Formatif (Lembar Observasi Proses & Kinerja Praktik)';
+          } else if (jenis === 'Sumatif' && (/uji|produk|kuis/i.test(bentuk) || bentuk === '-')) {
+            bentuk = 'Post-test / Asesmen Sumatif (Uji Kinerja Praktik & Portofolio)';
+          }
         }
         return `
           <tr>
-            <td><strong>${row.jenis}</strong></td>
+            <td><strong>${jenis}</strong></td>
             <td>${bentuk}</td>
             <td>${row.keterangan || '-'}</td>
           </tr>
@@ -2091,9 +2134,21 @@ Pada tataran analisis lanjutan, penguasaan materi **${topik}** menuntut kemampua
           break;
         }
       }
-      const formattedDateStr = formatIndonesianDate(data.createdAt);
-      document.getElementById('sigDateLocation').innerHTML = `${detectedCity}, ${formattedDateStr}<br>Guru Mata Pelajaran`;
+      const formattedDateStr = formatIndonesianDate(data.createdAt, isEn);
+      const roleLabel = isEn ? 'Subject Teacher' : 'Guru Mata Pelajaran';
+      const cityLabel = isEn ? (detectedCity === 'Kota/Kabupaten' ? 'City/District' : detectedCity) : detectedCity;
+      document.getElementById('sigDateLocation').innerHTML = `${cityLabel}, ${formattedDateStr}<br>${roleLabel}`;
       document.getElementById('sigTeacherName').innerHTML = `${nama}<br><span style="font-size: 0.82rem; font-weight: normal; color: #64748b;">( .................................... )</span>`;
+
+      const sigPrincipalRole = document.getElementById('sigPrincipalRole');
+      if (sigPrincipalRole) {
+        sigPrincipalRole.innerHTML = isEn ? 'Acknowledged by,<br>School Principal' : 'Mengetahui,<br>Kepala Sekolah';
+      }
+
+      // Terapkan kamus i18n pada seluruh elemen preview modul ajar
+      if (typeof applyTranslations === 'function') {
+        applyTranslations();
+      }
     }
 
     /**
@@ -2543,15 +2598,20 @@ Pada tataran analisis lanjutan, penguasaan materi **${topik}** menuntut kemampua
 
 
     /**
-     * Format Tanggal Bahasa Indonesia Otomatis (DD MMMM YYYY)
+     * Format Tanggal Otomatis (DD MMMM YYYY) Sesuai Bahasa Aktif
      */
-    function formatIndonesianDate(isoOrDate) {
+    function formatIndonesianDate(isoOrDate, isEnglish = (typeof getAppLanguage === 'function' && getAppLanguage() === 'en')) {
       const d = isoOrDate ? new Date(isoOrDate) : new Date();
       const validDate = isNaN(d.getTime()) ? new Date() : d;
-      const months = [
+      const monthsId = [
         'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
         'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
       ];
+      const monthsEn = [
+        'January', 'February', 'March', 'April', 'May', 'June',
+        'July', 'August', 'September', 'October', 'November', 'December'
+      ];
+      const months = isEnglish ? monthsEn : monthsId;
       const day = String(validDate.getDate()).padStart(2, '0');
       const month = months[validDate.getMonth()];
       const year = validDate.getFullYear();
@@ -4088,6 +4148,9 @@ Pada tataran analisis lanjutan, penguasaan materi **${topik}** menuntut kemampua
 
     document.addEventListener('DOMContentLoaded', () => {
       renderModulDocument();
+      if (typeof applyTranslations === 'function') {
+        applyTranslations();
+      }
     });
   </script>
 </body>

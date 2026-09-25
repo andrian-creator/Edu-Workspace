@@ -752,6 +752,98 @@ const PHRASE_PAIRS = [
   ['Buka Modul Ajar', 'Open Teaching Module'],
   ['Generate With AI', 'Generate With AI'],
 
+  // Step 2 & Checkbox Labels
+  ['Diskusi Kelompok', 'Group Discussion'],
+  ['Simulasi', 'Simulation'],
+  ['Praktikum Langsung', 'Hands-on Practice'],
+  ['Peer Teaching', 'Peer Teaching'],
+  ['Studi Kasus', 'Case Study'],
+  ['Campuran / Multimodal', 'Mixed / Multimodal'],
+  ['Lab Komputer', 'Computer Lab'],
+  ['Proyektor/LCD', 'Projector/LCD'],
+  ['Internet Cepat', 'High-Speed Internet'],
+  ['Smartphone Murid', 'Student Smartphones'],
+  ['Lainnya', 'Other'],
+  ['Keimanan', 'Faith & Piety'],
+  ['Kewargaan', 'Citizenship & Diversity'],
+  ['Kreativitas', 'Creativity'],
+  ['Kolaborasi', 'Collaboration'],
+  ['Kemandirian', 'Independence'],
+  ['Kesehatan', 'Physical & Mental Health'],
+  ['Komunikasi', 'Communication'],
+  ['(Opsional)', '(Optional)'],
+  ['Ceklis jika ingin AI meringkas CP agar lebih spesifik dan fokus pada Topik/Materi saja.', 'Check if you want AI to summarize CP to be more specific and focused on Topic/Material only.'],
+  ['Pisahkan dengan tanda titik koma (;) jika mengisi lebih dari satu fasilitas', 'Separate with semicolons (;) if entering multiple facilities'],
+
+  // Document Preview Table Headers & Terms
+  ['Kategori', 'Category'],
+  ['Identifikasi', 'Identification'],
+  ['Tindak Lanjut', 'Follow-up Action'],
+  ['Deskripsi', 'Description'],
+  ['Dimensi', 'Dimension'],
+  ['Deskripsi Penerapan', 'Implementation Description'],
+  ['Tahap', 'Stage'],
+  ['Waktu', 'Duration'],
+  ['Aktivitas Guru', 'Teacher Activities'],
+  ['Aktivitas Murid', 'Student Activities'],
+  ['Jenis Asesmen', 'Assessment Type'],
+  ['Bentuk', 'Format'],
+  ['Keterangan', 'Description'],
+  ['Aspek', 'Criteria / Aspect'],
+  ['Skor 1 (Kurang)', 'Score 1 (Needs Improvement)'],
+  ['Skor 2 (Cukup)', 'Score 2 (Satisfactory)'],
+  ['Skor 3 (Baik)', 'Score 3 (Good)'],
+  ['Skor 4 (Sangat Baik)', 'Score 4 (Excellent)'],
+  ['Kegiatan Awal', 'Introductory Activities'],
+  ['Kegiatan Inti', 'Core Activities'],
+  ['Kegiatan Penutup', 'Closing Activities'],
+  ['a. Judul LKPD:', 'a. Worksheet Title:'],
+  ['b. Tujuan Kegiatan:', 'b. Activity Objectives:'],
+  ['c. Petunjuk & Langkah Kerja:', 'c. Instructions & Work Steps:'],
+  ['a. Rekomendasi Tugas Pengayaan', 'a. Recommended Enrichment Task'],
+  ['b. Rekomendasi Tugas Remedial', 'b. Recommended Remedial Task'],
+  ['Guru Mata Pelajaran', 'Subject Teacher'],
+  ['Kepala Sekolah', 'School Principal'],
+  ['Dokumen ini dibuat menggunakan', 'This document was created using'],
+  ['Mengerti', 'Understand'],
+  ['Berhasil!', 'Success!'],
+  ['Pemberitahuan berhasil.', 'Action succeeded.'],
+
+  // Validation Warnings & Notifications
+  ['Kolom Wajib Diisi', 'Required Field'],
+  ['Silakan isi Nama Penyusun terlebih dahulu.', 'Please enter the Author Name first.'],
+  ['Silakan isi Institusi sekolah pendidik.', 'Please enter the School/Institution.'],
+  ['Silakan isi Tahun Penyusunan.', 'Please enter the Academic Year.'],
+  ['Silakan pilih Jenjang Sekolah.', 'Please select the School Level.'],
+  ['Silakan isi Jurusan (selain SMK isi: Reguler).', 'Please enter Major (for non-vocational enter: Regular).'],
+  ['Silakan pilih Kelas / Fase pembelajaran.', 'Please select Grade / Phase.'],
+  ['Silakan isi Mata Pelajaran terlebih dahulu.', 'Please enter Subject first.'],
+  ['Silakan isi Elemen Capaian Pembelajaran (pisahkan dengan titik koma).', 'Please enter Learning Outcome Elements (separate with semicolons).'],
+  ['Silakan isi Topik / Materi Pokok pembelajaran terlebih dahulu.', 'Please enter Topic / Core Material first.'],
+  ['Silakan isi nama Model Pembelajaran manual.', 'Please enter manual Learning Model name.'],
+  ['Silakan isi nama Pendekatan Pembelajaran manual.', 'Please enter manual Learning Approach name.'],
+  ['Pilihan Wajib Dipilih', 'Required Selection'],
+  ['Silakan pilih minimal satu Metode Pembelajaran.', 'Please select at least one Learning Method.'],
+  ['Silakan isi Jumlah Pertemuan (berupa angka).', 'Please enter Number of Sessions (numbers only).'],
+  ['Silakan isi Total JP & Durasi pembelajaran.', 'Please enter Total Hours & Duration.'],
+  ['Silakan isi Tujuan Pembelajaran atau klik "Generate With AI".', 'Please fill in Learning Objectives or click "Generate With AI".'],
+  ['Silakan isi rumusan Capaian Pembelajaran (CP) atau klik "Generate With AI".', 'Please fill in Learning Outcomes (CP) or click "Generate With AI".'],
+  ['Silakan pilih minimal satu Dimensi Profil Lulusan.', 'Please select at least one Graduate Profile Dimension.'],
+  ['Silakan isi Identifikasi Peserta Didik atau klik "Generate With AI" pada Identifikasi Awal.', 'Please fill in Student Identification or click "Generate With AI" in Initial Identification.'],
+  ['Silakan isi Identifikasi Materi Pembelajaran atau klik "Generate With AI" pada Identifikasi Awal.', 'Please fill in Learning Material Identification or click "Generate With AI" in Initial Identification.'],
+  ['Silakan isi Dimensi Profil Lulusan pada Identifikasi Awal atau klik "Generate With AI".', 'Please fill in Graduate Profile Dimensions in Initial Identification or click "Generate With AI".'],
+  ['Lengkapi Data Sebelumnya', 'Complete Previous Data'],
+  ['Silakan isi Mata Pelajaran (di Tahap 1) dan Isi Topik / Materi terlebih dahulu agar AI dapat merumuskan tujuan secara presisi.', 'Please fill in Subject (Step 1) and Topic / Material first so AI can formulate objectives accurately.'],
+  ['Silakan isi Mata Pelajaran dan Isi Topik / Materi terlebih dahulu.', 'Please fill in Subject and Topic / Material first.'],
+  ['Generate Sukses', 'Generation Successful'],
+  ['Modul Ajar telah berhasil disusun dan disimpan!', 'Teaching module has been successfully compiled and saved!'],
+  ['Modul Ajar Tersimpan (Mode Cadangan)', 'Teaching Module Saved (Fallback Mode)'],
+  ['Modul Ajar Masih Berstatus Draft', 'Teaching Module is Still in Draft Status'],
+  ['Lanjutkan Edit & Generate Modul', 'Continue Edit & Generate Module'],
+  ['Lanjutkan Edit &amp; Generate Modul', 'Continue Edit & Generate Module'],
+  ['Panduan Skor:', 'Scoring Guide:'],
+  ['Skor akhir diperoleh dari total skor pada setiap aspek dibagi jumlah aspek. Konversi nilai: 1–1.75 = Kurang, 1.76–2.5 = Cukup, 2.51–3.25 = Baik, 3.26–4 = Sangat Baik.', 'The final score is obtained from the total score across all aspects divided by the number of aspects. Value conversion: 1–1.75 = Needs Improvement, 1.76–2.5 = Fair, 2.51–3.25 = Good, 3.26–4 = Excellent.'],
+
   // Review Table
   ['Nama', 'Name'],
   ['Jenjang/Fase', 'Level/Phase'],
@@ -1229,39 +1321,92 @@ function autoTranslateCommonPhrases(root, lang) {
     const txt = st.textContent.trim();
     if (txt.includes('IDENTIFIKASI AWAL') || txt.includes('INITIAL IDENTIFICATION')) {
       st.textContent = isEn ? 'A. INITIAL IDENTIFICATION' : 'A. IDENTIFIKASI AWAL';
-    } else if (txt.includes('CAPAIAN DAN TUJUAN') || txt.includes('LEARNING OUTCOMES')) {
-      st.textContent = isEn ? 'B. LEARNING OUTCOMES & OBJECTIVES' : 'B. CAPAIAN DAN TUJUAN PEMBELAJARAN';
-    } else if (txt.includes('RANCANGAN PEMBELAJARAN') || txt.includes('INSTRUCTIONAL DESIGN')) {
-      st.textContent = isEn ? 'C. INSTRUCTIONAL DESIGN' : 'C. RANCANGAN PEMBELAJARAN';
-    } else if (txt.includes('LANGKAH-LANGKAH PEMBELAJARAN') || txt.includes('LEARNING ACTIVITIES')) {
-      st.textContent = isEn ? 'D. LEARNING ACTIVITIES & STEPS' : 'D. LANGKAH-LANGKAH PEMBELAJARAN';
-    } else if (txt.includes('ASESMEN PEMBELAJARAN') || txt.includes('LEARNING ASSESSMENT')) {
-      st.textContent = isEn ? 'E. LEARNING ASSESSMENT' : 'E. ASESMEN PEMBELAJARAN';
-    } else if (txt.includes('LEMBAR KERJA PESERTA DIDIK') || txt.includes('STUDENT WORKSHEET')) {
-      st.textContent = isEn ? 'F. STUDENT WORKSHEET (LKPD)' : 'F. LEMBAR KERJA PESERTA DIDIK (LKPD)';
-    } else if (txt.includes('PENGAYAAN DAN REMEDIAL') || txt.includes('ENRICHMENT AND REMEDIAL')) {
-      st.textContent = isEn ? 'G. ENRICHMENT AND REMEDIAL' : 'G. PENGAYAAN DAN REMEDIAL';
-    } else if (txt.includes('REFLEKSI GURU') || txt.includes('TEACHER AND STUDENT REFLECTION')) {
-      st.textContent = isEn ? 'H. TEACHER AND STUDENT REFLECTION' : 'H. REFLEKSI GURU DAN PESERTA DIDIK';
-    } else if (txt.includes('GLOSARIUM') || txt.includes('GLOSSARY')) {
-      st.textContent = isEn ? 'I. GLOSSARY' : 'I. GLOSARIUM';
-    } else if (txt.includes('DAFTAR PUSTAKA') || txt.includes('REFERENCES & BIBLIOGRAPHY')) {
-      st.textContent = isEn ? 'J. REFERENCES & BIBLIOGRAPHY' : 'J. DAFTAR PUSTAKA';
+    } else if (txt.includes('DESAIN PEMBELAJARAN') || txt.includes('INSTRUCTIONAL DESIGN') || txt.includes('CAPAIAN DAN TUJUAN')) {
+      st.textContent = isEn ? 'B. INSTRUCTIONAL DESIGN' : 'B. DESAIN PEMBELAJARAN';
+    } else if (txt.includes('PENGALAMAN BELAJAR') || txt.includes('LEARNING EXPERIENCES') || txt.includes('RANCANGAN PEMBELAJARAN')) {
+      st.textContent = isEn ? 'C. LEARNING EXPERIENCES' : 'C. PENGALAMAN BELAJAR';
+    } else if (txt.includes('MATERI AJAR DAN ASESMEN') || txt.includes('TEACHING MATERIAL & ASSESSMENT') || txt.includes('LANGKAH-LANGKAH PEMBELAJARAN')) {
+      st.textContent = isEn ? 'D. TEACHING MATERIAL & ASSESSMENT' : 'D. MATERI AJAR DAN ASESMEN';
+    } else if (txt.includes('REFLEKSI') || txt.includes('REFLECTION')) {
+      st.textContent = isEn ? 'E. REFLECTION' : 'E. REFLEKSI';
+    } else if (txt.includes('LAMPIRAN') || txt.includes('ATTACHMENTS')) {
+      st.textContent = isEn ? 'F. ATTACHMENTS & APPENDIX' : 'F. LAMPIRAN';
     }
   });
+
+  const SUB_HEADING_PAIRS = [
+    ['1. Identifikasi Peserta Didik', '1. Student Identification'],
+    ['2. Identifikasi Materi Pembelajaran', '2. Learning Material Identification'],
+    ['3. Dimensi Profil Lulusan', '3. Graduate Profile Dimensions'],
+    ['1. Capaian Pembelajaran', '1. Learning Outcomes'],
+    ['2. Tujuan Pembelajaran', '2. Learning Objectives'],
+    ['3. Pemahaman Bermakna', '3. Meaningful Understanding'],
+    ['4. Pertanyaan Pemantik', '4. Essential / Inquiry Questions'],
+    ['5. Lintas Disiplin Ilmu', '5. Interdisciplinary Connections'],
+    ['6. Praktik Pedagogis', '6. Pedagogical Practices'],
+    ['7. Kemitraan Pembelajaran', '7. Learning Partnerships'],
+    ['8. Lingkungan Pembelajaran', '8. Learning Environment'],
+    ['1. Materi Ajar', '1. Teaching Material'],
+    ['2. Materi Tambahan', '2. Additional Material'],
+    ['2. Asesmen', '2. Assessment'],
+    ['3. Asesmen', '3. Assessment'],
+    ['1. Refleksi Guru', '1. Teacher Reflection'],
+    ['2. Refleksi Murid', '2. Student Reflection'],
+    ['1. Lembar Kerja Peserta Didik (LKPD)', '1. Student Worksheet (LKPD)'],
+    ['2. Rubrik Penilaian', '2. Assessment Rubric'],
+    ['3. Pengayaan dan Remedial', '3. Enrichment and Remedial'],
+    ['4. Glosarium Materi', '4. Subject Glossary'],
+    ['5. Daftar Pustaka', '5. References & Bibliography']
+  ];
 
   root.querySelectorAll('.doc-sub-heading').forEach(sh => {
     const txt = sh.textContent.trim();
-    if (txt.includes('Identifikasi Peserta Didik') || txt.includes('Student Identification')) {
-      sh.textContent = isEn ? '1. Student Identification' : '1. Identifikasi Peserta Didik';
-    } else if (txt.includes('Identifikasi Materi') || txt.includes('Learning Material Identification')) {
-      sh.textContent = isEn ? '2. Learning Material Identification' : '2. Identifikasi Materi Pembelajaran';
-    } else if (txt.includes('Identifikasi Profil') || txt.includes('Graduate Profile Identification')) {
-      sh.textContent = isEn ? '3. Graduate Profile Identification' : '3. Identifikasi Profil Lulusan';
+    for (const [idSub, enSub] of SUB_HEADING_PAIRS) {
+      if (isEn && txt === idSub) {
+        sh.textContent = enSub;
+        break;
+      } else if (!isEn && txt === enSub) {
+        sh.textContent = idSub;
+        break;
+      }
     }
   });
 
-  // 4. Logout modal text
+  // 4. Preview Document Specific Dynamic Elements
+  const footerNotice = root.querySelector('.doc-footer-notice');
+  if (footerNotice) {
+    footerNotice.innerHTML = isEn
+      ? 'This document was created using <strong>Edu Workspace</strong>'
+      : 'Dokumen ini dibuat menggunakan <strong>Edu Workspace</strong>';
+  }
+
+  const sigPrincipal = root.querySelector('#sigPrincipalRole, .sig-block:first-child .sig-role');
+  if (sigPrincipal) {
+    sigPrincipal.innerHTML = isEn ? 'Acknowledged by,<br>School Principal' : 'Mengetahui,<br>Kepala Sekolah';
+  }
+
+  // Translate doc-table th elements directly to ensure preview document headers match active language
+  root.querySelectorAll('.doc-table th').forEach(th => {
+    const rawTh = th.textContent.trim();
+    if (!rawTh) return;
+    for (const [idTh, enTh] of PHRASE_PAIRS) {
+      if (isEn && rawTh === idTh) {
+        th.textContent = enTh;
+        break;
+      } else if (!isEn && rawTh === enTh) {
+        th.textContent = idTh;
+        break;
+      }
+    }
+  });
+
+  // 5. Open Teaching Module Button & Confirmation Modal
+  const btnOpenModul = root.querySelector('#btnOpenModul span');
+  if (btnOpenModul) {
+    btnOpenModul.textContent = isEn ? 'Open Teaching Module' : 'Buka Modul Ajar';
+  }
+
+  // 6. Logout modal text
   const logoutTitle = root.querySelector('#logoutModalTitle, .logout-modal-title');
   if (logoutTitle) logoutTitle.textContent = isEn ? 'Confirm Logout' : 'Konfirmasi Keluar';
   const logoutDesc = root.querySelector('#logoutModalDesc, .logout-modal-desc');

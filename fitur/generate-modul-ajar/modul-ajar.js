@@ -59,6 +59,10 @@ function showNotificationModal(title, msg, type = 'success') {
   titleEl.textContent = title;
   descEl.textContent = msg;
 
+  if (typeof applyTranslations === 'function') {
+    applyTranslations(modal);
+  }
+
   if (iconBox && iconContent) {
     iconBox.className = 'confirm-icon-box';
     if (type === 'success') {
@@ -1298,17 +1302,23 @@ async function initModulAjarPage() {
 
   // F. Periksa apakah dalam mode edit dari halaman Daftar Modul Ajar
   await checkAndLoadEditModul();
+
+  // Terapkan terjemahan bahasa aktif ke seluruh form modul ajar
+  if (typeof applyTranslations === 'function') {
+    applyTranslations();
+  }
 }
 
 /**
- * Sinkronisasi Otomatis Keterangan "(X Pertemuan)" pada Total JP & Durasi
- * Berdasarkan input angka di kolom Jumlah Pertemuan
+ * Sinkronisasi Otomatis Keterangan "(X Pertemuan / Sessions)" pada Total JP & Durasi
+ * Berdasarkan input angka di kolom Jumlah Pertemuan dan bahasa aktif
  */
 function syncTotalJPDurasi() {
   const inputPertemuan = document.getElementById('jumlahPertemuan');
   const inputTotalJP = document.getElementById('totalJPDurasi');
   if (!inputPertemuan || !inputTotalJP) return;
 
+  const isEn = typeof getAppLanguage === 'function' && getAppLanguage() === 'en';
   const rawNum = inputPertemuan.value.trim().replace(/[^\d]/g, '');
   const currentJP = inputTotalJP.value.trim();
 
@@ -1319,15 +1329,20 @@ function syncTotalJPDurasi() {
   else if (jenjang === 'SMP') menit = 40;
 
   // Bersihkan keterangan kurung pertemuan lama jika ada
-  let baseDurasi = currentJP.replace(/\s*\(\d*\s*pertemuan\)/gi, '').trim();
+  let baseDurasi = currentJP.replace(/\s*\(\d*\s*(pertemuan|sessions?)\)/gi, '').trim();
 
   // Jika belum ada base durasi atau masih format lama
-  if (!baseDurasi || baseDurasi.includes('(4 x 45 menit)') || !baseDurasi.includes('JP')) {
-    baseDurasi = `4 JP x ${menit} Menit`;
+  if (!baseDurasi || baseDurasi.includes('4 x 45') || (!baseDurasi.includes('JP') && !baseDurasi.includes('Hours'))) {
+    baseDurasi = isEn ? `4 Hours x ${menit} Minutes` : `4 JP x ${menit} Menit`;
+  } else if (isEn) {
+    baseDurasi = baseDurasi.replace(/\bJP\b/g, 'Hours').replace(/Menit/gi, 'Minutes');
+  } else {
+    baseDurasi = baseDurasi.replace(/\bHours\b/g, 'JP').replace(/Minutes/gi, 'Menit');
   }
 
+  const sessionWord = isEn ? 'Sessions' : 'Pertemuan';
   if (rawNum) {
-    inputTotalJP.value = `${baseDurasi} (${rawNum} Pertemuan)`;
+    inputTotalJP.value = `${baseDurasi} (${rawNum} ${sessionWord})`;
   } else {
     inputTotalJP.value = baseDurasi;
   }
@@ -1766,11 +1781,13 @@ function updateReviewSummary() {
   const jurusan = document.getElementById('jurusanSekolah')?.value.trim() || 'Reguler';
   const mapel = document.getElementById('mataPelajaran')?.value.trim() || '-';
 
+  const isEn = typeof getAppLanguage === 'function' && getAppLanguage() === 'en';
+
   if (document.getElementById('reviewJenjangFase')) {
     document.getElementById('reviewJenjangFase').textContent = `${jenjang} / ${fase}`;
   }
   if (document.getElementById('reviewJurusan')) {
-    document.getElementById('reviewJurusan').textContent = jurusan;
+    document.getElementById('reviewJurusan').textContent = (isEn && jurusan === 'Reguler') ? 'Regular' : jurusan;
   }
   if (document.getElementById('reviewMapel')) {
     document.getElementById('reviewMapel').textContent = mapel;
@@ -1781,10 +1798,16 @@ function updateReviewSummary() {
   if (document.getElementById('reviewPertemuan')) {
     const matchNum = rawPertemuan.match(/\d+/);
     const countNum = matchNum ? matchNum[0] : rawPertemuan;
-    document.getElementById('reviewPertemuan').textContent = `${countNum} Pertemuan`;
+    document.getElementById('reviewPertemuan').textContent = isEn ? `${countNum} Sessions` : `${countNum} Pertemuan`;
   }
   if (document.getElementById('reviewTotalJP')) {
-    document.getElementById('reviewTotalJP').textContent = rawJP || `${rawPertemuan} JP x 45 Menit (${rawPertemuan} Pertemuan)`;
+    let jpText = rawJP;
+    if (!jpText) {
+      jpText = isEn ? `${rawPertemuan} Hours x 45 Minutes (${rawPertemuan} Sessions)` : `${rawPertemuan} JP x 45 Menit (${rawPertemuan} Pertemuan)`;
+    } else if (isEn) {
+      jpText = jpText.replace(/\bJP\b/g, 'Hours').replace(/Menit/gi, 'Minutes').replace(/Pertemuan/gi, 'Sessions');
+    }
+    document.getElementById('reviewTotalJP').textContent = jpText;
   }
 
   // 3. Konteks Pembelajaran
@@ -1830,6 +1853,11 @@ function updateReviewSummary() {
   if (document.getElementById('reviewCPNarrative')) {
     document.getElementById('reviewCPNarrative').textContent = cp;
   }
+
+  const step3El = document.getElementById('step3');
+  if (step3El && typeof applyTranslations === 'function') {
+    applyTranslations(step3El);
+  }
 }
 
 /**
@@ -1838,6 +1866,9 @@ function updateReviewSummary() {
 function confirmGenerateModul() {
   const modal = document.getElementById('confirmGenerateModal');
   if (modal) {
+    if (typeof applyTranslations === 'function') {
+      applyTranslations(modal);
+    }
     modal.classList.add('active');
   }
 }
@@ -1935,11 +1966,18 @@ async function proceedGenerateModul() {
     const percentEl = document.getElementById('generatePercentText');
     const stepTextEl = document.getElementById('generateProgressStepText');
 
+    const isEn = typeof getAppLanguage === 'function' && getAppLanguage() === 'en';
     if (barEl) barEl.style.width = '15%';
     if (percentEl) percentEl.textContent = '15%';
-    if (stepTextEl) stepTextEl.textContent = 'Menghubungkan ke Google Gemini API...';
+    if (stepTextEl) stepTextEl.textContent = isEn ? 'Connecting to Google Gemini API...' : 'Menghubungkan ke Google Gemini API...';
 
-    const progressSteps = [
+    const progressSteps = isEn ? [
+      { p: 25, text: 'Analyzing learning parameters and preparing master prompt...' },
+      { p: 45, text: 'Google Gemini is formulating learning objectives & syntax...' },
+      { p: 65, text: 'Compiling learning flow, descriptive material & worksheets per session...' },
+      { p: 80, text: 'Generating subject technical glossary & references...' },
+      { p: 90, text: 'Processing and verifying AI document structure (deep generation, please wait)...' }
+    ] : [
       { p: 25, text: 'Menganalisis parameter pembelajaran dan menyusun master prompt...' },
       { p: 45, text: 'Google Gemini sedang merumuskan tujuan & sintaks pembelajaran...' },
       { p: 65, text: 'Menyusun alur pengalaman belajar, materi deskriptif & LKPD per pertemuan...' },
@@ -2069,14 +2107,19 @@ async function proceedGenerateModul() {
 
     // 3. SEMUA DATA SIAP — SEKARANG SET TEPAT 100% DAN LANGSUNG PINDAH KE TAMPILAN SUKSES!
     if (barEl) barEl.style.width = '100%';
+    const isEnSuccess = typeof getAppLanguage === 'function' && getAppLanguage() === 'en';
     if (percentEl) percentEl.textContent = '100%';
-    if (stepTextEl) stepTextEl.textContent = 'Selesai! Modul Ajar berhasil disusun.';
+    if (stepTextEl) stepTextEl.textContent = isEnSuccess ? 'Done! Teaching module successfully compiled.' : 'Selesai! Modul Ajar berhasil disusun.';
 
     // Jeda transisi 200ms agar animasi bar 100% terlihat mulus lalu tampilkan tombol "Buka Modul Ajar"
     setTimeout(() => {
       try {
         if (progressLoading) progressLoading.style.display = 'none';
         if (progressSuccess) progressSuccess.style.display = 'flex';
+
+        if (typeof applyTranslations === 'function') {
+          applyTranslations(progressContainer);
+        }
 
         // Scroll halus ke kartu hasil agar tombol Buka Modul Ajar terlihat nyaman dengan jarak di bawah layar
         scrollCardIntoViewWithGap(progressContainer, 70);
