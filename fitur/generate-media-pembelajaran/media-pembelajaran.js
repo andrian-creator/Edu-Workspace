@@ -205,8 +205,10 @@ async function loadUserModulDropdown() {
 
   userModulList = list;
 
+  const isEn = typeof getAppLanguage === 'function' && getAppLanguage() === 'en';
+
   if (selectEl) {
-    selectEl.innerHTML = '<option value="">-- Pilih Modul Ajar Tersimpan --</option>';
+    selectEl.innerHTML = `<option value="">${isEn ? '-- Select Saved Module --' : '-- Pilih Modul Ajar Tersimpan --'}</option>`;
     if (list.length > 0) {
       list.forEach((m, idx) => {
         const p = m.payload || m.contentJson || {};
@@ -217,13 +219,13 @@ async function loadUserModulDropdown() {
         opt.textContent = mapel ? `${title} (${mapel})` : title;
         selectEl.appendChild(opt);
       });
-      if (countHint) countHint.textContent = `${list.length} modul ditemukan`;
+      if (countHint) countHint.textContent = isEn ? `${list.length} modules found` : `${list.length} modul ditemukan`;
     } else {
-      if (countHint) countHint.textContent = 'Belum ada modul (Gunakan Isi Manual)';
+      if (countHint) countHint.textContent = isEn ? 'No modules found (Use Manual Input)' : 'Belum ada modul (Gunakan Isi Manual)';
       const opt = document.createElement('option');
       opt.value = "";
       opt.disabled = true;
-      opt.textContent = "(Belum ada modul tersimpan. Silakan gunakan Isi Manual Sendiri)";
+      opt.textContent = isEn ? "(No saved modules. Please use Manual Input.)" : "(Belum ada modul tersimpan. Silakan gunakan Isi Manual Sendiri)";
       selectEl.appendChild(opt);
     }
   }
@@ -309,15 +311,17 @@ function selectSlideCount(mode) {
  */
 function goToSession(sessionNum, silent = false) {
   if (sessionNum === 2 && currentOutlineSlides.length === 0 && !isGeneratingOutline) {
+    const isEn = typeof getAppLanguage === 'function' && getAppLanguage() === 'en';
     if (!silent) {
-      alert("Silakan lengkapi Informasi Materi dan klik 'Generate Outline Slide' terlebih dahulu.");
+      alert(isEn ? "Please complete Material Info and click 'Generate Slide Outline' first." : "Silakan lengkapi Informasi Materi dan klik 'Generate Outline Slide' terlebih dahulu.");
     }
     return;
   }
 
   if (sessionNum === 3 && currentGeneratedMediaSlides.length === 0 && !isGeneratingMedia) {
+    const isEn = typeof getAppLanguage === 'function' && getAppLanguage() === 'en';
     if (!silent) {
-      alert("Silakan klik 'Generate Media Pembelajaran' di Sesi 2 terlebih dahulu.");
+      alert(isEn ? "Please click 'Generate Learning Media' in Session 2 first." : "Silakan klik 'Generate Media Pembelajaran' di Sesi 2 terlebih dahulu.");
     }
     return;
   }
@@ -375,17 +379,19 @@ async function handleGenerateOutline() {
   const materi = document.getElementById('inputMateri')?.value.trim();
   const kelas = document.getElementById('inputKelas')?.value.trim();
 
+  const isEn = typeof getAppLanguage === 'function' && getAppLanguage() === 'en';
+
   // Validasi Input Wajib
   if (!mapel || !materi || !kelas) {
     if (typeof showEduAlert === 'function') {
       showEduAlert({
-        title: "Kolom Belum Lengkap",
-        message: "Mohon lengkapi kolom Mata Pelajaran, Materi, dan Kelas sebelum membuat outline slide.",
+        title: isEn ? "Incomplete Fields" : "Kolom Belum Lengkap",
+        message: isEn ? "Please complete Subject, Material, and Grade fields before generating the slide outline." : "Mohon lengkapi kolom Mata Pelajaran, Materi, dan Kelas sebelum membuat outline slide.",
         iconType: "warning",
-        buttonText: "Mengerti"
+        buttonText: isEn ? "OK" : "Mengerti"
       });
     } else {
-      alert("Mohon lengkapi Mata Pelajaran, Materi, dan Kelas.");
+      alert(isEn ? "Please complete Subject, Material, and Grade." : "Mohon lengkapi Mata Pelajaran, Materi, dan Kelas.");
     }
     return;
   }
@@ -395,14 +401,14 @@ async function handleGenerateOutline() {
   if (!apiKey || apiKey.length < 8) {
     if (typeof showEduAlert === 'function') {
       showEduAlert({
-        title: "Kunci API Gemini Belum Diatur",
-        message: "Untuk menyusun slide otomatis dengan AI, silakan masukkan Kunci Google Gemini API Anda terlebih dahulu di menu Kunci API.",
+        title: isEn ? "Gemini API Key Not Set" : "Kunci API Gemini Belum Diatur",
+        message: isEn ? "To generate slides automatically with AI, please enter your Google Gemini API Key first in the API Key menu." : "Untuk menyusun slide otomatis dengan AI, silakan masukkan Kunci Google Gemini API Anda terlebih dahulu di menu Kunci API.",
         iconType: "warning",
-        buttonText: "Atur Kunci API",
+        buttonText: isEn ? "Configure API Key" : "Atur Kunci API",
         redirectUrl: "../../dashboard-pengguna/api-key.html"
       });
     } else {
-      alert("Kunci API Google Gemini belum diatur.");
+      alert(isEn ? "Google Gemini API Key is not configured." : "Kunci API Google Gemini belum diatur.");
     }
     return;
   }
@@ -511,7 +517,7 @@ Format Keluaran WAJIB berupa JSON ARRAY murni tanpa teks pembuka atau penutup ma
     console.error("[Outline Generator Error]", err);
     if (loadingEl) loadingEl.style.display = 'none';
     goToSession(1);
-    showErrorState(err.message || "Gagal menyusun outline dengan Google Gemini AI.");
+    showErrorState(err.message || (isEn ? "Failed to create outline with Google Gemini AI." : "Gagal menyusun outline dengan Google Gemini AI."));
   } finally {
     isGeneratingOutline = false;
   }
@@ -528,10 +534,11 @@ function renderCanvaOutlineList() {
   const summaryTitle = document.getElementById('outlineSummaryTitle');
   const summaryMeta = document.getElementById('outlineSummaryMeta');
   const countBadge = document.getElementById('outlineSlideCountBadge');
+  const isEn = typeof getAppLanguage === 'function' && getAppLanguage() === 'en';
 
   if (summaryTitle) summaryTitle.textContent = currentPresentationMeta.materi.split('\n')[0] || currentPresentationMeta.subject;
   if (summaryMeta) summaryMeta.textContent = `${currentPresentationMeta.subject} • ${currentPresentationMeta.grade}`;
-  if (countBadge) countBadge.textContent = `${currentOutlineSlides.length} Slide Outline`;
+  if (countBadge) countBadge.textContent = isEn ? `${currentOutlineSlides.length} Slides` : `${currentOutlineSlides.length} Slide Outline`;
 
   if (!listContainer) return;
   listContainer.innerHTML = '';
@@ -655,8 +662,9 @@ function updateSlideKeyIdeas(idx, element) {
       currentOutlineSlides[idx].visualIdea = rawLines[0];
       currentOutlineSlides[idx].points = rawLines.slice(1).map(l => l.replace(/^[•\-\*]\s*/, ''));
     } else {
+      const isEn = typeof getAppLanguage === 'function' && getAppLanguage() === 'en';
       currentOutlineSlides[idx].visualIdea = '';
-      currentOutlineSlides[idx].points = rawLines.length > 0 ? rawLines.map(l => l.replace(/^[•\-\*]\s*/, '')) : ['Poin materi pembelajaran.'];
+      currentOutlineSlides[idx].points = rawLines.length > 0 ? rawLines.map(l => l.replace(/^[•\-\*]\s*/, '')) : [isEn ? 'Learning material point.' : 'Poin materi pembelajaran.'];
     }
   }
 }
@@ -707,12 +715,13 @@ function startEditSlide(idx) {
  * Hapus Slide dari Outline
  */
 function deleteOutlineSlide(idx) {
+  const isEn = typeof getAppLanguage === 'function' && getAppLanguage() === 'en';
   if (currentOutlineSlides.length <= 1) {
-    alert("Minimal harus ada 1 slide dalam presentasi.");
+    alert(isEn ? "A presentation must have at least 1 slide." : "Minimal harus ada 1 slide dalam presentasi.");
     return;
   }
 
-  const confirmDelete = confirm(`Hapus slide ${idx + 1}: "${currentOutlineSlides[idx].title}" dari outline?`);
+  const confirmDelete = confirm(isEn ? `Delete slide ${idx + 1}: "${currentOutlineSlides[idx].title}" from outline?` : `Hapus slide ${idx + 1}: "${currentOutlineSlides[idx].title}" dari outline?`);
   if (!confirmDelete) return;
 
   currentOutlineSlides.splice(idx, 1);
@@ -733,15 +742,20 @@ function deleteOutlineSlide(idx) {
  */
 function addNewOutlineSlide() {
   const nextNum = currentOutlineSlides.length + 1;
+  const isEn = typeof getAppLanguage === 'function' && getAppLanguage() === 'en';
   currentOutlineSlides.push({
     slideNumber: nextNum,
-    title: `Materi Konsep Baru #${nextNum}`,
-    points: [
+    title: isEn ? `New Concept Material #${nextNum}` : `Materi Konsep Baru #${nextNum}`,
+    points: isEn ? [
+      'Key learning point 1',
+      'Key learning point 2',
+      'Photo feature: relevant material illustration'
+    ] : [
       'Poin materi penting 1',
       'Poin materi penting 2',
       'Photo feature: ilustrasi gambar materi terkait'
     ],
-    visualIdea: 'Ilustrasi konsep visual materi terkait'
+    visualIdea: isEn ? 'Visual concept illustration for related material' : 'Ilustrasi konsep visual materi terkait'
   });
 
   expandedSlideIndex = currentOutlineSlides.length - 1;
@@ -828,12 +842,13 @@ function attachDragAndDropEvents(card, index) {
  */
 async function handleGenerateMedia() {
   if (isGeneratingMedia) return;
+  const isEn = typeof getAppLanguage === 'function' && getAppLanguage() === 'en';
   if (!currentPresentationMeta) {
-    alert("Data presentasi belum lengkap. Silakan generate modul ajar terlebih dahulu.");
+    alert(isEn ? "Presentation data is incomplete. Please generate a teaching module first." : "Data presentasi belum lengkap. Silakan generate modul ajar terlebih dahulu.");
     return;
   }
   if (!currentOutlineSlides || currentOutlineSlides.length === 0) {
-    alert("Outline slide kosong. Silakan susun outline terlebih dahulu.");
+    alert(isEn ? "Slide outline is empty. Please create an outline first." : "Outline slide kosong. Silakan susun outline terlebih dahulu.");
     return;
   }
 
@@ -841,9 +856,9 @@ async function handleGenerateMedia() {
   const aiApiKey = getEffectiveOpenaiApiKey();
   if (!aiApiKey) {
     const confirmGo = confirm(
-      "Kunci API ChatGPT (OpenAI) belum terpasang di akun Anda.\n\n" +
-      "Fitur Generate Media Pembelajaran menggunakan ChatGPT / OpenAI untuk memproses dan menghasilkan visual presentasi.\n\n" +
-      "Klik OK untuk membuka Manajemen API Key dan menyimpan kunci ChatGPT Anda."
+      isEn ?
+      "ChatGPT (OpenAI) API Key is not set in your account.\n\nThe Generate Learning Media feature uses ChatGPT / OpenAI to generate presentation visuals.\n\nClick OK to open API Key Management and save your ChatGPT key." :
+      "Kunci API ChatGPT (OpenAI) belum terpasang di akun Anda.\n\nFitur Generate Media Pembelajaran menggunakan ChatGPT / OpenAI untuk memproses dan menghasilkan visual presentasi.\n\nKlik OK untuk membuka Manajemen API Key dan menyimpan kunci ChatGPT Anda."
     );
     if (confirmGo) {
       window.location.href = "../dashboard-pengguna/api-key.html";
@@ -869,7 +884,9 @@ async function handleGenerateMedia() {
       const s = currentOutlineSlides[i];
       const updateSub = document.getElementById('mediaLoadingSub');
       if (updateSub) {
-        updateSub.textContent = `Menghubungi ChatGPT (OpenAI) untuk Slide ${i + 1} dari ${currentOutlineSlides.length} ("${s.title}")...`;
+        updateSub.textContent = isEn ?
+          `Connecting to ChatGPT (OpenAI) for Slide ${i + 1} of ${currentOutlineSlides.length} ("${s.title}")...` :
+          `Menghubungi ChatGPT (OpenAI) untuk Slide ${i + 1} dari ${currentOutlineSlides.length} ("${s.title}")...`;
       }
 
       // Panggil OpenAI API untuk generate ilustrasi visual materi
@@ -880,7 +897,7 @@ async function handleGenerateMedia() {
         console.warn(`[ChatGPT / OpenAI Slide ${i + 1} Error]`, err);
         // Jika slide pertama gagal karena otentikasi / kuota / token, hentikan dan beri tahu pengguna secara transparan
         if (i === 0 && (err.message.includes('token') || err.message.includes('401') || err.message.includes('Unauthorized') || err.message.includes('credit') || err.message.includes('balance') || err.message.includes('expired') || err.message.includes('quota'))) {
-          throw new Error(`Koneksi OpenAI API ditolak: "${err.message}". Pastikan API Key ChatGPT (OpenAI) Anda aktif dan memiliki kuota di menu Manajemen API Key.`);
+          throw new Error(isEn ? `OpenAI API connection rejected: "${err.message}". Please ensure your ChatGPT (OpenAI) API Key is active and has quota in the API Key Management menu.` : `Koneksi OpenAI API ditolak: "${err.message}". Pastikan API Key ChatGPT (OpenAI) Anda aktif dan memiliki kuota di menu Manajemen API Key.`);
         }
       }
 
@@ -909,7 +926,7 @@ async function handleGenerateMedia() {
     console.error("[Generate Media ChatGPT / OpenAI Error]", err);
     if (loadingEl) loadingEl.style.display = 'none';
     goToSession(2);
-    showErrorState(err.message || "Gagal menghasilkan media presentasi bergambar dengan ChatGPT / OpenAI.");
+    showErrorState(err.message || (isEn ? "Failed to generate illustrated presentation media with ChatGPT / OpenAI." : "Gagal menghasilkan media presentasi bergambar dengan ChatGPT / OpenAI."));
   } finally {
     isGeneratingMedia = false;
   }
@@ -1246,10 +1263,11 @@ function renderMediaResultView(slides, meta) {
   const summaryTitle = document.getElementById('mediaSummaryTitle');
   const summaryMeta = document.getElementById('mediaSummaryMeta');
   const countBadge = document.getElementById('mediaSlideCountBadge');
+  const isEn = typeof getAppLanguage === 'function' && getAppLanguage() === 'en';
 
   if (summaryTitle) summaryTitle.textContent = meta.materi.split('\n')[0] || meta.subject;
   if (summaryMeta) summaryMeta.textContent = `${meta.subject} • ${meta.grade}`;
-  if (countBadge) countBadge.textContent = `${slides.length} Slide Bergambar Siap`;
+  if (countBadge) countBadge.textContent = isEn ? `${slides.length} Illustrated Slides Ready` : `${slides.length} Slide Bergambar Siap`;
 
   if (!listContainer) return;
   listContainer.innerHTML = '';
@@ -1272,14 +1290,14 @@ function renderMediaResultView(slides, meta) {
       </div>
 
       <div class="media-slide-image-bar">
-        <span style="font-size: 0.8rem; color: #64748b; font-weight: 600;">Format 16:9 HD Gambar Slide</span>
-        <button type="button" class="btn-download-slide-img" onclick="downloadSingleSlideImage(${idx})" title="Unduh gambar slide ini">
+        <span style="font-size: 0.8rem; color: #64748b; font-weight: 600;">${isEn ? '16:9 HD Slide Image' : 'Format 16:9 HD Gambar Slide'}</span>
+        <button type="button" class="btn-download-slide-img" onclick="downloadSingleSlideImage(${idx})" title="${isEn ? 'Download this slide image' : 'Unduh gambar slide ini'}">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3">
             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
             <polyline points="7 10 12 15 17 10"></polyline>
             <line x1="12" y1="15" x2="12" y2="3"></line>
           </svg>
-          <span>Unduh Gambar (PNG)</span>
+          <span>${isEn ? 'Download Image (PNG)' : 'Unduh Gambar (PNG)'}</span>
         </button>
       </div>
 
@@ -1315,7 +1333,8 @@ function downloadSingleSlideImage(index) {
  * Mulai Presentasi Baru (Reset ke Sesi 1)
  */
 function startNewPresentation() {
-  const confirmNew = confirm("Mulai buat presentasi baru? Materi yang belum diunduh dapat disimpan terlebih dahulu.");
+  const isEn = typeof getAppLanguage === 'function' && getAppLanguage() === 'en';
+  const confirmNew = confirm(isEn ? "Start a new presentation? Make sure to download any unsaved material first." : "Mulai buat presentasi baru? Materi yang belum diunduh dapat disimpan terlebih dahulu.");
   if (!confirmNew) return;
 
   currentOutlineSlides = [];
@@ -1337,6 +1356,7 @@ function downloadPowerPointFile() {
   const safeFilename = `${topicTitle.replace(/[^a-zA-Z0-9_-]/g, '_')}_EduWorkspace.pptx`;
 
   if (typeof PptxGenJS !== 'undefined') {
+    const isEn = typeof getAppLanguage === 'function' && getAppLanguage() === 'en';
     try {
       const pptx = new PptxGenJS();
       pptx.layout = 'LAYOUT_16x9';
@@ -1407,10 +1427,10 @@ function downloadPowerPointFile() {
 
       if (typeof showEduAlert === 'function') {
         showEduAlert({
-          title: "File PowerPoint Diunduh!",
-          message: `File presentasi PowerPoint '${safeFilename}' lengkap dengan gambar visual berhasil diunduh ke perangkat Anda.`,
+          title: isEn ? "PowerPoint File Downloaded!" : "File PowerPoint Diunduh!",
+          message: isEn ? `PowerPoint file '${safeFilename}' with visual images has been successfully downloaded to your device.` : `File presentasi PowerPoint '${safeFilename}' lengkap dengan gambar visual berhasil diunduh ke perangkat Anda.`,
           iconType: "success",
-          buttonText: "Selesai"
+          buttonText: isEn ? "Done" : "Selesai"
         });
       }
       return;
@@ -1419,7 +1439,8 @@ function downloadPowerPointFile() {
     }
   }
 
-  alert("Gagal mengekspor file PowerPoint. Silakan salin teks atau unduh gambar per slide.");
+  const isEnFallback = typeof getAppLanguage === 'function' && getAppLanguage() === 'en';
+  alert(isEnFallback ? "Failed to export PowerPoint file. Please copy text or download images per slide." : "Gagal mengekspor file PowerPoint. Silakan salin teks atau unduh gambar per slide.");
 }
 
 /**
@@ -1429,16 +1450,17 @@ function copySlideContent() {
   const slides = currentGeneratedMediaSlides.length > 0 ? currentGeneratedMediaSlides : currentOutlineSlides;
   if (!slides || slides.length === 0) return;
 
+  const isEn = typeof getAppLanguage === 'function' && getAppLanguage() === 'en';
   const meta = currentPresentationMeta;
-  let text = `PRESENTASI: ${meta.subject} - ${meta.grade}\n`;
-  text += `Topik: ${meta.materi}\n\n`;
+  let text = isEn ? `PRESENTATION: ${meta.subject} - ${meta.grade}\n` : `PRESENTASI: ${meta.subject} - ${meta.grade}\n`;
+  text += isEn ? `Topic: ${meta.materi}\n\n` : `Topik: ${meta.materi}\n\n`;
 
   slides.forEach((s, idx) => {
     text += `===============================\n`;
     text += `SLIDE ${s.slideNumber || idx + 1}: ${s.title}\n`;
     text += `===============================\n`;
     (s.points || []).forEach(p => { text += `• ${p}\n`; });
-    if (s.visualIdea) text += `\n[Ide Visual]: ${s.visualIdea}\n`;
+    if (s.visualIdea) text += `\n[${isEn ? 'Visual Idea' : 'Ide Visual'}]: ${s.visualIdea}\n`;
     text += `\n`;
   });
 
@@ -1446,15 +1468,15 @@ function copySlideContent() {
     const btnLabel = document.getElementById('copyBtnLabel');
     if (btnLabel) {
       const orig = btnLabel.textContent;
-      btnLabel.textContent = "Tersalin!";
+      btnLabel.textContent = isEn ? "Copied!" : "Tersalin!";
       setTimeout(() => { btnLabel.textContent = orig; }, 2000);
     }
     if (typeof showEduAlert === 'function') {
       showEduAlert({
-        title: "Teks Berhasil Disalin!",
-        message: "Seluruh outline naskah dan materi slide telah disalin ke clipboard.",
+        title: isEn ? "Text Successfully Copied!" : "Teks Berhasil Disalin!",
+        message: isEn ? "All slide outline scripts and materials have been copied to clipboard." : "Seluruh outline naskah dan materi slide telah disalin ke clipboard.",
         iconType: "success",
-        buttonText: "Mengerti"
+        buttonText: isEn ? "Got It" : "Mengerti"
       });
     }
   });
@@ -1480,6 +1502,7 @@ async function callGeminiApi(apiKey, promptText) {
   let lastError = null;
 
   const curLang = (typeof getAppLanguage === 'function') ? getAppLanguage() : (localStorage.getItem('edu_current_language') || 'id');
+  const isEn = curLang === 'en';
   let finalPrompt = promptText;
   if (curLang === 'en') {
     if (!finalPrompt.includes('CRITICAL LANGUAGE REQUIREMENT') && !finalPrompt.includes('CRITICAL MANDATE - LANGUAGE REQUIREMENT: ENGLISH')) {
@@ -1490,7 +1513,7 @@ async function callGeminiApi(apiKey, promptText) {
 
   for (const model of models) {
     try {
-      updateSub(`Menghubungkan ke Gemini AI (${model})...`);
+      updateSub(`${isEn ? 'Connecting to Gemini AI' : 'Menghubungkan ke Gemini AI'} (${model})...`);
       const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
 
       const controller = new AbortController();
@@ -1521,7 +1544,7 @@ async function callGeminiApi(apiKey, promptText) {
         const errJson = await response.json().catch(() => ({}));
         const msg = errJson?.error?.message || `HTTP ${response.status}`;
         if (msg.toLowerCase().includes('api key not valid') || response.status === 400 || response.status === 403) {
-          throw new Error("Kunci Google Gemini API Anda tidak valid atau dinonaktifkan. Silakan periksa di menu Kunci API.");
+          throw new Error(isEn ? "Your Google Gemini API Key is invalid or disabled. Please check in the API Key menu." : "Kunci Google Gemini API Anda tidak valid atau dinonaktifkan. Silakan periksa di menu Kunci API.");
         }
         lastError = new Error(msg);
       }
@@ -1531,7 +1554,7 @@ async function callGeminiApi(apiKey, promptText) {
     }
   }
 
-  throw lastError || new Error("Gagal menerima respons dari AI.");
+  throw lastError || new Error(isEn ? "Failed to receive response from AI." : "Gagal menerima respons dari AI.");
 }
 
 /**
@@ -1613,12 +1636,13 @@ function createFallbackSlides(mapel, materi, kelas, count) {
 }
 
 function showErrorState(errMsg) {
+  const isEn = typeof getAppLanguage === 'function' && getAppLanguage() === 'en';
   if (typeof showEduAlert === 'function') {
     showEduAlert({
-      title: "Gagal Menghasilkan Slide",
+      title: isEn ? "Failed to Generate Slides" : "Gagal Menghasilkan Slide",
       message: errMsg,
       iconType: "warning",
-      buttonText: "Coba Lagi"
+      buttonText: isEn ? "Try Again" : "Coba Lagi"
     });
   } else {
     alert(errMsg);

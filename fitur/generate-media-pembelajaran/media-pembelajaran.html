@@ -94,8 +94,8 @@
                 </svg>
               </div>
               <div>
-                <h2 class="card-title">1. Informasi Materi Presentasi</h2>
-                <p class="card-subtitle">Tentukan topik, materi pembelajaran, dan jumlah slide yang ingin dirancang AI</p>
+                <h2 class="card-title" data-i18n="media_step1_title">1. Informasi Materi Presentasi</h2>
+                <p class="card-subtitle" data-i18n="media_step1_desc">Tentukan topik, materi pembelajaran, dan jumlah slide yang ingin dirancang AI</p>
               </div>
             </div>
           </div>
@@ -108,7 +108,7 @@
                 <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
                 <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
               </svg>
-              <span>Ambil dari Modul Ajar</span>
+              <span data-i18n="media_source_modul">Ambil dari Modul Ajar</span>
             </button>
 
             <button type="button" class="source-tab-btn" id="btnSourceManual" onclick="setSourceTab('manual')">
@@ -117,18 +117,18 @@
                 <path d="M12 20h9"></path>
                 <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
               </svg>
-              <span>Isi Manual Sendiri</span>
+              <span data-i18n="media_source_manual">Isi Manual Sendiri</span>
             </button>
           </div>
 
           <!-- Dropdown Pilihan Modul Ajar (Aktif jika tab 'Ambil dari Modul Ajar' dipilih) -->
           <div class="modul-select-container" id="modulSelectContainer">
             <label class="form-label" for="selectModulAjar">
-              <span>Pilih Modul Ajar Anda:</span>
-              <span class="form-hint" id="modulCountHint">Memuat modul...</span>
+              <span data-i18n="media_select_modul_label">Pilih Modul Ajar Anda:</span>
+              <span class="form-hint" id="modulCountHint" data-i18n="media_hint_module_loading">Memuat modul...</span>
             </label>
             <select id="selectModulAjar" class="form-select" onchange="onSelectModulChange(this.value)">
-              <option value="">-- Pilih Modul Ajar Tersimpan --</option>
+              <option value="" data-i18n="media_select_modul_default">-- Pilih Modul Ajar Tersimpan --</option>
             </select>
           </div>
 
@@ -138,38 +138,41 @@
             <!-- 1. Mata Pelajaran -->
             <div class="form-group">
               <label class="form-label" for="inputMataPelajaran">
-                <span>Mata Pelajaran <span style="color: #dc2626;">*</span></span>
-                <span class="form-hint">Contoh: Matematika, IPA, Desain Grafis</span>
+                <span><span data-i18n="media_subject_label">Mata Pelajaran</span> <span style="color: #dc2626;">*</span></span>
+                <span class="form-hint" data-i18n="media_subject_hint">Contoh: Matematika, IPA, Desain Grafis</span>
               </label>
               <input type="text" id="inputMataPelajaran" class="form-input"
+                data-i18n-placeholder="media_subject_placeholder"
                 placeholder="Ketik mata pelajaran atau pilih dari modul ajar" required>
             </div>
 
             <!-- 2. Materi Pembelajaran -->
             <div class="form-group">
               <label class="form-label" for="inputMateri">
-                <span>Materi Pembelajaran <span style="color: #dc2626;">*</span></span>
-                <span class="form-hint">Topik & rincian konsep utama</span>
+                <span><span data-i18n="media_topic_label">Materi Pembelajaran</span> <span style="color: #dc2626;">*</span></span>
+                <span class="form-hint" data-i18n="media_material_hint">Topik &amp; rincian konsep utama</span>
               </label>
               <textarea id="inputMateri" class="form-textarea" rows="4"
+                data-i18n-placeholder="media_material_placeholder"
                 placeholder="Tuliskan topik, materi pokok, atau konsep kunci yang ingin dijelaskan pada slide presentasi..." required></textarea>
             </div>
 
             <!-- 3. Kelas / Jenjang -->
             <div class="form-group">
               <label class="form-label" for="inputKelas">
-                <span>Kelas / Jenjang Pendidikan <span style="color: #dc2626;">*</span></span>
-                <span class="form-hint">Contoh: Kelas 7 SMP / Fase D, Kelas 10 SMA</span>
+                <span><span data-i18n="media_grade_full_label">Kelas / Jenjang Pendidikan</span> <span style="color: #dc2626;">*</span></span>
+                <span class="form-hint" data-i18n="media_grade_hint">Contoh: Kelas 7 SMP / Fase D, Kelas 10 SMA</span>
               </label>
               <input type="text" id="inputKelas" class="form-input"
+                data-i18n-placeholder="media_grade_placeholder"
                 placeholder="Ketik kelas / jenjang atau pilih dari modul ajar" required>
             </div>
 
             <!-- 4. Jumlah Slide (Hanya Rekomendasi AI & Isi Sendiri) -->
             <div class="form-group">
               <label class="form-label">
-                <span>Jumlah Slide</span>
-                <span class="form-hint">Pilih rekomendasi AI atau tentukan sendiri</span>
+                <span data-i18n="media_slide_count_label">Jumlah Slide</span>
+                <span class="form-hint" data-i18n="media_slide_count_hint">Pilih rekomendasi AI atau tentukan sendiri</span>
               </label>
 
               <div class="slide-count-grid">
@@ -178,7 +181,7 @@
                     stroke-linecap="round" stroke-linejoin="round">
                     <path d="M12 3l1.912 4.675a2 2 0 0 0 1.088 1.088L19.675 10.675a2 2 0 0 1 0 3.325l-4.675 1.912a2 2 0 0 0-1.088 1.088L12 21.675a2 2 0 0 1-3.325 0l-1.912-4.675a2 2 0 0 0-1.088-1.088L2.325 14a2 2 0 0 1 0-3.325l4.675-1.912a2 2 0 0 0 1.088-1.088L9.675 3a2 2 0 0 1 3.325 0z"></path>
                   </svg>
-                  <span>Rekomendasi AI</span>
+                  <span data-i18n="media_btn_ai_recommend">Rekomendasi AI</span>
                 </button>
                 <button type="button" class="slide-count-btn" id="btnSlideCustom" onclick="selectSlideCount('custom')">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
@@ -186,13 +189,14 @@
                     <path d="M12 20h9"></path>
                     <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
                   </svg>
-                  <span>Isi Sendiri</span>
+                  <span data-i18n="media_btn_fill_own">Isi Sendiri</span>
                 </button>
               </div>
 
               <!-- Input Jumlah Slide Custom (Muncul jika 'Isi Sendiri' dipilih) -->
               <div id="customSlideContainer" style="display: none; margin-top: 10px;">
                 <input type="number" id="inputCustomSlide" class="form-input" min="2" max="25" value="6"
+                  data-i18n-placeholder="media_slide_custom_placeholder"
                   placeholder="Masukkan angka jumlah slide (misal: 6, 8, 12)">
               </div>
             </div>
@@ -204,11 +208,11 @@
                   stroke-linecap="round" stroke-linejoin="round">
                   <path d="M12 3l1.912 4.675a2 2 0 0 0 1.088 1.088L19.675 10.675a2 2 0 0 1 0 3.325l-4.675 1.912a2 2 0 0 0-1.088 1.088L12 21.675a2 2 0 0 1-3.325 0l-1.912-4.675a2 2 0 0 0-1.088-1.088L2.325 14a2 2 0 0 1 0-3.325l4.675-1.912a2 2 0 0 0 1.088-1.088L9.675 3a2 2 0 0 1 3.325 0z"></path>
                 </svg>
-                <span id="btnGenerateText">Generate Outline Slide</span>
+                <span id="btnGenerateText" data-i18n="media_btn_generate">Generate Outline Slide</span>
               </button>
             </div>
 
-            <div style="font-size: 0.82rem; color: #64748b; text-align: center; margin-top: 14px;">
+            <div style="font-size: 0.82rem; color: #64748b; text-align: center; margin-top: 14px;" data-i18n="media_note_footer">
               Menggunakan Kunci Google Gemini AI akun Anda • Lanjut ke Sesi 2 untuk mereview dan mengedit outline slide
             </div>
 
@@ -238,8 +242,8 @@
                 </svg>
               </div>
               <div>
-                <h2 class="card-title">2. Outline Slide Presentasi</h2>
-                <p class="card-subtitle">Sesuaikan judul, ide materi, atau geser (drag) urutan slide sebelum membuat media visual</p>
+                <h2 class="card-title" data-i18n="media_card2_title">2. Outline Slide Presentasi</h2>
+                <p class="card-subtitle" data-i18n="media_card2_subtitle">Sesuaikan judul, ide materi, atau geser (drag) urutan slide sebelum membuat media visual</p>
               </div>
             </div>
 
@@ -249,15 +253,15 @@
                 <line x1="12" y1="5" x2="12" y2="19"></line>
                 <line x1="5" y1="12" x2="19" y2="12"></line>
               </svg>
-              <span>Tambah Slide</span>
+              <span data-i18n="media_btn_add_slide">Tambah Slide</span>
             </button>
           </div>
 
           <!-- Loading State AI di Sesi 2 -->
           <div class="session-loading-state" id="outlineLoadingState" style="display: none;">
             <div class="spinner-box"></div>
-            <h3 class="loading-title" id="outlineLoadingTitle">AI Sedang Menyusun Outline...</h3>
-            <p class="loading-subtitle" id="outlineLoadingSub">Menghubungkan ke Google Gemini AI...</p>
+            <h3 class="loading-title" id="outlineLoadingTitle" data-i18n="media_loading_outline_title">AI Sedang Menyusun Outline...</h3>
+            <p class="loading-subtitle" id="outlineLoadingSub" data-i18n="media_loading_outline_sub">Menghubungkan ke Google Gemini AI...</p>
             <div class="progress-track">
               <div class="progress-bar-fill"></div>
             </div>
@@ -290,7 +294,7 @@
                 <line x1="12" y1="5" x2="12" y2="19"></line>
                 <line x1="5" y1="12" x2="19" y2="12"></line>
               </svg>
-              <span>Tambah Slide Baru ke Outline</span>
+              <span data-i18n="media_btn_add_slide_bottom">Tambah Slide Baru ke Outline</span>
             </button>
 
             <!-- Navigasi Aksi Bawah Sesi 2 -->
@@ -300,7 +304,7 @@
                   <line x1="19" y1="12" x2="5" y2="12"></line>
                   <polyline points="12 19 5 12 12 5"></polyline>
                 </svg>
-                <span>Kembali ke Informasi Materi</span>
+                <span data-i18n="media_btn_back_to_info">Kembali ke Informasi Materi</span>
               </button>
 
               <button type="button" class="btn-generate-media" id="btnGenerateMedia" onclick="handleGenerateMedia()">
@@ -309,7 +313,7 @@
                   <circle cx="8.5" cy="8.5" r="1.5"></circle>
                   <polyline points="21 15 16 10 5 21"></polyline>
                 </svg>
-                <span id="btnGenerateMediaText">Generate Media Pembelajaran</span>
+                <span id="btnGenerateMediaText" data-i18n="media_btn_generate_media">Generate Media Pembelajaran</span>
               </button>
             </div>
 
@@ -335,8 +339,8 @@
                 </svg>
               </div>
               <div>
-                <h2 class="card-title">3. Hasil Media Pembelajaran</h2>
-                <p class="card-subtitle">Media presentasi PowerPoint bergambar siap digunakan di kelas</p>
+                <h2 class="card-title" data-i18n="media_card3_title">3. Hasil Media Pembelajaran</h2>
+                <p class="card-subtitle" data-i18n="media_card3_subtitle">Media presentasi PowerPoint bergambar siap digunakan di kelas</p>
               </div>
             </div>
 
@@ -347,7 +351,7 @@
                   <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
                   <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
                 </svg>
-                <span id="copyBtnLabel">Salin Teks</span>
+                <span id="copyBtnLabel" data-i18n="media_btn_copy_text">Salin Teks</span>
               </button>
 
               <button type="button" class="btn-download-ppt-top" onclick="downloadPowerPointFile()" title="Unduh File PowerPoint">
@@ -364,8 +368,8 @@
           <!-- Loading State Saat Generate Gambar Media di Sesi 3 -->
           <div class="session-loading-state" id="mediaLoadingState" style="display: none;">
             <div class="spinner-box"></div>
-            <h3 class="loading-title" id="mediaLoadingTitle">Sedang Membuat Media PPT Bergambar...</h3>
-            <p class="loading-subtitle" id="mediaLoadingSub">Menghasilkan visual gambar edukatif beresolusi tinggi untuk setiap slide...</p>
+            <h3 class="loading-title" id="mediaLoadingTitle" data-i18n="media_loading_media_title">Sedang Membuat Media PPT Bergambar...</h3>
+            <p class="loading-subtitle" id="mediaLoadingSub" data-i18n="media_loading_media_sub">Menghasilkan visual gambar edukatif beresolusi tinggi untuk setiap slide...</p>
             <div class="progress-track">
               <div class="progress-bar-fill"></div>
             </div>
@@ -398,7 +402,7 @@
                   <polyline points="7 10 12 15 17 10"></polyline>
                   <line x1="12" y1="15" x2="12" y2="3"></line>
                 </svg>
-                <span>Unduh File PowerPoint Bergambar (.pptx)</span>
+                <span data-i18n="media_btn_download_pptx_full">Unduh File PowerPoint Bergambar (.pptx)</span>
               </button>
 
               <div class="result-secondary-nav">
@@ -407,7 +411,7 @@
                     <line x1="19" y1="12" x2="5" y2="12"></line>
                     <polyline points="12 19 5 12 12 5"></polyline>
                   </svg>
-                  <span>Kembali Edit Outline Slide</span>
+                  <span data-i18n="media_btn_back_outline">Kembali Edit Outline Slide</span>
                 </button>
 
                 <button type="button" class="btn-new-presentation" onclick="startNewPresentation()">
@@ -415,7 +419,7 @@
                     <polyline points="1 4 1 10 7 10"></polyline>
                     <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
                   </svg>
-                  <span>Buat Presentasi Baru</span>
+                  <span data-i18n="media_btn_new_presentation">Buat Presentasi Baru</span>
                 </button>
               </div>
             </div>
@@ -429,9 +433,9 @@
   </main>
 
   <!-- Scripts -->
-  <script src="../../i18n.js?v=305"></script>
-  <script src="../../global.js?v=305"></script>
-  <script src="media-pembelajaran.js?v=305"></script>
+  <script src="../../i18n.js?v=306"></script>
+  <script src="../../global.js?v=306"></script>
+  <script src="media-pembelajaran.js?v=306"></script>
 </body>
 
 </html>
