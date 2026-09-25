@@ -643,17 +643,8 @@
       </button>
 
       <div class="nav-actions">
-        <!-- Tombol Download Word, PDF, Bahasa & Tutup -->
+        <!-- Tombol Download Word, PDF, & Tutup -->
         <div class="header-download-group">
-          <!-- Language Switcher in Preview Header -->
-          <div class="edu-lang-switcher" style="margin-right: 4px;" title="Ganti Bahasa / Switch Language">
-            <button type="button" class="edu-lang-btn active" data-lang="id" onclick="setAppLanguage('id')" aria-label="Bahasa Indonesia">
-              <span class="flag-icon">🇮🇩</span> <span>ID</span>
-            </button>
-            <button type="button" class="edu-lang-btn" data-lang="en" onclick="setAppLanguage('en')" aria-label="English">
-              <span class="flag-icon">🇬🇧</span> <span>EN</span>
-            </button>
-          </div>
           <button type="button" id="btnDownloadWord" class="btn-doc-download" onclick="downloadModulWord(); if (typeof closeGlobalMobileNav === 'function') closeGlobalMobileNav();" title="Download Word">
             <img src="../../Assets/icon/icon_word.png" alt="Word" class="nav-btn-icon">
             <span data-i18n="btn_download_word">Download Word</span>

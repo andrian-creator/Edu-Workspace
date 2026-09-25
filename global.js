@@ -1261,7 +1261,14 @@ function t(key, fallback = '') {
  * 3. Dashboard / Portal (Default) -> Logo + Api Key + Kembali + Language Switcher + Profil Dropdown + Mobile Logout
  * @param {Object} options
  */
+let _lastEduNavbarOptions = {};
+
 function renderEduNavbar(options = {}) {
+  if (options && Object.keys(options).length > 0) {
+    _lastEduNavbarOptions = { ..._lastEduNavbarOptions, ...options };
+  } else {
+    options = { ..._lastEduNavbarOptions };
+  }
   const targetId = options.targetId || 'eduGlobalNavbar';
   let headerEl = document.getElementById(targetId);
   if (!headerEl) {
@@ -1343,16 +1350,6 @@ function renderEduNavbar(options = {}) {
         </a>
 
         <div style="display: flex; align-items: center; gap: 12px;">
-          <!-- Language Switcher in Login Header -->
-          <div class="edu-lang-switcher" title="${curLang === 'id' ? 'Ganti Bahasa' : 'Switch Language'}">
-            <button type="button" class="edu-lang-btn ${curLang === 'id' ? 'active' : ''}" data-lang="id" onclick="setAppLanguage('id')" aria-label="Bahasa Indonesia">
-              <span class="flag-icon">🇮🇩</span> <span>ID</span>
-            </button>
-            <button type="button" class="edu-lang-btn ${curLang === 'en' ? 'active' : ''}" data-lang="en" onclick="setAppLanguage('en')" aria-label="English">
-              <span class="flag-icon">🇬🇧</span> <span>EN</span>
-            </button>
-          </div>
-
           <a href="${backHref}" class="btn-back-home" title="${backText}">
             <img data-icon="back" src="${getEduIconUrl('back')}" alt="Kembali" class="nav-btn-icon">
             <span data-i18n="btn_back">${backText}</span>
@@ -1414,12 +1411,17 @@ function renderEduNavbar(options = {}) {
   );
   const fiturPrefix = isNestedFitur ? '../../' : (isInFitur ? '../' : '');
 
+  const isDaftarModul = p.includes('daftar-modul') || p.includes('daftar modul');
+  const isApiKey = p.includes('api-key') || p.includes('api key');
+  const isProfil = p.includes('profil');
+  const isSubPagePengguna = isDaftarModul || isApiKey || isProfil;
+
   const isDashboardPengguna = (
     p.includes('/dashboard-pengguna') || 
     p.includes('dashboard-pengguna') ||
     p.includes('/dashboard pengguna') || 
     p.includes('dashboard pengguna')
-  ) && !p.includes('daftar-modul') && !p.includes('daftar modul') && !p.includes('api-key') && !p.includes('api key') && !p.includes('profil');
+  ) && !isSubPagePengguna;
 
   let defaultPortalHome = 'dashboard-pengguna.html';
   if (isInFitur) {
@@ -1437,6 +1439,9 @@ function renderEduNavbar(options = {}) {
   if (isInFitur) {
     defaultShowBack = true;
     defaultBackUrl = defaultPortalHome;
+  } else if (isSubPagePengguna) {
+    defaultShowBack = true;
+    defaultBackUrl = 'dashboard-pengguna.html';
   } else if (isAdminArea && !isMainAdmin) {
     defaultShowBack = true;
     defaultBackUrl = 'dashboard-admin.html';
@@ -1527,16 +1532,6 @@ function renderEduNavbar(options = {}) {
             <span data-i18n="btn_back">${t('btn_back', backText)}</span>
           </a>
         ` : ''}
-
-        <!-- Language Switcher in Portal Header -->
-        <div class="edu-lang-switcher" title="${curLang === 'id' ? 'Ganti Bahasa' : 'Switch Language'}">
-          <button type="button" class="edu-lang-btn ${curLang === 'id' ? 'active' : ''}" data-lang="id" onclick="setAppLanguage('id')" aria-label="Bahasa Indonesia">
-            <span class="flag-icon">🇮🇩</span> <span>ID</span>
-          </button>
-          <button type="button" class="edu-lang-btn ${curLang === 'en' ? 'active' : ''}" data-lang="en" onclick="setAppLanguage('en')" aria-label="English">
-            <span class="flag-icon">🇬🇧</span> <span>EN</span>
-          </button>
-        </div>
 
         <div class="nav-divider"></div>
 
