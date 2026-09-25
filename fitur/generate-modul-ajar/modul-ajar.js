@@ -807,8 +807,39 @@ async function callGeminiWithAccountKey(promptText, customConfig) {
   return null;
 }
 
-function getFallbackElemenCP(mapel, faseKelas) {
+function getFallbackElemenCP(mapel, faseKelas, isEn = (typeof getAppLanguage === 'function' && getAppLanguage() === 'en')) {
   const mL = (mapel || '').toLowerCase();
+  if (isEn) {
+    if (mL.includes('foto') || mL.includes('camera') || mL.includes('photo')) {
+      return 'Camera Techniques and Lighting; Photographic Visual Composition; Camera Device Operation; Post-production and Digital Editing; Photography Portfolio Management';
+    }
+    if (mL.includes('dkv') || mL.includes('design') || mL.includes('graphic')) {
+      return 'Fundamental Principles of Visual Communication; Sketching and Illustration; Typography and Layout; Graphic Design Software; Visual Communication Design Production';
+    }
+    if (mL.includes('animasi') || mL.includes('animation')) {
+      return 'Principles of Animation; Character Design and Storyboarding; 2D Animation; 3D Animation; Animation Post-Production';
+    }
+    if (mL.includes('jaringan') || mL.includes('tkj') || mL.includes('komputer') || mL.includes('network') || mL.includes('it')) {
+      return 'Computer Network Planning; Network Installation and Configuration; Network Systems Administration; Network Security; Network Maintenance and Troubleshooting';
+    }
+    if (mL.includes('ipas') || mL.includes('ipa') || mL.includes('science')) {
+      return 'Living Things and their Environment; Matter and its Changes; Energy and its Transformations; Earth and Space; Scientific Inquiry Process Skills';
+    }
+    if (mL.includes('matematika') || mL.includes('math')) {
+      return 'Numbers; Algebra; Measurement; Geometry; Data Analysis and Probability; Mathematical Reasoning and Problem Solving';
+    }
+    if (mL.includes('bahasa indonesia')) {
+      return 'Listening; Reading and Viewing; Speaking and Presenting; Writing';
+    }
+    if (mL.includes('bahasa inggris') || mL.includes('english')) {
+      return 'Listening - Speaking; Reading - Viewing; Writing - Presenting';
+    }
+    if (mL.includes('informatika') || mL.includes('informatics')) {
+      return 'Computational Thinking; Information and Communication Technology; Computer Systems; Computer Networks and Internet; Data Analysis; Algorithms and Programming; Social Impacts of Informatics';
+    }
+    return `Core Conceptual Understanding of ${mapel || 'Subject'}; Applied Process Skills; Authentic Problem Analysis; Creative Solution Design; Reflection and Communication of Results`;
+  }
+
   if (mL.includes('foto') || mL.includes('kamera') || mL.includes('lens')) {
     return 'Tata Kamera dan Pencahayaan; Komposisi Visual Fotografi; Pengoperasian Perangkat Kamera; Pascaproduksi dan Editing Digital; Manajemen Karya Fotografi';
   }
@@ -858,6 +889,7 @@ function setStepNavDisabled(disabled) {
  * Menyusun daftar elemen CP resmi Kurikulum Merdeka sesuai Mata Pelajaran, Jenjang, Fase, dan Jurusan
  */
 async function generateAIElemenCP() {
+  const isEn = typeof getAppLanguage === 'function' && getAppLanguage() === 'en';
   const mapel = document.getElementById('mataPelajaran')?.value.trim() || '';
   const jenjang = document.getElementById('jenjangSekolah')?.value || 'SMA / MA';
   const faseKelas = document.getElementById('faseKelas')?.value || 'Fase E';
@@ -867,8 +899,10 @@ async function generateAIElemenCP() {
 
   if (!mapel) {
     showNotificationModal(
-      'Lengkapi Data Sebelumnya',
-      'Silakan isi kolom Mata Pelajaran terlebih dahulu agar AI dapat menentukan Elemen Capaian Pembelajaran yang tepat dan baku.',
+      isEn ? 'Complete Required Data' : 'Lengkapi Data Sebelumnya',
+      isEn
+        ? 'Please enter Subject name first so AI can determine the accurate and standard Learning Outcome Elements.'
+        : 'Silakan isi kolom Mata Pelajaran terlebih dahulu agar AI dapat menentukan Elemen Capaian Pembelajaran yang tepat dan baku.',
       'warning'
     );
     document.getElementById('mataPelajaran')?.focus();
@@ -876,7 +910,9 @@ async function generateAIElemenCP() {
   }
 
   if (targetArea) {
-    targetArea.value = 'Mohon tunggu, AI sedang menyusun Elemen Capaian Pembelajaran...';
+    targetArea.value = isEn
+      ? 'Please wait, AI is compiling Learning Outcome Elements...'
+      : 'Mohon tunggu, AI sedang menyusun Elemen Capaian Pembelajaran...';
   }
 
   if (btn) {
@@ -922,13 +958,13 @@ PANDUAN KURIKULUM MERDEKA:
 ATURAN FORMAT OUTPUT SANGAT KETAT:
 1. HANYA TULISKAN NAMA-NAMA ELEMEN CP YANG DIPISAHKAN OLEH TANDA TITIK KOMA (;) DALAM SATU BARIS POLOS.
 2. DILARANG MENAMBAHKAN KATA PEMBUKA, SALAM, PENJELASAN, ATAU PENUTUP APAPUN.
-3. DILARANG MENGGUNAKAN NOMOR (1, 2, 3), BULLET POINT, ATAU TANDA BINTANG (* ATAU **).`;
+3. DILARANG MENGGUNAKAN NOMOR (1, 2, 3), BULLET POINT, ATAU TANDA BINTANG (* ATAU **).${isEn ? '\n4. LANGUAGE REQUIREMENT: Output MUST be entirely in English (e.g. Observation; Reading and Viewing; Speaking and Presenting; Writing).' : ''}`;
 
   const result = await callGeminiWithAccountKey(prompt, { silentError: true });
   if (result) {
     targetArea.value = cleanElemenCP(result);
   } else {
-    targetArea.value = getFallbackElemenCP(mapel, faseKelas);
+    targetArea.value = getFallbackElemenCP(mapel, faseKelas, isEn);
   }
 
   if (btn) {
@@ -943,18 +979,27 @@ ATURAN FORMAT OUTPUT SANGAT KETAT:
  * GENERATOR AI: D. Tujuan Pembelajaran
  */
 async function generateAITujuan() {
+  const isEn = typeof getAppLanguage === 'function' && getAppLanguage() === 'en';
   const ctx = getLearningContext();
   const btn = document.getElementById('btnGenTujuanAI');
   const targetArea = document.getElementById('tujuanPembelajaran');
   if (!targetArea) return;
 
   if (!ctx.mapel || !ctx.topik) {
-    showNotificationModal('Lengkapi Data Sebelumnya', 'Silakan isi Mata Pelajaran (di Tahap 1) dan Isi Topik / Materi terlebih dahulu agar AI dapat merumuskan tujuan secara presisi.', 'warning');
+    showNotificationModal(
+      isEn ? 'Complete Required Data' : 'Lengkapi Data Sebelumnya',
+      isEn
+        ? 'Please enter Subject (in Step 1) and Topic / Content first so AI can formulate precise objectives.'
+        : 'Silakan isi Mata Pelajaran (di Tahap 1) dan Isi Topik / Materi terlebih dahulu agar AI dapat merumuskan tujuan secara presisi.',
+      'warning'
+    );
     return;
   }
 
   if (targetArea) {
-    targetArea.value = 'Mohon tunggu, AI sedang merumuskan Tujuan Pembelajaran...';
+    targetArea.value = isEn
+      ? 'Please wait, AI is formulating Learning Objectives...'
+      : 'Mohon tunggu, AI sedang merumuskan Tujuan Pembelajaran...';
   }
 
   if (btn) {
@@ -978,17 +1023,17 @@ Susun 3 butir Tujuan Pembelajaran yang terukur dan konkret dengan standar ABCD (
 
 ATURAN WAJIB SANGAT KETAT:
 1. DILARANG MENULISKAN KALIMAT PEMBUKA SEPERTI "Berikut adalah...", "Tentu,", "Berikut ini...", ATAU KATA PENGANTAR LAINNYA.
-2. LANGSUNG MULAI DARI NOMOR "1. Peserta didik...".
+2. LANGSUNG MULAI DARI NOMOR "1. Peserta didik..." ${isEn ? '(atau "1. Students are able to...")' : ''}.
 3. DILARANG MENGGUNAKAN TANDA BINTANG (* ATAU **) SAMA SEKALI. DILARANG MENGGUNAKAN MARKDOWN BOLD.
-4. Tuliskan teks biasa/polos (plain text) 1., 2., 3. sampai selesai tuntas.`;
+4. Tuliskan teks biasa/polos (plain text) 1., 2., 3. sampai selesai tuntas.${isEn ? '\n5. LANGUAGE REQUIREMENT: Output MUST be entirely written in English.' : ''}`;
 
   const result = await callGeminiWithAccountKey(prompt, { silentError: true });
   if (result) {
     targetArea.value = cleanTujuanPembelajaran(result);
   } else {
-    targetArea.value = `1. Melalui pengamatan terarah dan telaah materi, peserta didik mampu memahami konsep esensial ${ctx.topik} secara tepat.
-2. Melalui penugasan berbasis model ${ctx.model}, peserta didik mampu menerapkan prinsip kerja ${ctx.topik} secara kolaboratif sesuai standar prosedur kerja.
-3. Melalui evaluasi hasil dan presentasi kelompok, peserta didik mampu mengomunikasikan pemecahan masalah materi ${ctx.topik} dengan nalar kritis dan mandiri.`;
+    targetArea.value = isEn
+      ? `1. Through guided observation and material review, students are able to accurately understand essential concepts of ${ctx.topik}.\n2. Through assignments based on the ${ctx.model} model, students are able to collaboratively apply the working principles of ${ctx.topik} according to standard procedures.\n3. Through outcome evaluation and group presentations, students are able to communicate problem-solving regarding ${ctx.topik} with critical reasoning and autonomy.`
+      : `1. Melalui pengamatan terarah dan telaah materi, peserta didik mampu memahami konsep esensial ${ctx.topik} secara tepat.\n2. Melalui penugasan berbasis model ${ctx.model}, peserta didik mampu menerapkan prinsip kerja ${ctx.topik} secara kolaboratif sesuai standar prosedur kerja.\n3. Melalui evaluasi hasil dan presentasi kelompok, peserta didik mampu mengomunikasikan pemecahan masalah materi ${ctx.topik} dengan nalar kritis dan mandiri.`;
   }
 
   if (btn) {
@@ -1003,18 +1048,27 @@ ATURAN WAJIB SANGAT KETAT:
  * GENERATOR AI: E. Materi Tambahan
  */
 async function generateAIMateri() {
+  const isEn = typeof getAppLanguage === 'function' && getAppLanguage() === 'en';
   const ctx = getLearningContext();
   const btn = document.getElementById('btnGenMateriAI');
   const targetArea = document.getElementById('materiTambahan');
   if (!targetArea) return;
 
   if (!ctx.mapel || !ctx.topik) {
-    showNotificationModal('Lengkapi Data Sebelumnya', 'Silakan isi Mata Pelajaran dan Isi Topik / Materi terlebih dahulu.', 'warning');
+    showNotificationModal(
+      isEn ? 'Complete Required Data' : 'Lengkapi Data Sebelumnya',
+      isEn
+        ? 'Please enter Subject and Topic / Content first.'
+        : 'Silakan isi Mata Pelajaran dan Isi Topik / Materi terlebih dahulu.',
+      'warning'
+    );
     return;
   }
 
   if (targetArea) {
-    targetArea.value = 'Mohon tunggu, AI sedang merumuskan Materi Tambahan...';
+    targetArea.value = isEn
+      ? 'Please wait, AI is formulating Supplementary Materials...'
+      : 'Mohon tunggu, AI sedang merumuskan Materi Tambahan...';
   }
 
   if (btn) {
@@ -1040,15 +1094,15 @@ ATURAN WAJIB SANGAT KETAT:
 2. LANGSUNG MULAI DARI NAMA MATERI PERTAMA.
 3. CUKUP RINGKAS DAN DESKRIPTIF (1-2 kalimat deskripsi per materi).
 4. DILARANG MENGGUNAKAN TANDA BINTANG (* ATAU **) SAMA SEKALI. DILARANG MENGGUNAKAN MARKDOWN BOLD.
-5. Gunakan format nomor 1., 2., 3. dalam teks polos.`;
+5. Gunakan format nomor 1., 2., 3. dalam teks polos.${isEn ? '\n6. LANGUAGE REQUIREMENT: Output MUST be entirely in English.' : ''}`;
 
   const result = await callGeminiWithAccountKey(prompt, { silentError: true });
   if (result) {
     targetArea.value = cleanMateriTambahan(result);
   } else {
-    targetArea.value = `1. Eksplorasi teknologi terkini dan studi kasus industri mutakhir terkait pengaplikasian materi ${ctx.topik}.
-2. Proyek inovasi kolaboratif tingkat lanjut guna memperluas wawasan terapan peserta didik di luar capaian pembelajaran dasar.
-3. Analisis komparatif tantangan nyata dan peluang karir profesional pada bidang keahlian ${ctx.mapel}.`;
+    targetArea.value = isEn
+      ? `1. Exploration of latest technology and cutting-edge industry case studies related to the application of ${ctx.topik}.\n2. Advanced collaborative innovation projects to broaden students' applied insights beyond basic learning outcomes.\n3. Comparative analysis of real-world challenges and professional career opportunities in ${ctx.mapel}.`
+      : `1. Eksplorasi teknologi terkini dan studi kasus industri mutakhir terkait pengaplikasian materi ${ctx.topik}.\n2. Proyek inovasi kolaboratif tingkat lanjut guna memperluas wawasan terapan peserta didik di luar capaian pembelajaran dasar.\n3. Analisis komparatif tantangan nyata dan peluang karir profesional pada bidang keahlian ${ctx.mapel}.`;
   }
 
   if (btn) {
@@ -1061,18 +1115,27 @@ ATURAN WAJIB SANGAT KETAT:
 
 /** GENERATOR AI: G. Capaian Pembelajaran (CP) */
 async function generateAICP() {
+  const isEn = typeof getAppLanguage === 'function' && getAppLanguage() === 'en';
   const ctx = getLearningContext();
   const btn = document.getElementById('btnGenCPAI');
   const targetArea = document.getElementById('capaianPembelajaran');
   if (!targetArea) return;
 
   if (!ctx.mapel || !ctx.topik) {
-    showNotificationModal('Lengkapi Data Sebelumnya', 'Silakan isi Mata Pelajaran dan Isi Topik / Materi terlebih dahulu.', 'warning');
+    showNotificationModal(
+      isEn ? 'Complete Required Data' : 'Lengkapi Data Sebelumnya',
+      isEn
+        ? 'Please enter Subject and Topic / Content first.'
+        : 'Silakan isi Mata Pelajaran dan Isi Topik / Materi terlebih dahulu.',
+      'warning'
+    );
     return;
   }
 
   if (targetArea) {
-    targetArea.value = 'Mohon tunggu, AI sedang merumuskan Capaian Pembelajaran...';
+    targetArea.value = isEn
+      ? 'Please wait, AI is formulating Learning Outcomes...'
+      : 'Mohon tunggu, AI sedang merumuskan Capaian Pembelajaran...';
   }
 
   if (btn) {
@@ -1107,15 +1170,19 @@ ATURAN WAJIB SANGAT KETAT:
 1. TULISKAN HANYA 1 PARAGRAF UTUH. DILARANG KERAS MEMBUAT PARAGRAF KEDUA.
 2. DILARANG MENGGUNAKAN KATA ATAU FRASA "Selain itu", "Disamping itu", "Berikut adalah", ATAU SALAM/PENGANTAR.
 3. DILARANG MENGGUNAKAN TANDA BINTANG (* ATAU **) SAMA SEKALI. DILARANG MENGGUNAKAN MARKDOWN BOLD.
-4. Tulis langsung narasi polos yang padat dan selesai tuntas sampai tanda titik.${isRingkasCP ? '\n5. Pastikan rumusan narasi CP secara eksplisit berpusat pada penguasaan topik ' + ctx.topik + '.' : ''}`;
+4. Tulis langsung narasi polos yang padat dan selesai tuntas sampai tanda titik.${isRingkasCP ? '\n5. Pastikan rumusan narasi CP secara eksplisit berpusat pada penguasaan topik ' + ctx.topik + '.' : ''}${isEn ? '\n6. LANGUAGE REQUIREMENT: Output MUST be entirely written in English.' : ''}`;
 
   const result = await callGeminiWithAccountKey(prompt, { silentError: true });
   if (result) {
     targetArea.value = cleanCapaianPembelajaran(result);
   } else {
-    targetArea.value = isRingkasCP
-      ? `Pada akhir Fase ${ctx.fase}, peserta didik menunjukkan penguasaan komprehensif terhadap materi ${ctx.topik}. Peserta didik mampu menganalisis konsep kunci, melaksanakan prosedur praktis terukur, dan memecahkan tantangan otentik secara kolaboratif maupun mandiri sesuai standar Kurikulum Merdeka.`
-      : `Pada akhir Fase ${ctx.fase}, peserta didik mampu memahami, mengaplikasikan, dan mengevaluasi ruang lingkup capaian pembelajaran pada mata pelajaran ${ctx.mapel}, khususnya elemen ${ctx.elemenCP} dan materi pokok ${ctx.topik} guna membekali kecakapan abad ke-21.`;
+    targetArea.value = isEn
+      ? (isRingkasCP
+          ? `By the end of Phase ${ctx.fase}, students demonstrate a comprehensive mastery of ${ctx.topik}. Students are able to analyze key concepts, perform measurable practical procedures, and solve authentic challenges collaboratively and independently according to Curriculum standards.`
+          : `By the end of Phase ${ctx.fase}, students are able to understand, apply, and evaluate the scope of learning outcomes in ${ctx.mapel}, particularly the ${ctx.elemenCP} element and main topic ${ctx.topik} to equip 21st-century competencies.`)
+      : (isRingkasCP
+          ? `Pada akhir Fase ${ctx.fase}, peserta didik menunjukkan penguasaan komprehensif terhadap materi ${ctx.topik}. Peserta didik mampu menganalisis konsep kunci, melaksanakan prosedur praktis terukur, dan memecahkan tantangan otentik secara kolaboratif maupun mandiri sesuai standar Kurikulum Merdeka.`
+          : `Pada akhir Fase ${ctx.fase}, peserta didik mampu memahami, mengaplikasikan, dan mengevaluasi ruang lingkup capaian pembelajaran pada mata pelajaran ${ctx.mapel}, khususnya elemen ${ctx.elemenCP} dan materi pokok ${ctx.topik} guna membekali kecakapan abad ke-21.`);
   }
 
   if (btn) {
@@ -1128,6 +1195,7 @@ ATURAN WAJIB SANGAT KETAT:
 
 /** GENERATOR AI: I. Identifikasi Awal */
 async function generateAIIdentifikasi() {
+  const isEn = typeof getAppLanguage === 'function' && getAppLanguage() === 'en';
   const ctx = getLearningContext();
   const btn = document.getElementById('btnGenIdentifikasiAI');
   const areaPeserta = document.getElementById('identifikasiPesertaDidik');
@@ -1135,13 +1203,19 @@ async function generateAIIdentifikasi() {
   const areaProfil = document.getElementById('identifikasiProfilLulusan');
 
   if (!ctx.mapel || !ctx.topik) {
-    showNotificationModal('Lengkapi Data Sebelumnya', 'Silakan isi Mata Pelajaran dan Isi Topik / Materi terlebih dahulu.', 'warning');
+    showNotificationModal(
+      isEn ? 'Complete Required Data' : 'Lengkapi Data Sebelumnya',
+      isEn
+        ? 'Please enter Subject and Topic / Content first.'
+        : 'Silakan isi Mata Pelajaran dan Isi Topik / Materi terlebih dahulu.',
+      'warning'
+    );
     return;
   }
 
-  if (areaPeserta) areaPeserta.value = 'Mohon tunggu, AI sedang merumuskan Identifikasi Peserta Didik...';
-  if (areaMateri) areaMateri.value = 'Mohon tunggu, AI sedang merumuskan Identifikasi Materi Pembelajaran...';
-  if (areaProfil) areaProfil.value = 'Mohon tunggu, AI sedang merumuskan Dimensi Profil Lulusan...';
+  if (areaPeserta) areaPeserta.value = isEn ? 'Please wait, AI is formulating Student Identification...' : 'Mohon tunggu, AI sedang merumuskan Identifikasi Peserta Didik...';
+  if (areaMateri) areaMateri.value = isEn ? 'Please wait, AI is formulating Learning Material Identification...' : 'Mohon tunggu, AI sedang merumuskan Identifikasi Materi Pembelajaran...';
+  if (areaProfil) areaProfil.value = isEn ? 'Please wait, AI is formulating Graduate Profile Dimensions...' : 'Mohon tunggu, AI sedang merumuskan Dimensi Profil Lulusan...';
 
   if (btn) {
     btn.disabled = true;
@@ -1178,7 +1252,7 @@ ATURAN SANGAT KETAT:
 (Tuliskan narasi ringkas materi pembelajaran di sini)
 
 [PROFIL]
-(Tuliskan narasi ringkas dimensi profil lulusan di sini)`;
+(Tuliskan narasi ringkas dimensi profil lulusan di sini)${isEn ? '\n- LANGUAGE REQUIREMENT: Output content inside brackets MUST be in English.' : ''}`;
 
   const result = await callGeminiWithAccountKey(prompt, { silentError: true });
   if (result) {
@@ -1188,9 +1262,15 @@ ATURAN SANGAT KETAT:
     if (areaMateri && parsed.materi) areaMateri.value = parsed.materi;
     if (areaProfil && parsed.profil) areaProfil.value = parsed.profil;
   } else {
-    if (areaPeserta) areaPeserta.value = `Sebagian besar peserta didik telah memiliki pengetahuan awal terkait materi ${ctx.topik}, namun memerlukan bimbingan bertahap (scaffolding) untuk mencapai ketuntasan kompetensi secara mandiri.`;
-    if (areaMateri) areaMateri.value = `Materi ${ctx.topik} memiliki tingkat kesulitan terukur yang memadukan teori konseptual dan keterampilan prosedural relevan dengan kebutuhan dunia nyata.`;
-    if (areaProfil) areaProfil.value = `Menumbuhkan dimensi Profil Pelajar Pancasila terutama Penalaran Kritis dalam membedah kasus materi, Kreativitas dalam menghasilkan karya, dan Kolaborasi aktif.`;
+    if (areaPeserta) areaPeserta.value = isEn
+      ? `Most students already have initial knowledge related to ${ctx.topik}, but require structured scaffolding to achieve competency mastery independently.`
+      : `Sebagian besar peserta didik telah memiliki pengetahuan awal terkait materi ${ctx.topik}, namun memerlukan bimbingan bertahap (scaffolding) untuk mencapai ketuntasan kompetensi secara mandiri.`;
+    if (areaMateri) areaMateri.value = isEn
+      ? `The topic ${ctx.topik} has a measurable level of difficulty combining conceptual theory and practical procedural skills relevant to real-world demands.`
+      : `Materi ${ctx.topik} memiliki tingkat kesulitan terukur yang memadukan teori konseptual dan keterampilan prosedural relevan dengan kebutuhan dunia nyata.`;
+    if (areaProfil) areaProfil.value = isEn
+      ? `Fostering Graduate Profile dimensions, particularly Critical Reasoning in analyzing subject cases, Creativity in producing work, and Active Collaboration.`
+      : `Menumbuhkan dimensi Profil Pelajar Pancasila terutama Penalaran Kritis dalam membedah kasus materi, Kreativitas dalam menghasilkan karya, dan Kolaborasi aktif.`;
   }
 
   if (btn) {
@@ -1915,8 +1995,9 @@ async function proceedGenerateModul() {
   const curEmail = (curUser?.email || '').trim().toLowerCase();
   const isAdm = curUser?.role === 'Admin' || (typeof ADMIN_EMAIL !== 'undefined' && curEmail === ADMIN_EMAIL.toLowerCase());
   const activeFeatures = Array.isArray(curUser?.features) ? curUser.features : [];
+  const isEn = typeof getAppLanguage === 'function' && getAppLanguage() === 'en';
   if (!isAdm && !activeFeatures.includes('generate_modul_ajar')) {
-    alert("Akses Fitur Dinonaktifkan: Hak akses fitur Pembuatan Modul Ajar saat ini dinonaktifkan oleh Administrator untuk akun Anda.");
+    alert(isEn ? "Access Disabled: Access to Teaching Module Generator is currently disabled by Administrator for your account." : "Akses Fitur Dinonaktifkan: Hak akses fitur Pembuatan Modul Ajar saat ini dinonaktifkan oleh Administrator untuk akun Anda.");
     window.location.replace("../../dashboard-pengguna/daftar-modul-ajar.html");
     return;
   }
@@ -1925,8 +2006,10 @@ async function proceedGenerateModul() {
   const activeApiKey = getEffectiveApiKey();
   if (!activeApiKey) {
     showNotificationModal(
-      'Kunci API Belum Disimpan',
-      'Fitur <strong>Generate Modul Ajar</strong> memerlukan API Key Google Gemini pada akun Anda.<br><br>Silakan buka menu <a href="../../dashboard-pengguna/api-key.html" style="color:#2563eb;font-weight:700;text-decoration:underline;">Kunci API</a> dan simpan API Key Google Gemini resmi Anda terlebih dahulu.',
+      isEn ? 'API Key Not Saved' : 'Kunci API Belum Disimpan',
+      isEn
+        ? 'The <strong>Generate Teaching Module</strong> feature requires a Google Gemini API Key on your account.<br><br>Please visit the <a href="../../dashboard-pengguna/api-key.html" style="color:#2563eb;font-weight:700;text-decoration:underline;">API Key</a> menu and save your official Google Gemini API Key first.'
+        : 'Fitur <strong>Generate Modul Ajar</strong> memerlukan API Key Google Gemini pada akun Anda.<br><br>Silakan buka menu <a href="../../dashboard-pengguna/api-key.html" style="color:#2563eb;font-weight:700;text-decoration:underline;">Kunci API</a> dan simpan API Key Google Gemini resmi Anda terlebih dahulu.',
       'warning'
     );
     return;
@@ -1958,6 +2041,23 @@ async function proceedGenerateModul() {
     progressLoading.style.display = 'flex';
     progressSuccess.style.display = 'none';
 
+    const headingEl = document.getElementById('generateLoadingHeading');
+    if (headingEl) {
+      headingEl.textContent = isEn ? 'Compiling Teaching Module...' : 'Sedang Menyusun Modul Ajar...';
+    }
+    const successHeadingEl = document.getElementById('generateSuccessHeading');
+    if (successHeadingEl) {
+      successHeadingEl.textContent = isEn ? 'Yay, Teaching Module Successfully Generated!' : 'Yey, Modul Ajar Berhasil Disusun!';
+    }
+    const captionEl = document.getElementById('generateIndicatorCaption');
+    if (captionEl) {
+      captionEl.textContent = isEn ? 'Automated compilation process by Gemini AI' : 'Proses perumusan otomatis oleh Gemini AI';
+    }
+
+    if (typeof applyTranslations === 'function') {
+      applyTranslations(progressContainer);
+    }
+
     // Scroll halus ke container progress dengan jarak lega dari tepi bawah jendela browser
     scrollCardIntoViewWithGap(progressContainer, 70);
 
@@ -1966,7 +2066,6 @@ async function proceedGenerateModul() {
     const percentEl = document.getElementById('generatePercentText');
     const stepTextEl = document.getElementById('generateProgressStepText');
 
-    const isEn = typeof getAppLanguage === 'function' && getAppLanguage() === 'en';
     if (barEl) barEl.style.width = '15%';
     if (percentEl) percentEl.textContent = '15%';
     if (stepTextEl) stepTextEl.textContent = isEn ? 'Connecting to Google Gemini API...' : 'Menghubungkan ke Google Gemini API...';

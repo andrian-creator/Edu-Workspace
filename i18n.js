@@ -224,6 +224,11 @@ const TRANSLATIONS = {
     form_cp_label: "Capaian Pembelajaran (CP)",
     form_tp_label: "Tujuan Pembelajaran (TP)",
     form_enrichment_label: "Materi Tambahan / Pengayaan",
+    sec_materi_tambahan: "Materi Tambahan",
+    badge_optional: "(Opsional)",
+    generating_heading: "Sedang Menyusun Modul Ajar...",
+    generated_success_heading: "Yey, Modul Ajar Berhasil Disusun!",
+    generated_success_sub: "Modul ajar siap untuk direview, dan diterapkan pada pembelajaran.",
     step3_card_title: "3. Review & Konfirmasi Generator",
     step3_card_desc: "Periksa kembali parameter yang telah dimasukkan sebelum AI menyusun modul ajar.",
     btn_start_generate: "Generate Modul Ajar Sekarang",
@@ -533,6 +538,11 @@ const TRANSLATIONS = {
     form_cp_label: "Learning Outcomes (CP)",
     form_tp_label: "Learning Objectives (TP)",
     form_enrichment_label: "Enrichment / Additional Material",
+    sec_materi_tambahan: "Supplementary Material",
+    badge_optional: "(Optional)",
+    generating_heading: "Compiling Teaching Module...",
+    generated_success_heading: "Yay, Teaching Module Successfully Created!",
+    generated_success_sub: "The teaching module is ready to review and implement in your classes.",
     step3_card_title: "3. Review & Generator Confirmation",
     step3_card_desc: "Review the entered parameters before AI compiles the teaching module.",
     btn_start_generate: "Generate Teaching Module Now",
@@ -1037,6 +1047,18 @@ const PLACEHOLDER_PAIRS = [
   ['Contoh: Materi memerlukan pemahaman konsep dasar sebelum eksperimen dan melibatkan istilah teknis.', 'Example: Material requires basic concept understanding prior to experiments and involves technical terms.'],
   ['Contoh: Penalaran kritis saat merancang eksperimen dan kolaborasi gotong royong dalam kelompok.', 'Example: Critical reasoning when designing experiments and collaborative teamwork.'],
   ['Contoh: Rekayasa Perangkat Lunak, TKJ, Akuntansi', 'Example: Software Engineering, Networking, Accounting'],
+  ['Ketik materi tambahan / pengayaan atau klik \'Generate With AI\' untuk menyusunnya otomatis berdasarkan data sebelumnya.', 'Type additional / enrichment material or click \'Generate With AI\' to compile automatically from previous data.'],
+  ['Ketik model pembelajaran manual...', 'Type manual learning model...'],
+  ['Ketik pendekatan pembelajaran manual...', 'Type manual learning approach...'],
+  ['Contoh: 4', 'Example: 4'],
+  ['Contoh: 4 JP x 45 Menit (4 Pertemuan)', 'Example: 4 Hours x 45 Minutes (4 Sessions)'],
+  ['Contoh: Slide Canva, Video YouTube, Quizizz', 'Example: Canva Slides, YouTube Video, Quizizz'],
+  ['Contoh: Lapangan; Lab Foto', 'Example: Sports Field; Photo Lab'],
+  ['Ketik rumusan Capaian Pembelajaran atau klik \'Generate With AI\' untuk merumuskannya secara terpadu sesuai Elemen CP di Tahap 1.', 'Type Learning Outcome formulation or click \'Generate With AI\' to formulate based on Learning Elements from Step 1.'],
+  ['Identifikasi kesiapan murid terhadap materi atau klik \'Generate With AI\'.', 'Identify student readiness for material or click \'Generate With AI\'.'],
+  ['Identifikasi esensi materi pembelajaran atau klik \'Generate With AI\'.', 'Identify core learning material essence or click \'Generate With AI\'.'],
+  ['Identifikasi keterkaitan profil lulusan dengan aktivitas atau klik \'Generate With AI\'.', 'Identify graduate profile alignment with activities or click \'Generate With AI\'.'],
+  ['Isi Tujuan Pembelajaran sendiri. Satu TP per baris.\nContoh:\n1. Murid mampu menghitung BEP produksi\n2. Murid mampu menganalisis titik impas', 'Enter Learning Objectives manually. One LO per line.\nExample:\n1. Students are able to calculate production BEP\n2. Students are able to analyze break-even point'],
   ['Reguler', 'Regular']
 ];
 
@@ -1188,8 +1210,8 @@ function applyTranslations(root = document) {
 function autoTranslateCommonPhrases(root, lang) {
   const isEn = lang === 'en';
 
-  // 1. Text Replacements khusus Form Label Titles & Key Values (menjaga asterisk <span class="required">*</span> dan child icon)
-  root.querySelectorAll('.form-label-title, .form-label-inline, label.form-label, .meta-label, .review-key, .cell-label').forEach(el => {
+  // 1. Text Replacements khusus Form Label Titles & Key Values (menjaga asterisk <span class="required">*</span> dan child icon/badges)
+  root.querySelectorAll('.form-label-title, .form-label-inline, label.form-label, .meta-label, .review-key, .cell-label, .section-heading, .review-section-heading, .review-group-title, .form-group-title').forEach(el => {
     if (el.hasAttribute('data-i18n') || el.hasAttribute('data-i18n-html')) return;
     if (el.tagName.toLowerCase() === 'label' && el.querySelector('.form-label-title')) return;
 
@@ -1248,41 +1270,64 @@ function autoTranslateCommonPhrases(root, lang) {
   });
 
   // 3. Text Replacements berdasarkan PHRASE_PAIRS untuk elemen umum
-  const targetSelectors = 'h1, h2, h3, h4, h5, p, span, a, button, label, th, td';
+  const targetSelectors = 'h1, h2, h3, h4, h5, h6, p, span, a, button, label, th, td, div, li, strong, b, em, i';
   const elements = root.querySelectorAll(targetSelectors);
 
   elements.forEach(el => {
-    // Jangan overwrite jika elemen sudah diproses data-i18n atau merupakan form-label-title
     if (el.hasAttribute('data-i18n') || el.hasAttribute('data-i18n-html')) return;
-    if (el.classList.contains('form-label-title')) return;
-    // Jangan ubah container dengan banyak child tags complex kecuali span murni / button span / step
-    if (el.children.length > 0 && !el.classList.contains('step-name') && !el.classList.contains('btn-create-modul') && !el.classList.contains('btn-step-prev') && !el.classList.contains('btn-step-next')) return;
+    if (el.tagName === 'SCRIPT' || el.tagName === 'STYLE') return;
+    if (el.classList.contains('form-label-title') || el.classList.contains('section-heading')) return;
 
-    const rawText = el.textContent.trim();
-    if (!rawText) return;
+    // Jika elemen tidak memiliki child tags: periksa teks secara langsung
+    if (el.children.length === 0) {
+      const rawText = el.textContent.trim();
+      if (!rawText) return;
 
-    for (const [idText, enText] of PHRASE_PAIRS) {
-      if (isEn && rawText === idText) {
-        el.textContent = enText;
-        break;
-      } else if (!isEn && rawText === enText) {
-        el.textContent = idText;
-        break;
+      for (const [idText, enText] of PHRASE_PAIRS) {
+        if (isEn && rawText === idText) {
+          el.textContent = enText;
+          break;
+        } else if (!isEn && rawText === enText) {
+          el.textContent = idText;
+          break;
+        }
       }
+      return;
     }
+
+    // Jika elemen memiliki child tags campuran teks (contoh: teks bercampur ikon / badge)
+    el.childNodes.forEach(node => {
+      if (node.nodeType === Node.TEXT_NODE) {
+        const fullRaw = node.textContent;
+        const rawText = fullRaw.trim();
+        if (!rawText) return;
+
+        for (const [idText, enText] of PHRASE_PAIRS) {
+          if (isEn && rawText === idText) {
+            node.textContent = fullRaw.replace(rawText, enText);
+            break;
+          } else if (!isEn && rawText === enText) {
+            node.textContent = fullRaw.replace(rawText, idText);
+            break;
+          }
+        }
+      }
+    });
   });
 
-  // 4. Placeholder Replacements
+  // 4. Placeholder Replacements (mendukung multi-baris \n)
   root.querySelectorAll('input, textarea').forEach(input => {
     if (input.hasAttribute('data-i18n-placeholder')) return;
-    const currentPh = input.placeholder ? input.placeholder.trim() : '';
+    const currentPh = input.placeholder ? input.placeholder.trim().replace(/\r\n/g, '\n') : '';
     if (!currentPh) return;
 
     for (const [idPh, enPh] of PLACEHOLDER_PAIRS) {
-      if (isEn && currentPh === idPh) {
+      const normId = idPh.trim().replace(/\r\n/g, '\n');
+      const normEn = enPh.trim().replace(/\r\n/g, '\n');
+      if (isEn && currentPh === normId) {
         input.placeholder = enPh;
         break;
-      } else if (!isEn && currentPh === enPh) {
+      } else if (!isEn && currentPh === normEn) {
         input.placeholder = idPh;
         break;
       }

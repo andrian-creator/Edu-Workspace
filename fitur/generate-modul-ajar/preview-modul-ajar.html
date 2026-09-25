@@ -939,19 +939,6 @@
         return isEn ? 'Application of Model Syntax & Teaching Method:' : 'Penerapan Sintaks Model & Metode Pembelajaran:';
       }
     }
-        return 'Penerapan Pendekatan Saintifik & Sintaks Model:';
-      } else if (pLower.includes('kontekstual') || pLower.includes('ctl')) {
-        return 'Penerapan Pendekatan Kontekstual & Sintaks Model:';
-      } else if (pLower.includes('steam') || pLower.includes('stem')) {
-        return 'Penerapan Pendekatan STEAM & Sintaks Model:';
-      } else if (pLower.includes('konstruktivisme')) {
-        return 'Penerapan Pendekatan Konstruktivisme & Sintaks Model:';
-      } else if (pendekatan && pendekatan !== '-' && !pLower.includes('reguler')) {
-        return `Penerapan Pendekatan ${pendekatan} & Sintaks Model:`;
-      } else {
-        return 'Penerapan Sintaks Model & Metode Pembelajaran:';
-      }
-    }
 
     /**
      * Format aktivitas guru dan murid menjadi daftar terstruktur per poin (1., 2., dst.)

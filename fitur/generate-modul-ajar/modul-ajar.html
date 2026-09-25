@@ -418,7 +418,7 @@
                 <div class="form-section-header between-space">
                   <div class="section-title-left">
                     <span class="section-badge">E</span>
-                    <h3 class="section-heading">Materi Tambahan <span class="optional-badge">(Opsional)</span></h3>
+                    <h3 class="section-heading"><span data-i18n="sec_materi_tambahan">Materi Tambahan</span> <span class="optional-badge" data-i18n="badge_optional">(Opsional)</span></h3>
                   </div>
                   <button type="button" class="btn-ai-generator" id="btnGenMateriAI" onclick="generateAIMateri()">
                     <img src="../../Assets/icon/icon_generate.png" class="btn-ai-icon" alt="">
@@ -872,7 +872,7 @@
                       ✦ AI Generator Aktif
                     </span>
                   </div>
-                  <div class="generate-state-heading" style="font-size: 1.5rem; font-weight: 800; color: #0f172a; line-height: 1.3;">Sedang Menyusun Modul Ajar...</div>
+                  <div class="generate-state-heading" id="generateLoadingHeading" data-i18n="generating_heading" style="font-size: 1.5rem; font-weight: 800; color: #0f172a; line-height: 1.3;">Sedang Menyusun Modul Ajar...</div>
                   <div class="generate-state-sub" id="generateProgressStepText" style="font-size: 1rem; color: #64748b; line-height: 1.6;">AI sedang merumuskan kegiatan inti pembelajaran & materi...</div>
                 </div>
                 
@@ -894,8 +894,8 @@
               <!-- State 2: Setelah Selesai Berubah Menjadi Info Sukses & Tombol Buka Modul Ajar -->
               <div id="progressStateSuccess" class="generate-state-box generate-success-box" style="display: none; flex-direction: column; gap: 20px; width: 100%;">
                 <div class="generate-text-group" style="display: flex; flex-direction: column; gap: 8px;">
-                  <div class="generate-state-heading" style="font-size: 1.65rem; font-weight: 800; color: #0f172a; line-height: 1.3;">Yey, Modul Ajar Berhasil Disusun!</div>
-                  <div class="generate-state-sub" style="font-size: 1.05rem; color: #475569; line-height: 1.65;">Modul ajar siap untuk direview, dan diterapkan pada pembelajaran.</div>
+                  <div class="generate-state-heading" id="generateSuccessHeading" data-i18n="generated_success_heading" style="font-size: 1.65rem; font-weight: 800; color: #0f172a; line-height: 1.3;">Yey, Modul Ajar Berhasil Disusun!</div>
+                  <div class="generate-state-sub" data-i18n="generated_success_sub" style="font-size: 1.05rem; color: #475569; line-height: 1.65;">Modul ajar siap untuk direview, dan diterapkan pada pembelajaran.</div>
                 </div>
 
                 <div style="margin-top: 4px;">
